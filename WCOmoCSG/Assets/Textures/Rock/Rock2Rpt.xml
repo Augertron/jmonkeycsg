@@ -1,0 +1,35 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<material class='com.jme3.material.Material' material_def='Common/MatDefs/Light/Lighting.j3md'>
+	<parameters>
+	    <MapEntry key='Shininess'>
+	        <Savable class='com.jme3.material.MatParam' name='Shininess' value_float='32.0' varType='Float'/>
+	    </MapEntry>
+	    <MapEntry key='DiffuseMap'>
+	        <Savable class='com.jme3.material.MatParamTexture' name='DiffuseMap' texture_unit='0' varType='Texture2D'>
+	            <value_savable class='com.jme3.texture.Texture2D' 
+	            		minificationFilter='Trilinear' 
+	            		name='Textures/Terrain/Rock2/rock.jpg' 
+	            		wrapS='Repeat' wrapT='Repeat'
+	            		reference_ID='com.jme3.texture.Texture2D@1025347207'>
+	                <key class='com.jme3.asset.TextureKey' 
+	                	generate_mips='true' 
+	                	name='Textures/Terrain/Rock2/rock.jpg'/>
+	            </value_savable>
+	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@1025347207'/>
+	        </Savable>
+	    </MapEntry>
+	    <MapEntry key='NormalMap'>
+	        <Savable class='com.jme3.material.MatParamTexture' name='NormalMap' texture_unit='1' varType='Texture2D'>
+	            <value_savable class='com.jme3.texture.Texture2D' 
+	            		minificationFilter='Trilinear' 
+	            		name='Textures/Terrain/Rock/Rock_normal.png' 
+	            		reference_ID='com.jme3.texture.Texture2D@1995915332'>
+	                <key class='com.jme3.asset.TextureKey' 
+	                	generate_mips='true' 
+	                	name='Textures/Terrain/Rock/Rock_normal.png'/>
+	            </value_savable>
+	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@1995915332'/>
+	        </Savable>
+	    </MapEntry>
+	</parameters>
+</material>

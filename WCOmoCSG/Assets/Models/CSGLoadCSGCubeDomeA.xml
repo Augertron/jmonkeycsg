@@ -1,0 +1,107 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CSGSamplesB' savable_versions='0, 0'>
+    <transform class='com.jme3.math.Transform' savable_versions='0'>
+        <translation class='com.jme3.math.Vector3f' savable_versions='0' z='0.0'/>
+    </transform>
+    
+    <lights class='com.jme3.light.LightList' savable_versions='0'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color  class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
+
+    <children size='4'>
+        <!-- Intersection of a dome with a shorter box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry' savable_versions='0, 1, 0'
+        		materialName='Textures/Terrain/Pond/Pond.j3m' hide2='Textures/Terrain/Rock/Rock.j3m' hide1='Textures/Terrain/BrickWall/BrickWall.j3m'>
+            <transform class='com.jme3.math.Transform' savable_versions='0'>
+                <translation class='com.jme3.math.Vector3f' savable_versions='0' x='3.0'/>
+            </transform>
+            <Shapes size='2'>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='com.jme3.scene.shape.Box' savable_versions='0, 0, 0' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='UNION' name='Dome'>
+                    <mesh class='com.jme3.scene.shape.Dome' insideView='true' planes='4' radialSamples='32' radius='1.1' savable_versions='0, 0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+
+		<!-- Simple Dome with explicit Material -->
+        <com.jme3.scene.Geometry name='AGeometry' savable_versions='0, 1, 0' 
+        		xxxmaterialName='Textures/Terrain/Rock/Rock.j3m' >
+            <transform class='com.jme3.math.Transform' savable_versions='0'>
+                <translation class='com.jme3.math.Vector3f' savable_versions='0' y='3.0'/>
+            </transform>
+            
+            <material class='com.jme3.material.Material' material_def='Common/MatDefs/Misc/ShowNormals.j3md' savable_versions='2'>
+                <parameters/>
+            </material>
+            
+            <xxxmaterial class='com.jme3.material.Material' material_def='Common/MatDefs/Light/Lighting.j3md' savable_versions='2'>
+                <parameters>
+                    <MapEntry key='NormalMap'>
+                        <Savable class='com.jme3.material.MatParamTexture' name='NormalMap' savable_versions='0, 0' texture_unit='1' varType='Texture2D'>
+                            <value_savable class='com.jme3.texture.Texture2D' minificationFilter='Trilinear' wrapS='Repeat' wrapT='Repeat' name='Textures/Terrain/Rock/Rock_normal.png' reference_ID='com.jme3.texture.Texture2D@-1180647224' savable_versions='0, 0'>
+                                <key class='com.jme3.asset.TextureKey' generate_mips='true' name='Textures/Terrain/Rock/Rock_normal.png' savable_versions='0, 0'/>
+                            </value_savable>
+                            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@-1180647224'/>
+                        </Savable>
+                    </MapEntry>
+                    <MapEntry key='ParallaxHeight'>
+                        <Savable class='com.jme3.material.MatParam' name='ParallaxHeight' savable_versions='0' value_float='0.05' varType='Float'/>
+                    </MapEntry>
+                    <MapEntry key='DiffuseMap'>
+                        <Savable class='com.jme3.material.MatParamTexture' name='DiffuseMap' savable_versions='0, 0' texture_unit='0' varType='Texture2D'>
+                            <value_savable class='com.jme3.texture.Texture2D' minificationFilter='Trilinear' wrapS='Repeat' wrapT='Repeat' name='Textures/Terrain/Rock/Rock.PNG' reference_ID='com.jme3.texture.Texture2D@603824774' savable_versions='0, 0'>
+                                <key class='com.jme3.asset.TextureKey' generate_mips='true' name='Textures/Terrain/Rock/Rock.PNG' savable_versions='0, 0'/>
+                            </value_savable>
+                            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@603824774'/>
+                        </Savable>
+                    </MapEntry>
+                    <MapEntry key='Shininess'>
+                        <Savable class='com.jme3.material.MatParam' ff_binding='MaterialShininess' name='Shininess' savable_versions='0' value_float='32.0' varType='Float'/>
+                    </MapEntry>
+                </parameters>
+            </xxxmaterial>
+
+             <mesh class='com.jme3.scene.shape.Dome' insideView='true' planes='4' radialSamples='32' radius='1.1' savable_versions='0, 0'/>
+        </com.jme3.scene.Geometry>
+
+    	<!-- Add Dome to a shorter box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry' savable_versions='0, 1, 0' 
+        		materialName='Textures/Terrain/Rock/Rock.j3m' >
+            <transform class='com.jme3.math.Transform' savable_versions='0'>
+                <translation class='com.jme3.math.Vector3f' savable_versions='0' x='-3.0'/>
+            </transform>
+            <Shapes size='2'>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='com.jme3.scene.shape.Box' savable_versions='0, 0, 0' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='Dome'>
+             		<mesh class='com.jme3.scene.shape.Dome' insideView='true' planes='4' radialSamples='32' radius='1.1' savable_versions='0, 0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Remove a dome from a shorter box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry' savable_versions='0, 1, 0'
+        		materialName='Textures/Terrain/BrickWall/BrickWall.j3m' hide='Textures/Terrain/Rocky/Rocky.j3m'>
+            <transform class='com.jme3.math.Transform' savable_versions='0'>
+                <translation class='com.jme3.math.Vector3f' savable_versions='0' x='0.0'/>
+            </transform>
+            <Shapes size='2'>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='com.jme3.scene.shape.Box' savable_versions='0, 0, 0' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='DIFFERENCE' name='Dome'>
+                    <transform class='com.jme3.math.Transform' savable_versions='0'/>
+             		<mesh class='com.jme3.scene.shape.Dome' insideView='true' planes='4' radialSamples='32' radius='1.1' savable_versions='0, 0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+    </children>
+</com.jme3.scene.Node>

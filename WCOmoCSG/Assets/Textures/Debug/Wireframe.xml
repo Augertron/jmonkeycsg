@@ -1,0 +1,11 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<material class='com.jme3.material.Material' material_def='Common/MatDefs/Misc/Unshaded.j3md'>
+	<parameters>
+	    <MapEntry key='Color'>
+	        <Savable class='com.jme3.material.MatParam' name='Color' varType='Vector4'>
+	            <value_savable class='com.jme3.math.ColorRGBA' r='1.0' g='0.5' b='0.0' a='1.0'/>
+	        </Savable>
+	    </MapEntry>
+	</parameters>
+	<render_state class='com.jme3.material.RenderState' wireframe='true'/>
+</material>

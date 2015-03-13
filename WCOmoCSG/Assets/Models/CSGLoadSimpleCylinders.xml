@@ -1,0 +1,72 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CSGSamples'>
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' z='-4.0'/>
+    </transform>
+    <children>
+    	<!-- Normal, minimal cylinder -->
+        <com.jme3.scene.Geometry name='Cylinder2a'
+       			materialName='Textures/Debug/Normals.xml'>	
+            <transform class='com.jme3.math.Transform' >
+                <translation class='com.jme3.math.Vector3f' x='-6.0' y='0.0'/>
+            </transform>
+            <mesh axisSamples='2' class='net.wcomo.jme3.csg.shape.Cylinder' closed='true' height='1.5' radialSamples='4' radius='1.1' radius2='1.1'/>
+        </com.jme3.scene.Geometry>
+
+		<!-- A closed cylinder -->
+        <com.jme3.scene.Geometry name='Cylinder1'
+        		 materialName='Textures/Rock/Rock1.xml' >
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='2.0'/>
+            </transform>
+            <mesh class='net.wcomo.jme3.csg.shape.Cylinder' 
+            	axisSamples='34' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+            <!--mesh class='com.jme3.scene.shape.Cylinder' axisSamples='34' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/-->
+        </com.jme3.scene.Geometry>
+        
+		<!-- An inverted cylinder -->
+        <com.jme3.scene.Geometry name='Cylinder1'
+        		materialName='Textures/BrickWall/BrickWall.xml' >
+        		<!-- materialName='Textures/Rock/Rock1.xml' -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='2.0' y='3.0'/>
+            </transform>
+            <mesh class='net.wcomo.jme3.csg.shape.Cylinder' 
+            	axisSamples='34' inverted='true' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+            <!--mesh class='com.jme3.scene.shape.Cylinder' axisSamples='34' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/-->
+        </com.jme3.scene.Geometry>
+
+        <!-- Closed, minimal cylinder -->
+        <com.jme3.scene.Geometry name='Cylinder2'
+       			materialName='Textures/BrickWall/BrickWall.xml' >
+        		<!--materialName='Textures/Debug/Wireframe.j3m'-->	
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' savable_versions='0' x='-3.0' y='0.0'/>
+            </transform>
+            <mesh axisSamples='2' class='net.wcomo.jme3.csg.shape.Cylinder' closed='true' height='1.5' radialSamples='4' radius='1.1' radius2='1.1'/>
+        </com.jme3.scene.Geometry>
+                
+        <!-- An open cylinder -->
+        <com.jme3.scene.Geometry name='Cylinder3'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='-3.0'/>
+            </transform>
+            <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.Cylinder' closed='false' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
+        </com.jme3.scene.Geometry>
+        
+        <!-- A tapering cylinder -->
+        <com.jme3.scene.Geometry name='Cylinder4'
+        		materialName='Textures/Debug/Normals.xml'>
+        		<!--materialName='Textures/Debug/Wireframe.xml'-->
+            <transform class='com.jme3.math.Transform'>
+                <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='-0.039469503' z='0.19470917'/>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/>
+            </transform>
+            <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.Cylinder' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.5'/>
+            <!--mesh axisSamples='34' class='com.jme3.scene.shape.Cylinder' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.5'/-->
+        </com.jme3.scene.Geometry>
+    </children>
+</com.jme3.scene.Node>

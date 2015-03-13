@@ -1,0 +1,61 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CSGSamples'>
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' z='-12.0'/>
+    </transform>
+    <children>
+		<!-- A standard sphere -->
+        <com.jme3.scene.Geometry name='Sphere1'
+        		materialName='Textures/Rock/Rock1.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='0.0'/>
+            </transform>
+            <mesh axisSamples='34' class='com.jme3.scene.shape.Sphere' radius='1.1' zSamples='32' radialSamples='32' useEvenSlices='false' interior='false'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='Sphere2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
+            </transform>
+            <mesh axisSamples='34' class='com.jme3.scene.shape.Sphere' radius='1.1' zSamples='32' radialSamples='32' useEvenSlices='false' interior='false'/>
+        </com.jme3.scene.Geometry>
+
+		<!-- A low-res sphere -->
+        <com.jme3.scene.Geometry name='Sphere3'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='-3.0'/>
+            </transform>
+            <mesh axisSamples='34' class='com.jme3.scene.shape.Sphere'  radius='1.1' zSamples='16' radialSamples='16' useEvenSlices='false' interior='false'/>
+        </com.jme3.scene.Geometry>
+        
+        <!-- A degenerate sphere -->
+        <com.jme3.scene.Geometry name='Sphere3a'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0'/>
+            </transform>
+            <mesh axisSamples='34' class='com.jme3.scene.shape.Sphere' radius='1.1' zSamples='3' radialSamples='3' useEvenSlices='true' interior='false'/>
+        </com.jme3.scene.Geometry>
+
+        <!-- A sphere with even slices -->
+        <com.jme3.scene.Geometry name='Sphere4'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='-3.0'/>
+            </transform>
+            <mesh axisSamples='34' class='com.jme3.scene.shape.Sphere' radius='1.1' zSamples='32' radialSamples='32' useEvenSlices='true' interior='false'/>
+        </com.jme3.scene.Geometry>
+        
+        <!-- An 'interior' sphere -->
+        <com.jme3.scene.Geometry name='Sphere5'
+        		materialName='Textures/Rock/Rock1.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='3.0'/>
+             </transform>
+            <mesh axisSamples='34' class='com.jme3.scene.shape.Sphere' radius='1.1' zSamples='32' radialSamples='32' useEvenSlices='false' interior='true'/>
+        </com.jme3.scene.Geometry>
+    </children>
+</com.jme3.scene.Node>

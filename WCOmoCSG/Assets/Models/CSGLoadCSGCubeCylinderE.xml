@@ -1,0 +1,128 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CSGSamplesC'>
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' z='20.0'/>
+    </transform>
+    <children>
+        <!-- Add a shorter cylinder to a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='Cylinder'>
+                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.Cylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+               </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Subtract shorter cylinder from a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='DIFFERENCE' name='Cylinder'>
+                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.Cylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Intersection of a shorter cylinder with a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='INTERSECTION' name='Cylinder'>
+                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.Cylinder' 
+                    	closed='true'  height='1.5' radialSamples='32' radius='1.1' radius2='1.1' />
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Add a shorter cylinder to a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
+            </transform>
+             <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='Cylinder'>
+                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.Cylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Subtract shorter cylinder from a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='DIFFERENCE' name='Cylinder'>
+                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.Cylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Intersection of a shorter cylinder with a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='INTERSECTION' name='Cylinder'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Cylinder'
+                    	 axisSamples='34' closed='true'  height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+
+    </children>
+</com.jme3.scene.Node>

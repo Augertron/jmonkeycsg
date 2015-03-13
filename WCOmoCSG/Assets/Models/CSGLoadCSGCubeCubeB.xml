@@ -1,0 +1,136 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CorridorBox'>
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' z='10.0'/>
+    </transform>
+    <children>
+        <!-- Build a corridor -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+                materialName='Textures/Debug/Wireframe.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='10.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='InteriorBox' Operator='DIFFERENCE'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='9.8' yExtent='0.90' zExtent='0.90'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='0.0'/>
+                    </transform>
+               </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+                materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='15.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+	                    <scaleFaces>
+	                    	<com.jme3.math.Vector3f x='1.0' y='10.0' z='15'/>
+	                    </scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='1.0' y='10.0' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='InteriorBox' Operator='DIFFERENCE'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+                    	<scaleFaces>
+                    		<com.jme3.math.Vector3f x='0.9' y='9.9' z='15'/>
+                    	</scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='0.9' y='9.9' z='0.9'/>
+                    </transform>
+	           	</net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-5.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+	                    <scaleFaces>
+	                    	<com.jme3.math.Vector3f x='10.0' y='1.0' z='53'/>
+	                    </scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='10.0' y='1.0' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='InteriorBox' Operator='DIFFERENCE'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+                    	<scaleFaces>
+                    		<com.jme3.math.Vector3f x='9.9' y='0.9' z='53'/>
+                    	</scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='9.9' y='0.9' z='0.9'/>
+                    </transform>
+	            </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='0.9' yExtent='0.9' zExtent='0.5'>
+                    	<scaleFaces>
+                    		<com.jme3.math.Vector3f x='9.9' y='0.9' z='53'/>
+                    	</scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='0' y='0' z='0.5'/>
+                    </transform>
+	            </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='25' y='0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+	                    <scaleFaces>
+	                    	<com.jme3.math.Vector3f x='1.0' y='10.0' z='48'/>
+	                    	<com.jme3.math.Vector3f x='10.0' y='1.0' z='10'/>
+	                    </scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='1.0' y='1.0' z='10.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='Interior' Operator='DIFFERENCE'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Cylinder' 
+                    	 axisSamples='34' closed='true' height='1.0' radialSamples='32' radius='0.5' radius2='0.5' uniformTexture='false'>
+                    	<scaleFaces>
+                    		<com.jme3.math.Vector3f x='3.0' y='9.9' z='2'/>
+                    	</scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='1.95' y='1.95' z='19.9'/>
+                    </transform>
+	            </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'>
+                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='0.9' yExtent='0.5' zExtent='0.9'>
+                    	<!--scaleFaces>
+	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='48'/>
+	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='10'/>
+                    	</scaleFaces-->
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='0' y='0.5' z='0'/>
+                    </transform>
+	            </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+    </children>
+</com.jme3.scene.Node>
