@@ -46,7 +46,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.texture.Texture;
 
-/** This class extends the basic JME Geometry to support the blending of various CSG shapes.
+/**  Constructive Solid Geometry (CSG)
+
+	The CSGGeometry class extends the basic JME Geometry to support the blending of various CSG shapes.
  	The standard CSG operations of Union / Difference / Intersection are supported.
  	
  	The end result is a Mesh produced by the blending of the shapes.  This mesh can then

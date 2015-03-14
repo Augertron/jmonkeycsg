@@ -12,10 +12,10 @@
             </transform>
             <Shapes>
                 <net.wcomo.jme3.csg.CSGShape name='Box'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='10.0' yExtent='1.0' zExtent='1.0'/>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='10.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='InteriorBox' Operator='DIFFERENCE'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='9.8' yExtent='0.90' zExtent='0.90'/>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='9.8' yExtent='0.90' zExtent='0.90'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='0.0'/>
                     </transform>
@@ -30,7 +30,7 @@
             </transform>
             <Shapes>
                 <net.wcomo.jme3.csg.CSGShape name='Box'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
 	                    <scaleFaces>
 	                    	<com.jme3.math.Vector3f x='1.0' y='10.0' z='15'/>
 	                    </scaleFaces>
@@ -40,7 +40,7 @@
                     </transform>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='InteriorBox' Operator='DIFFERENCE'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
                     	<scaleFaces>
                     		<com.jme3.math.Vector3f x='0.9' y='9.9' z='15'/>
                     	</scaleFaces>
@@ -59,7 +59,7 @@
             </transform>
             <Shapes>
                 <net.wcomo.jme3.csg.CSGShape name='Box'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
 	                    <scaleFaces>
 	                    	<com.jme3.math.Vector3f x='10.0' y='1.0' z='53'/>
 	                    </scaleFaces>
@@ -69,7 +69,7 @@
                     </transform>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='InteriorBox' Operator='DIFFERENCE'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
                     	<scaleFaces>
                     		<com.jme3.math.Vector3f x='9.9' y='0.9' z='53'/>
                     	</scaleFaces>
@@ -79,7 +79,7 @@
                     </transform>
 	            </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='0.9' yExtent='0.9' zExtent='0.5'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='0.9' yExtent='0.9' zExtent='0.5'>
                     	<scaleFaces>
                     		<com.jme3.math.Vector3f x='9.9' y='0.9' z='53'/>
                     	</scaleFaces>
@@ -98,7 +98,7 @@
             </transform>
             <Shapes>
                 <net.wcomo.jme3.csg.CSGShape name='Box'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
 	                    <scaleFaces>
 	                    	<com.jme3.math.Vector3f x='1.0' y='10.0' z='48'/>
 	                    	<com.jme3.math.Vector3f x='10.0' y='1.0' z='10'/>
@@ -109,7 +109,7 @@
                     </transform>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='Interior' Operator='DIFFERENCE'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Cylinder' 
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGCylinder' 
                     	 axisSamples='34' closed='true' height='1.0' radialSamples='32' radius='0.5' radius2='0.5' uniformTexture='false'>
                     	<scaleFaces>
                     		<com.jme3.math.Vector3f x='3.0' y='9.9' z='2'/>
@@ -120,7 +120,7 @@
                     </transform>
 	            </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'>
-                    <mesh class='net.wcomo.jme3.csg.shape.Box' xExtent='0.9' yExtent='0.5' zExtent='0.9'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='0.9' yExtent='0.5' zExtent='0.9'>
                     	<!--scaleFaces>
 	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='48'/>
 	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='10'/>

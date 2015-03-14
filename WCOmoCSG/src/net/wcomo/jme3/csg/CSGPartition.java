@@ -34,7 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-/** A CSGPartition is a hierarchical container class used to keep track of a set of Polygons, along with
+/** Constructive Solid Geometry (CSG)
+
+    A CSGPartition is a hierarchical container class used to keep track of a set of Polygons, along with
  	those in 'front' of and 'behind' a given plane.
  	
  	CSGPlane knows how to identify polygons in front of, behind, and in the same plane.  CSGPartition
@@ -115,7 +117,7 @@ public class CSGPartition
 	public void clipTo(
 		CSGPartition		pOther
 	) {
-		// Reset the list of polygons that apply based on clipping from the other node
+		// Reset the list of polygons that apply based on clipping from the other partition
 		mPolygons = pOther.clipPolygons( mPolygons );
 		if ( mFrontPartition != null ) mFrontPartition.clipTo( pOther );
 		if ( mBackPartition != null) mBackPartition.clipTo( pOther );
@@ -148,6 +150,8 @@ public class CSGPartition
 			return;
 		}
 		if ( pStackDepth > 10000 ) {
+			// This is probably an error in the algorithm, but I have not yet
+			// found the true cause.
 			System.out.println( "Node.build - too deep" );
 			return;
 		}

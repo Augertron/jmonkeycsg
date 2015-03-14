@@ -42,14 +42,11 @@ import static com.jme3.util.BufferUtils.*;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
-import net.wcomo.jme3.csg.shape.Box.Face;
-
 
 /** Specialization/Copy of standard JME3 Cylinder that applies a standard texture to its end caps
  */
-public class Cylinder 
-	extends com.jme3.scene.shape.Cylinder
-	implements Savable
+public class CSGCylinder 
+	extends CSGMesh
 {
 	/** Identify the 3 faces of the cylinder  */
 	public enum Face {
@@ -57,74 +54,73 @@ public class Cylinder
 		
 		private int mask;
 		Face() {
-			mask = 1 << this.ordinal();
+			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
 		}
 		public int getMask() { return mask; }
 	}
 
+	/** How many sample circles to generate along the axis */
+    protected int 		mAxisSamples;
+    /** How many point around the circle to generate
+     		The more points, the smoother the circlar surface.
+     		The fewer points, and it looks like a triangle/cube/pentagon/...
+     */
+    protected int 		mRadialSamples;
+
+    /** The radius of the front cap */
+    protected float 	mRadiusFront;
+    /** The radius of the back cap */
+    protected float 	mRadiusBack;
+
+    /** How tall is the cylinder */
+    protected float 	mHeight;
+    /** If closed, then the front and end caps are produced */
+    protected boolean 	mClosed;
+    /** If inverted, then the cylinder is intended to be viewed from the inside */
+    protected boolean 	mInverted;
 	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */
 	protected boolean	mUniformTexture;
 	
-	public Cylinder(
+	public CSGCylinder(
 	) {
-		super();
+		this( 32, 32, 1, 1, 2, true, false );
 	}
 	
-    public Cylinder(
+    public CSGCylinder(
     	int 		pAxisSamples
     , 	int 		pRadialSamples
-    ,	float 		pRadius
-    , 	float 		pHeight
-    ) {
-        this( pAxisSamples, pRadialSamples, pRadius, pRadius, pHeight, false, false );
-    }
-
-    public Cylinder(
-    	int 		pAxisSamples
-    , 	int 		pRadialSamples
-    ,	float 		pRadius
+    ,	float 		pRadiusFront
+    ,	float		pRadiusBack
     , 	float 		pHeight
     , 	boolean 	pClosed
     , 	boolean 	pInverted
     ) {
-        this( pAxisSamples, pRadialSamples, pRadius, pRadius, pHeight, pClosed, pInverted );
-    }
-
-    public Cylinder(
-    	int 		pAxisSamples
-    , 	int 		pRadialSamples
-    ,	float 		pRadius
-    , 	float 		pRadius2
-    , 	float 		pHeight
-    , 	boolean 	pClosed
-    , 	boolean 	pInverted
-    ) {
-        super( pAxisSamples, pRadialSamples, pRadius, pRadius2, pHeight, pClosed, pInverted );
+        mAxisSamples = pAxisSamples;
+        mRadialSamples = pRadialSamples;
+        mRadiusFront = pRadiusFront;
+        mRadiusBack = pRadiusBack;
+        mHeight = pHeight;
+        mClosed = pClosed;
+        mInverted = pInverted;
         
         // By default, keep the flat and curved textures uniform
         mUniformTexture = true;
     }
 
-    /**
-     * Rebuilds the cylinder based on a new set of parameters.
-     *
-     * @param axisSamples the number of samples along the axis.
-     * @param radialSamples the number of samples around the radial.
-     * @param radius the radius of the bottom of the cylinder.
-     * @param radius2 the radius of the top of the cylinder.
-     * @param height the cylinder's height.
-     * @param closed should the cylinder have top and bottom surfaces.
-     * @param inverted is the cylinder is meant to be viewed from the inside.
-     */
+    /** Configuration accessors */
+    public int getAxisSamples() { return mAxisSamples; }
+    public float getHeight() { return mHeight; }
+    public int getRadialSamples() { return mRadialSamples; }
+    public float getRadiusFront() { return mRadiusFront; }
+    public float getRadiusBack() { return mRadiusBack; }
+    public boolean isClosed() { return mClosed; }
+    public boolean isInverted() { return mInverted; }
+    public boolean hasUniformTexture() { return mUniformTexture; }
+
+    
+    /** Rebuilds the cylinder based on the current set of configuration parameters */
     @Override
     public void updateGeometry(
-    	int 	pAxisSamples
-    , 	int radialSamples
-    ,	float radius
-    , 	float radius2
-    , 	float height
-    , 	boolean closed
-    , 	boolean inverted
     ) {
     	// The cylinder is built from a series of 'pucks' as determined by the 
     	// axisSample count. Each puck is based on two slices (front and back) where a 
@@ -134,23 +130,15 @@ public class Cylinder
     	// For ease of construction, an extra vertex is created for the (radialSample + 1) which
     	// is the same as the (0) point.
     	// We then create two triangles that lay on the edge of the puck for each radialSample.
-        this.axisSamples = pAxisSamples;
         
         // If closed, we will generate 2 extra slices, one for top and one for bottom
         // Vertices are generated in a standard way for the these special slices, but there
         // is no puck with an edge.  Instead, the triangles describe the flat closed face.
         // For that, we will have 2 extra vertices that describe the center of the face.
-        int aSliceCount = (closed) ? pAxisSamples + 2 : pAxisSamples;
-        
-        this.radialSamples = radialSamples;
-        this.radius = radius;
-        this.radius2 = radius2;
-        this.height = height;
-        this.closed = closed;
-        this.inverted = inverted;
-        
+        int aSliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+
         // Vertices = ((radialSamples + 1) * number of slices) plus 2 center points if closed
-        int vertCount = (aSliceCount * (radialSamples + 1)) + (closed ? 2 : 0);
+        int vertCount = (aSliceCount * (mRadialSamples + 1)) + (mClosed ? 2 : 0);
         setBuffer( Type.Position, 3, createVector3Buffer( getFloatBuffer(Type.Position), vertCount) );
 
         // Normals
@@ -162,7 +150,7 @@ public class Cylinder
         // Indexes based on the triangle count, where there are 2 triangles per radial sample
         // per puck. If closed, then we have radialSample triangles on top plus radialSample 
         // triangles on bottom, so the times 2 works out fine
-        int aTriangleCount = (2 * radialSamples * (aSliceCount - 1));
+        int aTriangleCount = (2 * mRadialSamples * (aSliceCount - 1));
         setBuffer( Type.Index, 3, createShortBuffer(getShortBuffer(Type.Index), 3 * aTriangleCount) );
         
         FloatBuffer nb = getFloatBuffer(Type.Normal);
@@ -170,36 +158,36 @@ public class Cylinder
         FloatBuffer tb = getFloatBuffer(Type.TexCoord);
 
         // generate geometry
-        float inverseRadial = 1.0f / radialSamples;
-        float inverseAxisLess = 1.0f / (pAxisSamples - 1);
+        float inverseRadial = 1.0f / mRadialSamples;
+        float inverseAxisLess = 1.0f / (mAxisSamples - 1);
         float inverseAxisLessTexture = 1.0f / (aSliceCount - 1);
-        float halfHeight = 0.5f * height;
+        float halfHeight = 0.5f * mHeight;
         float textureBias = (mUniformTexture) ? FastMath.INV_PI : 1.0f;
 
         // Generate points on the unit circle to be used in computing the mesh
         // points on a cylinder slice. 
-        float[] sin = new float[radialSamples];
-        float[] cos = new float[radialSamples];
+        float[] sin = new float[ mRadialSamples ];
+        float[] cos = new float[ mRadialSamples ];
 
-        for (int radialCount = 0; radialCount < radialSamples; radialCount++) {
+        for (int radialCount = 0; radialCount < mRadialSamples; radialCount += 1 ) {
             float angle = FastMath.TWO_PI * inverseRadial * radialCount;
-            cos[radialCount] = FastMath.cos(angle);
-            sin[radialCount] = FastMath.sin(angle);
+            cos[ radialCount ] = FastMath.cos( angle );
+            sin[ radialCount ] = FastMath.sin( angle );
         }
         // calculate normals
         Vector3f[] vNormals = null;
         Vector3f vNormal = Vector3f.UNIT_Z;
 
-        if ((height != 0.0f) && (radius != radius2)) {
+        if ((mHeight != 0.0f) && ( mRadiusFront != mRadiusBack)) {
         	// Account for the slant of the normal when the radii differ
-            vNormals = new Vector3f[radialSamples];
-            Vector3f vHeight = Vector3f.UNIT_Z.mult(height);
+            vNormals = new Vector3f[ mRadialSamples ];
+            Vector3f vHeight = Vector3f.UNIT_Z.mult( mHeight );
             Vector3f vRadial = new Vector3f();
 
-            for (int radialCount = 0; radialCount < radialSamples; radialCount++) {
+            for (int radialCount = 0; radialCount < mRadialSamples; radialCount++) {
                 vRadial.set(cos[radialCount], sin[radialCount], 0.0f);
-                Vector3f vRadius = vRadial.mult(radius);
-                Vector3f vRadius2 = vRadial.mult(radius2);
+                Vector3f vRadius = vRadial.mult( mRadiusFront );
+                Vector3f vRadius2 = vRadial.mult( mRadiusBack );
                 Vector3f vMantle = vHeight.subtract(vRadius2.subtract(vRadius));
                 Vector3f vTangent = vRadial.cross(Vector3f.UNIT_Z);
                 vNormals[radialCount] = vMantle.cross(vTangent).normalize();
@@ -212,7 +200,7 @@ public class Cylinder
             float axisFraction;
             float axisFractionTexture;
             int topBottom = 0;
-            if (!closed) {
+            if ( !mClosed ) {
             	// Each slice is evenly spaced
                 axisFraction = axisCount * inverseAxisLess;
                 axisFractionTexture = axisFraction;
@@ -232,12 +220,12 @@ public class Cylinder
                 }
             }
             // compute center of slice
-            float z = -halfHeight + height * axisFraction;
+            float z = -halfHeight + mHeight * axisFraction;
             Vector3f sliceCenter = new Vector3f(0, 0, z);
 
             // Compute slice vertices, with duplication at the end point
             int save = i;
-            for (int radialCount = 0; radialCount < radialSamples; radialCount++, i++) {
+            for (int radialCount = 0; radialCount < mRadialSamples; radialCount++, i++) {
             	// How far around the circle are we?
                 float radialFraction = radialCount * inverseRadial;
                 
@@ -247,25 +235,25 @@ public class Cylinder
                 if (vNormals != null) {
                 	// Use the slant
                     vNormal = vNormals[radialCount];
-                } else if (radius == radius2) {
+                } else if ( mRadiusFront == mRadiusBack ) {
                 	// Use the standard perpendicular (with z of zero)
                     vNormal = tempNormal;
                 }
                 if (topBottom == 0) {
                 	// NOT at a closed end cap, so just just handle the inversion
-                    if (!inverted) {
+                    if ( !mInverted ) {
                         nb.put(vNormal.x).put(vNormal.y).put(vNormal.z);
                     } else {
                         nb.put(-vNormal.x).put(-vNormal.y).put(-vNormal.z);
                     }
                 } else {
                 	// Account for top/bottom, where the normal runs along the z axis
-                    nb.put(0).put(0).put( topBottom * (inverted ? -1 : 1) );
+                    nb.put(0).put(0).put( topBottom * (mInverted ? -1 : 1) );
                 }
                 // What texture applies?
                 if ( topBottom == 0 ) {
                 	// Map the texture along the curved surface
-                	tb.put((inverted ? 1 - radialFraction : radialFraction))
+                	tb.put((mInverted ? 1 - radialFraction : radialFraction))
                         	.put(axisFractionTexture);
                 } else if ( topBottom < 0 ) {
                 	// Map the texture to the bottom cap (facing the other way, right to left)
@@ -277,7 +265,7 @@ public class Cylinder
         					.put( 0.5f + ((tempNormal.y / 2.0f) * textureBias) );
                 }
                 // Where is the point along the circle ?
-                tempNormal.multLocal((radius - radius2) * axisFraction + radius2)
+                tempNormal.multLocal((mRadiusFront - mRadiusBack) * axisFraction + mRadiusBack )
                         .addLocal(sliceCenter);
                 pb.put(tempNormal.x).put(tempNormal.y).put(tempNormal.z);
             }
@@ -286,20 +274,20 @@ public class Cylinder
             BufferUtils.copyInternalVector3( nb, save, i );
             if ( topBottom == 0 ) {
             	// Full circle, so select the extremity of the texture
-            	tb.put((inverted ? 0.0f : 1.0f)).put(axisFractionTexture);
+            	tb.put((mInverted ? 0.0f : 1.0f)).put(axisFractionTexture);
             } else {
             	// Back to the beginning of the end cap
             	BufferUtils.copyInternalVector2( tb, save, i );
             }
         }
-        if ( closed ) {
+        if ( mClosed ) {
         	// Two extra vertices for the centers of the end caps
             pb.put(0).put(0).put(-halfHeight); // bottom center
-            nb.put(0).put(0).put(-1 * (inverted ? -1 : 1));
+            nb.put(0).put(0).put(-1 * (mInverted ? -1 : 1));
             tb.put(0.5f).put(0.5f);
             
             pb.put(0).put(0).put(halfHeight); // top center
-            nb.put(0).put(0).put(1 * (inverted ? -1 : 1));
+            nb.put(0).put(0).put(1 * (mInverted ? -1 : 1));
             tb.put(0.5f).put(0.5f);
         }
         // Map the generated set of vertices above into the appropriate triangles
@@ -312,30 +300,30 @@ public class Cylinder
             int i1 = i0 + 1;
             
             // i2 and i3 are on the slice behind
-            axisStart += radialSamples + 1;
+            axisStart += mRadialSamples + 1;
             int i2 = axisStart;
             int i3 = i2 + 1;
-            for (int i = 0; i < radialSamples; i++) {
+            for (int i = 0; i < mRadialSamples; i++) {
             	// Loop around the circle
-                if (closed && axisCount == 0) {
+                if ( mClosed && (axisCount == 0) ) {
                 	// This is the bottom
                     ib.put(index++, i0++);
-                    ib.put(index++, inverted ? i1++ : vertCount - 2);
-                    ib.put(index++, inverted ? vertCount - 2 : i1++ );
-                } else if (closed && axisCount == aSliceCount - 2) {
+                    ib.put(index++, mInverted ? i1++ : vertCount - 2);
+                    ib.put(index++, mInverted ? vertCount - 2 : i1++ );
+                } else if (mClosed && (axisCount == aSliceCount - 2) ) {
                 	// This is the top
                     ib.put(index++, i2++);
-                    ib.put(index++, inverted ? vertCount - 1 : i3++);
-                    ib.put(index++, inverted ? i3++ : vertCount - 1);
+                    ib.put(index++, mInverted ? vertCount - 1 : i3++);
+                    ib.put(index++, mInverted ? i3++ : vertCount - 1);
                 } else {
                 	// This is a standard slice composed of two triangles
                     ib.put(index++, i0++);
-                    ib.put(index++, inverted ? i2 : i1);
-                    ib.put(index++, inverted ? i1 : i2);
+                    ib.put(index++, mInverted ? i2 : i1);
+                    ib.put(index++, mInverted ? i1 : i2);
                     
                     ib.put(index++, i1++);
-                    ib.put(index++, inverted ? i2++ : i3++);
-                    ib.put(index++, inverted ? i3++ : i2++);
+                    ib.put(index++, mInverted ? i2++ : i3++);
+                    ib.put(index++, mInverted ? i3++ : i2++);
                 }
             }
         }
@@ -349,51 +337,37 @@ public class Cylinder
     ) throws IOException {
     	super.write( pExporter );
     	
-        // Extended attributes
         OutputCapsule outCapsule = pExporter.getCapsule( this );
+        outCapsule.write( mAxisSamples, "axisSamples", 32 );
+        outCapsule.write( mRadialSamples, "radialSamples", 32 );
+        outCapsule.write( mRadiusFront, "radius", 1 );
+        outCapsule.write( mRadiusBack, "radius2", mRadiusFront );
+        outCapsule.write( mHeight, "height", 2 );
+        outCapsule.write( mClosed, "closed", true );
+        outCapsule.write( mInverted, "inverted", false );
         outCapsule.write( mUniformTexture, "uniformTexture", true );
     }
     @Override
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
-        // Possible extended attributes
         InputCapsule inCapsule = pImporter.getCapsule( this );
-        this.mUniformTexture = inCapsule.readBoolean( "uniformTexture", true );
+        
+        mAxisSamples = inCapsule.readInt( "axisSamples", 32 );
+        mRadialSamples = inCapsule.readInt( "radialSamples", 32 );
+        mRadiusFront = inCapsule.readFloat( "radius", 1 );
+        mRadiusBack = inCapsule.readFloat( "radius2", mRadiusFront );
+        mHeight = inCapsule.readFloat( "height", 2 );
+        mClosed = inCapsule.readBoolean( "closed", true );
+        mInverted = inCapsule.readBoolean( "inverted", false );
+        mUniformTexture = inCapsule.readBoolean( "uniformTexture", true );
 
-        // Let the super do its thing
+        // Let the super do its thing (which will updateGeometry as needed)
         super.read( pImporter );
-        if ( getBuffer(Type.Index) == null ) {
-        	// Buffers not restored, so rebuild from scratch
-        	this.updateGeometry( axisSamples, radialSamples, radius, radius2, height, closed, inverted );
-        }
-        // Special scaling?
-        Vector2f aScale = (Vector2f)inCapsule.readSavable( "scaleTexture", null );
-        if ( aScale != null ) {
-        	this.scaleTextureCoordinates( aScale );
-        }
-        Savable[] faceScales = inCapsule.readSavableArray( "scaleFaces", null );
-        if ( faceScales != null ) {
-        	// x and y are the normal texture scaling factors.  z is the bitmask of faces
-        	for( Savable faceScale : faceScales ) {
-        		this.scaleFaceTextureCoordinates( (Vector3f)faceScale );
-        	}
-        }
     }
     
-    /** Apply texture coordinate scaling to selected 'faces' of the box */
-    public void scaleFaceTextureCoordinates(
-    	Vector3f	pScale
-    ) {
-    	scaleFaceTextureCoordinates( pScale.x, pScale.y, (int)pScale.z );
-    }
-    public void scaleFaceTextureCoordinates(
-    	float		pX
-    ,	float		pY
-    ,	Face		pFace
-    ) {
-    	scaleFaceTextureCoordinates( pX, pY, pFace.getMask() );
-    }
+    /** Apply texture coordinate scaling to selected 'faces' of the cylinder */
+    @Override
     public void scaleFaceTextureCoordinates(
     	float		pX
     ,	float		pY
@@ -417,11 +391,11 @@ public class Cylinder
         // is no puck with an edge.  Instead, the triangles describe the flat closed face.
         // For that, we will have 2 extra vertices that describe the center of the face.
         int index = 0;
-        int aSliceCount = (closed) ? this.axisSamples + 2 : this.axisSamples;
-        int aRadialCount = this.radialSamples + 1;
+        int aSliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+        int aRadialCount = mRadialSamples + 1;
         for( int axisCount = 0; axisCount < aSliceCount; axisCount += 1 ) {
             Face whichFace = Face.NONE;
-            if ( this.closed ) {
+            if ( mClosed ) {
             	// The first slice is the closed bottom, and the last slice is the closed top
                 if (axisCount == 0) {
                 	if ( (pFaceMask & Face.BACK.getMask()) != 0 ) {

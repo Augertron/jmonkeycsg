@@ -41,14 +41,16 @@ import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 
-/** Define a vertex of a shape in space, know by its position, its normal, and its texture coordinate
+/** Constructive Solid Geometry (CSG)
+	
+	A CSG Vertex is a point in space, know by its position, its normal, and its texture coordinate
 
 	NOTE
 		that a vertex is expected to be immutable with no internally moving parts.  Once created, you
-		cannot alter its attributes.  However, the Vertex internal Vectors are used in Mesh construction and
-		could therefore be adjusted/altered.
-		So even though the vertex itself is expected to be immutable, we must anticipate its parts
-		being consumed.  Therefore every clone must be a true copy.
+		cannot alter its attributes.  
+		HOWEVER, the Vertex internal Vectors are used in Mesh construction and could therefore be 
+		adjusted/altered. So even though the vertex itself is expected to be immutable, we must 
+		anticipate its parts being consumed.  Therefore every clone must be a true copy.
   */
 public class CSGVertex 
 	implements Savable

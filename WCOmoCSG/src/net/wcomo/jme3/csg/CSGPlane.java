@@ -41,7 +41,9 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
 
-/** A CSG Plane is quick representation of a flat surface, as defined by an arbitrary 'normal'. 
+/**  Constructive Solid Geometry (CSG)
+ 
+  	A CSGPlane is quick representation of a flat surface, as defined by an arbitrary 'normal'. 
  	Its inherent 'dot' is computed and stored for quick access.
  	
 	The following is a note I found on the web about what "dot" means in 3D graphics
@@ -53,6 +55,12 @@ import com.jme3.math.Vector3f;
 			
 	which means that some simple comparisons of a Plane/Polygon 'dot' can give us useful positioning
 	information.
+	
+	An important aspect of a plane is its ability to 'split' a given Polygon based on if the 
+	polygon is in front of, behind, crosses, or lies on the plane itself. The polygon can then be
+	included in an appropriate list of similar polygons.  In particular, a polygon that crosses the
+	plane can be broken into two parts, the new polygon in front of the plane and the new polygon
+	behind the plane.
 	
 	NOTE
 		that a plane is expected to be immutable with no inernally moving parts.  Once created, you

@@ -40,7 +40,10 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 
-/** Represent a flat geometric shape defined by a set of vertices in a given plane.
+/**  Constructive Solid Geometry (CSG)
+
+  	ACSGPolygon represents a flat geometric shape defined by a set of vertices in a given plane.
+  	
  	A CSGPolygon is assumed to be immutable once created, which means that its internal
  	structure is never changed.  This means that a clone of a polygon just uses the
  	original instance.

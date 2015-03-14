@@ -10,7 +10,7 @@
 	<children/>
     <assetLoaderKeyList>
     	<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCylinderA.xml'/>
-    	<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCylinderB.xml'/>
+    	<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCylinderB.xml'/>  
     	<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCylinderC.xml'/>
     	<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCylinderD.xml'/>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCylinderE.xml'/>
