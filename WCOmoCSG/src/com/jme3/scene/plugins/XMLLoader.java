@@ -29,11 +29,27 @@ import java.io.InputStream;
 
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetLoader;
+import com.jme3.asset.FilterKey;
+import com.jme3.asset.plugins.FileLocator;
 import com.jme3.export.Savable;
 import com.jme3.export.xml.XMLImporter;
+import com.jme3.scene.Spatial;
 
 /** An XML based scene loader that leverages the Savable XML format to 
  	reconstruct items in a scene
+ 	
+ 	// Sample SimpleApplication set up
+ 	@Override
+    public void simpleInitApp() {
+ 	    // Register this XMLImporter to handle xml files
+        assetManager.registerLocator( ".", FileLocator.class );
+        assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
+        
+        // Use a non-caching FilterKey
+        FilterKey aKey = new FilterKey( "SomeFileName.xml" );
+	    Spatial aScene = (Spatial)assetManager.loadAsset( aKey );
+	    rootNode.attachChild( aScene );
+	}
  */
 public class XMLLoader 
 	implements AssetLoader 
