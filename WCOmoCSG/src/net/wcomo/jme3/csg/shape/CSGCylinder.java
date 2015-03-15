@@ -102,9 +102,7 @@ public class CSGCylinder
         mHeight = pHeight;
         mClosed = pClosed;
         mInverted = pInverted;
-        
-        // By default, keep the flat and curved textures uniform
-        mUniformTexture = true;
+        mUniformTexture = false;
     }
 
     /** Configuration accessors */
@@ -345,7 +343,7 @@ public class CSGCylinder
         outCapsule.write( mHeight, "height", 2 );
         outCapsule.write( mClosed, "closed", true );
         outCapsule.write( mInverted, "inverted", false );
-        outCapsule.write( mUniformTexture, "uniformTexture", true );
+        outCapsule.write( mUniformTexture, "uniformTexture", false );
     }
     @Override
     public void read(
@@ -360,7 +358,7 @@ public class CSGCylinder
         mHeight = inCapsule.readFloat( "height", 2 );
         mClosed = inCapsule.readBoolean( "closed", true );
         mInverted = inCapsule.readBoolean( "inverted", false );
-        mUniformTexture = inCapsule.readBoolean( "uniformTexture", true );
+        mUniformTexture = inCapsule.readBoolean( "uniformTexture", false );
 
         // Let the super do its thing (which will updateGeometry as needed)
         super.read( pImporter );
