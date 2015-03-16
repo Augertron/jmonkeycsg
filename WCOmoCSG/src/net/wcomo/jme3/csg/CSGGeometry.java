@@ -56,8 +56,12 @@ import com.jme3.texture.Texture;
 */
 public class CSGGeometry
 	extends Geometry 
-	implements Savable
+	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGGeometryRevision="$Rev:$";
+	public static final String sCSGGeometryDate="$Date:$";
+
 	/** Supported actions applied to the CSGShapes added to a Geometry */
 	public static enum CSGOperator
 	{
@@ -212,6 +216,16 @@ public class CSGGeometry
 		regenerate();
 	}
 	
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGGeometryRevision
+													, sCSGGeometryDate
+													, pBuffer ) );
+	}
 
 
 }
