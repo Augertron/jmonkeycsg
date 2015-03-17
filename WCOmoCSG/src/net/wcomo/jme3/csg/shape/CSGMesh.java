@@ -121,14 +121,18 @@ public abstract class CSGMesh
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
-    	// Let the super do its thing
-        super.read( pImporter );
-        if ( getBuffer(Type.Index) == null ) {
-        	// Buffers not restored, so rebuild from scratch
-        	this.updateGeometry( );
-        }
-        // Extended attributes
         InputCapsule inCapsule = pImporter.getCapsule( this );
+
+        // Similar to .write(), we are not interested reading the various transient
+    	// elements that will be built by .updateGeometry().  So rather than
+    	// than letting super.read() try to rebuild buffers etc, just update the
+    	// geometry based on the configuration parameters that we assume our
+    	// various subclasses have already loaded.
+        this.setMode( inCapsule.readEnum( "mode", Mode.class, Mode.Triangles ) );
+
+        this.updateGeometry( );
+        
+        // Extended attributes
         mScaleTexture = (Vector2f)inCapsule.readSavable( "scaleTexture", null );
         if ( mScaleTexture != null ) {
         	this.scaleTextureCoordinates( mScaleTexture );

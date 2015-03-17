@@ -81,29 +81,4 @@ public class CSGTestVersion
 		System.err.print( aBuffer.toString() );;
 	}
 
-    protected CSGGeometry buildShape(
-        CSGGeometry.CSGOperator		pOperator1
-    ,	CSGGeometry.CSGOperator		pOperator2
-    ,	CSGGeometry.CSGOperator		pOperator3
-    ) {
-	    // Basic material for the CSG
-        Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
-    	//mat_csg.getAdditionalRenderState().setFaceCullMode( FaceCullMode.Off );
-
-    	CSGGeometry aGeometry = new CSGGeometry();
-    	aGeometry.setMaterial( mat_csg );
-
-    	CSGShape aSphere = new CSGShape( "Sphere1", new Sphere( 32, 32, 1.3f ) );
-    	aGeometry.addShape( aSphere, pOperator1 );
-
-    	CSGShape aCube = new CSGShape( "Box", new Box(1,1,1) );
-    	aGeometry.addShape( aCube, pOperator2 );
-
-    	aSphere = new CSGShape( "Sphere2", new Sphere( 32, 32, 1.3f ) );
-    	aGeometry.addShape( aSphere, pOperator3 );
-    	
-    	aGeometry.regenerate();
-    	return( aGeometry );
-    }
-    
 }

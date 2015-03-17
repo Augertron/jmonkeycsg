@@ -53,8 +53,8 @@ public class CSGSphere
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGSphereRevision="$Rev: $";
-	public static final String sCSGSphereDate="$Date: $";
+	public static final String sCSGSphereRevision="$Rev$";
+	public static final String sCSGSphereDate="$Date$";
 
     public enum TextureMode {
         ORIGINAL		// Wrap texture radially and along the z-axis
