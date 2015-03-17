@@ -102,8 +102,7 @@ public class CSGBox
 	/** Standard null constructor */
 	public CSGBox(
 	) {
-		// Standard 'unit' box  
-		this( 0.5f, 0.5f, 0.5f );
+		this( 1, 1, 1 );
 	}
 	/** Constructor based on the given extents */
 	public CSGBox(

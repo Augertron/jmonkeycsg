@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 
 import net.wcomo.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomo.jme3.csg.shape.CSGSphere.TextureMode;
 
 
 /** Specialization/Copy of standard JME3 Cylinder that applies a standard texture to its end caps
@@ -55,6 +56,10 @@ public class CSGCylinder
 	public static final String sCSGCylinderRevision="$Rev$";
 	public static final String sCSGCylinderDate="$Date$";
 
+    public enum TextureMode {
+        FLAT			// The texture of the end caps is simply flat
+    ,   UNIFORM			// Texture of end caps is flat and uniform in scale to the curved surface
+    }
 	/** Identify the 3 faces of the cylinder  */
 	public enum Face {
 		BACK, SIDES, FRONT, NONE;
@@ -67,30 +72,30 @@ public class CSGCylinder
 	}
 
 	/** How many sample circles to generate along the axis */
-    protected int 		mAxisSamples;
+    protected int 			mAxisSamples;
     /** How many point around the circle to generate
-     		The more points, the smoother the circlar surface.
+     		The more points, the smoother the circular surface.
      		The fewer points, and it looks like a triangle/cube/pentagon/...
      */
-    protected int 		mRadialSamples;
+    protected int 			mRadialSamples;
 
     /** The radius of the front cap */
-    protected float 	mRadiusFront;
+    protected float 		mRadiusFront;
     /** The radius of the back cap */
-    protected float 	mRadiusBack;
+    protected float 		mRadiusBack;
 
-    /** How tall is the cylinder */
-    protected float 	mHeight;
+    /** How tall is the cylinder along the z axis (where the 'extent' is half the total height) */
+    protected float 		mExtentZ;
     /** If closed, then the front and end caps are produced */
-    protected boolean 	mClosed;
+    protected boolean 		mClosed;
     /** If inverted, then the cylinder is intended to be viewed from the inside */
-    protected boolean 	mInverted;
+    protected boolean 		mInverted;
 	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */
-	protected boolean	mUniformTexture;
+	protected TextureMode	mTextureMode;
 	
 	public CSGCylinder(
 	) {
-		this( 32, 32, 1, 1, 2, true, false );
+		this( 32, 32, 1, 1, 1, true, false, TextureMode.FLAT );
 	}
 	
     public CSGCylinder(
@@ -98,29 +103,31 @@ public class CSGCylinder
     , 	int 		pRadialSamples
     ,	float 		pRadiusFront
     ,	float		pRadiusBack
-    , 	float 		pHeight
+    , 	float 		pZExtent
     , 	boolean 	pClosed
     , 	boolean 	pInverted
+    ,	TextureMode	pTextureMode
     ) {
         mAxisSamples = pAxisSamples;
         mRadialSamples = pRadialSamples;
         mRadiusFront = pRadiusFront;
         mRadiusBack = pRadiusBack;
-        mHeight = pHeight;
+        mExtentZ = pZExtent;
         mClosed = pClosed;
         mInverted = pInverted;
-        mUniformTexture = false;
+        mTextureMode = pTextureMode;
     }
 
     /** Configuration accessors */
     public int getAxisSamples() { return mAxisSamples; }
-    public float getHeight() { return mHeight; }
+    public float getZExtent() { return mExtentZ; }
+    public float getHeight() { return mExtentZ * 2; }
     public int getRadialSamples() { return mRadialSamples; }
     public float getRadiusFront() { return mRadiusFront; }
     public float getRadiusBack() { return mRadiusBack; }
     public boolean isClosed() { return mClosed; }
     public boolean isInverted() { return mInverted; }
-    public boolean hasUniformTexture() { return mUniformTexture; }
+    public TextureMode getTextureMode() { return mTextureMode; }
 
     
     /** Rebuilds the cylinder based on the current set of configuration parameters */
@@ -166,8 +173,8 @@ public class CSGCylinder
         float inverseRadial = 1.0f / mRadialSamples;
         float inverseAxisLess = 1.0f / (mAxisSamples - 1);
         float inverseAxisLessTexture = 1.0f / (aSliceCount - 1);
-        float halfHeight = 0.5f * mHeight;
-        float textureBias = (mUniformTexture) ? FastMath.INV_PI : 1.0f;
+        float fullHeight = mExtentZ * 2;
+        float textureBias = (mTextureMode == TextureMode.UNIFORM) ? FastMath.INV_PI : 1.0f;
 
         // Generate points on the unit circle to be used in computing the mesh
         // points on a cylinder slice. 
@@ -183,10 +190,10 @@ public class CSGCylinder
         Vector3f[] vNormals = null;
         Vector3f vNormal = Vector3f.UNIT_Z;
 
-        if ((mHeight != 0.0f) && ( mRadiusFront != mRadiusBack)) {
+        if ((fullHeight > 0.0f) && ( mRadiusFront != mRadiusBack)) {
         	// Account for the slant of the normal when the radii differ
             vNormals = new Vector3f[ mRadialSamples ];
-            Vector3f vHeight = Vector3f.UNIT_Z.mult( mHeight );
+            Vector3f vHeight = Vector3f.UNIT_Z.mult( fullHeight );
             Vector3f vRadial = new Vector3f();
 
             for (int radialCount = 0; radialCount < mRadialSamples; radialCount++) {
@@ -225,7 +232,7 @@ public class CSGCylinder
                 }
             }
             // compute center of slice
-            float z = -halfHeight + mHeight * axisFraction;
+            float z = -mExtentZ + fullHeight * axisFraction;
             Vector3f sliceCenter = new Vector3f(0, 0, z);
 
             // Compute slice vertices, with duplication at the end point
@@ -287,13 +294,13 @@ public class CSGCylinder
         }
         if ( mClosed ) {
         	// Two extra vertices for the centers of the end caps
-            pb.put(0).put(0).put(-halfHeight); // bottom center
-            nb.put(0).put(0).put(-1 * (mInverted ? -1 : 1));
-            tb.put(0.5f).put(0.5f);
+            pb.put( 0 ).put( 0 ).put( -mExtentZ ); // bottom center
+            nb.put( 0 ).put( 0 ).put( -1 * (mInverted ? -1 : 1) );
+            tb.put( 0.5f ).put( 0.5f );
             
-            pb.put(0).put(0).put(halfHeight); // top center
-            nb.put(0).put(0).put(1 * (mInverted ? -1 : 1));
-            tb.put(0.5f).put(0.5f);
+            pb.put( 0).put( 0 ).put( mExtentZ); // top center
+            nb.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
+            tb.put( 0.5f ).put( 0.5f );
         }
         // Map the generated set of vertices above into the appropriate triangles
         IndexBuffer ib = getIndexBuffer();
@@ -347,10 +354,10 @@ public class CSGCylinder
         outCapsule.write( mRadialSamples, "radialSamples", 32 );
         outCapsule.write( mRadiusFront, "radius", 1 );
         outCapsule.write( mRadiusBack, "radius2", mRadiusFront );
-        outCapsule.write( mHeight, "height", 2 );
+        outCapsule.write( mExtentZ, "zExtent", 1 );
         outCapsule.write( mClosed, "closed", true );
         outCapsule.write( mInverted, "inverted", false );
-        outCapsule.write( mUniformTexture, "uniformTexture", false );
+        outCapsule.write( mTextureMode, "textureMode", TextureMode.FLAT );
     }
     @Override
     public void read(
@@ -362,10 +369,14 @@ public class CSGCylinder
         mRadialSamples = inCapsule.readInt( "radialSamples", 32 );
         mRadiusFront = inCapsule.readFloat( "radius", 1 );
         mRadiusBack = inCapsule.readFloat( "radius2", mRadiusFront );
-        mHeight = inCapsule.readFloat( "height", 2 );
+        mExtentZ = inCapsule.readFloat( "zExtent", 0 );
+        if ( mExtentZ == 0 ) {
+        	float aHeight = inCapsule.readFloat( "height", 0 );
+        	mExtentZ = (aHeight > 0) ? (aHeight / 2.0f) : 1;
+        }
         mClosed = inCapsule.readBoolean( "closed", true );
         mInverted = inCapsule.readBoolean( "inverted", false );
-        mUniformTexture = inCapsule.readBoolean( "uniformTexture", false );
+        mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.FLAT );
 
         // Let the super do its thing (which will updateGeometry as needed)
         super.read( pImporter );

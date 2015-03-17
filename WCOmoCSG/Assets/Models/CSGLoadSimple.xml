@@ -10,8 +10,7 @@
 	<children/>
     <assetLoaderKeyList>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleBoxes.xml'/>
-   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleCylinders.xml'/>
-   		<!-- <com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleDomes.xml'/>
-   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleSpheres.xml'/> -->
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleCylinders.xml'/>->
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleSpheres.xml'/>
      </assetLoaderKeyList>
 </net.wcomo.jme3.csg.CSGLinkNode>

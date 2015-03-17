@@ -76,21 +76,51 @@ package net.wcomo.jme3.csg;
   		Comments tell you WHY (and may explain a bit of HOW if the code is very complex)
   		
   	2)	A simple naming standard provides huge returns:
-  		A)	Ala basic Java, classes are capitalized, methods are not
+  		A)	As per standard Java, classes are capitalized, methods are not
   		B)	All parameters in method calls are named "pXxxxx"
   		C)	All instance variables are named "mXxxxxx"
   		D)	All static variables are named "sXxxxxx"
   		
   	3)	For older eyes, whitespace increases legibility tremendously
   
+  -- The structure/packaging of this code --
+  	I am attempting to keep this CSG code as an independent plugin with minimal changes within the
+  	core JME as possible.  All CSG code is therefore in net.wcomo packages.
+  	
+  	Where simple changes in the core eliminated a lot of hoop-jumping, I have duplicated the
+  	core JME code into the appropriate com.jme3 package within the CSG SVN repository. The changes are
+  	all related to making the XML importer more robust.  I have found the Savable interface with its
+  	XML support to be quite handy in my testing and development. The XML is very readible and easy
+  	to manually edit to produce a wide range of test cases.  The core jme code changes
+  	are related to allowing the Savable.read() process to accommodate more missing parameters, which
+  	makes the .xml files more compact.
+  	I have also created an XMLLoader option for the AssetManager which makes it easy to load 
+  	.xml based definitions. XMLLoader can be included in the core jme package whenever the powers
+  	that be see fit.  There is nothing about it related to CSG and can be used for any type of
+  	loaded asset.
+  	
+  	CSGShape is the key player in defining the elements blended by CSG boolean operators.  It 
+  	is connected to any arbitrary Mesh, created by any core jme process.
+  	It was my original intent to leverage all the com.jme3.scene.shape classes.  But as I worked
+  	through various tests, I found I wanted a more unified approach to the primitive shapes 
+  	than what is offered by Box, Cylinder, etc.  I therefore have created CSG variants of the
+  	primitive shapes, based in the package net.wcomo.jme3.csg.shape.  While the class structure/
+  	inheritance tree is independent of the the core jme shapes, I shamelessly stole as much code
+  	as I needed.  @see net.wcomo.jme3.csg.shape.CSGMesh   --   Oh the joys of open source.
+  	
+  	So you have two options -- leverage the jme core shapes and attach them to an instance of
+  	CSGShape, or feel free to use any of the CSG defined primitives.
+  	
 */
 public interface ConstructiveSolidGeometry 
 {
-	/** Version tracking support */
+	/** Version tracking support 
+	 	(I plan to roll these numbers manually when something interesting happens) */
 	public static final int sCSGVersionMajor = 0;
 	public static final int sCSGVersionMinor = 9;
-	public static final String sCSGRevision="$Rev:$";
-	public static final String sCSGDate="$Date:$";
+	// NOTE that $Rev$  and $Date$ are auto-filled by SVN processing based on SVN keywords 
+	public static final String sCSGRevision="$Rev$";
+	public static final String sCSGDate="$Date$";
 	
 	/** Have all CSG components report on their current version */
 	public StringBuilder getVersion( StringBuilder pBuffer );

@@ -37,11 +37,13 @@ import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.scene.shape.Sphere.TextureMode;
 import com.jme3.util.BufferUtils;
+import com.jme3.util.TempVars;
 
 import static com.jme3.util.BufferUtils.*;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import net.wcomo.jme3.csg.ConstructiveSolidGeometry;
 
@@ -57,7 +59,7 @@ public class CSGSphere
 	public static final String sCSGSphereDate="$Date$";
 
     public enum TextureMode {
-        ORIGINAL		// Wrap texture radially and along the z-axis
+        ZAXIS			// Wrap texture radially and along the z-axis
     ,   PROJECTED		// Wrap texture radially, but spherically project along the z-axis
     ,   POLAR			// Apply texture to each pole.  Eliminates polar distortion,
         				// but mirrors the texture across the equator
@@ -66,7 +68,7 @@ public class CSGSphere
 	/** How many sample circles to generate along the z axis */
     protected int 			mAxisSamples;
     /** How many point around the circle to generate
-     		The more points, the smoother the circlar surface.
+     		The more points, the smoother the circular surface.
      		The fewer points, and it looks like a triangle/cube/pentagon/...
      */
     protected int 			mRadialSamples;
@@ -83,7 +85,7 @@ public class CSGSphere
 	
 	public CSGSphere(
 	) {
-		this( 32, 32, 1, false, false, TextureMode.ORIGINAL );
+		this( 32, 32, 1, false, false, TextureMode.ZAXIS );
 	}
 	
     public CSGSphere(
@@ -115,214 +117,246 @@ public class CSGSphere
     @Override
     public void updateGeometry(
     ) {
-    	// The cylinder is built from a series of 'pucks' as determined by the 
-    	// axisSample count. Each puck is based on two slices (front and back) where a 
-    	// vertex is generated at each radialSample point around the circle. So for 
-    	// an axisSample of 2, you build one puck, while 3 = 2 pucks, 4 = 3 pucks ...
-    	
-    	// For ease of construction, an extra vertex is created for the (radialSample + 1) which
-    	// is the same as the (0) point.
-    	// We then create two triangles that lay on the edge of the puck for each radialSample.
-        
-        // If closed, we will generate 2 extra slices, one for top and one for bottom
-        // Vertices are generated in a standard way for the these special slices, but there
-        // is no puck with an edge.  Instead, the triangles describe the flat closed face.
-        // For that, we will have 2 extra vertices that describe the center of the face.
-        int aSliceCount = (mEvenSlices) ? mAxisSamples + 2 : mAxisSamples;
+    	int vertexCount = setGeometryData();
+    	setIndexData( vertexCount );
+    }
+    /** builds the vertices based on the radius, radial and zSamples. */
+    protected int setGeometryData(
+    ) {
+        // allocate vertices
+        int vertCount = (mAxisSamples - 2) * (mRadialSamples + 1) + 2;
 
-        // Vertices = ((radialSamples + 1) * number of slices) plus 2 center points if closed
-        int vertCount = (aSliceCount * (mRadialSamples + 1)) + (mEvenSlices ? 2 : 0);
-        setBuffer( Type.Position, 3, createVector3Buffer( getFloatBuffer(Type.Position), vertCount) );
+        FloatBuffer posBuf = BufferUtils.createVector3Buffer(vertCount);
 
-        // Normals
-        setBuffer( Type.Normal, 3, createVector3Buffer( getFloatBuffer(Type.Normal), vertCount) );
+        // allocate normals if requested
+        FloatBuffer normBuf = BufferUtils.createVector3Buffer(vertCount);
 
-        // Texture co-ordinates
-        setBuffer( Type.TexCoord, 2, createVector2Buffer(vertCount) );
+        // allocate texture coordinates
+        FloatBuffer texBuf = BufferUtils.createVector2Buffer(vertCount);
 
-        // Indexes based on the triangle count, where there are 2 triangles per radial sample
-        // per puck. If closed, then we have radialSample triangles on top plus radialSample 
-        // triangles on bottom, so the times 2 works out fine
-        int aTriangleCount = (2 * mRadialSamples * (aSliceCount - 1));
-        setBuffer( Type.Index, 3, createShortBuffer(getShortBuffer(Type.Index), 3 * aTriangleCount) );
-        
-        FloatBuffer nb = getFloatBuffer(Type.Normal);
-        FloatBuffer pb = getFloatBuffer(Type.Position);
-        FloatBuffer tb = getFloatBuffer(Type.TexCoord);
+        setBuffer(Type.Position, 3, posBuf);
+        setBuffer(Type.Normal, 3, normBuf);
+        setBuffer(Type.TexCoord, 2, texBuf);
 
         // generate geometry
-        float inverseRadial = 1.0f / mRadialSamples;
-        float inverseAxisLess = 1.0f / (mAxisSamples - 1);
-        float inverseAxisLessTexture = 1.0f / (aSliceCount - 1);
-        float halfHeight = 0.5f * mHeight;
-        float textureBias = (mUniformTexture) ? FastMath.INV_PI : 1.0f;
+        float fInvRS = 1.0f / mRadialSamples;
+        float fZFactor = 2.0f / (mAxisSamples - 1);
 
         // Generate points on the unit circle to be used in computing the mesh
-        // points on a cylinder slice. 
-        float[] sin = new float[ mRadialSamples ];
-        float[] cos = new float[ mRadialSamples ];
-
-        for (int radialCount = 0; radialCount < mRadialSamples; radialCount += 1 ) {
-            float angle = FastMath.TWO_PI * inverseRadial * radialCount;
-            cos[ radialCount ] = FastMath.cos( angle );
-            sin[ radialCount ] = FastMath.sin( angle );
+        // points on a sphere slice.
+        float[] afSin = new float[(mRadialSamples + 1)];
+        float[] afCos = new float[(mRadialSamples + 1)];
+        for (int iR = 0; iR < mRadialSamples; iR++) {
+            float fAngle = FastMath.TWO_PI * fInvRS * iR;
+            afCos[iR] = FastMath.cos(fAngle);
+            afSin[iR] = FastMath.sin(fAngle);
         }
-        // calculate normals
-        Vector3f[] vNormals = null;
-        Vector3f vNormal = Vector3f.UNIT_Z;
+        afSin[mRadialSamples] = afSin[0];
+        afCos[mRadialSamples] = afCos[0];
 
-        if ((mHeight != 0.0f) && ( mRadiusFront != mRadiusBack)) {
-        	// Account for the slant of the normal when the radii differ
-            vNormals = new Vector3f[ mRadialSamples ];
-            Vector3f vHeight = Vector3f.UNIT_Z.mult( mHeight );
-            Vector3f vRadial = new Vector3f();
+        TempVars vars = TempVars.get();
+        Vector3f tempVa = vars.vect1;
+        Vector3f tempVb = vars.vect2;
+        Vector3f tempVc = vars.vect3;
 
-            for (int radialCount = 0; radialCount < mRadialSamples; radialCount++) {
-                vRadial.set(cos[radialCount], sin[radialCount], 0.0f);
-                Vector3f vRadius = vRadial.mult( mRadiusFront );
-                Vector3f vRadius2 = vRadial.mult( mRadiusBack );
-                Vector3f vMantle = vHeight.subtract(vRadius2.subtract(vRadius));
-                Vector3f vTangent = vRadial.cross(Vector3f.UNIT_Z);
-                vNormals[radialCount] = vMantle.cross(vTangent).normalize();
-            }
-        }
-        // Generate the cylinder itself, working up the axis, generating vertices at each slice
-        Vector3f tempNormal = new Vector3f();
-        for (int axisCount = 0, i = 0; axisCount < aSliceCount; axisCount++, i++) {
-        	// Percent of distance along the axis
-            float axisFraction;
-            float axisFractionTexture;
-            int topBottom = 0;
-            if ( !mEvenSlices ) {
-            	// Each slice is evenly spaced
-                axisFraction = axisCount * inverseAxisLess;
-                axisFractionTexture = axisFraction;
+        // generate the sphere itself
+        int i = 0;
+        for (int iZ = 1; iZ < (mAxisSamples - 1); iZ++) {
+            float fAFraction = FastMath.HALF_PI * (-1.0f + fZFactor * iZ); // in (-pi/2, pi/2)
+            float fZFraction;
+            if ( mEvenSlices ) {
+                fZFraction = -1.0f + fZFactor * iZ; // in (-1, 1)
             } else {
-            	// The first slice is the closed bottom, and the last slice is the closed top
-                if (axisCount == 0) {
-                    topBottom = -1; // bottom
-                    axisFraction = 0;
-                    axisFractionTexture = inverseAxisLessTexture;
-                } else if (axisCount == aSliceCount - 1) {
-                    topBottom = 1; // top
-                    axisFraction = 1;
-                    axisFractionTexture = 1 - inverseAxisLessTexture;
-                } else {
-                    axisFraction = (axisCount - 1) * inverseAxisLess;
-                    axisFractionTexture = axisCount * inverseAxisLessTexture;
-                }
+                fZFraction = FastMath.sin(fAFraction); // in (-1,1)
             }
+            float fZ = mRadius * fZFraction;
+
             // compute center of slice
-            float z = -halfHeight + mHeight * axisFraction;
-            Vector3f sliceCenter = new Vector3f(0, 0, z);
+            Vector3f kSliceCenter = tempVb.set(Vector3f.ZERO);
+            kSliceCenter.z += fZ;
 
-            // Compute slice vertices, with duplication at the end point
-            int save = i;
-            for (int radialCount = 0; radialCount < mRadialSamples; radialCount++, i++) {
-            	// How far around the circle are we?
-                float radialFraction = radialCount * inverseRadial;
-                
-                // And what is the normal to this portion of the arc?
-                tempNormal.set(cos[radialCount], sin[radialCount], 0.0f);
+            // compute radius of slice
+            float fSliceRadius = FastMath.sqrt(FastMath.abs( mRadius * mRadius
+                    - fZ * fZ));
 
-                if (vNormals != null) {
-                	// Use the slant
-                    vNormal = vNormals[radialCount];
-                } else if ( mRadiusFront == mRadiusBack ) {
-                	// Use the standard perpendicular (with z of zero)
-                    vNormal = tempNormal;
-                }
-                if (topBottom == 0) {
-                	// NOT at a closed end cap, so just just handle the inversion
-                    if ( !mInverted ) {
-                        nb.put(vNormal.x).put(vNormal.y).put(vNormal.z);
-                    } else {
-                        nb.put(-vNormal.x).put(-vNormal.y).put(-vNormal.z);
-                    }
+            // compute slice vertices with duplication at end point
+            Vector3f kNormal;
+            int iSave = i;
+            for (int iR = 0; iR < mRadialSamples; iR++) {
+                float fRadialFraction = iR * fInvRS; // in [0,1)
+                Vector3f kRadial = tempVc.set(afCos[iR], afSin[iR], 0);
+                kRadial.mult(fSliceRadius, tempVa);
+                posBuf.put(kSliceCenter.x + tempVa.x).put(
+                        kSliceCenter.y + tempVa.y).put(
+                        kSliceCenter.z + tempVa.z);
+
+                BufferUtils.populateFromBuffer(tempVa, posBuf, i);
+                kNormal = tempVa;
+                kNormal.normalizeLocal();
+                if ( !mInverted ) // allow interior texture vs. exterior
+                {
+                    normBuf.put(kNormal.x).put(kNormal.y).put(
+                            kNormal.z);
                 } else {
-                	// Account for top/bottom, where the normal runs along the z axis
-                    nb.put(0).put(0).put( topBottom * (mInverted ? -1 : 1) );
+                    normBuf.put(-kNormal.x).put(-kNormal.y).put(
+                            -kNormal.z);
                 }
-                // What texture applies?
-                if ( topBottom == 0 ) {
-                	// Map the texture along the curved surface
-                	tb.put((mInverted ? 1 - radialFraction : radialFraction))
-                        	.put(axisFractionTexture);
-                } else if ( topBottom < 0 ) {
-                	// Map the texture to the bottom cap (facing the other way, right to left)
-                	tb.put( 0.5f - ((tempNormal.x / 2.0f) * textureBias))
-        					.put( 0.5f + ((tempNormal.y / 2.0f) * textureBias) );
-                } else {
-                	// Map the texture to the top cap (simple left to right)
-                	tb.put( 0.5f + ((tempNormal.x / 2.0f) * textureBias))
-        					.put( 0.5f + ((tempNormal.y / 2.0f) * textureBias) );
+
+                switch( mTextureMode ) {
+                case ZAXIS:
+                    texBuf.put(fRadialFraction).put(
+                            0.5f * (fZFraction + 1.0f));
+                    break;
+                case PROJECTED:
+                    texBuf.put(fRadialFraction).put(
+                            FastMath.INV_PI
+                            * (FastMath.HALF_PI + FastMath.asin(fZFraction)));
+                    break;
+                case POLAR:
+                    float r = (FastMath.HALF_PI - FastMath.abs(fAFraction)) / FastMath.PI;
+                    float u = r * afCos[iR] + 0.5f;
+                    float v = r * afSin[iR] + 0.5f;
+                    texBuf.put(u).put(v);
+                    break;
                 }
-                // Where is the point along the circle ?
-                tempNormal.multLocal((mRadiusFront - mRadiusBack) * axisFraction + mRadiusBack )
-                        .addLocal(sliceCenter);
-                pb.put(tempNormal.x).put(tempNormal.y).put(tempNormal.z);
+                i += 1;
             }
-            // Copy the first generated point of the trip around the circle as the last
-            BufferUtils.copyInternalVector3( pb, save, i );
-            BufferUtils.copyInternalVector3( nb, save, i );
-            if ( topBottom == 0 ) {
-            	// Full circle, so select the extremity of the texture
-            	tb.put((mInverted ? 0.0f : 1.0f)).put(axisFractionTexture);
-            } else {
-            	// Back to the beginning of the end cap
-            	BufferUtils.copyInternalVector2( tb, save, i );
+
+            BufferUtils.copyInternalVector3(posBuf, iSave, i);
+            BufferUtils.copyInternalVector3(normBuf, iSave, i);
+
+            switch( mTextureMode ) {
+            case ZAXIS:
+                texBuf.put(1.0f)
+                	.put( 0.5f * (fZFraction + 1.0f));
+                break;
+            case PROJECTED:
+                texBuf.put(1.0f)
+                	.put(
+                        FastMath.INV_PI
+                        * (FastMath.HALF_PI + FastMath.asin(fZFraction)));
+                break;
+            case POLAR:
+                float r = (FastMath.HALF_PI - FastMath.abs(fAFraction)) / FastMath.PI;
+                texBuf.put(r + 0.5f).put(0.5f);
+                break;
             }
+            i += 1;
         }
-        if ( mEvenSlices ) {
-        	// Two extra vertices for the centers of the end caps
-            pb.put(0).put(0).put(-halfHeight); // bottom center
-            nb.put(0).put(0).put(-1 * (mInverted ? -1 : 1));
-            tb.put(0.5f).put(0.5f);
-            
-            pb.put(0).put(0).put(halfHeight); // top center
-            nb.put(0).put(0).put(1 * (mInverted ? -1 : 1));
-            tb.put(0.5f).put(0.5f);
+
+        vars.release();
+
+        // south pole
+        posBuf.position(i * 3);
+        posBuf.put(0f).put(0f).put( -mRadius );
+
+        normBuf.position(i * 3);
+        if ( !mInverted ) {
+            normBuf.put(0).put(0).put(-1); // allow for inner
+        } // texture orientation
+        // later.
+        else {
+            normBuf.put(0).put(0).put(1);
         }
-        // Map the generated set of vertices above into the appropriate triangles
-        IndexBuffer ib = getIndexBuffer();
-        int index = 0;
-        // Process along the axis, mapping the vertices of one slice to the slice behind it
-        for (int axisCount = 0, axisStart = 0; axisCount < aSliceCount - 1; axisCount++) {
-        	// i0 and i1 are on this slice
-            int i0 = axisStart;
-            int i1 = i0 + 1;
-            
-            // i2 and i3 are on the slice behind
-            axisStart += mRadialSamples + 1;
-            int i2 = axisStart;
-            int i3 = i2 + 1;
-            for (int i = 0; i < mRadialSamples; i++) {
-            	// Loop around the circle
-                if ( mEvenSlices && (axisCount == 0) ) {
-                	// This is the bottom
-                    ib.put(index++, i0++);
-                    ib.put(index++, mInverted ? i1++ : vertCount - 2);
-                    ib.put(index++, mInverted ? vertCount - 2 : i1++ );
-                } else if (mEvenSlices && (axisCount == aSliceCount - 2) ) {
-                	// This is the top
-                    ib.put(index++, i2++);
-                    ib.put(index++, mInverted ? vertCount - 1 : i3++);
-                    ib.put(index++, mInverted ? i3++ : vertCount - 1);
-                } else {
-                	// This is a standard slice composed of two triangles
-                    ib.put(index++, i0++);
-                    ib.put(index++, mInverted ? i2 : i1);
-                    ib.put(index++, mInverted ? i1 : i2);
-                    
-                    ib.put(index++, i1++);
-                    ib.put(index++, mInverted ? i2++ : i3++);
-                    ib.put(index++, mInverted ? i3++ : i2++);
-                }
-            }
+
+        texBuf.position(i * 2);
+
+        if ( mTextureMode == TextureMode.POLAR ) {
+            texBuf.put(0.5f).put(0.5f);
+        } else {
+            texBuf.put(0.5f).put(0.0f);
         }
+
+        i++;
+
+        // north pole
+        posBuf.put(0).put(0).put( mRadius );
+
+        if ( !mInverted ) {
+            normBuf.put(0).put(0).put(1);
+        } else {
+            normBuf.put(0).put(0).put(-1);
+        }
+
+        if ( mTextureMode == TextureMode.POLAR ) {
+            texBuf.put(0.5f).put(0.5f);
+        } else {
+            texBuf.put(0.5f).put(1.0f);
+        }
+
         updateBound();
+        setStatic();
+        
+        return( vertCount );
     }
-    
+
+    /**
+     * sets the indices for rendering the sphere.
+     */
+    private void setIndexData(
+    	int 	pVertexCount
+    ) {
+        // allocate connectivity
+        int triCount = 2 * (mAxisSamples - 2) * mRadialSamples;
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer(3 * triCount);
+        setBuffer(Type.Index, 3, idxBuf);
+
+        // generate connectivity
+        int index = 0;
+        for (int iZ = 0, iZStart = 0; iZ < (mAxisSamples - 3); iZ++) {
+            int i0 = iZStart;
+            int i1 = i0 + 1;
+            iZStart += (mRadialSamples + 1);
+            int i2 = iZStart;
+            int i3 = i2 + 1;
+            for (int i = 0; i < mRadialSamples; i++, index += 6) {
+                if ( !mInverted ) {
+                    idxBuf.put((short) i0++);
+                    idxBuf.put((short) i1);
+                    idxBuf.put((short) i2);
+                    idxBuf.put((short) i1++);
+                    idxBuf.put((short) i3++);
+                    idxBuf.put((short) i2++);
+                } else { // inside view
+                    idxBuf.put((short) i0++);
+                    idxBuf.put((short) i2);
+                    idxBuf.put((short) i1);
+                    idxBuf.put((short) i1++);
+                    idxBuf.put((short) i2++);
+                    idxBuf.put((short) i3++);
+                }
+            }
+        }
+
+        // south pole triangles
+        for (int i = 0; i < mRadialSamples; i++, index += 3) {
+            if ( !mInverted ) {
+                idxBuf.put((short) i);
+                idxBuf.put((short) (pVertexCount - 2));
+                idxBuf.put((short) (i + 1));
+            } else { // inside view
+                idxBuf.put((short) i);
+                idxBuf.put((short) (i + 1));
+                idxBuf.put((short) (pVertexCount - 2));
+            }
+        }
+
+        // north pole triangles
+        int iOffset = (mAxisSamples - 3) * (mRadialSamples + 1);
+        for (int i = 0; i < mRadialSamples; i++, index += 3) {
+            if ( !mInverted ) {
+                idxBuf.put((short) (i + iOffset));
+                idxBuf.put((short) (i + 1 + iOffset));
+                idxBuf.put((short) (pVertexCount - 1));
+            } else { // inside view
+                idxBuf.put((short) (i + iOffset));
+                idxBuf.put((short) (pVertexCount - 1));
+                idxBuf.put((short) (i + 1 + iOffset));
+            }
+        }
+    }
+
+
     /** Support texture scaling */
     @Override
     public void write(
@@ -336,7 +370,7 @@ public class CSGSphere
         outCapsule.write( mRadius, "radius", 1 );
         outCapsule.write( mEvenSlices, "useEvenSlices", false );
         outCapsule.write( mInverted, "inverted", false );
-        outCapsule.write( mTextureMode, "textureMode", TextureMode.ORIGINAL );
+        outCapsule.write( mTextureMode, "textureMode", TextureMode.ZAXIS );
     }
     @Override
     public void read(
@@ -349,7 +383,7 @@ public class CSGSphere
         mRadius = inCapsule.readFloat( "radius", 1 );
         mEvenSlices = inCapsule.readBoolean( "useEvenSlices", false );
         mInverted = inCapsule.readBoolean( "inverted", false );
-        mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.ORIGINAL );
+        mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.ZAXIS );
 
         // Let the super do its thing (which will updateGeometry as needed)
         super.read( pImporter );
@@ -375,54 +409,7 @@ public class CSGSphere
         FloatBuffer aBuffer = (FloatBuffer)tc.getData();
         aBuffer.clear();
         
-        // If closed, we will generate 2 extra slices, one for top and one for bottom
-        // Vertices are generated in a standard way for the these special slices, but there
-        // is no puck with an edge.  Instead, the triangles describe the flat closed face.
-        // For that, we will have 2 extra vertices that describe the center of the face.
-        int index = 0;
-        int aSliceCount = (mEvenSlices) ? mAxisSamples + 2 : mAxisSamples;
-        int aRadialCount = mRadialSamples + 1;
-        for( int axisCount = 0; axisCount < aSliceCount; axisCount += 1 ) {
-            Face whichFace = Face.NONE;
-            if ( mEvenSlices ) {
-            	// The first slice is the closed bottom, and the last slice is the closed top
-                if (axisCount == 0) {
-                	if ( (pFaceMask & Face.BACK.getMask()) != 0 ) {
-                		// Actively processing the back
-                		whichFace = Face.BACK;
-                	}
-                } else if (axisCount == aSliceCount - 1) {
-                	if ( (pFaceMask & Face.FRONT.getMask()) != 0 ) {
-                		// Actively processing the front
-                		whichFace = Face.FRONT;
-                	}
-                } else {
-                	if ( (pFaceMask & Face.SIDES.getMask()) != 0 ) {
-                		// Actively processing the sides
-                		whichFace = Face.SIDES;
-                	}
-                }
-            } else {
-            	if ( (pFaceMask & Face.SIDES.getMask()) != 0 ) {
-            		// Actively processing the sides
-            		whichFace = Face.SIDES;
-            	}
-            }
-            if ( whichFace == Face.NONE ) {
-            	// Nothing is this slice to process
-            	index += (2 * aRadialCount);
-            } else {
-            	for( int i = 0; i < aRadialCount; i += 1 ) {
-            		// Scale these points
-	    			float x = aBuffer.get( index  );
-	    			float y = aBuffer.get( index + 1 );
-	
-	                x *= pX;
-	                y *= pY;
-	                aBuffer.put( index++, x ).put( index++, y);
-            	}
-            }
-    	}
+
     	aBuffer.clear();
         tc.updateData( aBuffer );
     }

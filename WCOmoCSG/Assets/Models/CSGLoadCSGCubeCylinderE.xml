@@ -15,8 +15,8 @@
                     <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='Cylinder'>
-                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
-                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
+                    <mesh axisSamples='32' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
@@ -35,8 +35,8 @@
                     <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape Operator='DIFFERENCE' name='Cylinder'>
-                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
-                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
+                    <mesh axisSamples='32' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
@@ -55,8 +55,8 @@
                     <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape Operator='INTERSECTION' name='Cylinder'>
-                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
-                    	closed='true'  height='1.5' radialSamples='32' radius='1.1' radius2='1.1' />
+                    <mesh axisSamples='32' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
+                    	closed='true'  height='1.5' radialSamples='32' radius='1.1' />
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
@@ -75,8 +75,8 @@
                     <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape name='Cylinder'>
-                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
-                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+                    <mesh axisSamples='32' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
@@ -95,8 +95,8 @@
                     <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape Operator='DIFFERENCE' name='Cylinder'>
-                    <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
-                    	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+                    <mesh axisSamples='32' class='net.wcomo.jme3.csg.shape.CSGCylinder' 
+                    	closed='true' height='1.5' radialSamples='32' radius='1.1'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
@@ -116,7 +116,7 @@
                 </net.wcomo.jme3.csg.CSGShape>
                 <net.wcomo.jme3.csg.CSGShape Operator='INTERSECTION' name='Cylinder'>
                     <mesh class='net.wcomo.jme3.csg.shape.CSGCylinder'
-                    	 axisSamples='34' closed='true'  height='1.5' radialSamples='32' radius='1.1' radius2='1.1' uniformTexture='false'/>
+                    	 axisSamples='32' closed='true'  height='1.5' radialSamples='32' radius='1.1'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
