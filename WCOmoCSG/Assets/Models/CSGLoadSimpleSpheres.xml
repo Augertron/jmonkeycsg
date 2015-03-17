@@ -63,5 +63,25 @@
             <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' 
             	radius='1.1' axisSamples='32' radialSamples='32' useEvenSlices='false' interior='true'/>
         </com.jme3.scene.Geometry>
+        
+        <!-- A eccentric sphere -->
+        <com.jme3.scene.Geometry name='Sphere1'
+        		materialName='Textures/Rock/Rock1.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-6.0' y='0.0'/>
+            </transform>
+            <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' 
+            	radius='1.1' axisSamples='32' radialSamples='32' eccentricity='0.5'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='Sphere2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-6.0' y='3.0'/>
+            </transform>
+            <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' 
+            	radius='1.1' axisSamples='32' radialSamples='32' eccentricity='0.75'/>
+        </com.jme3.scene.Geometry>
+        
     </children>
 </com.jme3.scene.Node>
