@@ -59,8 +59,8 @@ public class CSGGeometry
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGGeometryRevision="$Rev:$";
-	public static final String sCSGGeometryDate="$Date:$";
+	public static final String sCSGGeometryRevision="$Rev$";
+	public static final String sCSGGeometryDate="$Date$";
 
 	/** Supported actions applied to the CSGShapes added to a Geometry */
 	public static enum CSGOperator
