@@ -67,8 +67,12 @@ import com.jme3.math.Vector3f;
 		cannot alter its normal or dot.  Therefore, a clone of a plane is just the plane itself.
  */
 public class CSGPlane 
-	implements Savable 
+	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGPlaneRevision="$Rev$";
+	public static final String sCSGPlaneDate="$Date$";
+
 	/** Define a 'tolerance' for when two planes are so close, they are effectively the same */
 	public static final double EPSILON = 1e-5;
 	
@@ -260,6 +264,17 @@ public class CSGPlane
 	public String toString(
 	) {
 		return( super.toString() + " - " + mNormal + "(" + mDot + ")" );
+	}
+	
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGPlaneRevision
+													, sCSGPlaneDate
+													, pBuffer ) );
 	}
 
 }

@@ -32,14 +32,20 @@ import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeImporter;
+import com.jme3.export.Savable;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
 /** Simple extension of Node that extends Savable.read() to accept a list of external references */
 public class CSGLinkNode 
 	extends Node
+	implements Savable, ConstructiveSolidGeometry
 {
-    @Override
+	/** Version tracking support */
+	public static final String sCSGLinkNodeRevision="$Rev$";
+	public static final String sCSGLinkNodeDate="$Date$";
+
+	@Override
     public void read(
     	JmeImporter 	pImporter
     ) throws IOException {
@@ -65,6 +71,17 @@ public class CSGLinkNode
 			}
 		}
 
+		
     }
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGLinkNodeRevision
+													, sCSGLinkNodeDate
+													, pBuffer ) );
+	}
 
 }

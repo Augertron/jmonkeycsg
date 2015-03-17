@@ -49,8 +49,12 @@ import com.jme3.export.Savable;
  	original instance.
  */
 public class CSGPolygon 
-	implements Savable 
+	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGPolygonRevision="$Rev$";
+	public static final String sCSGPolygonDate="$Date$";
+
 	/** Static empty list of vertices */
 	protected static final List<CSGVertex> sEmptyVertices = new ArrayList<CSGVertex>(0);
 	
@@ -137,6 +141,17 @@ public class CSGPolygon
 	public String toString(
 	) {
 		return( super.toString() + " - " + mVertices.size() + "(" + mPlane + ")" );
+	}
+
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGPolygonRevision
+													, sCSGPolygonDate
+													, pBuffer ) );
 	}
 
 }

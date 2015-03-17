@@ -39,6 +39,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
+import net.wcomo.jme3.csg.ConstructiveSolidGeometry;
+
 /** Constructive Solid Geometry (CSG)
  
  	Once upon a time, I thought the proper approach to CSG support in jMonkey was to leverage
@@ -74,7 +76,12 @@ import java.util.ArrayList;
  */
 public abstract class CSGMesh 
 	extends Mesh
+	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGMeshRevision="$Rev$";
+	public static final String sCSGMeshDate="$Date$";
+
 	/** Retain the texture scaling configuration */
 	protected Vector2f			mScaleTexture;
 	/** Retain the face texture scaling configuration */
@@ -135,5 +142,16 @@ public abstract class CSGMesh
         	}
         }
     }
+
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGMeshRevision
+													, sCSGMeshDate
+													, pBuffer ) );
+	}
 
 }

@@ -27,6 +27,8 @@ package net.wcomo.jme3.csg.shape;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+import net.wcomo.jme3.csg.ConstructiveSolidGeometry;
+
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -47,7 +49,12 @@ import com.jme3.util.BufferUtils;
  */
 public class CSGBox 
 	extends CSGMesh
+	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGBoxRevision="$Rev$";
+	public static final String sCSGBoxDate="$Date$";
+
 	/** Identify the 6 faces of the box  */
 	public enum Face {
 		BACK, RIGHT, FRONT, LEFT, TOP, BOTTOM, NONE;
@@ -256,5 +263,16 @@ public class CSGBox
         ,	sCenter.subtract(axes[0]).addLocal(axes[1]).addLocal(axes[2])
         };
     }
+
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGBoxRevision
+													, sCSGBoxDate
+													, pBuffer ) );
+	}
 
 }

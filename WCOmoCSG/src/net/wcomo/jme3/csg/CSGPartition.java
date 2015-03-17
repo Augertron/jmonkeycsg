@@ -33,6 +33,8 @@ package net.wcomo.jme3.csg;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.jme3.export.Savable;
+
 
 /** Constructive Solid Geometry (CSG)
 
@@ -44,7 +46,12 @@ import java.util.List;
  	of the hierarchy.
  */
 public class CSGPartition 
+	implements ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGPartitionRevision="$Rev$";
+	public static final String sCSGPartitionDate="$Date$";
+
 	/** The list of active polygons within this node */
 	protected List<CSGPolygon>	mPolygons;
 	/** The plane that defines this node */
@@ -54,6 +61,11 @@ public class CSGPartition
 	/** Those nodes behind this one */
 	protected CSGPartition		mBackPartition;
 	
+	/** Simple null constructor */
+	public CSGPartition(
+	) {
+		this( null );
+	}
 	/** Standard constructor that builds a hierarchy of nodes based on a given set of polygons */
 	public CSGPartition(
 		List<CSGPolygon>	pPolygons
@@ -192,5 +204,15 @@ public class CSGPartition
 		}
 	}
 
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGPartitionRevision
+													, sCSGPartitionDate
+													, pBuffer ) );
+	}
 
 }

@@ -72,8 +72,12 @@ import com.jme3.util.BufferUtils;
  */
 public class CSGShape 
 	extends Geometry
-	implements Comparable<CSGShape> 
+	implements Comparable<CSGShape>, Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGShapeRevision="$Rev$";
+	public static final String sCSGShapeDate="$Date$";
+
 	/** Canned, immutable empty list of polygons */
 	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);
 	
@@ -401,6 +405,17 @@ public class CSGShape
 			return( -1 );
 		}
 		return( thisOrder - otherOrder );
+	}
+
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGShapeRevision
+													, sCSGShapeDate
+													, pBuffer ) );
 	}
 
 }

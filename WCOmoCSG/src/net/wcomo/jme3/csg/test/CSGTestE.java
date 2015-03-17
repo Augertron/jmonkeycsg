@@ -81,6 +81,7 @@ public class CSGTestE
 //	,   "CSGLoadCSGCubeCylinderE.xml"
 //	,	"CSGLoadCSGCubeDomeA.xml"
 		
+	,	"Assets/Models/CSGLoadSimpleUnit.xml"
 	,	"Assets/Models/CSGLoadSimple.xml"
 	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
 	,	"Assets/Models/CSGLoadCSGCubeCube.xml"

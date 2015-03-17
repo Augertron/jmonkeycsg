@@ -37,7 +37,9 @@ public class CSGTestDriver
 	    //app = new CSGTestB();
 	    //app = new CSGTestC();
 	    //app = new CSGTestD();
-	    app = new CSGTestE();
+	    //app = new CSGTestE();
+	    
+	    app = new CSGTestVersion();
 	    
 	    app.start();
 	}

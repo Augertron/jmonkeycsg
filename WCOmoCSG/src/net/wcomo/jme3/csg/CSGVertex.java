@@ -53,8 +53,12 @@ import com.jme3.math.Vector3f;
 		anticipate its parts being consumed.  Therefore every clone must be a true copy.
   */
 public class CSGVertex 
-	implements Savable
+	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGVertexRevision="$Rev$";
+	public static final String sCSGVertexDate="$Date$";
+
 	/** Where is this vertex */
 	protected Vector3f	mPosition;
 	/** What is its normal */
@@ -157,6 +161,17 @@ public class CSGVertex
 	public String toString(
 	) {
 		return( super.toString() + " - " + mPosition );
+	}
+	
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGVertexRevision
+													, sCSGVertexDate
+													, pBuffer ) );
 	}
 
 }
