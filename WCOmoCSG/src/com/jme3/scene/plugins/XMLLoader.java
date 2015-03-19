@@ -26,6 +26,8 @@ package com.jme3.scene.plugins;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetLoader;
@@ -54,7 +56,10 @@ import com.jme3.scene.Spatial;
 public class XMLLoader 
 	implements AssetLoader 
 {
-	/** Load the XML */
+	/** Logging support */
+    protected static final Logger sLogger = Logger.getLogger( XMLLoader.class.getName() );
+
+    /** Load the XML */
 	@Override
     public Object load(
     	AssetInfo	pAssetInfo
@@ -69,7 +74,13 @@ public class XMLLoader
     		aStream = pAssetInfo.openStream();
     		Savable aNode = anImporter.load( aStream );
     		return( aNode );
-    		
+    	
+    	} catch( IOException ex ) {
+    		sLogger.log( Level.WARNING, "XMLLoader failed", ex );
+    		throw ex;
+    	} catch( Exception ex ) {
+    		sLogger.log( Level.WARNING, "XMLLoader failed", ex );
+    		throw new IOException( ex );
     	} finally {
     		if ( aStream != null ) aStream.close();
     	}

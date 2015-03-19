@@ -64,7 +64,7 @@ import com.jme3.texture.Texture;
  					materials from the underlying shapes, I hit a wall where a Geometry cannot
  					support multiple meshes.
  					@see CSGGeonode - which is rooted in Node and creates independent sub-Geometries
- 					to handle the different meshes.
+ 					to handle the different meshes/textures
 */
 public class CSGGeometry
 	extends Geometry 
@@ -188,7 +188,7 @@ public class CSGGeometry
 			}
 			if ( aProduct != null ) {
 				List<Mesh> meshList = aProduct.toMesh( (materialIndex == null) ? 0 : materialIndex.intValue() );
-				this.setMesh( meshList.get( meshList.size() -1 ) );
+				this.setMesh( meshList.get( 0 ) );
 			}
 		}
 	}
