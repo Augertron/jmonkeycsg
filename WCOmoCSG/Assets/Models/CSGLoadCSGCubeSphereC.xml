@@ -5,7 +5,7 @@
     </transform>
     <children>
         <!-- Add a shorter sphere to a longer box -->
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-3.0'/>
@@ -21,10 +21,10 @@
                     </transform>
                </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0'/>
@@ -40,10 +40,10 @@
                     </transform>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0'/>
@@ -59,10 +59,10 @@
                     </transform>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
         
         <!-- Add a shorter box to a longer box -->
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
@@ -80,10 +80,10 @@
                     <scaleTexture class='com.jme3.math.Vector2f' x='2' y='2'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='3.0'/>
@@ -101,10 +101,10 @@
                     <scaleTexture class='com.jme3.math.Vector2f' x='3' y='3'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='3.0'/>
@@ -122,7 +122,7 @@
                     <scaleTexture class='com.jme3.math.Vector2f' x='0.5' y='0.5'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
 
     </children>
 </com.jme3.scene.Node>

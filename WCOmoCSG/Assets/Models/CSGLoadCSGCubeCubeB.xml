@@ -5,7 +5,7 @@
     </transform>
     <children>
         <!-- Build a corridor -->
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
                 materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0' y='0'/>
@@ -21,9 +21,9 @@
                     </transform>
                </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
         
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
                 materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0' y='15.0'/>
@@ -50,9 +50,9 @@
                     </transform>
 	           	</net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
 
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0' y='-5.0'/>
@@ -89,9 +89,9 @@
                     </transform>
 	            </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
 
-        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='25' y='0'/>
@@ -131,6 +131,6 @@
                     </transform>
 	            </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeometry>
+        </net.wcomo.jme3.csg.CSGGeonode>
     </children>
 </com.jme3.scene.Node>
