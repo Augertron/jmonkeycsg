@@ -60,21 +60,46 @@ public class CSGPartition
 	protected CSGPartition		mFrontPartition;
 	/** Those nodes behind this one */
 	protected CSGPartition		mBackPartition;
+	/** The custom Material index that applies to this Partition */
+	protected int				mMaterialIndex;
 	
 	/** Simple null constructor */
 	public CSGPartition(
 	) {
-		this( null );
+		this( null, 0 );
 	}
 	/** Standard constructor that builds a hierarchy of nodes based on a given set of polygons */
 	public CSGPartition(
 		List<CSGPolygon>	pPolygons
+	,	Number				pMaterialIndex
+	) {
+		this( pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue() );
+	}
+	public CSGPartition(
+		List<CSGPolygon>	pPolygons
+	,	int					pMaterialIndex
 	) {
 		mPolygons = new ArrayList<CSGPolygon>();
+		mMaterialIndex = pMaterialIndex;
+		
 		if ( pPolygons != null ) {
 			buildHierarchy( pPolygons, 0 );
 		}
 	}
+	public CSGPartition(
+		List<CSGPolygon>	pPolygons
+	) {
+		mPolygons = new ArrayList<CSGPolygon>();
+		
+		if ( pPolygons != null ) {
+			mMaterialIndex = pPolygons.get(0).getMaterialIndex();
+			buildHierarchy( pPolygons, 0 );
+		}
+	}
+	
+	/** Accessor to the MaterialIndex */
+	public int getMaterialIndex() { return mMaterialIndex; }
+	
 
 	/** Access to all polygons defined within this hierarchy */
 	public List<CSGPolygon> allPolygons(
@@ -180,7 +205,7 @@ public class CSGPartition
 		}
 		if ( !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
-				this.mFrontPartition = new CSGPartition(null);
+				this.mFrontPartition = new CSGPartition( null, this.mMaterialIndex );
 			}
 			if ( this.mPolygons.isEmpty() && back.isEmpty() ) {
 				// Everything is in the front, it does not need to be processed deeper
@@ -192,7 +217,7 @@ public class CSGPartition
 		}
 		if ( !back.isEmpty() ) {
 			if ( mBackPartition == null ) {
-				mBackPartition = new CSGPartition(null);
+				mBackPartition = new CSGPartition( null, this.mMaterialIndex );
 			}
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
 				// Everything is in the back, it does not need to be processed deeper

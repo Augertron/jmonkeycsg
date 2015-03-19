@@ -114,6 +114,15 @@ package net.wcomo.jme3.csg;
 */
 public interface ConstructiveSolidGeometry 
 {
+	/** Supported actions applied to the CSGShapes */
+	public static enum CSGOperator
+	{
+		UNION
+	,	DIFFERENCE
+	,	INTERSECTION
+	,	SKIP
+	}
+	
 	/** Version tracking support 
 	 	(I plan to roll these numbers manually when something interesting happens) */
 	public static final int sCSGVersionMajor = 0;

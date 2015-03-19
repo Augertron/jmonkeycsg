@@ -116,6 +116,8 @@ public class CSGShape
 	protected CSGGeometry.CSGOperator	mOperator;
 	/** Arbitrary 'ordering' of operations within the geometry */
 	protected int						mOrder;
+	/** Index that selects a custom material */
+	protected int						mMaterialIndex;
 
 	
 	/** Basic null constructor */
@@ -155,6 +157,11 @@ public class CSGShape
 	@Override
 	public CSGShape clone(
 	) {
+		return( clone( 0 ) );
+	}
+	public CSGShape clone(
+		Number		pMaterialIndex
+	) {
 		CSGShape aClone;
 		
 		if ( this.mesh == null ) {
@@ -162,19 +169,29 @@ public class CSGShape
 			List<CSGPolygon> newPolyList = new ArrayList<CSGPolygon>( mPolygons );
 			aClone = new CSGShape( newPolyList, mOrder );
 		} else {
-			// Base it on the mesh
-			aClone = (CSGShape)super.clone();
+			// Base it on the mesh (but do not clone the material)
+			aClone = (CSGShape)super.clone( false );
 			aClone.setOrder( mOrder );
 		}
 		aClone.setOperator( mOperator );
+		aClone.setMaterialIndex( pMaterialIndex );
 		return( aClone );
 	}
 	
 	/** Accessor to the list of polygons */
 	public List<CSGPolygon> getPolygons(
+		Number	pMaterialIndex
 	) { 
 		if ( mPolygons.isEmpty() && (this.mesh != null) ) {
+			// Generate the polygons
+			this.mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
 			mPolygons = fromMesh( this.mesh, this.getLocalTransform() );
+			
+		} else if ( !mPolygons.isEmpty() 
+				&& (pMaterialIndex != null)
+				&& (this.mMaterialIndex != pMaterialIndex.intValue()) ) {
+			// We have polygons, but a different custom material is desired
+			throw new IllegalArgumentException( "CSGShape invalid change-of-material" );
 		}
 		return mPolygons; 
 	}
@@ -195,12 +212,26 @@ public class CSGShape
 		mOrder = pOrder;
 	}
 
+	/** Accessor to the custom material index */
+	public int getMaterialIndex() { return mMaterialIndex; }
+	public void setMaterialIndex(
+		int		pMaterialIndex
+	) {
+		mMaterialIndex = pMaterialIndex;
+	}
+	public void setMaterialIndex(
+		Number	pMaterialIndex
+	) {
+		mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
+	}
+
 	/** Add a shape into this one */
 	public CSGShape union(
 		CSGShape	pOther
+	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons() );
-		CSGPartition b = new CSGPartition( pOther.getPolygons() );
+		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
+		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
 		a.clipTo(b);
 		b.clipTo(a);
 		b.invert();
@@ -213,9 +244,10 @@ public class CSGShape
 	/** Subtract a shape from this one */
 	public CSGShape difference(
 		CSGShape	pOther
+	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons() );
-		CSGPartition b = new CSGPartition( pOther.getPolygons() );
+		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
+		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
 		a.invert();
 		a.clipTo(b);
 		b.clipTo(a);
@@ -230,9 +262,10 @@ public class CSGShape
 	/** Find the intersection with another shape */
 	public CSGShape intersection(
 		CSGShape	pOther
+	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons());
-	    CSGPartition b = new CSGPartition( pOther.getPolygons() );
+		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
+	    CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
 	    a.invert();
 	    b.clipTo(a);
 	    b.invert();
@@ -283,18 +316,22 @@ public class CSGShape
 			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform ) );
 			
 			// And build the appropriate polygon
-			CSGPolygon aPolygon = new CSGPolygon( aVertexList );
+			CSGPolygon aPolygon = new CSGPolygon( aVertexList, this.mMaterialIndex );
 			polygons.add( aPolygon );
 		}
 		return( polygons );
 	}
 	
-	/** Produce the mesh that corresponds to this shape */
-	public Mesh toMesh(
+	/** Produce the mesh(es) that corresponds to this shape
+	 	The zeroth mesh in the list is the total, composite mesh.
+	 	Every other mesh (if present) applies solely to a specific Material.
+	  */
+	public List<Mesh> toMesh(
+		int		pMaxMaterialIndex
 	) {
-		Mesh aMesh = new Mesh();
+		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
 		
-		List<CSGPolygon> aPolyList = getPolygons();
+		List<CSGPolygon> aPolyList = getPolygons( null );
 		int anEstimateVertexCount = aPolyList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );
@@ -302,33 +339,62 @@ public class CSGShape
 		List<Vector2f> aTexCoordList = new ArrayList<Vector2f>( anEstimateVertexCount  );
 		List<Integer> anIndexList = new ArrayList<Integer>( anEstimateVertexCount );
 		
-		// Walk the list of all polygons, collecting all vertices
+		// Include the master list of all elements
+		meshList.add( toMesh( -1, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList ) );
+		
+		// Include per-material meshes
+		for( int index = 0; (pMaxMaterialIndex > 0) && (index <= pMaxMaterialIndex); index += 1 ) {
+			// The zeroth index is the generic Material, all others are custom Materials
+			aPositionList.clear(); aNormalList.clear(); aTexCoordList.clear(); anIndexList.clear();
+			Mesh aMesh = toMesh( index, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList );
+			meshList.add( aMesh );
+		}
+		return( meshList );
+	}
+		
+	protected Mesh toMesh(
+		int					pMaterialIndex
+	,	List<CSGPolygon>	pPolyList
+	,	List<Vector3f> 		pPositionList
+	,	List<Vector3f> 		pNormalList
+	,	List<Vector2f> 		pTexCoordList
+	,	List<Integer> 		pIndexList
+	) {
+		Mesh aMesh = new Mesh();
+		
+		// Walk the list of all polygons, collecting all appropriate vertices
 		int indexPtr = 0;
-		for( CSGPolygon aPolygon : aPolyList ) {
+		for( CSGPolygon aPolygon : pPolyList ) {
+			// Does this polygon have a custom material?
+			int materialIndex = aPolygon.getMaterialIndex();
+			if ( (pMaterialIndex >= 0) && (materialIndex != pMaterialIndex) ) {
+				// Only material-specific polygons are interesting
+				continue;
+			}
 			List<CSGVertex> aVertexList = aPolygon.getVertices();
 			int aVertexCount = aVertexList.size();
 			
 			List<Integer> vertexPointers = new ArrayList<Integer>( aVertexCount );
 			for( CSGVertex aVertex : aVertexList ) {
-				aPositionList.add( aVertex.getPosition() );
-				aNormalList.add( aVertex.getNormal() );
-				aTexCoordList.add( aVertex.getTextureCoordinate() );
+				pPositionList.add( aVertex.getPosition() );
+				pNormalList.add( aVertex.getNormal() );
+				pTexCoordList.add( aVertex.getTextureCoordinate() );
 				
 				vertexPointers.add( indexPtr++ );
 			}
 			for( int ptr = 2; ptr < aVertexCount; ptr += 1 ) {
-				anIndexList.add( vertexPointers.get(0) );
-				anIndexList.add( vertexPointers.get(ptr-1) );
-				anIndexList.add( vertexPointers.get(ptr) );
+				pIndexList.add( vertexPointers.get(0) );
+				pIndexList.add( vertexPointers.get(ptr-1) );
+				pIndexList.add( vertexPointers.get(ptr) );
 			}
 		}
 		// Populate the appropriate mesh buffers (which are based on arrays)
-		Vector3f[] positionArray = aPositionList.toArray( new Vector3f[aPositionList.size()] );
-		Vector3f[] normalArray = aNormalList.toArray( new Vector3f[aNormalList.size()] );
-		Vector2f[] texCoordArray = aTexCoordList.toArray( new Vector2f[aTexCoordList.size()] );
-		int[] indicesIntArray = new int[ anIndexList.size()];
-		for(int i = 0, j = anIndexList.size(); i < j; i += 1 ) {
-			indicesIntArray[i] = anIndexList.get(i);
+		Vector3f[] positionArray = pPositionList.toArray( new Vector3f[ pPositionList.size() ] );
+		Vector3f[] normalArray = pNormalList.toArray( new Vector3f[ pNormalList.size() ] );
+		Vector2f[] texCoordArray = pTexCoordList.toArray( new Vector2f[ pTexCoordList.size() ] );
+		int[] indicesIntArray = new int[ pIndexList.size() ];
+		for(int i = 0, j = pIndexList.size(); i < j; i += 1 ) {
+			indicesIntArray[i] = pIndexList.get(i);
 		}
 		aMesh.setBuffer( Type.Position, 3, BufferUtils.createFloatBuffer(positionArray));
 		aMesh.setBuffer( Type.Normal, 3, BufferUtils.createFloatBuffer(normalArray));

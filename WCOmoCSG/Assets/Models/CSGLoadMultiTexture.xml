@@ -1,0 +1,62 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomo.jme3.csg.CSGLinkNode fname='CSGSamples'>
+    <lights class='com.jme3.light.LightList'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
+	<children>
+	    <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                
+                <net.wcomo.jme3.csg.CSGShape name='Cylinder'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGCylinder'
+                    	 axisSamples='32' closed='true' height='6.2831852' radialSamples='32' radius='1.0' textureMode='UNIFORM'/>
+                    <scaleTexture class='com.jme3.math.Vector2f' x='4.0' y='4.0'/>
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' y='3.0'/>
+		            </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeonode>
+        
+	    <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                
+                <net.wcomo.jme3.csg.CSGShape name='Cylinder'
+                		materialName='Textures/Rock/Rock1.xml'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGCylinder'
+                    	 axisSamples='32' closed='true' height='6.2831852' radialSamples='32' radius='1.0' textureMode='UNIFORM'/>
+                    <scaleTexture class='com.jme3.math.Vector2f' x='4.0' y='4.0'/>
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' y='0.0'/>
+		            </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeonode>
+	
+	</children>
+<!-- 
+    <assetLoaderKeyList>
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleBoxes.xml'/>
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleCylinders.xml'/>->
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleSpheres.xml'/>
+     </assetLoaderKeyList>
+-->
+</net.wcomo.jme3.csg.CSGLinkNode>

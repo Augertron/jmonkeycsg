@@ -34,6 +34,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Queue;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.export.InputCapsule;
@@ -42,8 +45,11 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.material.MatParamTexture;
+import com.jme3.material.Material;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.SceneGraphVisitor;
+import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 
 /**  Constructive Solid Geometry (CSG)
@@ -53,6 +59,12 @@ import com.jme3.texture.Texture;
  	
  	The end result is a Mesh produced by the blending of the shapes.  This mesh can then
  	be transformed and textured as it is placed in the scene.
+ 	
+ 	@deprecated -- unfortunately, when I went to expand this Geometry concept to handle blending 
+ 					materials from the underlying shapes, I hit a wall where a Geometry cannot
+ 					support multiple meshes.
+ 					@see CSGGeonode - which is rooted in Node and creates independent sub-Geometries
+ 					to handle the different meshes.
 */
 public class CSGGeometry
 	extends Geometry 
@@ -62,15 +74,6 @@ public class CSGGeometry
 	public static final String sCSGGeometryRevision="$Rev$";
 	public static final String sCSGGeometryDate="$Date$";
 
-	/** Supported actions applied to the CSGShapes added to a Geometry */
-	public static enum CSGOperator
-	{
-		UNION
-	,	DIFFERENCE
-	,	INTERSECTION
-	,	SKIP
-	}
-	
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
 
@@ -107,6 +110,11 @@ public class CSGGeometry
 		}
 	}
 	
+	@Override
+    public Mesh getMesh() {
+        return mesh;
+    }
+
 	/** Action to generate the mesh based on the given shapes */
 	public void regenerate(
 	) {
@@ -115,17 +123,42 @@ public class CSGGeometry
 			List<CSGShape> sortedShapes = new ArrayList<>( mShapes );
 			Collections.sort( sortedShapes );
 			
+			// Prepare for custom materials
+			Map<Material,Integer> materialMap = null;
+			
 			// Operate on each shape in turn, blending it into the common
+			Integer materialIndex = null;
 			CSGShape aProduct = null;
 			for( CSGShape aShape : sortedShapes ) {
+				// Any special Material?
+				Material aMaterial = aShape.getMaterial();
+				if ( aMaterial != null ) {
+					// Locate cached copy of the material
+					if ( materialMap == null ) {
+						// No other custom materials - this becomes the first
+						materialIndex = new Integer( 1 );
+						materialMap = new HashMap( 17 );
+						materialMap.put( aMaterial, materialIndex );
+						
+					} else if ( materialMap.containsKey( aMaterial ) ) {
+						// Use the material already found
+						materialIndex = materialMap.get( aMaterial );
+						
+					} else {
+						// Add this custom material into the list
+						materialIndex = new Integer( materialMap.size() + 1 );
+						materialMap.put( aMaterial,  materialIndex );
+					}
+				}
+				// Apply the operator
 				switch( aShape.getOperator() ) {
 				case UNION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone();
+						aProduct = aShape.clone( materialIndex );
 					} else {
 						// Blend together
-						aProduct = aProduct.union( aShape );
+						aProduct = aProduct.union( aShape, materialIndex );
 					}
 					break;
 					
@@ -134,17 +167,17 @@ public class CSGGeometry
 						// NO PLACE TO START
 					} else {
 						// Blend together
-						aProduct = aProduct.difference( aShape );
+						aProduct = aProduct.difference( aShape, materialIndex );
 					}
 					break;
 					
 				case INTERSECTION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone();
+						aProduct = aShape.clone( materialIndex );
 					} else {
 						// Blend together
-						aProduct = aProduct.intersection( aShape );
+						aProduct = aProduct.intersection( aShape, materialIndex );
 					}
 					break;
 					
@@ -154,7 +187,8 @@ public class CSGGeometry
 				}
 			}
 			if ( aProduct != null ) {
-				this.setMesh( aProduct.toMesh() );
+				List<Mesh> meshList = aProduct.toMesh( (materialIndex == null) ? 0 : materialIndex.intValue() );
+				this.setMesh( meshList.get( meshList.size() -1 ) );
 			}
 		}
 	}
@@ -212,7 +246,7 @@ public class CSGGeometry
         		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
         	}
         }
-		// Rebuild based on the shapes
+		// Rebuild based on the shapes just loaded
 		regenerate();
 	}
 	

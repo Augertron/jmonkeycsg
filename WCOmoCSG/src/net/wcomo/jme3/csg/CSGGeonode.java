@@ -37,8 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
+import java.util.logging.Level;
 
 import com.jme3.asset.AssetKey;
+import com.jme3.asset.AssetNotFoundException;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -52,41 +54,48 @@ import com.jme3.scene.Node;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
+import com.jme3.util.SafeArrayList;
 
 /**  Constructive Solid Geometry (CSG)
 
 	The CSGGeoNode class wants to act like a Geometry which produces a Mesh that is the result
-	of the boolean CSG operations.  But we also wish to track portions of the final constructed
-	shape and apply selected Materials to those portions.  It seems the simplest way to segment
-	this Material assignment is to produce independent Meshes, one for each different Material.
+	of the boolean CSG operations. It can have a Material that applies to the final product.
+	 
+	But we also wish to track portions of the final constructed shape and apply selected Materials 
+	to those portions.  It seems the simplest way to segment this Material assignment is to 
+	produce independent Meshes, one for each different Material.
 	
 	Unfortunately, I am seeing no simple mechanism in jMonkey that allows me to create a single
-	Geometry with multiple Meshes.  Instead, jMonkey seems predicated on using Nodes to hold 
+	Geometry with multiple Meshes.  Instead, jMonkey is predicated on using Nodes to hold 
 	multiple children where each child can be a Geometry (with its Mesh and Material).
 	
 	So I will operate the CSG master as a Node, where its children are minimal Geometrys that
-	are created to associate a Mesh with a Material.
-	
-	
+	are created to associate a Mesh with a Material. 
+	I hope to optimize bounds and collision processing by working from the single complete Mesh
+	that is produced by standard processing. 
 */
-public class CSGGeoNode
+public class CSGGeonode
 	extends Node
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGGeoNodeRevision="$Rev: $";
-	public static final String sCSGGeoNodeDate="$Date: $";
+	public static final String sCSGGeonodeRevision="$Rev$";
+	public static final String sCSGGeonodeDate="$Date$";
 
+	/** The master material */
+    protected Material 			mMaterial;
+    /** Control flag to force the use of a single material set at this node level */
+    protected boolean			mForceSingleMaterial;
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
 
 	/** Basic null constructor */
-	public CSGGeoNode(
+	public CSGGeonode(
 	) {
-		this( "CSGGeometry" );
+		this( "CSGGeoNode" );
 	}
 	/** Constructor based on a given name */
-	public CSGGeoNode(
+	public CSGGeonode(
 		String	pName
 	) {
 		super( pName );
@@ -113,9 +122,13 @@ public class CSGGeoNode
 		}
 	}
 	
-	@Override
-    public Mesh getMesh() {
-        return mesh;
+    /** Accessor to the Material (ala Geometry */
+    public Material getMaterial() { return mMaterial; }
+    @Override
+    public void setMaterial(
+    	Material 	pMaterial
+    ) {
+        this.mMaterial = pMaterial;
     }
 
 	/** Action to generate the mesh based on the given shapes */
@@ -127,7 +140,7 @@ public class CSGGeoNode
 			Collections.sort( sortedShapes );
 			
 			// Prepare for custom materials
-			Map<Material,Integer> materialMap = null;
+			Map materialMap = null;
 			
 			// Operate on each shape in turn, blending it into the common
 			Integer materialIndex = null;
@@ -142,15 +155,17 @@ public class CSGGeoNode
 						materialIndex = new Integer( 1 );
 						materialMap = new HashMap( 17 );
 						materialMap.put( aMaterial, materialIndex );
+						materialMap.put( materialIndex, aMaterial );
 						
 					} else if ( materialMap.containsKey( aMaterial ) ) {
 						// Use the material already found
-						materialIndex = materialMap.get( aMaterial );
+						materialIndex = (Integer)materialMap.get( aMaterial );
 						
 					} else {
 						// Add this custom material into the list
 						materialIndex = new Integer( materialMap.size() + 1 );
 						materialMap.put( aMaterial,  materialIndex );
+						materialMap.put( materialIndex, aMaterial );
 					}
 				}
 				// Apply the operator
@@ -190,8 +205,24 @@ public class CSGGeoNode
 				}
 			}
 			if ( aProduct != null ) {
+				// Transform the list of meshes into children
+				// (note that the first mesh is an Overall mesh that crosses all materials)
 				List<Mesh> meshList = aProduct.toMesh( (materialIndex == null) ? 0 : materialIndex.intValue() );
-				this.setMesh( meshList.get( meshList.size() -1 ) );
+				if ( mForceSingleMaterial || (meshList.size() == 1) ) {
+					// Singleton element
+					Geometry aChild = new Geometry( this.getName(), meshList.get( 0 ) );
+					aChild.setMaterial( mMaterial );
+					this.attachChild( aChild );
+				} else if ( meshList.size() > 1 ) {
+					// Multiple elements, with the first dedicated to the 'generic' material
+					for( int i = 1, j = meshList.size(); i < j; i += 1 ) {
+						Geometry aChild = new Geometry( this.getName() + i, meshList.get( i ) );
+						Material aMaterial = (Material)materialMap.get( new Integer( i ) );
+						aChild.setMaterial( (aMaterial == null) ? mMaterial : aMaterial );
+						this.attachChild( aChild );
+					}
+				}
+				
 			}
 		}
 	}
@@ -201,19 +232,22 @@ public class CSGGeoNode
 	public void write(
 		JmeExporter		pExporter
 	) throws IOException {
-		// Let the super do its thing BUT DO NOT DUMP THE MESH
-		// Instead, we rely on the shapes themselves
-		Mesh saveMesh = this.mesh;
-		this.mesh = null;
+		OutputCapsule aCapsule = pExporter.getCapsule( this );
+
+		// We are NOT interested in saving the generated children
+		SafeArrayList<Spatial> saveChildren = this.children;
+		this.children = null;
 		try {
 			super.write( pExporter );
 		} finally {
-			this.mesh = saveMesh;
+			this.children = saveChildren;
 		}
+        if ( mMaterial != null ) {
+            aCapsule.write( mMaterial.getAssetName(), "materialName", null );
+        }
 		// Save the shapes
 		// NOTE a deficiency in the OutputCapsule API which should operate on a List,
 		//		but instead requires an ArrayList
-		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "Shapes", null );
 	}
 	
@@ -221,11 +255,23 @@ public class CSGGeoNode
 	public void read(
 		JmeImporter		pImporter
 	) throws IOException {
+		InputCapsule aCapsule = pImporter.getCapsule( this );
+
 		// Let the super do its thing
 		super.read( pImporter );
+		// But ensure we rebuild the children list from scratch
+		this.children.clear();;
 		
+        String matName = aCapsule.readString( "materialName", null );
+        if ( matName != null ) {
+            // Material name is set, attempt to load material via J3M
+            try {
+                mMaterial = pImporter.getAssetManager().loadMaterial( matName );
+            } catch( AssetNotFoundException ex ) {
+                throw new IllegalArgumentException( "Cannot locate material: " + matName );
+            }
+        }
 		// Look for the list of shapes
-		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "Shapes", null );
 		
 		// Look for list of external definitions
@@ -241,14 +287,6 @@ public class CSGGeoNode
 				}
 			}
 		}
-		// Anything special for the Material?
-        boolean repeatTexture = aCapsule.readBoolean( "repeatTexture", false );
-        if ( repeatTexture && (this.material != null)) {
-        	MatParamTexture aParam = this.getMaterial().getTextureParam( "DiffuseMap" );
-        	if ( aParam != null ) {
-        		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
-        	}
-        }
 		// Rebuild based on the shapes just loaded
 		regenerate();
 	}
@@ -259,8 +297,8 @@ public class CSGGeoNode
 		StringBuilder	pBuffer
 	) {
 		return( ConstructiveSolidGeometry.getVersion( this.getClass()
-													, sCSGGeometryRevision
-													, sCSGGeometryDate
+													, sCSGGeonodeRevision
+													, sCSGGeonodeDate
 													, pBuffer ) );
 	}
 

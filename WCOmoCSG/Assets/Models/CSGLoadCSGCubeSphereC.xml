@@ -1,0 +1,128 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CSGSamplesC'>
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' z='-10.0'/>
+    </transform>
+    <children>
+        <!-- Add a shorter sphere to a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+                materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='OtherBox'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' radius='0.75'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+               </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Subtract shorter box from a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+                materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='DIFFERENCE' name='OtherBox'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' radius='0.75'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Intersection of a shorter box with a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+                materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0'/>
+            </transform>
+             <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='INTERSECTION' name='OtherBox'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' radius='0.75'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Add a shorter box to a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape name='LittleBox'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' radius='1.0'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                		<!--  scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/ -->
+            		</transform>
+                    <scaleTexture class='com.jme3.math.Vector2f' x='2' y='2'/>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Subtract shorter box from a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='DIFFERENCE' name='LittleBox'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' radius='1.0' eccentricity='0.5'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                		<!-- scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/ -->
+            		</transform>
+                    <scaleTexture class='com.jme3.math.Vector2f' x='3' y='3'/>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+        
+        <!-- Intersection of a shorter box with a longer box -->
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='3.0'/>
+            </transform>
+            <Shapes>
+                <net.wcomo.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomo.jme3.csg.CSGShape>
+                <net.wcomo.jme3.csg.CSGShape Operator='INTERSECTION' name='LittleBox'>
+                    <mesh class='net.wcomo.jme3.csg.shape.CSGSphere' radius='1.0'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                		<!-- scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/-->
+            		</transform>
+                    <scaleTexture class='com.jme3.math.Vector2f' x='0.5' y='0.5'/>
+                </net.wcomo.jme3.csg.CSGShape>
+            </Shapes>
+        </net.wcomo.jme3.csg.CSGGeometry>
+
+    </children>
+</com.jme3.scene.Node>

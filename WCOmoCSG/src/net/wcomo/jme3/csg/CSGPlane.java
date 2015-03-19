@@ -231,11 +231,11 @@ public class CSGPlane
 			}
 			if ( beforeVertices.size() >= 3 ) {
 				// We have a full shape in front of the plane
-				pFront.add( new CSGPolygon( beforeVertices ) );
+				pFront.add( new CSGPolygon( beforeVertices, pPolygon.getMaterialIndex() ) );
 			}
 			if ( behindVertices.size() >= 3 ) {
 				// We have a full shape behind the plane
-				pBack.add( new CSGPolygon( behindVertices ) );
+				pBack.add( new CSGPolygon( behindVertices, pPolygon.getMaterialIndex() ) );
 			}
 			break;
 		}

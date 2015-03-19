@@ -62,27 +62,32 @@ public class CSGPolygon
 	protected List<CSGVertex>	mVertices;
 	/** The plane that contains this shape */
 	protected CSGPlane 			mPlane;
+	/** The custom material that applies to this shape */
+	protected int				mMaterialIndex;
 
 	/** Standard null constructor */
 	public CSGPolygon(
 	) {
-		this( sEmptyVertices );
+		this( sEmptyVertices, 0 );
 	}
 	
 	/** Constructor based on a set of Vertices (minimum 3 expected) */
 	public CSGPolygon(
 		List<CSGVertex>		pVertices
+	,	int					pMaterialIndex
 	) {
-		this( pVertices, CSGPlane.fromVertices( pVertices ) );
+		this( pVertices, CSGPlane.fromVertices( pVertices ), pMaterialIndex );
 	}
 	
 	/** Internal constructor based on given vertices and plane */
 	protected CSGPolygon(
 		List<CSGVertex>		pVertices
 	,	CSGPlane			pPlane
+	,	int					pMaterialIndex
 	) {
 		mVertices = pVertices;
 		mPlane = pPlane;
+		mMaterialIndex = pMaterialIndex;
 	}
 	
 	/** Make a copy */
@@ -98,7 +103,7 @@ public class CSGPolygon
 				// Flip the order of the vertices as we go
 				newVertices.add( 0, bVertex );
 			}
-			return( new CSGPolygon( newVertices, mPlane.clone( pFlipIt ) ) );
+			return( new CSGPolygon( newVertices, mPlane.clone( pFlipIt ), mMaterialIndex ) );
 		} else {
 			// The polygon is immutable, so its clone is just itself
 			return( this );
@@ -110,6 +115,9 @@ public class CSGPolygon
 	
 	/** Accessor to the plane */
 	public CSGPlane getPlane() { return mPlane; }
+	
+	/** Accessor to the custom material index */
+	public int getMaterialIndex() { return mMaterialIndex; }
 	
 
 	/** Make it 'savable' */

@@ -36,7 +36,8 @@ import com.jme3.export.Savable;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
-/** Simple extension of Node that extends Savable.read() to accept a list of external references */
+/** Simple extension of Node that extends Savable.read() to accept a list of external references 
+ */
 public class CSGLinkNode 
 	extends Node
 	implements Savable, ConstructiveSolidGeometry

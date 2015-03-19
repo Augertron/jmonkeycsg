@@ -45,7 +45,7 @@ import com.jme3.scene.shape.Sphere;
 import com.jme3.texture.Texture;
 
 import net.wcomo.jme3.csg.CSGGeometry;
-import net.wcomo.jme3.csg.CSGGeometry.CSGOperator;
+import net.wcomo.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomo.jme3.csg.CSGShape;
 
 /** Simple test of the CSG suport 

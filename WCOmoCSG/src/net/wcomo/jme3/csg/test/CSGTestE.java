@@ -57,7 +57,7 @@ import com.jme3.scene.shape.Sphere;
 import com.jme3.texture.Texture;
 
 import net.wcomo.jme3.csg.CSGGeometry;
-import net.wcomo.jme3.csg.CSGGeometry.CSGOperator;
+import net.wcomo.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomo.jme3.csg.CSGShape;
 
 /** Exercise the import facility, looking for the output from TestD
@@ -82,9 +82,10 @@ public class CSGTestE
 //	,	"CSGLoadCSGCubeDomeA.xml"
 		
 	,	"Assets/Models/CSGLoadSimpleUnit.xml"
-	,	"Assets/Models/CSGLoadSimple.xml"
-	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
-	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
+	,	"Assets/Models/CSGLoadMultiTexture.xml"
+//	,	"Assets/Models/CSGLoadSimple.xml"
+//	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
+//	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
 
 	};
 	

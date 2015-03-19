@@ -11,5 +11,6 @@
     <assetLoaderKeyList>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCubeA.xml'/>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCubeB.xml'/>
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeSphereC.xml'/>
      </assetLoaderKeyList>
 </net.wcomo.jme3.csg.CSGLinkNode>
