@@ -67,6 +67,7 @@ public class CSGTestVersion
 	    // Report on all the versions we know
 	    StringBuilder aBuffer = new StringBuilder( 512 );
 		(new CSGGeometry()).getVersion( aBuffer );
+		(new CSGGeonode()).getVersion( aBuffer );
 		(new CSGLinkNode()).getVersion( aBuffer );
 		(new CSGPartition()).getVersion( aBuffer );
 		(new CSGPlane()).getVersion( aBuffer );
@@ -75,7 +76,6 @@ public class CSGTestVersion
 		
 		(new CSGBox()).getVersion( aBuffer );
 		(new CSGCylinder()).getVersion( aBuffer );
-//		(new CSGMesh()).getVersion( aBuffer );
 		(new CSGSphere()).getVersion( aBuffer );
 		
 		System.err.print( aBuffer.toString() );;

@@ -33,8 +33,8 @@
         </net.wcomo.jme3.csg.CSGGeonode>
 ?>
         <!-- A simple union -->
-	    <net.wcomo.jme3.csg.CSGGeonode name='TestBlended'
-        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+	    <net.wcomo.jme3.csg.CSGGeometry name='TestBlended'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml' singleMaterial='true' >
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0'/>
             </transform>
@@ -53,11 +53,11 @@
 		            </transform>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
 		<!-- A corridor -->
-	    <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
-        		materialName='Textures/Rock/Rock1Rpt.xml' singleMaterial='false'>
+	    <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
+        		materialName='Textures/Rock/Rock1Rpt.xml' singleMaterial='true'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='0'/>
             </transform>
@@ -86,8 +86,8 @@
                     </transform>
 	            </net.wcomo.jme3.csg.CSGShape>
 
-                <net.wcomo.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'>
-                		<!-- materialName='Textures/Rock/Rock2.xml'> -->
+                <net.wcomo.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
                 		<!-- materialName='Textures/Rock/Rock1Rpt.xml'> -->
                     <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='0.9' yExtent='0.5' zExtent='0.9'>
                     	<!--scaleFaces>
@@ -101,7 +101,7 @@
 	            </net.wcomo.jme3.csg.CSGShape>
 
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
 	</children>
 </net.wcomo.jme3.csg.CSGLinkNode>
