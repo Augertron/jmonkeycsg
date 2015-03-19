@@ -5,7 +5,7 @@
     </transform>
     <children>
         <!-- SKIP the cylinder, just the box -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/Debug/Normals.xml'>
         		<!--materialName='Textures/Debug/Wireframe.xml'-->
             <transform class='com.jme3.math.Transform'>
@@ -20,10 +20,10 @@
                     	closed='true' height='2.5' axisSamples='32' radialSamples='32' radius='1.1'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
      
         <!-- Unit cylinder  -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/Rock/Rock2Rpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0'/>
@@ -38,10 +38,10 @@
                     <scaleTexture class='com.jme3.math.Vector2f' x='1.0' y='1.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
         <!-- 'unit' cylinder in proportion with repeating texture -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
         		<!--materialName='Textures/Rock/Rock2Rpt.xml'-->
             <transform class='com.jme3.math.Transform'>
@@ -57,10 +57,10 @@
                     <scaleTexture class='com.jme3.math.Vector2f' x='4.0' y='4.0'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
 		<!-- Check the wireframe -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='9.0'/>
@@ -71,10 +71,10 @@
                     	 axisSamples='32' closed='true' height='2.5' radialSamples='32' radius='1.1' radius2='1.5'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
         <!-- SKIP the cylinder, just the box -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/Rock/Rock1.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
@@ -88,10 +88,10 @@
                     	closed='true' height='2.5' axisSamples='32' radialSamples='32' radius='1.1'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
         <!-- SKIP the box, just the cylinder -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='3.0'/>
@@ -105,10 +105,10 @@
                     	axisSamples='32' closed='true' height='2.5' radialSamples='32' radius='1.1'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
         <!-- SKIP the cylinder, just a bigger box -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-6.0' y='3.0'/>
@@ -123,10 +123,10 @@
                     	 closed='true' height='2.5' radialSamples='32' radius='1.1'/>
                 </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
         
         <!-- SKIP the cylinder, just a scaled box -->
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='3.0'/>
@@ -139,8 +139,8 @@
             		</transform>
                </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
-        <net.wcomo.jme3.csg.CSGGeonode name='CSGGeometry'
+        </net.wcomo.jme3.csg.CSGGeometry>
+        <net.wcomo.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='9.0' y='3.0'/>
@@ -154,7 +154,7 @@
                     <scaleTexture class='com.jme3.math.Vector2f' x='0.5' y='0.5'/>
                </net.wcomo.jme3.csg.CSGShape>
             </Shapes>
-        </net.wcomo.jme3.csg.CSGGeonode>
+        </net.wcomo.jme3.csg.CSGGeometry>
 
     </children>
 

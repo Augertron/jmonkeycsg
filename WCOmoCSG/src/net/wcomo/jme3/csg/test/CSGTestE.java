@@ -68,24 +68,12 @@ public class CSGTestE
 	/** List of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
 		null
-//	,	"CSGTestD.xml"
 
-//	,	"CSGLoadSimpleBoxes.xml"		// Basic boxes
-//	,	"CSGLoadSimpleCylinders.xml"	// Basic wco cylinders
-//	,	"CSGLoadSimpleSpheres.xml"		// Basic spheres
-//	,	"CSGLoadSimpleDomes.xml"		// Basic domes
-	
-//	,	"CSGLoadCSGSimpleShapes.xml"	// Singleton simple shapes within a CSG
-//	,   "CSGLoadCSGCubeCylinderA.xml"	// SKIPed shapes within a CSG
-//	,   "CSGLoadCSGCubeCylinderB.xml"	// Longer cylinder with a shorter box
-//	,   "CSGLoadCSGCubeCylinderE.xml"
-//	,	"CSGLoadCSGCubeDomeA.xml"
-		
 	,	"Assets/Models/CSGLoadSimpleUnit.xml"
+	,	"Assets/Models/CSGLoadSimple.xml"
+	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
+	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
 	,	"Assets/Models/CSGLoadMultiTexture.xml"
-//	,	"Assets/Models/CSGLoadSimple.xml"
-//	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
-//	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
 
 	};
 	

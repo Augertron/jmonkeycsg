@@ -58,7 +58,7 @@ import com.jme3.util.SafeArrayList;
 
 /**  Constructive Solid Geometry (CSG)
 
-	The CSGGeoNode class wants to act like a Geometry which produces a Mesh that is the result
+	The CSGGeonode class wants to act like a Geometry which produces a Mesh that is the result
 	of the boolean CSG operations. It can have a Material that applies to the final product.
 	 
 	But we also wish to track portions of the final constructed shape and apply selected Materials 
@@ -69,7 +69,7 @@ import com.jme3.util.SafeArrayList;
 	Geometry with multiple Meshes.  Instead, jMonkey is predicated on using Nodes to hold 
 	multiple children where each child can be a Geometry (with its Mesh and Material).
 	
-	So I will operate the CSG master as a Node, where its children are minimal Geometrys that
+	So I will operate this CSG class as a Node, where its children are minimal Geometrys that
 	are created to associate a Mesh with a Material. 
 	I hope to optimize bounds and collision processing by working from the single complete Mesh
 	that is produced by standard processing. 
@@ -82,6 +82,9 @@ public class CSGGeonode
 	public static final String sCSGGeonodeRevision="$Rev$";
 	public static final String sCSGGeonodeDate="$Date$";
 
+	/** A canned zero */
+	protected static final Integer sGenericMaterialIndex = new Integer( 0 );
+	
 	/** The master material */
     protected Material 			mMaterial;
     /** Control flag to force the use of a single material set at this node level */
@@ -141,32 +144,45 @@ public class CSGGeonode
 			
 			// Prepare for custom materials
 			Map materialMap = null;
+			int materialCount = 0;
 			
 			// Operate on each shape in turn, blending it into the common
-			Integer materialIndex = null;
 			CSGShape aProduct = null;
 			for( CSGShape aShape : sortedShapes ) {
 				// Any special Material?
-				Material aMaterial = aShape.getMaterial();
+				Integer materialIndex = null;
+				Material aMaterial = (mForceSingleMaterial) ? null : aShape.getMaterial();
 				if ( aMaterial != null ) {
 					// Locate cached copy of the material
+					AssetKey materialKey = aMaterial.getKey();
+					
 					if ( materialMap == null ) {
 						// No other custom materials - this becomes the first
-						materialIndex = new Integer( 1 );
 						materialMap = new HashMap( 17 );
-						materialMap.put( aMaterial, materialIndex );
+						
+						materialIndex = new Integer( ++materialCount );
+						materialMap.put( materialKey, materialIndex );
 						materialMap.put( materialIndex, aMaterial );
 						
-					} else if ( materialMap.containsKey( aMaterial ) ) {
+						// Include the 'generic' material as well as index zero
+						if ( this.mMaterial != null ) {
+							materialMap.put( this.mMaterial.getKey(), sGenericMaterialIndex );
+							materialMap.put( sGenericMaterialIndex, this.mMaterial );
+						}
+						
+					} else if ( materialMap.containsKey( materialKey ) ) {
 						// Use the material already found
-						materialIndex = (Integer)materialMap.get( aMaterial );
+						materialIndex = (Integer)materialMap.get( materialKey );
 						
 					} else {
 						// Add this custom material into the list
-						materialIndex = new Integer( materialMap.size() + 1 );
-						materialMap.put( aMaterial,  materialIndex );
+						materialIndex = new Integer( ++materialCount );
+						materialMap.put( materialKey,  materialIndex );
 						materialMap.put( materialIndex, aMaterial );
 					}
+				} else {
+					// No custom material
+					materialIndex = null;
 				}
 				// Apply the operator
 				switch( aShape.getOperator() ) {
@@ -206,19 +222,22 @@ public class CSGGeonode
 			}
 			if ( aProduct != null ) {
 				// Transform the list of meshes into children
-				// (note that the first mesh is an Overall mesh that crosses all materials)
-				List<Mesh> meshList = aProduct.toMesh( (materialIndex == null) ? 0 : materialIndex.intValue() );
-				if ( mForceSingleMaterial || (meshList.size() == 1) ) {
+				// (note that the zero mesh is an Overall mesh that crosses all materials,
+				//  and the one mesh is the one that corresponds to the generic material)
+				List<Mesh> meshList = aProduct.toMesh( (materialMap == null) ? 0 : materialCount );
+				if ( meshList.size() == 1 ) {
 					// Singleton element
 					Geometry aChild = new Geometry( this.getName(), meshList.get( 0 ) );
 					aChild.setMaterial( mMaterial );
 					this.attachChild( aChild );
+					
 				} else if ( meshList.size() > 1 ) {
 					// Multiple elements, with the first dedicated to the 'generic' material
+					// (which means the 'i' index is one greater than the material index)
 					for( int i = 1, j = meshList.size(); i < j; i += 1 ) {
 						Geometry aChild = new Geometry( this.getName() + i, meshList.get( i ) );
-						Material aMaterial = (Material)materialMap.get( new Integer( i ) );
-						aChild.setMaterial( (aMaterial == null) ? mMaterial : aMaterial );
+						Material aMaterial = (Material)materialMap.get( new Integer( i - 1 ) );
+						aChild.setMaterial( aMaterial );
 						this.attachChild( aChild );
 					}
 				}
@@ -235,6 +254,7 @@ public class CSGGeonode
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 
 		// We are NOT interested in saving the generated children
+		// since we expect to rebuild the composit
 		SafeArrayList<Spatial> saveChildren = this.children;
 		this.children = null;
 		try {
@@ -242,9 +262,13 @@ public class CSGGeonode
 		} finally {
 			this.children = saveChildren;
 		}
+		// Like a Geometry, a possible Material
         if ( mMaterial != null ) {
             aCapsule.write( mMaterial.getAssetName(), "materialName", null );
         }
+        // Override on handling multiple materials
+        aCapsule.write( mForceSingleMaterial, "singleMaterial",  false );
+
 		// Save the shapes
 		// NOTE a deficiency in the OutputCapsule API which should operate on a List,
 		//		but instead requires an ArrayList
@@ -262,6 +286,7 @@ public class CSGGeonode
 		// But ensure we rebuild the children list from scratch
 		this.children.clear();;
 		
+		// Act like a Geometry and support a Material
         String matName = aCapsule.readString( "materialName", null );
         if ( matName != null ) {
             // Material name is set, attempt to load material via J3M
@@ -271,6 +296,9 @@ public class CSGGeonode
                 throw new IllegalArgumentException( "Cannot locate material: " + matName );
             }
         }
+        // Multi-materials can be suppressed
+        mForceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  false );
+        
 		// Look for the list of shapes
 		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "Shapes", null );
 		

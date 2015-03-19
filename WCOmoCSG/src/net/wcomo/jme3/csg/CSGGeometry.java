@@ -60,11 +60,15 @@ import com.jme3.texture.Texture;
  	The end result is a Mesh produced by the blending of the shapes.  This mesh can then
  	be transformed and textured as it is placed in the scene.
  	
- 	@deprecated -- unfortunately, when I went to expand this Geometry concept to handle blending 
- 					materials from the underlying shapes, I hit a wall where a Geometry cannot
- 					support multiple meshes.
- 					@see CSGGeonode - which is rooted in Node and creates independent sub-Geometries
- 					to handle the different meshes/textures
+ 	Unfortunately, when I went to expand this Geometry concept to handle blending materials from the 
+ 	underlying shapes, I hit a wall where a Geometry cannot support multiple meshes.  You have to
+ 	operate as a Node with multiple child Geometries to get multiple meshes and materials.
+ 	
+ 	I had considered deprecating this class, but we may still trip over a need for a simple Geometry.
+ 	So long as you can tolerate a single Material, then this class may still be of interest to you.
+ 	
+ 	@see CSGGeonode - which is rooted in Node and creates independent sub-Geometries
+ 					  to handle the different meshes/textures
 */
 public class CSGGeometry
 	extends Geometry 
@@ -122,43 +126,19 @@ public class CSGGeometry
 			// Sort the shapes based on their operator
 			List<CSGShape> sortedShapes = new ArrayList<>( mShapes );
 			Collections.sort( sortedShapes );
-			
-			// Prepare for custom materials
-			Map<Material,Integer> materialMap = null;
-			
+				
 			// Operate on each shape in turn, blending it into the common
-			Integer materialIndex = null;
 			CSGShape aProduct = null;
 			for( CSGShape aShape : sortedShapes ) {
-				// Any special Material?
-				Material aMaterial = aShape.getMaterial();
-				if ( aMaterial != null ) {
-					// Locate cached copy of the material
-					if ( materialMap == null ) {
-						// No other custom materials - this becomes the first
-						materialIndex = new Integer( 1 );
-						materialMap = new HashMap( 17 );
-						materialMap.put( aMaterial, materialIndex );
-						
-					} else if ( materialMap.containsKey( aMaterial ) ) {
-						// Use the material already found
-						materialIndex = materialMap.get( aMaterial );
-						
-					} else {
-						// Add this custom material into the list
-						materialIndex = new Integer( materialMap.size() + 1 );
-						materialMap.put( aMaterial,  materialIndex );
-					}
-				}
 				// Apply the operator
 				switch( aShape.getOperator() ) {
 				case UNION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( materialIndex );
+						aProduct = aShape.clone( null );
 					} else {
 						// Blend together
-						aProduct = aProduct.union( aShape, materialIndex );
+						aProduct = aProduct.union( aShape, null );
 					}
 					break;
 					
@@ -167,17 +147,17 @@ public class CSGGeometry
 						// NO PLACE TO START
 					} else {
 						// Blend together
-						aProduct = aProduct.difference( aShape, materialIndex );
+						aProduct = aProduct.difference( aShape, null );
 					}
 					break;
 					
 				case INTERSECTION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( materialIndex );
+						aProduct = aShape.clone( null );
 					} else {
 						// Blend together
-						aProduct = aProduct.intersection( aShape, materialIndex );
+						aProduct = aProduct.intersection( aShape, null );
 					}
 					break;
 					
@@ -187,8 +167,11 @@ public class CSGGeometry
 				}
 			}
 			if ( aProduct != null ) {
-				List<Mesh> meshList = aProduct.toMesh( (materialIndex == null) ? 0 : materialIndex.intValue() );
-				this.setMesh( meshList.get( 0 ) );
+				List<Mesh> meshList = aProduct.toMesh( 0 );
+				if ( !meshList.isEmpty() ) {
+					// The overall, blended mesh represents this Geometry
+					this.setMesh( meshList.get( 0 ) );
+				}
 			}
 		}
 	}
