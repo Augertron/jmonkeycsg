@@ -10,7 +10,7 @@
             <transform class='com.jme3.math.Transform' >
                 <translation class='com.jme3.math.Vector3f' x='-6.0' y='0.0'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGCylinder'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
         </com.jme3.scene.Geometry>
 
 		<!-- A closed cylinder -->
@@ -19,7 +19,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='2.0'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGCylinder' 
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
             	axisSamples='34' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
             <!--mesh class='com.jme3.scene.shape.Cylinder' axisSamples='34' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/-->
         </com.jme3.scene.Geometry>
@@ -31,7 +31,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='2.0' y='3.0'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGCylinder' 
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
             	axisSamples='34' inverted='true' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
             <!--mesh class='com.jme3.scene.shape.Cylinder' axisSamples='34' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/-->
         </com.jme3.scene.Geometry>
@@ -43,7 +43,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' savable_versions='0' x='-3.0' y='0.0'/>
             </transform>
-            <mesh axisSamples='2' class='net.wcomo.jme3.csg.shape.CSGCylinder' closed='true' height='1.5' radialSamples='4' radius='1.1' radius2='1.1'/>
+            <mesh axisSamples='2' class='net.wcomohundro.jme3.csg.shape.CSGCylinder' closed='true' height='1.5' radialSamples='4' radius='1.1' radius2='1.1'/>
         </com.jme3.scene.Geometry>
                 
         <!-- An open cylinder -->
@@ -53,7 +53,7 @@
                 <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='-3.0'/>
             </transform>
-            <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.CSGCylinder' closed='false' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
+            <mesh axisSamples='34' class='net.wcomohundro.jme3.csg.shape.CSGCylinder' closed='false' height='1.5' radialSamples='32' radius='1.1' radius2='1.1'/>
         </com.jme3.scene.Geometry>
         
         <!-- A tapering cylinder -->
@@ -65,7 +65,7 @@
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
                 <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/>
             </transform>
-            <mesh axisSamples='34' class='net.wcomo.jme3.csg.shape.CSGCylinder' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.5'/>
+            <mesh axisSamples='34' class='net.wcomohundro.jme3.csg.shape.CSGCylinder' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.5'/>
             <!--mesh axisSamples='34' class='com.jme3.scene.shape.Cylinder' closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.5'/-->
         </com.jme3.scene.Geometry>
     </children>

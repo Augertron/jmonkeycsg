@@ -10,14 +10,14 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='0.0'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGBox'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='Box1a'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-15.0' y='6.0'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='10.0' yExtent='1.0' zExtent='1.0'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='10.0' yExtent='1.0' zExtent='1.0'/>
         </com.jme3.scene.Geometry>
         
   		<!-- An elongated, rotated box with a texture -->
@@ -27,7 +27,7 @@
                 <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='-3.0'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='1.0' zExtent='1.0'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='1.0' zExtent='1.0'/>
         </com.jme3.scene.Geometry>  
         
         <!-- Another elongated, rotated STRIP box -->
@@ -37,7 +37,7 @@
                 <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='-3.0'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='1.0' zExtent='1.0'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='1.0' zExtent='1.0'/>
         </com.jme3.scene.Geometry> 
         
         <!-- Normal, Elongated, rotated, scaled box -->
@@ -48,7 +48,7 @@
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
                 <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/>
             </transform>
-            <mesh class='net.wcomo.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.5'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.5'/>
         </com.jme3.scene.Geometry>
     </children>
 </com.jme3.scene.Node>
