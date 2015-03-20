@@ -47,7 +47,7 @@ package net.wcomohundro.jme3.csg;
  	After retiring from the professional life of a software engineer for over four decades, I have the
  	opportunity to indulge in a few whims and can now investigate things like 3D graphics. Having 
  	experimented with Java since its initial release in 1995, and having been developing enterprise-level,
- 	commercial java applications for over fifteen years, jMonkey struck me as perfect place to begin
+ 	commercial java applications since before 2000, jMonkey struck me as perfect place to begin
  	playing around.
  	
  	As an engineer, not a graphics designer, the idea of hand-tooling meshes and textures via various

@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<!-- Webpage home for the SourceForge "jMonkeyCSG" project -->
+<head>
+    <title>jMonkey CSG - Constructive Solid Geometry</title>
+    <!-- Use a JQuery ThemeRoller theme, in this case 'smoothness' -->
+    <link rel="stylesheet" type="text/css" href="jquery-ui-1.11.2.custom.css">
+
+    <!-- Include the basic JQuery support (core and ui) -->
+    <script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jquery-ui-1.11.2.custom.min.js"></script>
+    
+    <meta name="description" 
+        content="This is a plugin for the jMonkey 3D development environment which supports CSG - Constructive Solid Geometry">
+    <meta name="keywords" 
+        content="jMonkey 3D CSG ConstructiveSolidGeometry">
+</head>
+<body>
+<div class="ui-widget-content">
+    <h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
+    <p><a href="http://en.wikipedia.org/wiki/Constructive_solid_geometry">Constructive solid geometry (CSG)</a>
+    <i>(formerly called computational binary solid geometry)</i> is a 
+ 	technique used in 3D solid modeling. Constructive solid geometry allows a modeler to create 
+ 	a complex surface or object by using Boolean operators to combine objects. Often CSG presents 
+ 	a model or surface that appears visually complex, but is actually little more than cleverly 
+ 	combined or decombined objects</p>
+ 	
+ 	<p>It is said that an object is constructed from primitives by means of allowable operations, which 
+ 	are typically Boolean operations on sets: union, intersection and difference.</p>
+ 	<ul>
+ 	<li>Union - the merger (addition) of two objects into one</li>
+ 	<li>Intersection - the portion common to both objects</li>
+ 	<li>Difference - what is left when you remove one object from another</li>
+ 	</ul>
+ 	
+ 	<h3>A Few Personal Notes on the History of this Code <i>(2015)</i></h3>
+ 	<p>After retiring from the professional life of a software engineer for over four decades, I have the
+ 	opportunity to indulge in a few whims and can now investigate things like 3D graphics. Having 
+ 	experimented with Java since its initial release in 1995, and having been developing enterprise-level,
+ 	commercial java applications since before 2000, <i>jMonkey</i> struck me as perfect place to begin
+ 	playing around.</p>
+ 	
+ 	<p>As an engineer, not a graphics designer, the idea of hand-tooling meshes and textures via various
+ 	UI oriented drawing tools has no appeal.  I am a build-it-up-programmatically kind of person. So
+ 	when I went looking for the concept of blending shapes together, I came across CSG and
+ 	a sample implementation in Java for <i>jMonkey</i>.</p>
+ 	
+ 	<p>As far as I can tell, <i>Evan Wallace</i> put together a Javascript library for CSG support within 
+ 	browsers that support WebGL.  @see <a href="http://evanw.github.io/csg.js">http://evanw.github.io/csg.js</a>
+ 	 (it is really quite impressive).
+ 	<br>This was converted into jMonkey compatible Java by <i>fabsterpal</i>, and posted to a 
+ 	<a href="https://github.com/andychase/fabian-csg">Github repository</a>
+ 	by <i>andychase</i>.  Everything seems to have been properly posted and annotated for fully open 
+ 	source.</p>
+ 	
+ 	<p>While working with the <i>fabsterpal</i> code, I tripped over some bugs and encountered many spots
+ 	where I wished for more extensive comments.  My personal learning style is to work from an
+ 	operational example.  From there, I can make small, incremental changes to help we understand
+ 	the larger picture.  To that end, I reimplemented the Java code, following my own
+ 	conventions and structures.  But the logic and algorithms are all based directly on what I found
+ 	in the original Javascript/Java code.</p>
+ 	
+ 	<p>In other words, I am frolicking in my sandbox...  But as a firm believer in open source, I am making my
+ 	experiments available to all.  If there is something here of value to you, feel free to use it.
+ 	I will be attempting to keep the posted code fully operational -- but for now, I am making no pledges
+ 	about backward compatibility.
+ 	<br>If you find a problem, post a <a href="https://sourceforge.net/p/jmonkeycsg/tickets/">ticket</a>
+ 	 via SourceForge. </p>
+ 	 
+ 	<h3>Code Structure</h3>
+ 	<p>I am attempting to retain the CSG code as an independent plug-in with no changes needed within
+ 	the jme3 core.  You will find the interesting stuff in the package "net.wcomohundro.jme3.csg".  Some
+ 	habits die hard (well, they really do not die at all), so I work within the Eclipse IDE tapping into
+ 	the jMonkey GIT SVN repository to provide the jMonkey environment. I have no real knowledge of the 
+ 	jMonkey IDE.</p>
+ 	<p>All that being said, I do have a set of core jme3 changes posted in the CSG SVN repository.
+ 	<i>(oh, come on, you just knew that was coming)</i> I have found the <b>Savable</b> support via XML
+ 	to be an excellent way to manage my test cases. My core code changes are mostly related to providing
+ 	reasonable (ie, non NullPointerException) defaults for elements missing from the XML. And I have
+ 	created a simple XMLLoader plugin for the AssetManager that allows me to load Assets from the 
+ 	XML files.  This allows me to create CSG test cases very simply by hand editing XML files. By 
+ 	providing reasonable defaults, I can prune my XML files to a bare minimum. At some future point, I will
+ 	be submitting my core changes back to the jMonkey project. They are handy for anyone who is interested
+ 	and have no hard connections back into CSG.</p>
+ 	
+ 	<h3>Features</h3>
+ 	<dl>
+ 	<dt>CSGShape</dt>
+ 	<dd>The basic CSG primitive based on any arbitrary Mesh.</dd>
+  	<dt>CSGGeometry</dt>
+ 	<dd>The boolean blending point for the various CSGShapes which results in a final shape to
+ 	which a Material is applied.</dd>
+ 	</dl>
+ 	 
+    <h3>Licensed like jMonkey</h3>
+    <p>New BSD (3-clause) License. In other words, you do whatever makes you happy!</p>
+    <h3>Download/Access the Code</h3>
+    <p>
+        jMonkeyCSG is managed via a SourceForge project which you can reference 
+        <a href="https://sourceforge.net/projects/jmonkeycsg/">here</a>. 
+        All source is available via the SourceForge 
+        <a href="https://sourceforge.net/p/jmonkeycsg/code/HEAD/tree/">SVN repository</a>.
+    </p>
+</div>
+</body>
+</html>
