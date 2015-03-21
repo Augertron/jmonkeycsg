@@ -49,6 +49,20 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 
 /** Specialization/Copy of standard JME3 Sphere for unification with other CSG shapes
+ 	Like CSGCylinder (and the original Sphere) we render slices of the sphere along the
+ 	z-axis.  AxisSamples determines how many slices to produce, and RadialSamples 
+ 	determines how many vertices to produce around the circle for each slice.
+ 	
+ 	The concept of 'eccentricity' is supported to produce oblate/prolate spheroids.  
+ 	For e == 0 --> follow a circle and produce a regular sphere
+ 	For e > 0 and e < 1 --> follow an ellipse where the major axis is the radius (prolate)
+ 	For e >= 1 --> follow an ellipse where the minor axis is the radius (oblate)
+ 	
+ 	In all cases, every slice is circular.  The eccentricity only determines how the
+ 	radius of the slice is determined.  Again, in all cases, the zExtent matches the radius.
+ 	For e == 0 --> the xExtent and yExtent match the radius.
+ 	For e > 0 and e < 1 --> the xExtent and yExtent will be smaller than the radius
+ 	For e > 1 --> the xExtent and yExtent will be greater than the radius
  */
 public class CSGSphere 
 	extends CSGMesh
@@ -78,7 +92,7 @@ public class CSGSphere
     /** The eccentricity (where 0 is a circle) */
     protected float			mEccentricity;
 
-    /** When generating the slices along the z-axis, evenly space them (or create more near the extremities) */
+    /** When generating the slices along the z-axis, evenly space them (else create more near the extremities) */
     protected boolean 		mEvenSlices;
     /** If inverted, then the cylinder is intended to be viewed from the inside */
     protected boolean 		mInverted;
@@ -164,7 +178,10 @@ public class CSGSphere
         // generate the sphere itself
         int i = 0;
         float rSquared = mRadius * mRadius;
-        float oneMinusESquared = (mEccentricity > 0) ? (1 - (mEccentricity * mEccentricity)) : 1;
+        float eSquared = mEccentricity * mEccentricity;
+        float oneMinusESquared = (mEccentricity >= 1)
+        							?	eSquared
+        							:	((mEccentricity > 0) ? (1 - eSquared) : 1);
         
         for (int iZ = 1; iZ < (mAxisSamples - 1); iZ++) {
             float fAFraction = FastMath.HALF_PI * (-1.0f + fZFactor * iZ); // in (-pi/2, pi/2)

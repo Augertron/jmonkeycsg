@@ -45,7 +45,7 @@ import com.jme3.scene.shape.Cylinder;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.texture.Texture;
 
-import net.wcomohundro.jme3.csg.CSGGeometry;
+import net.wcomohundro.jme3.csg.CSGGeonode;
 import net.wcomohundro.jme3.csg.CSGShape;
 
 /** Simple test of the CSG suport 
@@ -54,11 +54,13 @@ import net.wcomohundro.jme3.csg.CSGShape;
 public class CSGTestB 
 	extends SimpleApplication 
 {
-
-	public CSGTestB(
+	public static void main(
+		String[] 	pArgs
 	) {
-		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+	    SimpleApplication app = new CSGTestB();		    
+	    app.start();
 	}
+
     @Override
     public void simpleInitApp(
     ) {
@@ -67,61 +69,88 @@ public class CSGTestB
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 	    
 	    // Long cylinder that pokes out of the cube
-    	CSGGeometry aGeometry = buildShape( CSGGeometry.CSGOperator.UNION, 2.5f, CSGGeometry.CSGOperator.UNION );
-    	aGeometry.move( 0f, 3, 0f );
+    	Spatial aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
+    	aGeometry.move( -3f, 0, 0f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION, 2.5f, CSGGeometry.CSGOperator.DIFFERENCE );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
+    	aGeometry.move( 0f, 0f, 0f );
+    	rootNode.attachChild( aGeometry );
+    	
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
     	aGeometry.move( 3f, 0f, 0f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION, 2.5f, CSGGeometry.CSGOperator.INTERSECTION );
-    	aGeometry.move( 0f, 0f, 3f );
+    	// Short cylinder that does not span out of the cube
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, false );
+    	aGeometry.move( -3f, 3f, 0f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION, 2.5f, CSGGeometry.CSGOperator.SKIP );
-    	aGeometry.move( -3f, 0f, 0f );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
+    	aGeometry.move( 0f, 3f, 0f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.SKIP, 2.5f, CSGGeometry.CSGOperator.UNION );
-    	aGeometry.move( 0f, -3f, 0f );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
+    	aGeometry.move( 3f, 3f, 0f );
+    	rootNode.attachChild( aGeometry );
+    	
+	    // Long cylinder that pokes out of the cube
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, true );
+    	aGeometry.move( -3f, 0, -5f );
+    	rootNode.attachChild( aGeometry );
+    	
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, true );
+    	aGeometry.move( 0f, 0f, -5f );
+    	rootNode.attachChild( aGeometry );
+    	
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.INTERSECTION, true );
+    	aGeometry.move( 3f, 0f, -5f );
     	rootNode.attachChild( aGeometry );
     	
     	// Short cylinder that does not span out of the cube
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION, 1.5f, CSGGeometry.CSGOperator.UNION );
-    	aGeometry.move( 0f, 3f, -8f );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, true );
+    	aGeometry.move( -3f, 3f, -5f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION, 1.5f, CSGGeometry.CSGOperator.DIFFERENCE );
-    	aGeometry.move( 3f, 0f, -8f );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, true );
+    	aGeometry.move( 0f, 3f, -5f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION, 1.5f, CSGGeometry.CSGOperator.INTERSECTION );
-    	aGeometry.move( 0f, 0f, -8f );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, true );
+    	aGeometry.move( 3f, 3f, -5f );
     	rootNode.attachChild( aGeometry );
-
-    	//Geometry aCylinder = new Geometry( "Cylinder", new Cylinder( 32, 32, 1.1f, 2.5f ) );
-        //aCylinder.setMaterial( new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" ) );
-        //aCylinder.setLocalTranslation(new Vector3f(0f,-3f,0f));
-        //rootNode.attachChild( aCylinder );
+    	
+    	// Just the box
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.SKIP, false );
+    	aGeometry.move( -3f, 0f, 5f );
+    	rootNode.attachChild( aGeometry );
+    	// Just the cylinder
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.SKIP, 2.5f, CSGGeonode.CSGOperator.UNION, true );
+    	aGeometry.move( 3f, 0f, 5f );
+    	rootNode.attachChild( aGeometry );
     }
 
-    protected CSGGeometry buildShape(
-        CSGGeometry.CSGOperator		pOperator1
+    protected Spatial buildShape(
+    	CSGGeonode.CSGOperator		pOperator1
     ,	float						pLength
-    ,	CSGGeometry.CSGOperator		pOperator2
+    ,	CSGGeonode.CSGOperator		pOperator2
+    ,	boolean						pColored
     ) {
 	    // Basic material for the CSG
         Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
-    	//mat_csg.getAdditionalRenderState().setFaceCullMode( FaceCullMode.Off );
 
-    	CSGGeometry aGeometry = new CSGGeometry();
+    	CSGGeonode aGeometry = new CSGGeonode();
     	aGeometry.setMaterial( mat_csg );
 
     	CSGShape aCube = new CSGShape( "Box", new Box(1,1,1) );
     	aGeometry.addShape( aCube, pOperator1 );
 
     	CSGShape aCylinder = new CSGShape( "Cylinder", new Cylinder( 32, 32, 1.1f, pLength, true ) );
+    	if ( pColored ) {
+            Material mat1 = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
+            mat1.setColor( "Color", ColorRGBA.Yellow );
+            aCylinder.setMaterial( mat1 );
+    	}
     	aGeometry.addShape( aCylinder, pOperator2 );
     	
     	aGeometry.regenerate();
