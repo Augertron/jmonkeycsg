@@ -26,6 +26,13 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='0.75'/>
         </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box1'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-9'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='1.5'/>
+        </com.jme3.scene.Geometry>
         
         <!-- Wireframe -->
         <com.jme3.scene.Geometry name='Box1'
@@ -48,6 +55,13 @@
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-6'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='0.75'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box1'
+        		materialName='Textures/Debug/Wireframe.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-9'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='1.5'/>
         </com.jme3.scene.Geometry>
         
         <!-- Brickwall -->

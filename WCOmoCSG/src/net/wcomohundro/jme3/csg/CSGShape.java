@@ -33,6 +33,7 @@ package net.wcomohundro.jme3.csg;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,15 +141,15 @@ public class CSGShape
         aBuffer.flip();
         return aBuffer;
     }
-    public static IntBuffer createIntBuffer(
-    	List<Integer> 	pIndices
+    public static ShortBuffer createIndexBuffer(
+    	List<Number> 	pIndices
     ) {
-        IntBuffer aBuffer = BufferUtils.createIntBuffer( pIndices.size() );
-        for( Integer aValue : pIndices ) {
+    	ShortBuffer aBuffer = BufferUtils.createShortBuffer( pIndices.size() );
+        for( Number aValue : pIndices ) {
             if ( aValue != null ) {
-            	aBuffer.put( aValue.intValue() );
+            	aBuffer.put( aValue.shortValue() );
             } else {
-            	aBuffer.put(0);
+            	aBuffer.put( (short)0 );
             }
         }
         aBuffer.flip();
@@ -383,7 +384,7 @@ public class CSGShape
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );
 		List<Vector3f> aNormalList = new ArrayList<Vector3f>( anEstimateVertexCount );
 		List<Vector2f> aTexCoordList = new ArrayList<Vector2f>( anEstimateVertexCount  );
-		List<Integer> anIndexList = new ArrayList<Integer>( anEstimateVertexCount );
+		List<Number> anIndexList = new ArrayList<Number>( anEstimateVertexCount );
 		
 		// Include the master list of all elements
 		meshList.add( toMesh( -1, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList ) );
@@ -404,7 +405,7 @@ public class CSGShape
 	,	List<Vector3f> 		pPositionList
 	,	List<Vector3f> 		pNormalList
 	,	List<Vector2f> 		pTexCoordList
-	,	List<Integer> 		pIndexList
+	,	List<Number> 		pIndexList
 	) {
 		Mesh aMesh = new Mesh();
 		
@@ -420,7 +421,7 @@ public class CSGShape
 			List<CSGVertex> aVertexList = aPolygon.getVertices();
 			int aVertexCount = aVertexList.size();
 			
-			List<Integer> vertexPointers = new ArrayList<Integer>( aVertexCount );
+			List<Number> vertexPointers = new ArrayList<Number>( aVertexCount );
 			for( CSGVertex aVertex : aVertexList ) {
 				pPositionList.add( aVertex.getPosition() );
 				pNormalList.add( aVertex.getNormal() );
@@ -438,7 +439,7 @@ public class CSGShape
 		aMesh.setBuffer( Type.Position, 3, createVector3Buffer( pPositionList ) );
 		aMesh.setBuffer( Type.Normal, 3, createVector3Buffer( pNormalList ) );
 		aMesh.setBuffer( Type.TexCoord, 2, createVector2Buffer( pTexCoordList ) );
-		aMesh.setBuffer( Type.Index, 3, createIntBuffer( pIndexList ) );
+		aMesh.setBuffer( Type.Index, 3, createIndexBuffer( pIndexList ) );
 /***
 		// Populate the appropriate mesh buffers (which are based on arrays)
 		Vector3f[] positionArray = pPositionList.toArray( new Vector3f[ pPositionList.size() ] );

@@ -37,6 +37,13 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='UNIFORM'/>
         </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-6.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='FLAT_LINEAR'/>
+        </com.jme3.scene.Geometry>
         
    		<!-- Rock1 -->
         <com.jme3.scene.Geometry name='Box3'

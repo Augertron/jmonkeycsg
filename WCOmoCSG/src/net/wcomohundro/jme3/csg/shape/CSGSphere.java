@@ -133,21 +133,11 @@ public class CSGSphere
     @Override
     public void updateGeometry(
     ) {
-    	int vertexCount = setGeometryData();
-    	setIndexData( vertexCount );
-    }
-    /** builds the vertices based on the radius, radial and zSamples. */
-    protected int setGeometryData(
-    ) {
-        // allocate vertices
+        // Allocate buffers for position/normals/texture
         int vertCount = (mAxisSamples - 2) * (mRadialSamples + 1) + 2;
 
         FloatBuffer posBuf = BufferUtils.createVector3Buffer(vertCount);
-
-        // allocate normals if requested
         FloatBuffer normBuf = BufferUtils.createVector3Buffer(vertCount);
-
-        // allocate texture coordinates
         FloatBuffer texBuf = BufferUtils.createVector2Buffer(vertCount);
 
         setBuffer(Type.Position, 3, posBuf);
@@ -175,15 +165,15 @@ public class CSGSphere
         Vector3f tempVb = vars.vect2;
         Vector3f tempVc = vars.vect3;
 
-        // generate the sphere itself
-        int i = 0;
+        // Generate the sphere itself
+        int index = 0;
         float rSquared = mRadius * mRadius;
         float eSquared = mEccentricity * mEccentricity;
         float oneMinusESquared = (mEccentricity >= 1)
         							?	eSquared
         							:	((mEccentricity > 0) ? (1 - eSquared) : 1);
         
-        for (int iZ = 1; iZ < (mAxisSamples - 1); iZ++) {
+        for( int iZ = 1; iZ < (mAxisSamples - 1); iZ += 1 ) {
             float fAFraction = FastMath.HALF_PI * (-1.0f + fZFactor * iZ); // in (-pi/2, pi/2)
             float fZFraction;
             if ( mEvenSlices ) {
@@ -212,7 +202,7 @@ public class CSGSphere
 
             // compute slice vertices with duplication at end point
             Vector3f kNormal;
-            int iSave = i;
+            int iSave = index;
             for (int iR = 0; iR < mRadialSamples; iR++) {
                 float fRadialFraction = iR * fInvRS; // in [0,1)
                 Vector3f kRadial = tempVc.set(afCos[iR], afSin[iR], 0);
@@ -221,7 +211,7 @@ public class CSGSphere
                 		.put( kSliceCenter.y + tempVa.y )
                 		.put( kSliceCenter.z + tempVa.z );
 
-                BufferUtils.populateFromBuffer(tempVa, posBuf, i);
+                BufferUtils.populateFromBuffer( tempVa, posBuf, index );
                 kNormal = tempVa;
                 kNormal.normalizeLocal();
                 if ( !mInverted ) {
@@ -246,97 +236,71 @@ public class CSGSphere
                     texBuf.put(u).put(v);
                     break;
                 }
-                i += 1;
+                index += 1;
             }
-
-            BufferUtils.copyInternalVector3(posBuf, iSave, i);
-            BufferUtils.copyInternalVector3(normBuf, iSave, i);
+            // Copy the first radial vertex to the end
+            BufferUtils.copyInternalVector3( posBuf, iSave, index );
+            BufferUtils.copyInternalVector3( normBuf, iSave, index );
 
             switch( mTextureMode ) {
             case ZAXIS:
-                texBuf.put(1.0f)
-                	.put( 0.5f * (fZFraction + 1.0f));
+                texBuf.put(1.0f).put( 0.5f * (fZFraction + 1.0f) );
                 break;
             case PROJECTED:
                 texBuf.put(1.0f)
-                	.put(
-                        FastMath.INV_PI
-                        * (FastMath.HALF_PI + FastMath.asin(fZFraction)));
+                	.put( FastMath.INV_PI * (FastMath.HALF_PI + FastMath.asin(fZFraction)));
                 break;
             case POLAR:
                 float r = (FastMath.HALF_PI - FastMath.abs(fAFraction)) / FastMath.PI;
                 texBuf.put(r + 0.5f).put(0.5f);
                 break;
             }
-            i += 1;
+            index += 1;
         }
-
         vars.release();
 
-        // south pole
-        posBuf.position(i * 3);
+        // South pole
+        posBuf.position( index * 3);
         posBuf.put(0f).put(0f).put( -mRadius );
 
-        normBuf.position(i * 3);
+        normBuf.position( index * 3);
         if ( !mInverted ) {
             normBuf.put(0).put(0).put(-1); // allow for inner
-        } // texture orientation
-        // later.
-        else {
+        } else {
             normBuf.put(0).put(0).put(1);
         }
-
-        texBuf.position(i * 2);
+        texBuf.position( index * 2 );
 
         if ( mTextureMode == TextureMode.POLAR ) {
             texBuf.put(0.5f).put(0.5f);
         } else {
             texBuf.put(0.5f).put(0.0f);
         }
-
-        i++;
-
-        // north pole
+        // North pole
         posBuf.put(0).put(0).put( mRadius );
-
         if ( !mInverted ) {
             normBuf.put(0).put(0).put(1);
         } else {
             normBuf.put(0).put(0).put(-1);
         }
-
         if ( mTextureMode == TextureMode.POLAR ) {
             texBuf.put(0.5f).put(0.5f);
         } else {
             texBuf.put(0.5f).put(1.0f);
         }
-
-        updateBound();
-        setStatic();
-        
-        return( vertCount );
-    }
-
-    /**
-     * sets the indices for rendering the sphere.
-     */
-    private void setIndexData(
-    	int 	pVertexCount
-    ) {
-        // allocate connectivity
+        // Allocate the indices
         int triCount = 2 * (mAxisSamples - 2) * mRadialSamples;
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer(3 * triCount);
-        setBuffer(Type.Index, 3, idxBuf);
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * triCount );
+        setBuffer( Type.Index, 3, idxBuf );
 
-        // generate connectivity
-        int index = 0;
-        for (int iZ = 0, iZStart = 0; iZ < (mAxisSamples - 3); iZ++) {
+        index = 0;
+        for( int iZ = 0, iZStart = 0; iZ < (mAxisSamples - 3); iZ++ ) {
             int i0 = iZStart;
             int i1 = i0 + 1;
             iZStart += (mRadialSamples + 1);
             int i2 = iZStart;
             int i3 = i2 + 1;
-            for (int i = 0; i < mRadialSamples; i++, index += 6) {
+            for( int i = 0; i < mRadialSamples; i++, index += 6) {
                 if ( !mInverted ) {
                     idxBuf.put((short) i0++);
                     idxBuf.put((short) i1);
@@ -354,35 +318,35 @@ public class CSGSphere
                 }
             }
         }
-
-        // south pole triangles
-        for (int i = 0; i < mRadialSamples; i++, index += 3) {
+        // South pole triangles
+        for( int i = 0; i < mRadialSamples; i++, index += 3 ) {
             if ( !mInverted ) {
                 idxBuf.put((short) i);
-                idxBuf.put((short) (pVertexCount - 2));
+                idxBuf.put((short) (vertCount - 2));
                 idxBuf.put((short) (i + 1));
             } else { // inside view
                 idxBuf.put((short) i);
                 idxBuf.put((short) (i + 1));
-                idxBuf.put((short) (pVertexCount - 2));
+                idxBuf.put((short) (vertCount - 2));
             }
         }
-
-        // north pole triangles
+        // North pole triangles
         int iOffset = (mAxisSamples - 3) * (mRadialSamples + 1);
-        for (int i = 0; i < mRadialSamples; i++, index += 3) {
+        for( int i = 0; i < mRadialSamples; i++, index += 3 ) {
             if ( !mInverted ) {
                 idxBuf.put((short) (i + iOffset));
                 idxBuf.put((short) (i + 1 + iOffset));
-                idxBuf.put((short) (pVertexCount - 1));
+                idxBuf.put((short) (vertCount - 1));
             } else { // inside view
                 idxBuf.put((short) (i + iOffset));
-                idxBuf.put((short) (pVertexCount - 1));
+                idxBuf.put((short) (vertCount - 1));
                 idxBuf.put((short) (i + 1 + iOffset));
             }
         }
+        // Establish the bounds
+        updateBound();
+        setStatic();
     }
-
 
     /** Support texture scaling */
     @Override

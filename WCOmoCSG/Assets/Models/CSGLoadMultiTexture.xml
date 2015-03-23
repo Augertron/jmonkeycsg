@@ -76,9 +76,9 @@
                 <net.wcomohundro.jme3.csg.CSGShape name='Interior' Operator='DIFFERENCE'
                 		materialName='Textures/BrickWall/BrickWallRpt.xml'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-                    	 axisSamples='34' closed='true' height='1.0' radialSamples='32' radius='0.5'>
+                    	 axisSamples='34' closed='true' height='1.0' radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'>
                     	<scaleFaces>
-                    		<com.jme3.math.Vector3f x='3.0' y='9.9' z='2'/>
+                    		<com.jme3.math.Vector3f x='9.95' y='3' z='2'/>
                     	</scaleFaces>
                     </mesh>
                     <transform class='com.jme3.math.Transform'>

@@ -59,6 +59,8 @@ public class CSGCylinder
     public enum TextureMode {
         FLAT			// The texture of the end caps is simply flat
     ,   UNIFORM			// Texture of end caps is flat and uniform in scale to the curved surface
+    ,	FLAT_LINEAR		// Flat end caps, curved surface is linear front-to-back
+    ,	UNIFORM_LINEAR	// Flat, uniform end caps, curved surface is linear front-to-back
     }
 	/** Identify the 3 faces of the cylinder  */
 	public enum Face {
@@ -171,11 +173,19 @@ public class CSGCylinder
 
         // generate geometry
         float inverseRadial = 1.0f / mRadialSamples;
-        float inverseAxisLess = 1.0f / (mAxisSamples - 1);
-        float inverseAxisLessTexture = 1.0f / (aSliceCount - 1);
+        float inverseAxis = 1.0f / (mAxisSamples - 1);
         float fullHeight = mExtentZ * 2;
-        float textureBias = (mTextureMode == TextureMode.UNIFORM) ? FastMath.INV_PI : 1.0f;
-
+        
+        float endcapTextureBias;
+        switch( mTextureMode ) {
+        case UNIFORM:
+        case UNIFORM_LINEAR:
+        	endcapTextureBias = FastMath.INV_PI;
+        	break;
+        default:
+        	endcapTextureBias = 1.0f;
+        	break;
+        }
         // Generate points on the unit circle to be used in computing the mesh
         // points on a cylinder slice. 
         float[] sin = new float[ mRadialSamples ];
@@ -186,49 +196,47 @@ public class CSGCylinder
             cos[ radialCount ] = FastMath.cos( angle );
             sin[ radialCount ] = FastMath.sin( angle );
         }
-        // calculate normals
+        // Calculate normals
         Vector3f[] vNormals = null;
         Vector3f vNormal = Vector3f.UNIT_Z;
 
-        if ((fullHeight > 0.0f) && ( mRadiusFront != mRadiusBack)) {
+        if ( (fullHeight > 0.0f) && (mRadiusFront != mRadiusBack) ) {
         	// Account for the slant of the normal when the radii differ
             vNormals = new Vector3f[ mRadialSamples ];
             Vector3f vHeight = Vector3f.UNIT_Z.mult( fullHeight );
             Vector3f vRadial = new Vector3f();
 
-            for (int radialCount = 0; radialCount < mRadialSamples; radialCount++) {
-                vRadial.set(cos[radialCount], sin[radialCount], 0.0f);
+            for( int radialCount = 0; radialCount < mRadialSamples; radialCount += 1 ) {
+                vRadial.set( cos[radialCount], sin[radialCount], 0.0f );
                 Vector3f vRadius = vRadial.mult( mRadiusFront );
                 Vector3f vRadius2 = vRadial.mult( mRadiusBack );
-                Vector3f vMantle = vHeight.subtract(vRadius2.subtract(vRadius));
-                Vector3f vTangent = vRadial.cross(Vector3f.UNIT_Z);
-                vNormals[radialCount] = vMantle.cross(vTangent).normalize();
+                Vector3f vMantle = vHeight.subtract( vRadius2.subtract(vRadius) );
+                Vector3f vTangent = vRadial.cross( Vector3f.UNIT_Z );
+                vNormals[radialCount] = vMantle.cross( vTangent ).normalize();
             }
         }
         // Generate the cylinder itself, working up the axis, generating vertices at each slice
         Vector3f tempNormal = new Vector3f();
-        for (int axisCount = 0, i = 0; axisCount < aSliceCount; axisCount++, i++) {
+        for( int axisCount = 0, i = 0; axisCount < aSliceCount; axisCount++, i += 1 ) {
         	// Percent of distance along the axis
             float axisFraction;
-            float axisFractionTexture;
+            float axisFractionTexture = Float.NaN;
             int topBottom = 0;
             if ( !mClosed ) {
             	// Each slice is evenly spaced
-                axisFraction = axisCount * inverseAxisLess;
+                axisFraction = axisCount * inverseAxis;
                 axisFractionTexture = axisFraction;
             } else {
             	// The first slice is the closed bottom, and the last slice is the closed top
                 if (axisCount == 0) {
                     topBottom = -1; // bottom
                     axisFraction = 0;
-                    axisFractionTexture = inverseAxisLessTexture;
                 } else if (axisCount == aSliceCount - 1) {
                     topBottom = 1; // top
                     axisFraction = 1;
-                    axisFractionTexture = 1 - inverseAxisLessTexture;
                 } else {
-                    axisFraction = (axisCount - 1) * inverseAxisLess;
-                    axisFractionTexture = axisCount * inverseAxisLessTexture;
+                    axisFraction = (axisCount - 1) * inverseAxis;
+                    axisFractionTexture = (axisCount - 1) * inverseAxis;
                 }
             }
             // compute center of slice
@@ -237,14 +245,14 @@ public class CSGCylinder
 
             // Compute slice vertices, with duplication at the end point
             int save = i;
-            for (int radialCount = 0; radialCount < mRadialSamples; radialCount++, i++) {
+            for( int radialCount = 0; radialCount < mRadialSamples; radialCount += 1, i += 1 ) {
             	// How far around the circle are we?
                 float radialFraction = radialCount * inverseRadial;
                 
                 // And what is the normal to this portion of the arc?
-                tempNormal.set(cos[radialCount], sin[radialCount], 0.0f);
+                tempNormal.set( cos[radialCount], sin[radialCount], 0.0f );
 
-                if (vNormals != null) {
+                if ( vNormals != null ) {
                 	// Use the slant
                     vNormal = vNormals[radialCount];
                 } else if ( mRadiusFront == mRadiusBack ) {
@@ -265,28 +273,48 @@ public class CSGCylinder
                 // What texture applies?
                 if ( topBottom == 0 ) {
                 	// Map the texture along the curved surface
-                	tb.put((mInverted ? 1 - radialFraction : radialFraction))
-                        	.put(axisFractionTexture);
+                    switch( mTextureMode ) {
+                    case FLAT:
+                    case UNIFORM:
+                    	// Run the texture around the circle
+                    	tb.put( (mInverted ? 1 - radialFraction : radialFraction) )
+                    		.put( axisFractionTexture );                    	
+                    	break;
+                    default:
+                    	// Run the texture linearly from front to back
+                    	tb.put( axisFractionTexture )
+                    		.put( mInverted ? radialFraction : 1 - radialFraction ); 	
+                    	break;
+                    }
                 } else if ( topBottom < 0 ) {
                 	// Map the texture to the bottom cap (facing the other way, right to left)
-                	tb.put( 0.5f - ((tempNormal.x / 2.0f) * textureBias))
-        					.put( 0.5f + ((tempNormal.y / 2.0f) * textureBias) );
+                	tb.put( 0.5f - ((tempNormal.x / 2.0f) * endcapTextureBias))
+        					.put( 0.5f + ((tempNormal.y / 2.0f) * endcapTextureBias) );
                 } else {
                 	// Map the texture to the top cap (simple left to right)
-                	tb.put( 0.5f + ((tempNormal.x / 2.0f) * textureBias))
-        					.put( 0.5f + ((tempNormal.y / 2.0f) * textureBias) );
+                	tb.put( 0.5f + ((tempNormal.x / 2.0f) * endcapTextureBias))
+        					.put( 0.5f + ((tempNormal.y / 2.0f) * endcapTextureBias) );
                 }
                 // Where is the point along the circle ?
                 tempNormal.multLocal((mRadiusFront - mRadiusBack) * axisFraction + mRadiusBack )
                         .addLocal(sliceCenter);
-                pb.put(tempNormal.x).put(tempNormal.y).put(tempNormal.z);
+                
+                pb.put( tempNormal.x ).put( tempNormal.y ).put( tempNormal.z );
             }
             // Copy the first generated point of the trip around the circle as the last
             BufferUtils.copyInternalVector3( pb, save, i );
             BufferUtils.copyInternalVector3( nb, save, i );
             if ( topBottom == 0 ) {
             	// Full circle, so select the extremity of the texture
-            	tb.put((mInverted ? 0.0f : 1.0f)).put(axisFractionTexture);
+            	switch( mTextureMode ) {
+                case FLAT:
+                case UNIFORM:
+                	tb.put((mInverted ? 0.0f : 1.0f)).put( axisFractionTexture );
+                	break;
+                default:
+                	tb.put( axisFractionTexture ).put( mInverted ? 1.0f : 0.0f );
+                	break;
+            	}
             } else {
             	// Back to the beginning of the end cap
             	BufferUtils.copyInternalVector2( tb, save, i );
