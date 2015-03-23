@@ -32,6 +32,7 @@ package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,6 +110,51 @@ public class CSGShape
 
 	/** Canned, immutable empty list of polygons */
 	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);
+	
+	/** Service to create a vector buffer for a given List */
+    public static FloatBuffer createVector3Buffer(
+    	List<Vector3f> 	pVectors
+    ) {
+        FloatBuffer aBuffer = BufferUtils.createVector3Buffer( pVectors.size() );
+        for( Vector3f aVector : pVectors ) {
+            if ( aVector != null ) {
+            	aBuffer.put( aVector.x ).put( aVector.y ).put( aVector.z );
+            } else {
+            	aBuffer.put(0).put(0).put(0);
+            }
+        }
+        aBuffer.flip();
+        return aBuffer;
+    }
+    public static FloatBuffer createVector2Buffer(
+    	List<Vector2f> 	pVectors
+    ) {
+        FloatBuffer aBuffer = BufferUtils.createVector2Buffer( pVectors.size() );
+        for( Vector2f aVector : pVectors ) {
+            if ( aVector != null ) {
+            	aBuffer.put( aVector.x ).put( aVector.y );
+            } else {
+            	aBuffer.put(0).put(0);
+            }
+        }
+        aBuffer.flip();
+        return aBuffer;
+    }
+    public static IntBuffer createIntBuffer(
+    	List<Integer> 	pIndices
+    ) {
+        IntBuffer aBuffer = BufferUtils.createIntBuffer( pIndices.size() );
+        for( Integer aValue : pIndices ) {
+            if ( aValue != null ) {
+            	aBuffer.put( aValue.intValue() );
+            } else {
+            	aBuffer.put(0);
+            }
+        }
+        aBuffer.flip();
+        return aBuffer;
+    }
+
 	
 	/** The list of polygons that make up this shape */
 	protected List<CSGPolygon>			mPolygons;
@@ -388,6 +434,12 @@ public class CSGShape
 				pIndexList.add( vertexPointers.get(ptr) );
 			}
 		}
+		// Use our own buffer setters to optimize access and cut down on object churn
+		aMesh.setBuffer( Type.Position, 3, createVector3Buffer( pPositionList ) );
+		aMesh.setBuffer( Type.Normal, 3, createVector3Buffer( pNormalList ) );
+		aMesh.setBuffer( Type.TexCoord, 2, createVector2Buffer( pTexCoordList ) );
+		aMesh.setBuffer( Type.Index, 3, createIntBuffer( pIndexList ) );
+/***
 		// Populate the appropriate mesh buffers (which are based on arrays)
 		Vector3f[] positionArray = pPositionList.toArray( new Vector3f[ pPositionList.size() ] );
 		Vector3f[] normalArray = pNormalList.toArray( new Vector3f[ pNormalList.size() ] );
@@ -400,6 +452,7 @@ public class CSGShape
 		aMesh.setBuffer( Type.Normal, 3, BufferUtils.createFloatBuffer(normalArray));
 		aMesh.setBuffer( Type.Index, 3, BufferUtils.createIntBuffer(indicesIntArray));
 		aMesh.setBuffer( Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoordArray));
+****/
 		aMesh.updateBound();
 		aMesh.updateCounts();
 		

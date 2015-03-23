@@ -41,6 +41,9 @@ import java.util.logging.Level;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetNotFoundException;
+import com.jme3.bounding.BoundingVolume;
+import com.jme3.collision.Collidable;
+import com.jme3.collision.CollisionResults;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -85,6 +88,8 @@ public class CSGGeonode
 	/** A canned zero */
 	protected static final Integer sGenericMaterialIndex = new Integer( 0 );
 	
+	/** The master geometry/mesh that describes the overall shape */
+	protected CSGGeometry		mMasterGeometry;
 	/** The master material */
     protected Material 			mMaterial;
     /** Control flag to force the use of a single material set at this node level */
@@ -92,6 +97,7 @@ public class CSGGeonode
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
 
+	
 	/** Basic null constructor */
 	public CSGGeonode(
 	) {
@@ -125,7 +131,7 @@ public class CSGGeonode
 		}
 	}
 	
-    /** Accessor to the Material (ala Geometry */
+    /** Accessor to the Material (ala Geometry) */
     public Material getMaterial() { return mMaterial; }
     @Override
     public void setMaterial(
@@ -150,7 +156,7 @@ public class CSGGeonode
 			CSGShape aProduct = null;
 			for( CSGShape aShape : sortedShapes ) {
 				// Any special Material?
-				Integer materialIndex = null;
+				Integer materialIndex;
 				Material aMaterial = (mForceSingleMaterial) ? null : aShape.getMaterial();
 				if ( aMaterial != null ) {
 					// Locate cached copy of the material
@@ -161,23 +167,24 @@ public class CSGGeonode
 						materialMap = new HashMap( 17 );
 						
 						materialIndex = new Integer( ++materialCount );
-						materialMap.put( materialKey, materialIndex );
+						if ( materialKey != null ) materialMap.put( materialKey, materialIndex );
 						materialMap.put( materialIndex, aMaterial );
 						
 						// Include the 'generic' material as well as index zero
 						if ( this.mMaterial != null ) {
-							materialMap.put( this.mMaterial.getKey(), sGenericMaterialIndex );
+							materialKey =  this.mMaterial.getKey();
+							if ( materialKey != null ) materialMap.put( materialKey, sGenericMaterialIndex );
 							materialMap.put( sGenericMaterialIndex, this.mMaterial );
 						}
 						
-					} else if ( materialMap.containsKey( materialKey ) ) {
+					} else if ( (materialKey != null) && materialMap.containsKey( materialKey ) ) {
 						// Use the material already found
 						materialIndex = (Integer)materialMap.get( materialKey );
 						
 					} else {
 						// Add this custom material into the list
 						materialIndex = new Integer( ++materialCount );
-						materialMap.put( materialKey,  materialIndex );
+						if ( materialKey != null ) materialMap.put( materialKey,  materialIndex );
 						materialMap.put( materialIndex, aMaterial );
 					}
 				} else {
@@ -220,16 +227,21 @@ public class CSGGeonode
 					break;
 				}
 			}
+			// Build up the mesh(es)
+			mMasterGeometry = null;
 			if ( aProduct != null ) {
 				// Transform the list of meshes into children
-				// (note that the zero mesh is an Overall mesh that crosses all materials,
-				//  and the one mesh is the one that corresponds to the generic material)
+				// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
+				//  and the 'one' mesh is the one that corresponds to the generic material)
 				List<Mesh> meshList = aProduct.toMesh( (materialMap == null) ? 0 : materialCount );
+				if ( !meshList.isEmpty() ) {
+					// Use the 'zero' mesh to describe the overall geometry
+					mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );
+					mMasterGeometry.setMaterial( mMaterial.clone() );
+				}
 				if ( meshList.size() == 1 ) {
-					// Singleton element
-					Geometry aChild = new Geometry( this.getName(), meshList.get( 0 ) );
-					aChild.setMaterial( mMaterial );
-					this.attachChild( aChild );
+					// Singleton element, where the master becomes our only child
+					this.attachChild( mMasterGeometry );
 					
 				} else if ( meshList.size() > 1 ) {
 					// Multiple elements, with the first dedicated to the 'generic' material
@@ -237,14 +249,73 @@ public class CSGGeonode
 					for( int i = 1, j = meshList.size(); i < j; i += 1 ) {
 						Geometry aChild = new Geometry( this.getName() + i, meshList.get( i ) );
 						Material aMaterial = (Material)materialMap.get( new Integer( i - 1 ) );
-						aChild.setMaterial( aMaterial );
+						aChild.setMaterial( aMaterial.clone() );
 						this.attachChild( aChild );
 					}
+					// NOTE that we only attach the independent child meshes, not the master
 				}
-				
 			}
 		}
 	}
+	
+    /** Updates the bounding volume of the mesh. Should be called when the
+		mesh has been modified.
+		OVERRIDE to operate on the master 
+     */
+	@Override
+    public void updateModelBound(
+    ) {
+        super.updateModelBound();
+        
+        if ( mMasterGeometry != null) {
+        	mMasterGeometry.updateModelBound();
+        }
+    }
+
+    /** Update the bounding volume that contains this geometry. 
+     	OVERRIDE to operate on the master mesh
+     */
+    @Override
+    protected void updateWorldBound(
+    ) {
+    	// I was hoping to optimize this processing by operating solely on the the 
+    	// masterGeometry, but something goes amiss and the surfaces get lost at 
+    	// random viewing angles ?????
+        super.updateWorldBound();
+
+        if ( mMasterGeometry != null) {
+        	//this.worldBound = mMasterGeometry.refreshWorldBound().clone( this.worldBound );
+        }
+    }
+    
+    /**	Returns the number of triangles contained in all sub-branches of this node that contain geometry.
+		OVERRIDE to operate directly from the master 
+	*/
+    @Override
+    public int getTriangleCount(
+    ) {
+    	return( (mMasterGeometry == null) ? 0 : mMasterGeometry.getTriangleCount() );
+    }
+    
+    /**	Returns the number of vertices contained in all sub-branches of this node that contain geometry.
+   		OVERRIDE to operate directly from the master mesh
+     */
+    @Override
+    public int getVertexCount(
+    ) {
+        return( (mMasterGeometry == null) ? 0 : mMasterGeometry.getVertexCount() );
+    }
+    
+    /** Process a collision 
+     	OVERRIDE to operate directly from the master
+     */
+    public int collideWith(
+    	Collidable 			pOther
+    , 	CollisionResults 	pResults
+    ) {
+        return( (mMasterGeometry == null) ? 0 : mMasterGeometry.collideWith( pOther, pResults ) );
+    }
+
 
 	/** Support the persistence of this Geometry */
 	@Override
@@ -254,7 +325,7 @@ public class CSGGeonode
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 
 		// We are NOT interested in saving the generated children
-		// since we expect to rebuild the composit
+		// since we expect to rebuild the composite
 		SafeArrayList<Spatial> saveChildren = this.children;
 		this.children = null;
 		try {

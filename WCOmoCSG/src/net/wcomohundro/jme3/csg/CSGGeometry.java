@@ -50,6 +50,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.texture.Texture;
 
 /**  Constructive Solid Geometry (CSG)
@@ -92,6 +93,13 @@ public class CSGGeometry
 	) {
 		super( pName );
 	}
+	/** Constructor on a name and given mesh */
+	public CSGGeometry(
+		String	pName
+	,	Mesh	pMesh
+	) {
+		super( pName, pMesh );
+	}
 	
 	/** Add a shape to this geometry */
 	public void addShape(
@@ -114,11 +122,24 @@ public class CSGGeometry
 		}
 	}
 	
+	/** Access to the mesh 
+	 	OVERRIDE strictly for a debug hook
+	 */
 	@Override
-    public Mesh getMesh() {
-        return mesh;
+    public Mesh getMesh(
+    ) {
+        return( mesh );
     }
-
+	
+	/** For CSGGeonode use -- allow non protected access to updateWorldBound
+	 						  and the resulting bound
+	 */
+	public BoundingVolume refreshWorldBound(
+	) {
+		this.updateWorldBound();
+		return( worldBound );
+	}
+	
 	/** Action to generate the mesh based on the given shapes */
 	public void regenerate(
 	) {
