@@ -42,14 +42,15 @@ import com.jme3.scene.Spatial;
  	
  	// Sample SimpleApplication set up
  	@Override
-    public void simpleInitApp() {
+    public void simpleInitApp(
+    ) {
  	    // Register this XMLImporter to handle xml files
         assetManager.registerLocator( ".", FileLocator.class );
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
         
-        // Use a non-caching FilterKey
-        FilterKey aKey = new FilterKey( "SomeFileName.xml" );
-	    Spatial aScene = (Spatial)assetManager.loadAsset( aKey );
+        // Use an appropriate key for the type of object being loaded
+        ModelKey aKey = new ModelKey( "SomeModelFileName.xml" );
+	    Spatial aScene = assetManager.loadAsset( aKey );
 	    rootNode.attachChild( aScene );
 	}
  */

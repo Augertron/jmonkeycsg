@@ -65,7 +65,7 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	For e > 1 --> the xExtent and yExtent will be greater than the radius
  */
 public class CSGSphere 
-	extends CSGMesh
+	extends CSGRadial
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
@@ -79,23 +79,8 @@ public class CSGSphere
         				// but mirrors the texture across the equator
     }
 
-	/** How many sample circles to generate along the z axis */
-    protected int 			mAxisSamples;
-    /** How many point around the circle to generate
-     		The more points, the smoother the circular surface.
-     		The fewer points, and it looks like a triangle/cube/pentagon/...
-     */
-    protected int 			mRadialSamples;
-
-    /** The radius of the sphere */
-    protected float 		mRadius;
-    /** The eccentricity (where 0 is a circle) */
-    protected float			mEccentricity;
-
     /** When generating the slices along the z-axis, evenly space them (else create more near the extremities) */
     protected boolean 		mEvenSlices;
-    /** If inverted, then the cylinder is intended to be viewed from the inside */
-    protected boolean 		mInverted;
 	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */
 	protected TextureMode	mTextureMode;
 	
@@ -112,20 +97,13 @@ public class CSGSphere
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
     ) {
-        mAxisSamples = pAxisSamples;
-        mRadialSamples = pRadialSamples;
-        mRadius = pRadius;
+    	super( pAxisSamples, pRadialSamples, pRadius, pInverted );
         mEvenSlices = pUseEvenSlices;
-        mInverted = pInverted;
         mTextureMode = pTextureMode;
     }
 
     /** Configuration accessors */
-    public int getAxisSamples() { return mAxisSamples; }
-    public int getRadialSamples() { return mRadialSamples; }
-    public float getRadius() { return mRadius; }
     public boolean hasEvenSlices() { return mEvenSlices; }
-    public boolean isInverted() { return mInverted; }
     public TextureMode getTextureMode() { return mTextureMode; }
 
     
@@ -150,15 +128,7 @@ public class CSGSphere
 
         // Generate points on the unit circle to be used in computing the mesh
         // points on a sphere slice.
-        float[] afSin = new float[(mRadialSamples + 1)];
-        float[] afCos = new float[(mRadialSamples + 1)];
-        for (int iR = 0; iR < mRadialSamples; iR++) {
-            float fAngle = FastMath.TWO_PI * fInvRS * iR;
-            afCos[iR] = FastMath.cos(fAngle);
-            afSin[iR] = FastMath.sin(fAngle);
-        }
-        afSin[mRadialSamples] = afSin[0];
-        afCos[mRadialSamples] = afCos[0];
+        CSGRadialCoord[] coordList = getRadialCoordinates( mRadialSamples );
 
         TempVars vars = TempVars.get();
         Vector3f tempVa = vars.vect1;
@@ -203,10 +173,11 @@ public class CSGSphere
             // compute slice vertices with duplication at end point
             Vector3f kNormal;
             int iSave = index;
-            for (int iR = 0; iR < mRadialSamples; iR++) {
-                float fRadialFraction = iR * fInvRS; // in [0,1)
-                Vector3f kRadial = tempVc.set(afCos[iR], afSin[iR], 0);
-                kRadial.mult(fSliceRadius, tempVa);
+            for (int iRadial = 0; iRadial < mRadialSamples; iRadial += 1 ) {
+            	CSGRadialCoord aCoord = coordList[ iRadial ];
+                float fRadialFraction = iRadial * fInvRS; // in [0,1)
+                Vector3f kRadial = tempVc.set( aCoord.mCosine, aCoord.mSine, 0 );
+                kRadial.mult( fSliceRadius, tempVa );
                 posBuf.put( kSliceCenter.x + tempVa.x )
                 		.put( kSliceCenter.y + tempVa.y )
                 		.put( kSliceCenter.z + tempVa.z );
@@ -231,8 +202,8 @@ public class CSGSphere
                     break;
                 case POLAR:
                     float r = (FastMath.HALF_PI - FastMath.abs(fAFraction)) / FastMath.PI;
-                    float u = r * afCos[iR] + 0.5f;
-                    float v = r * afSin[iR] + 0.5f;
+                    float u = r * aCoord.mCosine + 0.5f;
+                    float v = r * aCoord.mSine + 0.5f;
                     texBuf.put(u).put(v);
                     break;
                 }
@@ -356,12 +327,7 @@ public class CSGSphere
     	super.write( pExporter );
     	
         OutputCapsule outCapsule = pExporter.getCapsule( this );
-        outCapsule.write( mAxisSamples, "axisSamples", 32 );
-        outCapsule.write( mRadialSamples, "radialSamples", 32 );
-        outCapsule.write( mRadius, "radius", 1 );
-        outCapsule.write( mEccentricity, "eccentricity", 0 );
         outCapsule.write( mEvenSlices, "useEvenSlices", false );
-        outCapsule.write( mInverted, "inverted", false );
         outCapsule.write( mTextureMode, "textureMode", TextureMode.ZAXIS );
     }
     @Override
@@ -370,12 +336,7 @@ public class CSGSphere
     ) throws IOException {
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
-        mAxisSamples = inCapsule.readInt( "axisSamples", 32 );
-        mRadialSamples = inCapsule.readInt( "radialSamples", 32 );
-        mRadius = inCapsule.readFloat( "radius", 1 );
-        mEccentricity = inCapsule.readFloat( "eccentricity", 0 );
         mEvenSlices = inCapsule.readBoolean( "useEvenSlices", false );
-        mInverted = inCapsule.readBoolean( "inverted", false );
         mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.ZAXIS );
 
         // Let the super do its thing (which will updateGeometry as needed)
@@ -412,6 +373,8 @@ public class CSGSphere
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
+		pBuffer = super.getVersion( pBuffer );
+		if ( pBuffer.length() > 0 ) pBuffer.append( "\n" );
 		return( ConstructiveSolidGeometry.getVersion( this.getClass()
 													, sCSGSphereRevision
 													, sCSGSphereDate

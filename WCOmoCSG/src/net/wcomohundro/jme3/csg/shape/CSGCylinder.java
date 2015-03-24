@@ -49,7 +49,7 @@ import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
 /** Specialization/Copy of standard JME3 Cylinder that applies a standard texture to its end caps
  */
 public class CSGCylinder 
-	extends CSGMesh
+	extends CSGRadial
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
@@ -73,25 +73,11 @@ public class CSGCylinder
 		public int getMask() { return mask; }
 	}
 
-	/** How many sample circles to generate along the axis */
-    protected int 			mAxisSamples;
-    /** How many point around the circle to generate
-     		The more points, the smoother the circular surface.
-     		The fewer points, and it looks like a triangle/cube/pentagon/...
-     */
-    protected int 			mRadialSamples;
-
-    /** The radius of the front cap */
-    protected float 		mRadiusFront;
     /** The radius of the back cap */
     protected float 		mRadiusBack;
 
-    /** How tall is the cylinder along the z axis (where the 'extent' is half the total height) */
-    protected float 		mExtentZ;
     /** If closed, then the front and end caps are produced */
     protected boolean 		mClosed;
-    /** If inverted, then the cylinder is intended to be viewed from the inside */
-    protected boolean 		mInverted;
 	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */
 	protected TextureMode	mTextureMode;
 	
@@ -110,25 +96,17 @@ public class CSGCylinder
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
     ) {
-        mAxisSamples = pAxisSamples;
-        mRadialSamples = pRadialSamples;
-        mRadiusFront = pRadiusFront;
+    	super( pAxisSamples, pRadialSamples, pRadiusFront, pInverted );
         mRadiusBack = pRadiusBack;
-        mExtentZ = pZExtent;
+        mExtentZ = pZExtent;			// This will override the default setting from the radius
         mClosed = pClosed;
-        mInverted = pInverted;
         mTextureMode = pTextureMode;
     }
 
     /** Configuration accessors */
-    public int getAxisSamples() { return mAxisSamples; }
-    public float getZExtent() { return mExtentZ; }
-    public float getHeight() { return mExtentZ * 2; }
-    public int getRadialSamples() { return mRadialSamples; }
-    public float getRadiusFront() { return mRadiusFront; }
+    public float getRadiusFront() { return mRadius; }
     public float getRadiusBack() { return mRadiusBack; }
     public boolean isClosed() { return mClosed; }
-    public boolean isInverted() { return mInverted; }
     public TextureMode getTextureMode() { return mTextureMode; }
 
     
@@ -171,7 +149,7 @@ public class CSGCylinder
         FloatBuffer pb = getFloatBuffer(Type.Position);
         FloatBuffer tb = getFloatBuffer(Type.TexCoord);
 
-        // generate geometry
+        // Generate geometry
         float inverseRadial = 1.0f / mRadialSamples;
         float inverseAxis = 1.0f / (mAxisSamples - 1);
         float fullHeight = mExtentZ * 2;
@@ -180,35 +158,33 @@ public class CSGCylinder
         switch( mTextureMode ) {
         case UNIFORM:
         case UNIFORM_LINEAR:
+        	// UNIFORM end caps are inherently scaled so match the texture scaling of the curved surface
         	endcapTextureBias = FastMath.INV_PI;
         	break;
         default:
+        	// Simple FLAT end caps act like a circular cookie-cutter applied on the texture
         	endcapTextureBias = 1.0f;
         	break;
         }
         // Generate points on the unit circle to be used in computing the mesh
         // points on a cylinder slice. 
-        float[] sin = new float[ mRadialSamples ];
-        float[] cos = new float[ mRadialSamples ];
+        CSGRadialCoord[] coordList = getRadialCoordinates( mRadialSamples );
 
-        for (int radialCount = 0; radialCount < mRadialSamples; radialCount += 1 ) {
-            float angle = FastMath.TWO_PI * inverseRadial * radialCount;
-            cos[ radialCount ] = FastMath.cos( angle );
-            sin[ radialCount ] = FastMath.sin( angle );
-        }
         // Calculate normals
         Vector3f[] vNormals = null;
         Vector3f vNormal = Vector3f.UNIT_Z;
 
-        if ( (fullHeight > 0.0f) && (mRadiusFront != mRadiusBack) ) {
+        if ( (fullHeight > 0.0f) && (mRadius != mRadiusBack) ) {
         	// Account for the slant of the normal when the radii differ
             vNormals = new Vector3f[ mRadialSamples ];
             Vector3f vHeight = Vector3f.UNIT_Z.mult( fullHeight );
             Vector3f vRadial = new Vector3f();
 
             for( int radialCount = 0; radialCount < mRadialSamples; radialCount += 1 ) {
-                vRadial.set( cos[radialCount], sin[radialCount], 0.0f );
-                Vector3f vRadius = vRadial.mult( mRadiusFront );
+            	CSGRadialCoord aCoord = coordList[ radialCount ];
+                vRadial.set( aCoord.mCosine, aCoord.mSine, 0 );
+                
+                Vector3f vRadius = vRadial.mult( mRadius );
                 Vector3f vRadius2 = vRadial.mult( mRadiusBack );
                 Vector3f vMantle = vHeight.subtract( vRadius2.subtract(vRadius) );
                 Vector3f vTangent = vRadial.cross( Vector3f.UNIT_Z );
@@ -250,12 +226,13 @@ public class CSGCylinder
                 float radialFraction = radialCount * inverseRadial;
                 
                 // And what is the normal to this portion of the arc?
-                tempNormal.set( cos[radialCount], sin[radialCount], 0.0f );
+               	CSGRadialCoord aCoord = coordList[ radialCount ];
+                tempNormal.set( aCoord.mCosine, aCoord.mSine, 0 );
 
                 if ( vNormals != null ) {
                 	// Use the slant
                     vNormal = vNormals[radialCount];
-                } else if ( mRadiusFront == mRadiusBack ) {
+                } else if ( mRadius == mRadiusBack ) {
                 	// Use the standard perpendicular (with z of zero)
                     vNormal = tempNormal;
                 }
@@ -296,7 +273,7 @@ public class CSGCylinder
         					.put( 0.5f + ((tempNormal.y / 2.0f) * endcapTextureBias) );
                 }
                 // Where is the point along the circle ?
-                tempNormal.multLocal((mRadiusFront - mRadiusBack) * axisFraction + mRadiusBack )
+                tempNormal.multLocal((mRadius - mRadiusBack) * axisFraction + mRadiusBack )
                         .addLocal(sliceCenter);
                 
                 pb.put( tempNormal.x ).put( tempNormal.y ).put( tempNormal.z );
@@ -378,13 +355,8 @@ public class CSGCylinder
     	super.write( pExporter );
     	
         OutputCapsule outCapsule = pExporter.getCapsule( this );
-        outCapsule.write( mAxisSamples, "axisSamples", 32 );
-        outCapsule.write( mRadialSamples, "radialSamples", 32 );
-        outCapsule.write( mRadiusFront, "radius", 1 );
-        outCapsule.write( mRadiusBack, "radius2", mRadiusFront );
-        outCapsule.write( mExtentZ, "zExtent", 1 );
+        outCapsule.write( mRadiusBack, "radius2", mRadius );
         outCapsule.write( mClosed, "closed", true );
-        outCapsule.write( mInverted, "inverted", false );
         outCapsule.write( mTextureMode, "textureMode", TextureMode.FLAT );
     }
     @Override
@@ -393,17 +365,10 @@ public class CSGCylinder
     ) throws IOException {
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
-        mAxisSamples = inCapsule.readInt( "axisSamples", 32 );
-        mRadialSamples = inCapsule.readInt( "radialSamples", 32 );
-        mRadiusFront = inCapsule.readFloat( "radius", 1 );
-        mRadiusBack = inCapsule.readFloat( "radius2", mRadiusFront );
-        mExtentZ = inCapsule.readFloat( "zExtent", 0 );
-        if ( mExtentZ == 0 ) {
-        	float aHeight = inCapsule.readFloat( "height", 0 );
-        	mExtentZ = (aHeight > 0) ? (aHeight / 2.0f) : 1;
-        }
+        // The super will read the mRadius, but we need it now in case radius2 is missing
+        mRadius = inCapsule.readFloat( "radius", 1 );
+        mRadiusBack = inCapsule.readFloat( "radius2", mRadius );
         mClosed = inCapsule.readBoolean( "closed", true );
-        mInverted = inCapsule.readBoolean( "inverted", false );
         mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.FLAT );
 
         // Let the super do its thing (which will updateGeometry as needed)
@@ -487,6 +452,8 @@ public class CSGCylinder
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
+		pBuffer = super.getVersion( pBuffer );
+		if ( pBuffer.length() > 0 ) pBuffer.append( "\n" );
 		return( ConstructiveSolidGeometry.getVersion( this.getClass()
 													, sCSGCylinderRevision
 													, sCSGCylinderDate

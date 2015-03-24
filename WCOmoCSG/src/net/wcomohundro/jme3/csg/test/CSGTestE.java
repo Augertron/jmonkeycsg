@@ -34,8 +34,7 @@ import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
-import com.jme3.asset.FilterKey;
-import com.jme3.asset.TextureKey;
+import com.jme3.asset.NonCachingKey;
 import com.jme3.asset.plugins.ClasspathLocator;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.export.Savable;
@@ -52,16 +51,13 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
-import com.jme3.scene.shape.Sphere;
 import com.jme3.texture.Texture;
 
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 
-/** Exercise the import facility, looking for the output from TestD
- */
+/** Exercise the import facility */
 public class CSGTestE 
 	extends SimpleApplication 
 {
@@ -113,12 +109,16 @@ public class CSGTestE
     	Object aNode = null;
     	String sceneName = sSceneList[ mSceneIndex ];
     	if ( sceneName != null ) try {
-	    	FilterKey aKey = new FilterKey( sceneName );
+    		// For testing, suppress the cache
+	    	// ModelKey aKey = new ModelKey( sceneName );
+	    	// aNode = assetManager.loadModel( aKey );
+	    	NonCachingKey aKey = new NonCachingKey( sceneName );
 	    	aNode = assetManager.loadAsset( aKey );
+
     	} catch( Exception ex ) {
     		System.out.println( "***Load Scene Failed: " + ex );
     	}
-    	return( (aNode instanceof Spatial) ? (Spatial)aNode : null );
+    	return( (Spatial)aNode );
     }
     
     /** Service routine to activate the interactive listeners */

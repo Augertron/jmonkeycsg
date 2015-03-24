@@ -268,6 +268,8 @@ public class CSGBox
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
+		pBuffer = super.getVersion( pBuffer );
+		if ( pBuffer.length() > 0 ) pBuffer.append( "\n" );
 		return( ConstructiveSolidGeometry.getVersion( this.getClass()
 													, sCSGBoxRevision
 													, sCSGBoxDate

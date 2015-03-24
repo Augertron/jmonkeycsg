@@ -56,8 +56,8 @@ public abstract class CSGAxial
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGAxialRevision="$Rev: 28 $";
-	public static final String sCSGAxialDate="$Date: 2015-03-23 15:58:19 -0500 (Mon, 23 Mar 2015) $";
+	public static final String sCSGAxialRevision="$Rev$";
+	public static final String sCSGAxialDate="$Date$";
 
 
 	/** How many sample slices to generate along the axis */

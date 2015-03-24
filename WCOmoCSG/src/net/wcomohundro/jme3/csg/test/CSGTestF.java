@@ -34,8 +34,7 @@ import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
-import com.jme3.asset.FilterKey;
-import com.jme3.asset.TextureKey;
+import com.jme3.asset.NonCachingKey;
 import com.jme3.asset.plugins.ClasspathLocator;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bullet.BulletAppState;
@@ -141,7 +140,8 @@ public class CSGTestF
     	Object aNode = null;
     	String sceneName = sSceneList[ mSceneIndex ];
     	if ( sceneName != null ) try {
-	    	FilterKey aKey = new FilterKey( sceneName );
+    		// For testing, suppress any caching
+	    	NonCachingKey aKey = new NonCachingKey( sceneName );
 	    	aNode = assetManager.loadAsset( aKey );
     	} catch( Exception ex ) {
     		System.out.println( "***Load Scene Failed: " + ex );

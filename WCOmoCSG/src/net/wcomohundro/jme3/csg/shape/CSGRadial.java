@@ -55,8 +55,8 @@ public abstract class CSGRadial
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGRadialRevision="$Rev: 28 $";
-	public static final String sCSGRadialDate="$Date: 2015-03-23 15:58:19 -0500 (Mon, 23 Mar 2015) $";
+	public static final String sCSGRadialRevision="$Rev$";
+	public static final String sCSGRadialDate="$Date$";
 	
 	/** Cache of radial coordinates, keyed by the radial sample count */
 	protected static Map<Integer,WeakReference<CSGRadialCoord[]>> sRadialCoordCache = new HashMap( 17 );
@@ -70,7 +70,17 @@ public abstract class CSGRadial
 		if ( coordList == null ) synchronized( sRadialCoordCache ) {
 			// No in the cache, so create it now 
 			// (and it is not worth the effort to check the cache again once synchronized)
+	        float inverseRadialSamples = 1.0f / pRadialSamples;
+			coordList = new CSGRadialCoord[ pRadialSamples + 1 ];
 			
+			// Generate the coordinate values for each radial point
+	        for( int iRadial = 0; iRadial < pRadialSamples; iRadial += 1 ) {
+	            float anAngle = FastMath.TWO_PI * inverseRadialSamples * iRadial;
+	            coordList[ iRadial ] = new CSGRadialCoord( anAngle );
+	        }
+	        // Include an extra point at the end that matches the starting point
+	        coordList[ pRadialSamples ] = coordList[ 0 ];
+
 			sRadialCoordCache.put( coordKey, new WeakReference( coordList ) );
 		}
 		return( coordList );
@@ -166,5 +176,12 @@ class CSGRadialCoord
 	) {
 		mSine = pSine;
 		mCosine = pCosine;
+	}
+	/** Construct based on an angle */
+	CSGRadialCoord(
+		float	pAngle
+	) {
+		mCosine = FastMath.cos( pAngle );
+        mSine = FastMath.sin( pAngle );
 	}
 }
