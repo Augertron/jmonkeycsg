@@ -236,16 +236,16 @@ public class CSGCylinder
                 	// Use the standard perpendicular (with z of zero)
                     vNormal = tempNormal;
                 }
-                if (topBottom == 0) {
+                if ( topBottom == 0 ) {
                 	// NOT at a closed end cap, so just just handle the inversion
                     if ( !mInverted ) {
-                        nb.put(vNormal.x).put(vNormal.y).put(vNormal.z);
+                        nb.put( vNormal.x ).put( vNormal.y ).put( vNormal.z );
                     } else {
-                        nb.put(-vNormal.x).put(-vNormal.y).put(-vNormal.z);
+                        nb.put( -vNormal.x ).put( -vNormal.y ).put( -vNormal.z );
                     }
                 } else {
                 	// Account for top/bottom, where the normal runs along the z axis
-                    nb.put(0).put(0).put( topBottom * (mInverted ? -1 : 1) );
+                    nb.put( 0 ).put( 0 ).put( topBottom * (mInverted ? -1 : 1) );
                 }
                 // What texture applies?
                 if ( topBottom == 0 ) {

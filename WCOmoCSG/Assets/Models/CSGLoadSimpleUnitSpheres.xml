@@ -16,22 +16,25 @@
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-3'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='0.5'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='Box1'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-6'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='0.75'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='Box1'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-9'/>
+                <scale class='com.jme3.math.Vector3f' x='0.75' y='0.5' z='1.2'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='1.5'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
         </com.jme3.scene.Geometry>
         
         <!-- Wireframe -->
@@ -46,22 +49,25 @@
         		materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-3'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='0.5'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='Box1'
         		materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-6'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='0.75'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='Box1'
         		materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-9'/>
+                <scale class='com.jme3.math.Vector3f' x='0.75' y='0.5' z='1.2'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' eccentricity='1.5'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
         </com.jme3.scene.Geometry>
         
         <!-- Brickwall -->
@@ -87,6 +93,56 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR'/>
         </com.jme3.scene.Geometry>
         
+        <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-9'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
+        </com.jme3.scene.Geometry>
+         <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-12'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-15'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR'/>
+        </com.jme3.scene.Geometry>
+
+        <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-18'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
+        </com.jme3.scene.Geometry>
+         <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-21'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-24'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR'/>
+        </com.jme3.scene.Geometry>
+
    		<!-- Rock1 -->
         <com.jme3.scene.Geometry name='Box3'
         		materialName='Textures/Rock/Rock1.xml'>
@@ -133,7 +189,55 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR'/>
         </com.jme3.scene.Geometry>  
         
+        <com.jme3.scene.Geometry name='Box4'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-9'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
+        </com.jme3.scene.Geometry>  
+        <com.jme3.scene.Geometry name='Box4'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-12'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
+        </com.jme3.scene.Geometry>  
+        <com.jme3.scene.Geometry name='Box4'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-15'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR'/>
+        </com.jme3.scene.Geometry>  
             
+        <com.jme3.scene.Geometry name='Box4'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-18'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
+        </com.jme3.scene.Geometry>  
+        <com.jme3.scene.Geometry name='Box4'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-21'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
+        </com.jme3.scene.Geometry>  
+        <com.jme3.scene.Geometry name='Box4'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-24'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR'/>
+        </com.jme3.scene.Geometry>  
         
     </children>
 </com.jme3.scene.Node>

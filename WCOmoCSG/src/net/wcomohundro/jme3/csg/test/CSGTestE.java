@@ -65,8 +65,8 @@ public class CSGTestE
 	protected static String[] sSceneList = new String[] {
 		null
 
-//	,	"Assets/Models/CSGLoadSimpleUnit.xml"
-//	,	"Assets/Models/CSGLoadSimple.xml"
+	,	"Assets/Models/CSGLoadSimpleUnit.xml"
+	,	"Assets/Models/CSGLoadSimple.xml"
 //	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
 //	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
 	,	"Assets/Models/CSGLoadMultiTexture.xml"

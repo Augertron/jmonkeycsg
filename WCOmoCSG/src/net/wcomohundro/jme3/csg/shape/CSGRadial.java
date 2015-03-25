@@ -91,9 +91,6 @@ public abstract class CSGRadial
 
     /** The base radius of the surface (which may well match the zExtent) */
     protected float 		mRadius;
-    /** The eccentricity (where 0 is a circle) */
-    protected float			mEccentricity;
-
     /** If inverted, then the cylinder is intended to be viewed from the inside */
     protected boolean 		mInverted;
 	
@@ -130,7 +127,6 @@ public abstract class CSGRadial
         OutputCapsule outCapsule = pExporter.getCapsule( this );
         outCapsule.write( mRadialSamples, "radialSamples", 32 );
         outCapsule.write( mRadius, "radius", 1 );
-        outCapsule.write( mEccentricity, "eccentricity", 0 );
         outCapsule.write( mInverted, "inverted", false );
     }
     @Override
@@ -141,7 +137,6 @@ public abstract class CSGRadial
         
         mRadialSamples = inCapsule.readInt( "radialSamples", 32 );
         mRadius = inCapsule.readFloat( "radius", 1 );
-        mEccentricity = inCapsule.readFloat( "eccentricity", 0 );
         mInverted = inCapsule.readBoolean( "inverted", false );
 
         // Let the super do its thing (which will updateGeometry as needed)

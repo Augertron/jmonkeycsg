@@ -53,17 +53,14 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	z-axis.  AxisSamples determines how many slices to produce, and RadialSamples 
  	determines how many vertices to produce around the circle for each slice.
  	
- 	The concept of 'eccentricity' is supported to produce oblate/prolate spheroids.  
- 	For e == 0 --> follow a circle and produce a regular sphere
- 	For e > 0 and e < 1 --> follow an ellipse where the major axis is the radius (prolate)
- 	For e >= 1 --> follow an ellipse where the minor axis is the radius (oblate)
- 	
- 	In all cases, every slice is circular.  The eccentricity only determines how the
- 	radius of the slice is determined.  Again, in all cases, the zExtent matches the radius.
- 	For e == 0 --> the xExtent and yExtent match the radius.
- 	For e > 0 and e < 1 --> the xExtent and yExtent will be smaller than the radius
- 	For e > 1 --> the xExtent and yExtent will be greater than the radius
- */
+ 	I have altered the how textures are applied to the poles to (ZAXIS, PROJECTED) so that
+ 	the swirlly radial distortion is eliminated.
+ 	 
+ 	NOTE that for a while, I was going to support 'eccentricity' in the generation of the
+ 		sphere to provide oblate/prolate spheroids.  But then I can came across a telling
+ 		note that scaling gives you the same effect, with more flexibility and less 
+ 		complexity.
+*/
 public class CSGSphere 
 	extends CSGRadial
 	implements Savable, ConstructiveSolidGeometry
@@ -112,206 +109,213 @@ public class CSGSphere
     public void updateGeometry(
     ) {
         // Allocate buffers for position/normals/texture
-        int vertCount = (mAxisSamples - 2) * (mRadialSamples + 1) + 2;
+    	// We generate an extra vertex around the radial sample where the last
+    	// vertex overlays the first.  And even though the north/south poles are
+    	// a single point, we need to generate different textures coordinates for
+    	// the pole for each different radial so we need a full set of vertices
+        int vertCount = mAxisSamples  * (mRadialSamples + 1);
 
         FloatBuffer posBuf = BufferUtils.createVector3Buffer(vertCount);
         FloatBuffer normBuf = BufferUtils.createVector3Buffer(vertCount);
         FloatBuffer texBuf = BufferUtils.createVector2Buffer(vertCount);
 
-        setBuffer(Type.Position, 3, posBuf);
-        setBuffer(Type.Normal, 3, normBuf);
-        setBuffer(Type.TexCoord, 2, texBuf);
+        setBuffer( Type.Position, 3, posBuf );
+        setBuffer( Type.Normal, 3, normBuf );
+        setBuffer( Type.TexCoord, 2, texBuf );
 
         // generate geometry
-        float fInvRS = 1.0f / mRadialSamples;
-        float fZFactor = 2.0f / (mAxisSamples - 1);
+        float inverseRadialSamples = 1.0f / mRadialSamples;
+        float zAxisFactor = 2.0f / (mAxisSamples - 1);
 
         // Generate points on the unit circle to be used in computing the mesh
         // points on a sphere slice.
         CSGRadialCoord[] coordList = getRadialCoordinates( mRadialSamples );
 
+        // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
-        Vector3f tempVa = vars.vect1;
-        Vector3f tempVb = vars.vect2;
-        Vector3f tempVc = vars.vect3;
+	    int index = 0;
+        try {
+	        // Generate the sphere itself
+	        float rSquared = mRadius * mRadius;
 
-        // Generate the sphere itself
-        int index = 0;
-        float rSquared = mRadius * mRadius;
-        float eSquared = mEccentricity * mEccentricity;
-        float oneMinusESquared = (mEccentricity >= 1)
-        							?	eSquared
-        							:	((mEccentricity > 0) ? (1 - eSquared) : 1);
-        
-        for( int iZ = 1; iZ < (mAxisSamples - 1); iZ += 1 ) {
-            float fAFraction = FastMath.HALF_PI * (-1.0f + fZFactor * iZ); // in (-pi/2, pi/2)
-            float fZFraction;
-            if ( mEvenSlices ) {
-                fZFraction = -1.0f + fZFactor * iZ; // in (-1, 1)
-            } else {
-                fZFraction = FastMath.sin(fAFraction); // in (-1,1)
-            }
-            float fZ = mRadius * fZFraction;
+	        for( int iZ = 1; iZ < (mAxisSamples - 1); iZ += 1 ) {
+	        	// Angle based on where we are along the zAxis
+	            float angleFraction = FastMath.HALF_PI * (-1.0f + (zAxisFactor * iZ)); // in (-pi/2, pi/2)
+                float polarFraction = (FastMath.HALF_PI - FastMath.abs( angleFraction )) / FastMath.PI;
 
-            // compute center of slice
-            Vector3f kSliceCenter = tempVb.set(Vector3f.ZERO);
-            kSliceCenter.z += fZ;
-
-            // compute radius of slice
-            // For a circle, where fZ is the distance along the axis from the center, simple
-            // aSquared + bSquared = cSquared, means that fZSquared + sliceRadiusSquared = rSquared
-            // 		sliceRadius == SquareRoot( rSquared - fZSquared)
-            // For an ellipse, we can include the eccentricity where:
-            //		y = SquareRoot( (aSquared - xSquared) * (1 - eSquared) )
-            // For us, the radius is really 'a' (the major radius), and we are treating the distance
-            // along the zAxis as 'x'...
-            //  	sliceRadius == SquareRoot( (rSquared - fZSquared) * (1 - eSquared) )
-            // which is reasonable, since a circle has eccentricity of 0, so the equations are the same
-            float fSliceRadius 
-            	= FastMath.sqrt(FastMath.abs( (rSquared - (fZ * fZ))) * oneMinusESquared );
-
-            // compute slice vertices with duplication at end point
-            Vector3f kNormal;
-            int iSave = index;
-            for (int iRadial = 0; iRadial < mRadialSamples; iRadial += 1 ) {
-            	CSGRadialCoord aCoord = coordList[ iRadial ];
-                float fRadialFraction = iRadial * fInvRS; // in [0,1)
-                Vector3f kRadial = tempVc.set( aCoord.mCosine, aCoord.mSine, 0 );
-                kRadial.mult( fSliceRadius, tempVa );
-                posBuf.put( kSliceCenter.x + tempVa.x )
-                		.put( kSliceCenter.y + tempVa.y )
-                		.put( kSliceCenter.z + tempVa.z );
-
-                BufferUtils.populateFromBuffer( tempVa, posBuf, index );
-                kNormal = tempVa;
-                kNormal.normalizeLocal();
-                if ( !mInverted ) {
-                    normBuf.put( kNormal.x ).put( kNormal.y ).put( kNormal.z );
-                } else {
-                    normBuf.put( -kNormal.x ).put( -kNormal.y ).put( -kNormal.z );
-                }
+	            // Position along zAxis as a +/- percentage
+	            float zAxisFraction;
+	            if ( mEvenSlices ) {
+	            	// Spread the slices evenly along the zAxis
+	            	zAxisFraction = -1.0f + zAxisFactor * iZ; // in (-1, 1)
+	            } else {
+	            	// Generate more slices where the values change the quickest
+	            	zAxisFraction = FastMath.sin( angleFraction ); // in (-1,1)
+	            }
+	            // Absolute position along the zAxis
+	            float zAxis = mRadius * zAxisFraction;
+	
+	            // compute center of slice
+	            Vector3f sliceCenter = vars.vect2.set( Vector3f.ZERO );
+	            sliceCenter.z += zAxis;
+	
+	            // compute radius of slice
+	            // For a circle, where zAxis is the distance along the axis from the center, simple
+	            // aSquared + bSquared = cSquared, means that zAxisSquared + sliceRadiusSquared = rSquared
+	            // 		sliceRadius == SquareRoot( rSquared - zAxisSquared)
+	            float sliceRadius 
+	            	= FastMath.sqrt( FastMath.abs( (rSquared - (zAxis * zAxis))) );
+	
+	            // Compute slice vertices with duplication at end point
+	            int iSave = index;
+                float textureX = 0, textureY = 0;
                 switch( mTextureMode ) {
                 case ZAXIS:
-                    texBuf.put(fRadialFraction).put(
-                            0.5f * (fZFraction + 1.0f));
+                    textureY = 0.5f * (zAxisFraction + 1.0f);
                     break;
                 case PROJECTED:
-                    texBuf.put(fRadialFraction).put(
-                            FastMath.INV_PI
-                            * (FastMath.HALF_PI + FastMath.asin(fZFraction)));
-                    break;
-                case POLAR:
-                    float r = (FastMath.HALF_PI - FastMath.abs(fAFraction)) / FastMath.PI;
-                    float u = r * aCoord.mCosine + 0.5f;
-                    float v = r * aCoord.mSine + 0.5f;
-                    texBuf.put(u).put(v);
+                	textureY = FastMath.INV_PI * (FastMath.HALF_PI + FastMath.asin( zAxisFraction ));
                     break;
                 }
-                index += 1;
-            }
-            // Copy the first radial vertex to the end
-            BufferUtils.copyInternalVector3( posBuf, iSave, index );
-            BufferUtils.copyInternalVector3( normBuf, iSave, index );
-
-            switch( mTextureMode ) {
-            case ZAXIS:
-                texBuf.put(1.0f).put( 0.5f * (fZFraction + 1.0f) );
-                break;
-            case PROJECTED:
-                texBuf.put(1.0f)
-                	.put( FastMath.INV_PI * (FastMath.HALF_PI + FastMath.asin(fZFraction)));
-                break;
-            case POLAR:
-                float r = (FastMath.HALF_PI - FastMath.abs(fAFraction)) / FastMath.PI;
-                texBuf.put(r + 0.5f).put(0.5f);
-                break;
-            }
-            index += 1;
+	            for( int iRadial = 0; iRadial < mRadialSamples; iRadial += 1 ) {
+	            	// Get the vector on the surface for this radial position
+	            	CSGRadialCoord aCoord = coordList[ iRadial ];
+	                Vector3f radialVector = vars.vect3.set( aCoord.mCosine, aCoord.mSine, 0 );
+	                
+	                // Account for the actual radius
+	                Vector3f posVector = radialVector.mult( sliceRadius, vars.vect1 );
+	                
+	                // Account for the center
+	                posVector.addLocal( sliceCenter );
+	                posBuf.put( posVector.x ).put( posVector.y ).put( posVector.z );
+	
+	                // What is the normal?
+	                Vector3f normVector = posVector.normalizeLocal();
+	                if ( !mInverted ) {
+	                    normBuf.put( normVector.x ).put( normVector.y ).put( normVector.z );
+	                } else {
+	                    normBuf.put( -normVector.x ).put( -normVector.y ).put( -normVector.z );
+	                }
+	                // Where are we radially along the surface?
+	                float radialFraction = iRadial * inverseRadialSamples; // in [0,1)
+	                switch( mTextureMode ) {
+	                case ZAXIS:
+	                case PROJECTED:
+	                	textureX = radialFraction;
+	                    break;
+	                case POLAR:
+	                    textureX = polarFraction * aCoord.mCosine + 0.5f;
+	                    textureY = polarFraction * aCoord.mSine + 0.5f;
+	                    break;
+	                }
+	                texBuf.put( textureX ).put( textureY );
+	                index += 1;
+	            }
+	            // Copy the first radial vertex to the end
+	            BufferUtils.copyInternalVector3( posBuf, iSave, index );
+	            BufferUtils.copyInternalVector3( normBuf, iSave, index );
+	
+	            switch( mTextureMode ) {
+	            case ZAXIS:
+	            case PROJECTED:
+	            	textureX = 1.0f;
+	                break;
+	            case POLAR:
+	                textureX = polarFraction + 0.5f;
+	                textureY = 0.5f;
+	                break;
+	            }
+                texBuf.put( textureX ).put( textureY );
+	            
+	            index += 1;
+	        }
+        } finally {
+        	// Return the borrowed vectors
+        	vars.release();
         }
-        vars.release();
+        // South pole (at the back, along zAxis, facing backwards <unless inverted>)
+        int southPoleIndex = index;
+        for( int iRadial = 0; iRadial < mRadialSamples; iRadial += 1 ) {
+	        posBuf.put( 0 ).put( 0 ).put( -mRadius );
+	        normBuf.put( 0 ).put( 0 ).put( (mInverted) ? 1 : -1 );
 
-        // South pole
-        posBuf.position( index * 3);
-        posBuf.put(0f).put(0f).put( -mRadius );
-
-        normBuf.position( index * 3);
-        if ( !mInverted ) {
-            normBuf.put(0).put(0).put(-1); // allow for inner
-        } else {
-            normBuf.put(0).put(0).put(1);
+	        if ( mTextureMode == TextureMode.POLAR ) {
+	        	// Spreading the texture across the pole, so the pole itself is dead center
+	            texBuf.put( 0.5f ).put( 0.5f );
+	        } else {
+	        	// x is following the radial, and y is following the zAxis
+                float radialFraction = iRadial * inverseRadialSamples; // in [0,1)
+	            texBuf.put( radialFraction ).put( 0.0f );
+	        }
+	        index += 1;
         }
-        texBuf.position( index * 2 );
-
-        if ( mTextureMode == TextureMode.POLAR ) {
-            texBuf.put(0.5f).put(0.5f);
-        } else {
-            texBuf.put(0.5f).put(0.0f);
-        }
-        // North pole
-        posBuf.put(0).put(0).put( mRadius );
-        if ( !mInverted ) {
-            normBuf.put(0).put(0).put(1);
-        } else {
-            normBuf.put(0).put(0).put(-1);
-        }
-        if ( mTextureMode == TextureMode.POLAR ) {
-            texBuf.put(0.5f).put(0.5f);
-        } else {
-            texBuf.put(0.5f).put(1.0f);
+        // North pole (at the front, along zAxis, facing forwards <unless inverted>)
+        int northPoleIndex = index;
+        for( int iRadial = 0; iRadial < mRadialSamples; iRadial += 1 ) {
+	        posBuf.put( 0 ).put( 0 ).put( mRadius );
+	        normBuf.put( 0 ).put( 0 ).put( (mInverted) ? -1 : 1 );
+	
+	        if ( mTextureMode == TextureMode.POLAR ) {
+	        	// Spreading the texture across the pole, so the pole itself is dead center
+	            texBuf.put( 0.5f ).put( 0.5f );
+	        } else {
+	        	// x is following the radial, and y is following the zAxis
+                float radialFraction = iRadial * inverseRadialSamples; // in [0,1)
+	            texBuf.put( radialFraction ).put( 1.0f );
+	        }
         }
         // Allocate the indices
         int triCount = 2 * (mAxisSamples - 2) * mRadialSamples;
         ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * triCount );
         setBuffer( Type.Index, 3, idxBuf );
 
-        index = 0;
         for( int iZ = 0, iZStart = 0; iZ < (mAxisSamples - 3); iZ++ ) {
             int i0 = iZStart;
             int i1 = i0 + 1;
             iZStart += (mRadialSamples + 1);
             int i2 = iZStart;
             int i3 = i2 + 1;
-            for( int i = 0; i < mRadialSamples; i++, index += 6) {
+            for( int i = 0; i < mRadialSamples; i++ ) {
                 if ( !mInverted ) {
-                    idxBuf.put((short) i0++);
-                    idxBuf.put((short) i1);
-                    idxBuf.put((short) i2);
-                    idxBuf.put((short) i1++);
-                    idxBuf.put((short) i3++);
-                    idxBuf.put((short) i2++);
+                    idxBuf.put( (short) i0++);
+                    idxBuf.put( (short) i1);
+                    idxBuf.put( (short) i2);
+                    idxBuf.put( (short) i1++);
+                    idxBuf.put( (short) i3++);
+                    idxBuf.put( (short) i2++);
                 } else { // inside view
-                    idxBuf.put((short) i0++);
-                    idxBuf.put((short) i2);
-                    idxBuf.put((short) i1);
-                    idxBuf.put((short) i1++);
-                    idxBuf.put((short) i2++);
-                    idxBuf.put((short) i3++);
+                    idxBuf.put( (short) i0++);
+                    idxBuf.put( (short) i2);
+                    idxBuf.put( (short) i1);
+                    idxBuf.put( (short) i1++);
+                    idxBuf.put( (short) i2++);
+                    idxBuf.put( (short) i3++);
                 }
             }
         }
         // South pole triangles
-        for( int i = 0; i < mRadialSamples; i++, index += 3 ) {
+        for( int i = 0; i < mRadialSamples; i += 1 ) {
             if ( !mInverted ) {
-                idxBuf.put((short) i);
-                idxBuf.put((short) (vertCount - 2));
-                idxBuf.put((short) (i + 1));
+                idxBuf.put( (short) i );
+                idxBuf.put( (short) southPoleIndex++ );
+                idxBuf.put( (short) (i + 1) );
             } else { // inside view
-                idxBuf.put((short) i);
-                idxBuf.put((short) (i + 1));
-                idxBuf.put((short) (vertCount - 2));
+                idxBuf.put( (short) i );
+                idxBuf.put( (short) (i + 1) );
+                idxBuf.put( (short) southPoleIndex++ );
             }
         }
         // North pole triangles
         int iOffset = (mAxisSamples - 3) * (mRadialSamples + 1);
-        for( int i = 0; i < mRadialSamples; i++, index += 3 ) {
+        for( int i = 0; i < mRadialSamples; i += 1 ) {
             if ( !mInverted ) {
-                idxBuf.put((short) (i + iOffset));
-                idxBuf.put((short) (i + 1 + iOffset));
-                idxBuf.put((short) (vertCount - 1));
+                idxBuf.put( (short) (i + iOffset) );
+                idxBuf.put( (short) (i + 1 + iOffset) );
+                idxBuf.put( (short) northPoleIndex++ );
             } else { // inside view
-                idxBuf.put((short) (i + iOffset));
-                idxBuf.put((short) (vertCount - 1));
-                idxBuf.put((short) (i + 1 + iOffset));
+                idxBuf.put( (short) (i + iOffset) );
+                idxBuf.put( (short) northPoleIndex++ );
+                idxBuf.put( (short) (i + 1 + iOffset) );
             }
         }
         // Establish the bounds
@@ -363,6 +367,7 @@ public class CSGSphere
         FloatBuffer aBuffer = (FloatBuffer)tc.getData();
         aBuffer.clear();
         
+        // Nothing to do just quite yet....
 
     	aBuffer.clear();
         tc.updateData( aBuffer );
