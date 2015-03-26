@@ -17,7 +17,12 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-15.0' y='6.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='10.0' yExtent='1.0' zExtent='1.0'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='10.0' yExtent='1.0' zExtent='1.0'>
+                <scaleFaces>
+                    <com.jme3.math.Vector3f x='10' y='1' z='5'/>
+                    <com.jme3.math.Vector3f x='10' y='1' z='48'/>
+            	</scaleFaces>
+            </mesh>
         </com.jme3.scene.Geometry>
         
   		<!-- An elongated, rotated box with a texture -->

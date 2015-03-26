@@ -36,12 +36,14 @@
         
         <!-- A degenerate sphere -->
         <com.jme3.scene.Geometry name='Sphere3a'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
-            	radius='1.1' axisSamples='3' radialSamples='3' useEvenSlices='true' interior='false'/>
+            		radius='1.5' axisSamples='3' radialSamples='3' firstRadial='PI/2' useEvenSlices='true'>
+            	<scaleTexture class='com.jme3.math.Vector2f' x='4' y='4'/>
+            </mesh>
         </com.jme3.scene.Geometry>
 
         <!-- A sphere with even slices -->

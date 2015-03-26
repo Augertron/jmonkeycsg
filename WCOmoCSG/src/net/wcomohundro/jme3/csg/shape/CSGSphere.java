@@ -129,7 +129,7 @@ public class CSGSphere
 
         // Generate points on the unit circle to be used in computing the mesh
         // points on a sphere slice.
-        CSGRadialCoord[] coordList = getRadialCoordinates( mRadialSamples );
+        CSGRadialCoord[] coordList = getRadialCoordinates( mRadialSamples, mFirstRadial );
 
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();

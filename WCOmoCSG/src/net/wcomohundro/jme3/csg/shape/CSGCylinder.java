@@ -168,7 +168,7 @@ public class CSGCylinder
         }
         // Generate points on the unit circle to be used in computing the mesh
         // points on a cylinder slice. 
-        CSGRadialCoord[] coordList = getRadialCoordinates( mRadialSamples );
+        CSGRadialCoord[] coordList = getRadialCoordinates( mRadialSamples, mFirstRadial );
 
         // Calculate normals
         Vector3f[] vNormals = null;
@@ -382,6 +382,7 @@ public class CSGCylinder
     ,	float		pY
     ,	int			pFaceMask
     ) {
+    	// Operate on the TextureCoordinate buffer
         VertexBuffer tc = getBuffer(Type.TexCoord);
         if (tc == null)
             throw new IllegalStateException("The mesh has no texture coordinates");
@@ -395,6 +396,11 @@ public class CSGCylinder
         FloatBuffer aBuffer = (FloatBuffer)tc.getData();
         aBuffer.clear();
         
+        // What surfaces are we dealing with?
+        boolean doBack = (pFaceMask & Face.BACK.getMask()) != 0;
+        boolean doFront = (pFaceMask & Face.FRONT.getMask()) != 0;
+        boolean doSides = (pFaceMask & Face.SIDES.getMask()) != 0;
+        
         // If closed, we will generate 2 extra slices, one for top and one for bottom
         // Vertices are generated in a standard way for the these special slices, but there
         // is no puck with an edge.  Instead, the triangles describe the flat closed face.
@@ -407,23 +413,23 @@ public class CSGCylinder
             if ( mClosed ) {
             	// The first slice is the closed bottom, and the last slice is the closed top
                 if (axisCount == 0) {
-                	if ( (pFaceMask & Face.BACK.getMask()) != 0 ) {
+                	if ( doBack ) {
                 		// Actively processing the back
                 		whichFace = Face.BACK;
                 	}
                 } else if (axisCount == aSliceCount - 1) {
-                	if ( (pFaceMask & Face.FRONT.getMask()) != 0 ) {
+                	if ( doFront ) {
                 		// Actively processing the front
                 		whichFace = Face.FRONT;
                 	}
                 } else {
-                	if ( (pFaceMask & Face.SIDES.getMask()) != 0 ) {
+                	if ( doSides ) {
                 		// Actively processing the sides
                 		whichFace = Face.SIDES;
                 	}
                 }
             } else {
-            	if ( (pFaceMask & Face.SIDES.getMask()) != 0 ) {
+            	if ( doSides ) {
             		// Actively processing the sides
             		whichFace = Face.SIDES;
             	}
@@ -434,17 +440,37 @@ public class CSGCylinder
             } else {
             	for( int i = 0; i < aRadialCount; i += 1 ) {
             		// Scale these points
-	    			float x = aBuffer.get( index  );
-	    			float y = aBuffer.get( index + 1 );
-	
-	                x *= pX;
-	                y *= pY;
-	                aBuffer.put( index++, x ).put( index++, y);
+            		index = applyScale( index, aBuffer, pX, pY, true );
             	}
             }
     	}
+        if ( mClosed ) {
+        	// Two extra vertices for the centers of the end caps
+        	index = applyScale( index, aBuffer, pX, pY, doBack );
+        	index = applyScale( index, aBuffer, pX, pY, doFront );
+        }
     	aBuffer.clear();
         tc.updateData( aBuffer );
+    }
+    /** Service routine to apply scaling within the texture buffer */
+    protected int applyScale(
+    	int			pIndex
+    ,	FloatBuffer pBuffer
+	,	float		pX
+	,	float		pY
+    ,	boolean		pApplyScale
+    ) {
+    	if ( pApplyScale ) {
+			float x = pBuffer.get( pIndex  );
+			float y = pBuffer.get( pIndex + 1 );
+
+            x *= pX;
+            y *= pY;
+            pBuffer.put( pIndex++, x ).put( pIndex++, y );        		
+    	} else {
+    		pIndex += 2;
+    	}
+    	return( pIndex );
     }
     
 	/////// Implement ConstructiveSolidGeometry

@@ -58,13 +58,17 @@ public abstract class CSGRadial
 	public static final String sCSGRadialRevision="$Rev$";
 	public static final String sCSGRadialDate="$Date$";
 	
-	/** Cache of radial coordinates, keyed by the radial sample count */
+	/** Cache of radial coordinates based on a radial count and starting angle.
+	 	The key is a simple blend of the count and an integer representation of the angle 
+	 */
 	protected static Map<Integer,WeakReference<CSGRadialCoord[]>> sRadialCoordCache = new HashMap( 17 );
 	protected static CSGRadialCoord[] getRadialCoordinates(
 		int		pRadialSamples
+	,	float	pFirstRadial
 	) {
 		// Look in the cache
-		Integer coordKey = new Integer( pRadialSamples );
+		int aHash = (int)((100 * pFirstRadial) / FastMath.PI);
+		Integer coordKey = new Integer( pRadialSamples + (aHash << 16) );
 		WeakReference<CSGRadialCoord[]> aReference = sRadialCoordCache.get( coordKey );
 		CSGRadialCoord[] coordList = (aReference == null) ? null : aReference.get();
 		if ( coordList == null ) synchronized( sRadialCoordCache ) {
@@ -75,12 +79,19 @@ public abstract class CSGRadial
 			
 			// Generate the coordinate values for each radial point
 	        for( int iRadial = 0; iRadial < pRadialSamples; iRadial += 1 ) {
-	            float anAngle = FastMath.TWO_PI * inverseRadialSamples * iRadial;
+	        	if ( iRadial >= pRadialSamples ) iRadial = 0;
+	            float anAngle = (FastMath.TWO_PI * inverseRadialSamples * iRadial) + pFirstRadial;
+	            if ( anAngle > FastMath.TWO_PI ) anAngle -= FastMath.TWO_PI;
 	            coordList[ iRadial ] = new CSGRadialCoord( anAngle );
 	        }
 	        // Include an extra point at the end that matches the starting point
 	        coordList[ pRadialSamples ] = coordList[ 0 ];
 
+	        // NOTE that we are willing to allow the key/weakref mapping to remain even
+	        //		after the given coordinate list is reaped.  The assumption is that
+	        //		once a list is in the cache, we are likely to use it again, and that
+	        //		the overhead of a few extra Map.Entry is not worth the effort to 
+	        //		monitor the reference queue or to run a harvester thread.
 			sRadialCoordCache.put( coordKey, new WeakReference( coordList ) );
 		}
 		return( coordList );
@@ -88,6 +99,8 @@ public abstract class CSGRadial
 
 	/** How many samples to take take around the surface of each slice */
     protected int 			mRadialSamples;
+    /** Which radial angle to start with */
+    protected float			mFirstRadial;
 
     /** The base radius of the surface (which may well match the zExtent) */
     protected float 		mRadius;
@@ -114,6 +127,7 @@ public abstract class CSGRadial
 
     /** Configuration accessors */
     public int getRadialSamples() { return mRadialSamples; }
+    public float getFirstRadial() { return mFirstRadial; }
     public float getRadius() { return mRadius; }
     public boolean isInverted() { return mInverted; }
 
@@ -126,6 +140,7 @@ public abstract class CSGRadial
     	
         OutputCapsule outCapsule = pExporter.getCapsule( this );
         outCapsule.write( mRadialSamples, "radialSamples", 32 );
+        outCapsule.write( mFirstRadial, "firstRadial", 0 );
         outCapsule.write( mRadius, "radius", 1 );
         outCapsule.write( mInverted, "inverted", false );
     }
@@ -136,6 +151,30 @@ public abstract class CSGRadial
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
         mRadialSamples = inCapsule.readInt( "radialSamples", 32 );
+        String anAngle = inCapsule.readString( "firstRadial", null );
+        if ( anAngle == null ) {
+        	mFirstRadial = 0;
+        } else {
+        	anAngle = anAngle.toUpperCase();
+        	int index = anAngle.indexOf( "PI" );
+        	if ( index >= 0 ) {
+        		// Decipher things like 3PI/4
+        		int numenator = 1;
+        		int denominator = 1;
+        		if ( index > 0 ) {
+        			numenator = Integer.parseInt( anAngle.substring( 0, index ) );
+        		}
+        		index += 2;
+        		if ( (index < anAngle.length() -1) 
+        		&& (anAngle.charAt( index++ ) == '/') ) {
+        			denominator = Integer.parseInt( anAngle.substring( index ) );
+        		}
+        		mFirstRadial = ((float)numenator * FastMath.PI) / (float)denominator;
+        	} else {
+        		// Assume its just a float
+        		mFirstRadial = Float.parseFloat( anAngle );
+        	}
+        }
         mRadius = inCapsule.readFloat( "radius", 1 );
         mInverted = inCapsule.readBoolean( "inverted", false );
 
