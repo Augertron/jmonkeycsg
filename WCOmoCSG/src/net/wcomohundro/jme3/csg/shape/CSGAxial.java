@@ -50,6 +50,8 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	a set of slices along the zAxis.  The span of the processing is determined by
  	the zExtent.  The shape runs from +zExtent to -zExtent, so the effective 'height'
  	of the shape is 2*zExtent.
+ 	
+ 	An axial is considered to be 'closed' if front/back endcaps are generated for the shape
  */
 public abstract class CSGAxial 
 	extends CSGMesh
@@ -64,24 +66,29 @@ public abstract class CSGAxial
     protected int 			mAxisSamples;
     /** How tall is the cylinder along the z axis (where the 'extent' is half the total height) */
     protected float 		mExtentZ;
-	
+    /** If closed, then the front and end caps are produced */
+    protected boolean 		mClosed;
+
 	protected CSGAxial(
 	) {
-		this( 32, 1 );
+		this( 32, 1, true );
 	}
     protected CSGAxial(
     	int 		pAxisSamples
     , 	float 		pZExtent
+    ,	boolean		pClosed
     ) {
         mAxisSamples = pAxisSamples;
         mExtentZ = pZExtent;
+        mClosed = pClosed;
     }
 
     /** Configuration accessors */
     public int getAxisSamples() { return mAxisSamples; }
     public float getZExtent() { return mExtentZ; }
     public float getHeight() { return mExtentZ * 2; }
-    
+    public boolean isClosed() { return mClosed; }
+
     /** Support texture scaling */
     @Override
     public void write(
@@ -92,6 +99,7 @@ public abstract class CSGAxial
         OutputCapsule outCapsule = pExporter.getCapsule( this );
         outCapsule.write( mAxisSamples, "axisSamples", 32 );
         outCapsule.write( mExtentZ, "zExtent", 1 );
+        outCapsule.write( mClosed, "closed", true );
     }
     @Override
     public void read(
@@ -100,11 +108,18 @@ public abstract class CSGAxial
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
         mAxisSamples = inCapsule.readInt( "axisSamples", 32 );
+        
+        // Let each shape apply its own zExtent default
         mExtentZ = inCapsule.readFloat( "zExtent", 0 );
         if ( mExtentZ == 0 ) {
         	float aHeight = inCapsule.readFloat( "height", 0 );
-        	mExtentZ = (aHeight > 0) ? (aHeight / 2.0f) : 1;
+        	if ( aHeight > 0 ) {
+        		// An explicit height sets the zExtent
+        		mExtentZ = aHeight / 2.0f;
+        	}
         }
+        mClosed = inCapsule.readBoolean( "closed", true );
+
         // Let the super do its thing (which will updateGeometry as needed)
         super.read( pImporter );
     }

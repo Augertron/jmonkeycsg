@@ -137,6 +137,9 @@ public class CSGBox
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
+        // Let the super do its thing
+        super.read( pImporter );
+
         // Basic configuration
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
@@ -144,8 +147,8 @@ public class CSGBox
         mExtentY = inCapsule.readFloat( "yExtent", 1 );
         mExtentZ = inCapsule.readFloat( "zExtent", 1 );
 
-        // The super will trigger updateGeometry() 
-        super.read( pImporter );
+        // Standard trigger of updateGeometry() 
+        this.readComplete( pImporter );
     }
     /** Preserve this shape */
     @Override

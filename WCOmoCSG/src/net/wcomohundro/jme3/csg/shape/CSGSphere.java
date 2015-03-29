@@ -46,6 +46,7 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.shape.CSGCylinder.Face;
 
 
 /** Specialization/Copy of standard JME3 Sphere for unification with other CSG shapes
@@ -69,12 +70,24 @@ public class CSGSphere
 	public static final String sCSGSphereRevision="$Rev$";
 	public static final String sCSGSphereDate="$Date$";
 
+	/** Special texture modes that can be applied */
     public enum TextureMode {
         ZAXIS			// Wrap texture radially and along the z-axis
     ,   PROJECTED		// Wrap texture radially, but spherically project along the z-axis
     ,   POLAR			// Apply texture to each pole.  Eliminates polar distortion,
         				// but mirrors the texture across the equator
     }
+    
+	/** For possible future enhances to texture scaling  */
+	public enum Face {
+		BACK, CRUST, FRONT, NONE;
+		
+		private int mask;
+		Face() {
+			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
+		}
+		public int getMask() { return mask; }
+	}
 
     /** When generating the slices along the z-axis, evenly space them (else create more near the extremities) */
     protected boolean 		mEvenSlices;
@@ -94,26 +107,61 @@ public class CSGSphere
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
     ) {
-    	super( pAxisSamples, pRadialSamples, pRadius, pInverted );
+    	super( pAxisSamples, pRadialSamples, pRadius, true, pInverted );
         mEvenSlices = pUseEvenSlices;
         mTextureMode = pTextureMode;
     }
+
+    /** Subclasses control the default setting for flat ends */
+    @Override
+    public boolean defaultFlatEnds() { return false; }
 
     /** Configuration accessors */
     public boolean hasEvenSlices() { return mEvenSlices; }
     public TextureMode getTextureMode() { return mTextureMode; }
 
     
-    /** Rebuilds the cylinder based on the current set of configuration parameters */
+    /** Rebuilds the sphere based on the current set of configuration parameters */
     @Override
     public void updateGeometry(
     ) {
+    	if ( true ) { 
+            // Allocate buffers for position/normals/texture
+        	// We generate an extra vertex around the radial sample where the last
+        	// vertex overlays the first.  
+    		// And even though the north/south poles are a single point, we need to 
+    		// generate different texture coordinates for the pole for each different 
+    		// radial, so we need a full set of vertices
+        	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+        	CSGRadialContext aContext = getContext( sliceCount );
+        	
+        	int southPoleIndex = 0;
+        	int northPoleIndex = createGeometry( aContext );
+
+        	// There are 2 triangles for every radial point on every puck,
+            // and there are AxisSamples -1 pucks
+            int triCount = 2 * (mAxisSamples -1) * mRadialSamples;
+            if ( mClosed ) {
+            	// If the shape is closed, then there is one triangle for every radial point,
+            	// but there are two ends
+            	triCount += 2 * mRadialSamples;
+            }
+            createIndices( aContext, triCount, southPoleIndex, northPoleIndex );
+            
+            // Establish the bounds
+            updateBound();
+            setStatic();
+            
+            return;
+    	}
+/********
         // Allocate buffers for position/normals/texture
     	// We generate an extra vertex around the radial sample where the last
     	// vertex overlays the first.  And even though the north/south poles are
     	// a single point, we need to generate different textures coordinates for
     	// the pole for each different radial so we need a full set of vertices
-        int vertCount = mAxisSamples  * (mRadialSamples + 1);
+        int aSliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+        int vertCount = aSliceCount  * (mRadialSamples + 1);
 
         FloatBuffer posBuf = BufferUtils.createVector3Buffer(vertCount);
         FloatBuffer normBuf = BufferUtils.createVector3Buffer(vertCount);
@@ -123,9 +171,11 @@ public class CSGSphere
         setBuffer( Type.Normal, 3, normBuf );
         setBuffer( Type.TexCoord, 2, texBuf );
 
-        // generate geometry
+        // Percentage of the whole circle that each radial sample takes
         float inverseRadialSamples = 1.0f / mRadialSamples;
-        float zAxisFactor = 2.0f / (mAxisSamples - 1);
+        
+        // Percentage of the full zExtent (unit of -1 to +1) that each slice takes
+        float zAxisFactor = 2.0f / (aSliceCount - 1);
 
         // Generate points on the unit circle to be used in computing the mesh
         // points on a sphere slice.
@@ -138,7 +188,7 @@ public class CSGSphere
 	        // Generate the sphere itself
 	        float rSquared = mRadius * mRadius;
 
-	        for( int iZ = 1; iZ < (mAxisSamples - 1); iZ += 1 ) {
+	        for( int iZ = 1; iZ < (aSliceCount - 1); iZ += 1 ) {
 	        	// Angle based on where we are along the zAxis
 	            float angleFraction = FastMath.HALF_PI * (-1.0f + (zAxisFactor * iZ)); // in (-pi/2, pi/2)
                 float polarFraction = (FastMath.HALF_PI - FastMath.abs( angleFraction )) / FastMath.PI;
@@ -153,7 +203,7 @@ public class CSGSphere
 	            	zAxisFraction = FastMath.sin( angleFraction ); // in (-1,1)
 	            }
 	            // Absolute position along the zAxis
-	            float zAxis = mRadius * zAxisFraction;
+	            float zAxis = mExtentZ * zAxisFraction;
 	
 	            // compute center of slice
 	            Vector3f sliceCenter = vars.vect2.set( Vector3f.ZERO );
@@ -265,11 +315,11 @@ public class CSGSphere
 	        }
         }
         // Allocate the indices
-        int triCount = 2 * (mAxisSamples - 2) * mRadialSamples;
+        int triCount = 2 * (aSliceCount - 2) * mRadialSamples;
         ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * triCount );
         setBuffer( Type.Index, 3, idxBuf );
 
-        for( int iZ = 0, iZStart = 0; iZ < (mAxisSamples - 3); iZ++ ) {
+        for( int iZ = 0, iZStart = 0; iZ < (aSliceCount - 3); iZ++ ) {
             int i0 = iZStart;
             int i1 = i0 + 1;
             iZStart += (mRadialSamples + 1);
@@ -306,7 +356,7 @@ public class CSGSphere
             }
         }
         // North pole triangles
-        int iOffset = (mAxisSamples - 3) * (mRadialSamples + 1);
+        int iOffset = (aSliceCount - 3) * (mRadialSamples + 1);
         for( int i = 0; i < mRadialSamples; i += 1 ) {
             if ( !mInverted ) {
                 idxBuf.put( (short) (i + iOffset) );
@@ -321,9 +371,192 @@ public class CSGSphere
         // Establish the bounds
         updateBound();
         setStatic();
+*******/
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: allocate the context */
+    @Override
+    protected CSGRadialContext getContext(
+    	int		pSliceCount
+    ) {
+    	 CSGSphereContext aContext = new CSGSphereContext( pSliceCount, mRadialSamples );
+    	 
+    	 // The rSquared is constant for a given radius and can be calculated here
+    	 aContext.mRadiusSquared = mRadius * mRadius;
+    	 return( aContext );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: fractional speaking, where are we along the z axis */
+    @Override
+    protected float getZAxisFraction( 
+    	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	float axisFraction;
+    	if ( pSurface != 0 ) {
+    		// At the end caps
+    		axisFraction = (float)pSurface;
+    		
+    	} else if ( mEvenSlices ) {
+        	// Spread the slices evenly along the zAxis
+        	axisFraction = (pContext.mZAxisUniformPercent * (float)pContext.mZOffset) - 1.0f; // in (-1, 1)
+        	
+        } else {
+        	// Generate more slices where the values change the quickest
+        	axisFraction = FastMath.sin( pContext.mAngleFraction ); // in (-1,1)
+        }
+    	return( axisFraction );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: where is the center of the given slice */
+    @Override
+    protected Vector3f getSliceCenter(
+    	Vector3f			pUseVector
+    ,	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	// By default, the center is ON the zAxis at the given absolute z position 
+    	return( super.getSliceCenter( pUseVector, pContext, pSurface ) );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: what is the radius of the Radial at this slice */
+    @Override
+    protected float getSliceRadius(
+        CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+        // For a circle, where zAxis is the distance along the axis from the center, simple
+        // aSquared + bSquared = cSquared, means that zAxisSquared + sliceRadiusSquared = rSquared
+        // 		sliceRadius == SquareRoot( rSquared - zAxisSquared)
+        float sliceRadius 
+        	= FastMath.sqrt( FastMath.abs( (((CSGSphereContext)pContext).mRadiusSquared
+        										- (pContext.mZAxisAbsolute * pContext.mZAxisAbsolute))) );
+        return( sliceRadius );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: prepare the texture for the entire slice */
+    @Override
+    protected Vector2f getSliceTexture(
+    	Vector2f			pUseVector
+    ,	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	// The texture y will vary by the slice
+    	pUseVector.set( Vector2f.ZERO );
+        switch( mTextureMode ) {
+        case ZAXIS:
+        	pUseVector.y = 0.5f * (pContext.mZAxisFraction + 1.0f);
+            break;
+        case PROJECTED:
+        	pUseVector.y = FastMath.INV_PI * (FastMath.HALF_PI + FastMath.asin( pContext.mZAxisFraction ));
+            break;
+        }
+    	return( pUseVector );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: compute the position of a given radial vertex */
+    @Override
+    protected Vector3f getRadialPosition(
+    	Vector3f			pUseVector
+    ,	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	if ( pSurface != 0 ) {
+    		// Special backface/frontface processing, using the -1/+1 of the surface
+    		pUseVector.set( 0, 0, mRadius * (float)pSurface);
+    		
+    	} else {
+	    	// Get the vector on the surface for this radial position
+	    	// By default, just operate on the unit circle
+	    	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
+	        pUseVector.set( aCoord.mCosine, aCoord.mSine, 0 );
+	        
+	        // Account for the actual radius
+	        pUseVector.multLocal( pContext.mSliceRadius );
+	        
+	        // Account for the center
+	        pUseVector.addLocal( pContext.mSliceCenter );
+    	}
+        return( pUseVector );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: compute the normal of a given radial vertex */
+    @Override
+    protected Vector3f getRadialNormal(
+    	Vector3f			pUseVector
+    ,	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	// Since we are dealing with a sphere, the normal just needs to point
+    	// back to the origin
+    	if ( pSurface != 0 ) {
+    		// Special backface/processing processing, using the -1/+1 of the surface
+    		pUseVector.set( 0, 0, (float)pSurface );
+
+    	} else {
+    		// Normal surface/crust processing
+    		pUseVector.set( pContext.mPosVector );
+    		pUseVector.normalizeLocal();
+    	}
+    	if ( mInverted ) {
+    		// Invert the normal
+    		pUseVector.multLocal( -1 );
+    	}
+    	return( pUseVector );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: compute the texture of a given radial vertex */
+    @Override
+    protected Vector2f getRadialTexture(
+    	Vector2f			pUseVector
+    ,	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	// Start with the slice previously set
+    	pUseVector.set( pContext.mSliceTexture );
+    	
+    	if ( pSurface != 0 ) {
+    		// Working the poles
+    		switch( mTextureMode ) {
+    		case POLAR:
+            	// Spreading the texture across the pole, so the pole itself is dead center
+    			pUseVector.set( 0.5f, 0.5f );
+                break;
+    		default:
+            	// x is following the radial, and y is following the zAxis, at its extremities
+    			pUseVector.set( pContext.mRadialFraction, (pSurface < 0) ? 0 : 1 );
+    			break;
+    		}
+    	} else if ( pContext.mRadialIndex == mRadialSamples ) {
+    		// Once around the radial and back to the beginning
+            switch( mTextureMode ) {
+            case ZAXIS:
+            case PROJECTED:
+            	pUseVector.x = 1.0f;
+                break;
+            case POLAR:
+            	pUseVector.x = pContext.mPolarFraction + 0.5f;
+            	pUseVector.y = 0.5f;
+                break;
+            }
+    	} else {
+    		// Working the surface
+    		switch( mTextureMode ) {
+	        case ZAXIS:
+	        case PROJECTED:
+	        	pUseVector.x = pContext.mRadialFraction;
+	            break;
+	        case POLAR:
+	        	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
+	        	pUseVector.x = pContext.mPolarFraction * aCoord.mCosine + 0.5f;
+	        	pUseVector.y = pContext.mPolarFraction * aCoord.mSine + 0.5f;
+	            break;
+	        }
+    	}
+    	return( pUseVector );
     }
 
-    /** Support texture scaling */
+    /** Support sphere specific configuration settings */
     @Override
     public void write(
     	JmeExporter		pExporter
@@ -338,16 +571,30 @@ public class CSGSphere
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
+        // Let the super do its thing
+        super.read( pImporter );
+
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
         mEvenSlices = inCapsule.readBoolean( "useEvenSlices", false );
         mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.ZAXIS );
 
-        // Let the super do its thing (which will updateGeometry as needed)
-        super.read( pImporter );
+        // Super processing of zExtent reads to zero to allow us to apply an appropriate default here
+        if ( mExtentZ == 0 ) {
+        	// For a cylinder the default is to match the radius
+        	mExtentZ = mRadius;
+        } else if ( mRadius == 1 ) {
+        	// An explicit Z extent overrides a default radius
+        	mRadius = mExtentZ;
+        } else if ( mExtentZ != mRadius ) {
+        	// So what does this mean?
+        	throw new IOException( "CSGSphere radius/zExtent mismatch" );
+        }
+        // Standard trigger of updateGeometry() 
+        this.readComplete( pImporter );
     }
     
-    /** Apply texture coordinate scaling to selected 'faces' of the cylinder */
+    /** Apply texture coordinate scaling to selected 'faces' of the sphere */
     @Override
     public void scaleFaceTextureCoordinates(
     	float		pX
@@ -355,22 +602,35 @@ public class CSGSphere
     ,	int			pFaceMask
     ) {
         VertexBuffer tc = getBuffer(Type.TexCoord);
-        if (tc == null)
+        if ( tc == null ) {
             throw new IllegalStateException("The mesh has no texture coordinates");
-
-        if (tc.getFormat() != VertexBuffer.Format.Float)
+        }
+        if ( tc.getFormat() != VertexBuffer.Format.Float ) {
             throw new UnsupportedOperationException("Only float texture coord format is supported");
-
-        if (tc.getNumComponents() != 2)
+        }
+        if ( tc.getNumComponents() != 2 ) {
             throw new UnsupportedOperationException("Only 2D texture coords are supported");
-
+        }
         FloatBuffer aBuffer = (FloatBuffer)tc.getData();
         aBuffer.clear();
         
-        // Nothing to do just quite yet....
+        // Nothing really custom yet
+        boolean doBack = (pFaceMask & Face.BACK.getMask()) != 0;
+        boolean doFront = (pFaceMask & Face.FRONT.getMask()) != 0;
+        boolean doCrust = (pFaceMask & Face.CRUST.getMask()) != 0;
 
-    	aBuffer.clear();
-        tc.updateData( aBuffer );
+        if ( doCrust ) {
+	        for( int i = 0, j = aBuffer.limit() / 2; i < j; i += 1 ) {
+	            float x = aBuffer.get();
+	            float y = aBuffer.get();
+	            aBuffer.position( aBuffer.position()-2 );
+	            x *= pX;
+	            y *= pY;
+	            aBuffer.put(x).put(y);
+	        }
+	        aBuffer.clear();
+	        tc.updateData( aBuffer );
+        }
     }
     
 	/////// Implement ConstructiveSolidGeometry
@@ -385,5 +645,21 @@ public class CSGSphere
 													, sCSGSphereDate
 													, pBuffer ) );
 	}
+
+}
+/** Helper class for use during the geometry calculations */
+class CSGSphereContext
+	extends CSGRadialContext
+{
+	float	mRadiusSquared;
+	
+    /** Initialize the context */
+    CSGSphereContext(
+    	int		pSliceCount
+    ,	int		pRadialSamples
+    ) {	
+    	// The sphere has RadialSamples (+1 for the overlapping end point) times the number of slices
+    	super( pSliceCount, pRadialSamples, pSliceCount * (pRadialSamples + 1) );
+    }
 
 }

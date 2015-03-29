@@ -129,15 +129,27 @@ public abstract class CSGMesh
     	// geometry based on the configuration parameters that we assume our
     	// various subclasses have already loaded.
         this.setMode( inCapsule.readEnum( "mode", Mode.class, Mode.Triangles ) );
-
-        this.updateGeometry( );
+        
+        //////// NOTE NOTE NOTE
+        // 			That every CSGShape is expected to callback via readComplete()
+        //			to generate the geometry and apply any final fixup
+    }
+    
+    /** FOR SUBCLASS CALLBACK - finish up the processing after all read configuration
+     							is complete.
+     */
+    protected void readComplete(
+    	JmeImporter		pImporter
+    ) throws IOException {
+    	// Reconstruct the shape
+        this.updateGeometry();
         
         // Extended attributes
+        InputCapsule inCapsule = pImporter.getCapsule( this );
         mScaleTexture = (Vector2f)inCapsule.readSavable( "scaleTexture", null );
         if ( mScaleTexture != null ) {
         	this.scaleTextureCoordinates( mScaleTexture );
         }
-        
         mScaleFaceTexture = inCapsule.readSavableArrayList( "scaleFaces", null );
         if ( mScaleFaceTexture != null ) {
         	// x and y are the normal texture scaling factors.  z is the bitmask of faces
