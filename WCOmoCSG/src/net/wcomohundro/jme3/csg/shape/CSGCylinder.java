@@ -96,15 +96,11 @@ public class CSGCylinder
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
     ) {
-    	super( pAxisSamples, pRadialSamples, pRadiusFront, pClosed, pInverted );
+    	super( pAxisSamples, pRadialSamples, pRadiusFront, pClosed, pInverted, true );
         mRadiusBack = pRadiusBack;
         mExtentZ = pZExtent;			// This will override the default setting from the radius
         mTextureMode = pTextureMode;
     }
-    
-    /** Subclasses control the default setting for flat ends */
-    @Override
-    public boolean defaultFlatEnds() { return true; }
 
     /** Configuration accessors */
     public float getRadiusFront() { return mRadius; }
@@ -146,7 +142,8 @@ public class CSGCylinder
             	// but there are two ends
             	triCount += 2 * mRadialSamples;
             }
-            createIndices( aContext, triCount, southPoleIndex, northPoleIndex );
+            // The poles are represented by a single point
+            createIndices( aContext, triCount, southPoleIndex, northPoleIndex, true );
             
             // Establish the bounds
             updateBound();
@@ -401,13 +398,17 @@ public class CSGCylinder
 	    case UNIFORM:
 	    case UNIFORM_LINEAR:
 	    	// UNIFORM end caps are inherently scaled so match the texture scaling of the curved surface
-	    	aContext.mEndcapTextureBias = FastMath.INV_PI;
+	    	aContext.mEndcapTextureBiasX = aContext.mEndcapTextureBiasY = FastMath.INV_PI;
 	    	break;
 	    default:
 	    	// Simple FLAT end caps act like a circular cookie-cutter applied on the texture
-	    	aContext.mEndcapTextureBias = 1.0f;
+	    	aContext.mEndcapTextureBiasX = aContext.mEndcapTextureBiasY = 1.0f;
 	    	break;
 	    }
+    	if ( mScaleSlice != null ) {
+    		aContext.mEndcapTextureBiasX *= mScaleSlice.x;
+    		aContext.mEndcapTextureBiasY *= mScaleSlice.y;
+    	}
     	return( aContext );
     }
 
@@ -473,6 +474,10 @@ public class CSGCylinder
         // Account for the center
         pUseVector.addLocal( pContext.mSliceCenter );
 
+        // Apply scaling
+        if ( mScaleSlice != null ) {
+        	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
+        }
 	    return( pUseVector );
     }
     
@@ -516,7 +521,12 @@ public class CSGCylinder
     		pUseVector.set( 0, 0, (float)pSurface );
     	} else {
     		// Use the prebuilt, cached normal
-    		pUseVector.set( myContext.mRadialNormals[ myContext.mRadialIndex ] );    		
+    		pUseVector.set( myContext.mRadialNormals[ myContext.mRadialIndex ] ); 
+    		
+            // Apply scaling
+            if ( mScaleSlice != null ) {
+            	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
+            }
     	}
     	if ( mInverted ) {
     		// Invert the normal
@@ -533,19 +543,25 @@ public class CSGCylinder
     ,	int					pSurface
     ) {
     	CSGCylinderContext myContext = (CSGCylinderContext)pContext;
+
+        // Apply scaling ONLY to the end caps so that we retain the cookie-cutout style
+    	// of texture without screwing up the curved crust.  Scaling is reflected in the
+    	// EndcapTextureBias
     	if ( pSurface < 0 ) {
         	// Map the texture to the bottom cap (facing the other way, right to left)
+    		// NOTE no scaling of the end caps
         	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
     		pUseVector.set(
-    			0.5f - ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBias)
-			,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBias) );
+    			0.5f - ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBiasX)
+			,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBiasY) );
     		
     	} else if ( pSurface > 0 ) {
         	// Map the texture to the top cap (simple left to right)
+    		// NOTE no scaling of the end caps
         	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
     		pUseVector.set(
-        		0.5f + ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBias)
-    		,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBias) );
+        		0.5f + ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBiasX)
+    		,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBiasY) );
     	
     	} else {
         	// Map the texture along the curved crust/surface
@@ -573,7 +589,8 @@ public class CSGCylinder
             	,	(mInverted) ? radialFraction : 1.0f - radialFraction );	
             	break;
             }
-        }
+    	}
+
     	return( pUseVector );
     }
 
@@ -725,7 +742,8 @@ public class CSGCylinder
 class CSGCylinderContext
 	extends CSGRadialContext
 {
-    float		mEndcapTextureBias;
+    float		mEndcapTextureBiasX;
+    float		mEndcapTextureBiasY;
     Vector3f[] 	mRadialNormals;
 	
     /** Initialize the context */

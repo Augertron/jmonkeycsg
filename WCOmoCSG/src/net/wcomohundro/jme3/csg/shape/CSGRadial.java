@@ -30,6 +30,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.Savable;
 import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.VertexBuffer.Type;
@@ -65,7 +66,28 @@ import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
  	
  	Subclasses are expected to override the callback processing routines.  Sample
  	defaults are provided just to get you started.  Subclasses may also extend the
- 	context element to provide their own contextual defintions.
+ 	context element to provide their own contextual definitions.
+ 	
+ 	Configuration Settings:
+ 	 	radialSamples - the count of sampling points around the circle.
+ 	 					= 3 produces a triangular shape
+ 	 					= 4 produces a square shape
+ 	 					= 5 produces a pentagonal shape
+ 	 					higher numbers look more and more circular
+ 	 					
+        firstRadial - 	radian number of degrees of where the first point around the 
+        			 	circle is started.  0 means East, PI/4 means NorthEast,
+        			 	PI/2 means North, etc
+        			 	
+        radius -		the size of the radial circle
+        
+        scaleSliceX -	special size scaling to apply to every individual slice.
+        scaleSliceY		(overall scaling of the Geometry that contains this shape
+        				 does produce an elliptical rather than circular radial.
+        				 However, the texture applied to each slice is then scaled as well.
+        				 Applying scale to the individual slice preserves the original
+        				 texture mapping.  IE - check out the endcaps of a cylinder)
+ 		
  */
 public abstract class CSGRadial 
 	extends CSGAxial
@@ -123,27 +145,30 @@ public abstract class CSGRadial
     protected float 		mRadius;
     /** If closed, do the endcaps bulge out or are they flat? */
     protected boolean		mFlatEnds;
-    /** If inverted, then the cylinder is intended to be viewed from the inside */
-    protected boolean 		mInverted;
+    /** Per-slice scaling **/
+    protected Vector2f		mScaleSlice;
+    /** Per-slice across all the slices */
+    protected float		 	mRotateSlices;
+    
 	
+    /** As abstract, it only makes sense to have protected constructors */
 	public CSGRadial(
 	) {
-		this( 32, 32, 1, true, false );
+		this( 32, 32, 1, true, false, false );
 	}
-	
-    public CSGRadial(
+    protected CSGRadial(
     	int 		pAxisSamples
     , 	int 		pRadialSamples
     ,	float 		pRadius
     ,	boolean		pClosed
     ,	boolean		pInverted
+    ,	boolean		pFlatEnds
     ) {
     	// By default, treat the radius and zExtent the same
-    	super( pAxisSamples, pRadius, pClosed );
+    	super( pAxisSamples, pRadius, pClosed, pInverted );
         mRadialSamples = pRadialSamples;
         mRadius = pRadius;
-        mInverted = pInverted;
-        mFlatEnds = defaultFlatEnds();
+        mFlatEnds = pFlatEnds;
     }
 
     /** Configuration accessors */
@@ -151,12 +176,12 @@ public abstract class CSGRadial
     public float getFirstRadial() { return mFirstRadial; }
     public float getRadius() { return mRadius; }
     public boolean hasFlatEnds() { return mFlatEnds; }
-    public boolean isInverted() { return mInverted; }
     
-    /** Subclasses control the default setting for flat ends */
-    public abstract boolean defaultFlatEnds();
-    
-    /** Rebuilds the sphere based on the current set of configuration parameters */
+    /** Rebuilds the sphere based on the current set of configuration parameters
+     
+    	THIS IMPLEMENTATION PROVIDES A SAMPLE TO COPY AND APPLY SPECIALIZATIONS IN ANY GIVEN SUBCLASS
+    	DO NOT EXPECT THIS IMPLEMENTATION TO PRODUCE AN APPROPRITE SHAPE
+     */
     @Override
     public void updateGeometry(
     ) {
@@ -180,7 +205,7 @@ public abstract class CSGRadial
         	// but there are two ends
         	triCount += 2 * mRadialSamples;
         }
-        createIndices( aContext, triCount, southPoleIndex, northPoleIndex );
+        createIndices( aContext, triCount, southPoleIndex, northPoleIndex, mFlatEnds );
         
         // Establish the bounds
         updateBound();
@@ -190,6 +215,9 @@ public abstract class CSGRadial
     /** Generic driver that rebuilds the shape from the current set of configuration parameters.
      	As a Radial/Axial combination, we are walking along the zAxis, generating a Radial 
      	set of vertices at each Axial slice, including the front/back end caps as needed.
+     	
+     	"flat" endcaps do not contribute to the height.  "non-flat" endcaps influence the
+     	overall height processing.
      */
     protected int createGeometry(
     	CSGRadialContext	pContext
@@ -246,7 +274,9 @@ public abstract class CSGRadial
 	        	pContext.mPolarFraction 
 	        		= (FastMath.HALF_PI - FastMath.abs( pContext.mAngleFraction )) / FastMath.PI;
 
-	            // Position along zAxis as a +/- percentage
+	            // Position along zAxis as a +/- percentage  (-1 / +1)
+	        	// NOTE that the implementation of getZAxisFraction is free to apply non-uniform
+	        	//		spacing between the slices.
 	        	pContext.mZAxisFraction = getZAxisFraction( pContext, aSurface );
 	            // Absolute position along the zAxis
 	        	pContext.mZAxisAbsolute = mExtentZ * pContext.mZAxisFraction;
@@ -255,9 +285,18 @@ public abstract class CSGRadial
 	        	pContext.mSliceCenter = getSliceCenter( vars.vect2, pContext, aSurface );
 	        	pContext.mSliceRadius = getSliceRadius( pContext, aSurface );
 	            
-	            // Ready the standard texture for this slice
+	            // Ready the standard texture for this slice 
+	        	// (this may let you optimize some texture calculations once for the slice
+	        	//  with minor adjustments at each radial point on the slice)
 	        	pContext.mSliceTexture = getSliceTexture( vars.vect2d, pContext, aSurface );
-	            
+	        	
+	        	// Any per-slice rotation?
+	        	Quaternion aRotator = null;
+	        	if ( mRotateSlices != 0 ) {
+	        		// What rotation should be applied to this position along the z
+	        		float rotateAngle = ((pContext.mZAxisFraction + 1.0f) / 2.0f) * mRotateSlices;
+	        		aRotator = (new Quaternion()).fromAngleNormalAxis( rotateAngle, Vector3f.UNIT_Z );
+	        	}
 	            // Compute slice vertices with duplication at end point
 	            int iSave = pContext.mIndex;
 	            for( pContext.mRadialIndex = 0; pContext.mRadialIndex < mRadialSamples; pContext.mRadialIndex += 1 ) {
@@ -267,12 +306,18 @@ public abstract class CSGRadial
 
 	                // Where is this vertex?
 	            	pContext.mPosVector = getRadialPosition( vars.vect1, pContext, aSurface );
+	            	if ( aRotator != null ) {
+	            		aRotator.multLocal( pContext.mPosVector );
+	            	}
 	                pContext.mPosBuf.put( pContext.mPosVector.x )
 	                				.put( pContext.mPosVector.y )
 	                				.put( pContext.mPosVector.z );
 	
 	                // What is the normal for this position?
 	                pContext.mNormVector = getRadialNormal( vars.vect4, pContext, aSurface );
+	            	if ( aRotator != null ) {
+	            		aRotator.multLocal( pContext.mNormVector );
+	            	}
 	                pContext.mNormBuf.put( pContext.mNormVector.x )
 	                				.put( pContext.mNormVector.y )
 	                				.put( pContext.mNormVector.z );
@@ -310,6 +355,7 @@ public abstract class CSGRadial
     ,	int					pTriangleCount
     ,	int					pSouthPoleIndex
     ,	int					pNorthPoleIndex
+    ,	boolean				pSinglePoleVertex
     ) {
         // Allocate the indices, 3 points on every triangle
         ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * pTriangleCount );
@@ -326,9 +372,9 @@ public abstract class CSGRadial
         	if ( mClosed && (iZ == 0) ) {
                 // BackFace/SouthPole triangles
                 for( int i = 0; i < mRadialSamples; i += 1 ) {
-                	if ( mFlatEnds ) {
-                		// The flat ends provide an extra set of vertices, along with
-                		// extra pole vertex
+                	if ( pSinglePoleVertex ) {
+                		// The single vertex at the pole is used over and over
+                		// for the set of radial edge points
 	                    if ( !mInverted ) {
 	                        idxBuf.put( (short) i0++ );
 	                        idxBuf.put( (short) pSouthPoleIndex );
@@ -339,7 +385,7 @@ public abstract class CSGRadial
 	                        idxBuf.put( (short) pSouthPoleIndex );
 	                    }              		
                 	} else {
-                		// The rounded ends provide no extra slice per se, just the poles.
+                		// Multiple vertices are provided for the pole
             			// Remember that first cluster is the pole itself, and the next
             			// cluster is start of real data, so utilize i2/i3
 	                    if ( !mInverted ) {
@@ -356,9 +402,9 @@ public abstract class CSGRadial
         	} else if ( mClosed && (iZ == pContext.mSliceCount -2) ) {
                 // FrontFace/NorthPole triangles
                 for( int i = 0; i < mRadialSamples; i += 1 ) {
-                	if ( mFlatEnds ) {
-                		// The flat ends provide an extra set of vertices, along with
-                		// extra pole vertex
+                	if ( pSinglePoleVertex ) {
+                		// The single vertex at the pole is used over and over
+                		// for the set of radial edge points
 	                    if ( !mInverted ) {
 	                        idxBuf.put( (short) i2++ );
 	                        idxBuf.put( (short) i3++ );
@@ -369,7 +415,7 @@ public abstract class CSGRadial
 	                        idxBuf.put( (short) i3++ );
 	                    }
                 	} else {
-                		// The rounded ends provide no extra slice per se, just the poles.
+                		// Multiple vertices are provided for the pole.
             			// Remember that the very last cluster is the pole itself, and the next
             			// to last is the final set of real data, so utilize i0/i1
 	                    if ( !mInverted ) {
@@ -483,6 +529,11 @@ public abstract class CSGRadial
         
         // Account for the center
         posVector.addLocal( pContext.mSliceCenter );
+        
+        // Apply scaling
+        if ( mScaleSlice != null ) {
+        	posVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
+        }
         return( posVector );
     }
     
@@ -495,6 +546,12 @@ public abstract class CSGRadial
     	// By default, just normalize the given position (which is the normal of a sphere)
     	pUseVector.set( pContext.mPosVector );
     	pUseVector.normalizeLocal();
+    	
+        // Apply scaling
+        if ( mScaleSlice != null ) {
+        	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
+        }
+        // Invert as needed
     	if ( mInverted ) {
     		// Invert the normal
     		pUseVector.multLocal( -1 );
@@ -510,6 +567,11 @@ public abstract class CSGRadial
     ) {
     	// No real default, just copy the slice
     	pUseVector.set( pContext.mSliceTexture );
+    	
+        // Apply scaling
+        if ( mScaleSlice != null ) {
+        	pUseVector.multLocal( mScaleSlice );
+        }
     	return( pUseVector );
     }
     
@@ -525,7 +587,10 @@ public abstract class CSGRadial
         outCapsule.write( mRadialSamples, "radialSamples", 32 );
         outCapsule.write( mFirstRadial, "firstRadial", 0 );
         outCapsule.write( mRadius, "radius", 1 );
-        outCapsule.write( mInverted, "inverted", defaultFlatEnds() );
+        if ( mScaleSlice != null ) {
+        	outCapsule.write( mScaleSlice.x, "scaleSliceX", 1.0f );
+        	outCapsule.write( mScaleSlice.y, "scaleSliceY", 1.0f );
+        }
     }
     @Override
     public void read(
@@ -537,33 +602,56 @@ public abstract class CSGRadial
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
         mRadialSamples = inCapsule.readInt( "radialSamples", mRadialSamples );
-        String anAngle = inCapsule.readString( "firstRadial", null );
-        if ( anAngle == null ) {
-        	mFirstRadial = 0;
-        } else {
-        	anAngle = anAngle.toUpperCase();
-        	int index = anAngle.indexOf( "PI" );
+        mFirstRadial = readPiValue( inCapsule, "firstRadial", 0 );
+        mRadius = inCapsule.readFloat( "radius", mRadius );
+        
+        float scaleX = readPiValue( inCapsule, "scaleSliceX", 1.0f );
+        float scaleY = readPiValue( inCapsule, "scaleSliceY", 1.0f );
+        if ( (scaleX != 1.0f) || (scaleY != 1.0f) ) {
+        	mScaleSlice = new Vector2f( scaleX, scaleY );
+        }
+        
+        mRotateSlices = readPiValue( inCapsule, "twist", 0 );
+    }
+    
+    /** Service routine to interpret a Savable.read() float value that can take the form
+     		xxxPI/yyy
+     	that supports fractional values of PI
+     */
+    protected float readPiValue(
+    	InputCapsule	pCapsule
+    ,	String			pValueName
+    ,	float			pDefaultValue
+    ) throws IOException {
+    	float aFloatValue = pDefaultValue;
+    	
+    	// Read the value as a string so we can test for "PI"
+        String piText = pCapsule.readString( pValueName, null );
+        if ( piText != null ) {
+        	// Something explicitly given, figure out what
+        	piText = piText.toUpperCase();
+        	int index = piText.indexOf( "PI" );
         	if ( index >= 0 ) {
         		// Decipher things like 3PI/4
         		int numenator = 1;
         		int denominator = 1;
         		if ( index > 0 ) {
-        			numenator = Integer.parseInt( anAngle.substring( 0, index ) );
+        			// Some integer multiplier of PI
+        			numenator = Integer.parseInt( piText.substring( 0, index ) );
         		}
         		index += 2;
-        		if ( (index < anAngle.length() -1) 
-        		&& (anAngle.charAt( index++ ) == '/') ) {
-        			denominator = Integer.parseInt( anAngle.substring( index ) );
+        		if ( (index < piText.length() -1) 
+        		&& (piText.charAt( index++ ) == '/') ) {
+        			// Some integer divisor of PI
+        			denominator = Integer.parseInt( piText.substring( index ) );
         		}
-        		mFirstRadial = ((float)numenator * FastMath.PI) / (float)denominator;
+        		aFloatValue = ((float)numenator * FastMath.PI) / (float)denominator;
         	} else {
-        		// Assume its just a float
-        		mFirstRadial = Float.parseFloat( anAngle );
+        		// If not PI, then its just a float
+        		aFloatValue = Float.parseFloat( piText );
         	}
         }
-        mRadius = inCapsule.readFloat( "radius", mRadius );
-        mFlatEnds = inCapsule.readBoolean( "flatEnds", mFlatEnds );
-        mInverted = inCapsule.readBoolean( "inverted", mInverted );
+    	return( aFloatValue );
     }
        
 	/////// Implement ConstructiveSolidGeometry

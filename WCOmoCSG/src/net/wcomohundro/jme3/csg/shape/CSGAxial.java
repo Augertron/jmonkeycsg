@@ -52,6 +52,8 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	of the shape is 2*zExtent.
  	
  	An axial is considered to be 'closed' if front/back endcaps are generated for the shape
+ 	
+ 	An 'inverted' axial is designed to be viewed from the inside
  */
 public abstract class CSGAxial 
 	extends CSGMesh
@@ -64,23 +66,28 @@ public abstract class CSGAxial
 
 	/** How many sample slices to generate along the axis */
     protected int 			mAxisSamples;
-    /** How tall is the cylinder along the z axis (where the 'extent' is half the total height) */
+    /** How tall is the shape along the z axis (where the 'extent' is half the total height) */
     protected float 		mExtentZ;
     /** If closed, then the front and end caps are produced */
     protected boolean 		mClosed;
+    /** If inverted, then the cylinder is intended to be viewed from the inside */
+    protected boolean 		mInverted;
+
 
 	protected CSGAxial(
 	) {
-		this( 32, 1, true );
+		this( 32, 1, true, false );
 	}
     protected CSGAxial(
     	int 		pAxisSamples
     , 	float 		pZExtent
     ,	boolean		pClosed
+    ,	boolean		pInverted
     ) {
         mAxisSamples = pAxisSamples;
         mExtentZ = pZExtent;
         mClosed = pClosed;
+        mInverted = pInverted;
     }
 
     /** Configuration accessors */
@@ -88,6 +95,7 @@ public abstract class CSGAxial
     public float getZExtent() { return mExtentZ; }
     public float getHeight() { return mExtentZ * 2; }
     public boolean isClosed() { return mClosed; }
+    public boolean isInverted() { return mInverted; }
 
     /** Support texture scaling */
     @Override
@@ -100,6 +108,7 @@ public abstract class CSGAxial
         outCapsule.write( mAxisSamples, "axisSamples", 32 );
         outCapsule.write( mExtentZ, "zExtent", 1 );
         outCapsule.write( mClosed, "closed", true );
+        outCapsule.write( mInverted, "inverted", false );
     }
     @Override
     public void read(
@@ -119,6 +128,7 @@ public abstract class CSGAxial
         	}
         }
         mClosed = inCapsule.readBoolean( "closed", true );
+        mInverted = inCapsule.readBoolean( "inverted", mInverted );
 
         // Let the super do its thing (which will updateGeometry as needed)
         super.read( pImporter );

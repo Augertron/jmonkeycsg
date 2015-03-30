@@ -107,14 +107,10 @@ public class CSGSphere
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
     ) {
-    	super( pAxisSamples, pRadialSamples, pRadius, true, pInverted );
+    	super( pAxisSamples, pRadialSamples, pRadius, true, pInverted, false );
         mEvenSlices = pUseEvenSlices;
         mTextureMode = pTextureMode;
     }
-
-    /** Subclasses control the default setting for flat ends */
-    @Override
-    public boolean defaultFlatEnds() { return false; }
 
     /** Configuration accessors */
     public boolean hasEvenSlices() { return mEvenSlices; }
@@ -146,7 +142,8 @@ public class CSGSphere
             	// but there are two ends
             	triCount += 2 * mRadialSamples;
             }
-            createIndices( aContext, triCount, southPoleIndex, northPoleIndex );
+            // Multiple, unique poles are provided
+            createIndices( aContext, triCount, southPoleIndex, northPoleIndex, false );
             
             // Establish the bounds
             updateBound();
@@ -476,6 +473,11 @@ public class CSGSphere
 	        
 	        // Account for the center
 	        pUseVector.addLocal( pContext.mSliceCenter );
+	        
+	        // Apply scaling
+	        if ( mScaleSlice != null ) {
+	        	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
+	        }
     	}
         return( pUseVector );
     }
@@ -497,6 +499,11 @@ public class CSGSphere
     		// Normal surface/crust processing
     		pUseVector.set( pContext.mPosVector );
     		pUseVector.normalizeLocal();
+    		
+            // Apply scaling
+            if ( mScaleSlice != null ) {
+            	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
+            }
     	}
     	if ( mInverted ) {
     		// Invert the normal
@@ -553,6 +560,8 @@ public class CSGSphere
 	            break;
 	        }
     	}
+    	// NOTE that we do not apply the slice scaling to the texture... We must still
+    	//		map once around the globe as a single texture iteration
     	return( pUseVector );
     }
 
