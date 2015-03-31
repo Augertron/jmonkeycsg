@@ -92,10 +92,20 @@ public abstract class CSGAxial
 
     /** Configuration accessors */
     public int getAxisSamples() { return mAxisSamples; }
+    public void setAxisSamples( int pSampleCount ) { mAxisSamples = pSampleCount; }
+    
     public float getZExtent() { return mExtentZ; }
+    public void setZExtent( float pZExtent ) { mExtentZ = pZExtent; }
+    
     public float getHeight() { return mExtentZ * 2; }
+    public void setHeight( float pHeight ) { mExtentZ = pHeight / 2.0f; }
+    
     public boolean isClosed() { return mClosed; }
+    public void setClosed( boolean pIsClosed ) { mClosed = pIsClosed; }
+    
     public boolean isInverted() { return mInverted; }
+    public void setInverted( boolean pIsInverted ) { mInverted = pIsInverted; }
+    
 
     /** Support texture scaling */
     @Override

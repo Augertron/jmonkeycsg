@@ -144,6 +144,50 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='UNIFORM_LINEAR'/>
         </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box5x'
+        		materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='20.0' y='-12.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' twist='PI' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box6x'
+        		materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='25.0' y='-12.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' scaleSliceY='0.5' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box7x'
+        		materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='30.0' y='-12.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' twist='PI' scaleSliceY='0.5' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box8x'
+        		materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='35.0' y='-12.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' radialSamples='5' twist='PI' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
         
          <!-- Redbrick -->
         <com.jme3.scene.Geometry name='Box1y'
@@ -178,6 +222,50 @@
                 <translation class='com.jme3.math.Vector3f' x='15.0' y='-18.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='UNIFORM_LINEAR'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box5y'
+        		materialName='Textures/BrickWall/RedBrickRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='20.0' y='-18.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' twist='PI' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box6y'
+        		materialName='Textures/BrickWall/RedBrickRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='25.0' y='-18.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' scaleSliceY='0.5' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box7y'
+        		materialName='Textures/BrickWall/RedBrickRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='30.0' y='-18.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' twist='PI' scaleSliceY='0.5' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='Box8y'
+        		materialName='Textures/BrickWall/RedBrickRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='35.0' y='-18.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' radialSamples='5' twist='PI' zExtent='2'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='4.0' y='2' z='2'/>
+            	</scaleFaces>
+            </mesh>
         </com.jme3.scene.Geometry>
         
     </children>

@@ -78,21 +78,21 @@ public class CSGBox
     };
 
     protected static final float[] GEOMETRY_NORMALS_DATA = {
-       0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1, // back
-       1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0, // right
-       0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1, // front
-      -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, // left
-       0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0, // top
-       0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0  // bottom
+       0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1, // back
+       1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0, // right
+       0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1, // front
+      -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0, // left
+       0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0, // top
+       0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0  // bottom
    	};
 
    	protected static final float[] GEOMETRY_TEXTURE_DATA = {
-       1, 0, 0, 0, 0, 1, 1, 1, // back
-       1, 0, 0, 0, 0, 1, 1, 1, // right
-       1, 0, 0, 0, 0, 1, 1, 1, // front
-       1, 0, 0, 0, 0, 1, 1, 1, // left
-       1, 0, 0, 0, 0, 1, 1, 1, // top
-       1, 0, 0, 0, 0, 1, 1, 1  // bottom
+       1, 0,   0, 0,   0, 1,   1, 1, // back
+       1, 0,   0, 0,   0, 1,   1, 1, // right
+       1, 0,   0, 0,   0, 1,   1, 1, // front
+       1, 0,   0, 0,   0, 1,   1, 1, // left
+       1, 0,   0, 0,   0, 1,   1, 1, // top
+       1, 0,   0, 0,   0, 1,   1, 1  // bottom
    	};
 
 	/** The size of the box (remember to *2 for full width/height/depth) */
@@ -216,6 +216,17 @@ public class CSGBox
         FloatBuffer fpb = BufferUtils.createVector3Buffer(24);
         Vector3f[] v = computeVertices();
         fpb.put(new float[] {
+        /** This is from the original jme3 Box, which applies the x texture along the z axis and the
+            y texture along the x axis for top/bottom
+                v[0].x, v[0].y, v[0].z, v[1].x, v[1].y, v[1].z, v[2].x, v[2].y, v[2].z, v[3].x, v[3].y, v[3].z, // back
+                v[1].x, v[1].y, v[1].z, v[4].x, v[4].y, v[4].z, v[6].x, v[6].y, v[6].z, v[2].x, v[2].y, v[2].z, // right
+                v[4].x, v[4].y, v[4].z, v[5].x, v[5].y, v[5].z, v[7].x, v[7].y, v[7].z, v[6].x, v[6].y, v[6].z, // front
+                v[5].x, v[5].y, v[5].z, v[0].x, v[0].y, v[0].z, v[3].x, v[3].y, v[3].z, v[7].x, v[7].y, v[7].z, // left
+                v[2].x, v[2].y, v[2].z, v[6].x, v[6].y, v[6].z, v[7].x, v[7].y, v[7].z, v[3].x, v[3].y, v[3].z, // top
+                v[0].x, v[0].y, v[0].z, v[5].x, v[5].y, v[5].z, v[4].x, v[4].y, v[4].z, v[1].x, v[1].y, v[1].z  // bottom
+        **/
+        /** This keeps the x texture along the x axis, and runs the y texture along the z axis for
+         	top/bottom */
                 v[0].x, v[0].y, v[0].z, v[1].x, v[1].y, v[1].z, v[2].x, v[2].y, v[2].z, v[3].x, v[3].y, v[3].z, // back
                 v[1].x, v[1].y, v[1].z, v[4].x, v[4].y, v[4].z, v[6].x, v[6].y, v[6].z, v[2].x, v[2].y, v[2].z, // right
                 v[4].x, v[4].y, v[4].z, v[5].x, v[5].y, v[5].z, v[7].x, v[7].y, v[7].z, v[6].x, v[6].y, v[6].z, // front
@@ -245,7 +256,7 @@ public class CSGBox
             setBuffer( Type.TexCoord, 2, BufferUtils.createFloatBuffer( GEOMETRY_TEXTURE_DATA ));
         }
     }
-    /** Service routine that constructs the array or vectors representing the 8 vertices of the box */
+    /** Service routine that constructs the array of vectors representing the 8 vertices of the box */
     protected final Vector3f[] computeVertices(
     ) {
         Vector3f[] axes = {
@@ -253,16 +264,16 @@ public class CSGBox
         ,   Vector3f.UNIT_Y.mult( mExtentY )
         ,	Vector3f.UNIT_Z.mult( mExtentZ )
         };
-        
+        // Define the 8 points that specify the cube
         return new Vector3f[] {
-            sCenter.subtract(axes[0]).subtractLocal(axes[1]).subtractLocal(axes[2])
-        ,	sCenter.add(axes[0]).subtractLocal(axes[1]).subtractLocal(axes[2])
-        ,	sCenter.add(axes[0]).addLocal(axes[1]).subtractLocal(axes[2])
-        ,	sCenter.subtract(axes[0]).addLocal(axes[1]).subtractLocal(axes[2])
-        ,	sCenter.add(axes[0]).subtractLocal(axes[1]).addLocal(axes[2])
-        ,	sCenter.subtract(axes[0]).subtractLocal(axes[1]).addLocal(axes[2])
-        ,	sCenter.add(axes[0]).addLocal(axes[1]).addLocal(axes[2])
-        ,	sCenter.subtract(axes[0]).addLocal(axes[1]).addLocal(axes[2])
+            sCenter.subtract(axes[0]).subtractLocal(axes[1]).subtractLocal(axes[2])	// 0- Back Left Bottom
+        ,	sCenter.add(axes[0]).subtractLocal(axes[1]).subtractLocal(axes[2])		// 1- Back Right Bottom
+        ,	sCenter.add(axes[0]).addLocal(axes[1]).subtractLocal(axes[2])			// 2- Back Right Top
+        ,	sCenter.subtract(axes[0]).addLocal(axes[1]).subtractLocal(axes[2])		// 3- Back Left Top
+        ,	sCenter.add(axes[0]).subtractLocal(axes[1]).addLocal(axes[2])			// 4- Front Right Bottom
+        ,	sCenter.subtract(axes[0]).subtractLocal(axes[1]).addLocal(axes[2])		// 5- Front Left Bottom
+        ,	sCenter.add(axes[0]).addLocal(axes[1]).addLocal(axes[2])				// 6- Front Right Top
+        ,	sCenter.subtract(axes[0]).addLocal(axes[1]).addLocal(axes[2])			// 7- Front Left Top
         };
     }
 

@@ -478,6 +478,10 @@ public class CSGCylinder
         if ( mScaleSlice != null ) {
         	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
         }
+        // Apply rotation
+    	if ( pContext.mSliceRotator != null ) {
+    		pContext.mSliceRotator.multLocal( pUseVector );
+    	}
 	    return( pUseVector );
     }
     
@@ -515,7 +519,6 @@ public class CSGCylinder
                 }
             }
 		}
-		
     	if ( pSurface != 0 ) {
     		// Backface/Frontface processing perpendicular to x/y plane, using the -1/+1 of the surface
     		pUseVector.set( 0, 0, (float)pSurface );
@@ -527,6 +530,10 @@ public class CSGCylinder
             if ( mScaleSlice != null ) {
             	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
             }
+            // Apply rotation
+        	if ( pContext.mSliceRotator != null ) {
+        		pContext.mSliceRotator.multLocal( pUseVector );
+        	}
     	}
     	if ( mInverted ) {
     		// Invert the normal

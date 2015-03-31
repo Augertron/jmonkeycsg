@@ -82,11 +82,23 @@ public class CSGTestD
         aGeometry.move( -2f, 0f, 0f );
         aNode.attachChild( aGeometry );
 
-        mat_csg = assetManager.loadMaterial( "Textures/Debug/Wireframe.j3m" );
+        //mat_csg = assetManager.loadMaterial( "Textures/Debug/Wireframe.j3m" );
         //mat_csg = assetManager.loadMaterial( "Textures/Terrain/BrickWall/BrickWall.j3m"  );
+        
+        Material sphereMat = new Material(assetManager, 
+                "Common/MatDefs/Light/Lighting.j3md");
+        sphereMat.setTexture("DiffuseMap", 
+                assetManager.loadTexture("Textures/Terrain/Pond/Pond.jpg"));
+        sphereMat.setTexture("NormalMap", 
+                assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
+        sphereMat.setBoolean("UseMaterialColors",true);    
+        sphereMat.setColor("Diffuse",ColorRGBA.White);
+        sphereMat.setColor("Specular",ColorRGBA.White);
+        sphereMat.setFloat("Shininess", 64f);  // [0,128]
+
         aGeometry = new Geometry( "Box1", new Box( 1, 1, 1 ) );
         //aGeometry = new Geometry( "Cylinder", new Cylinder( 32, 32, 1.1f, 1.5f, true ) );
-        aGeometry.setMaterial( mat_csg );
+        aGeometry.setMaterial( sphereMat );
         aGeometry.move( 2f, 0f, 0f );
         aNode.attachChild( aGeometry );
         
@@ -94,6 +106,7 @@ public class CSGTestD
         Light aLight = new AmbientLight();
         aLight.setColor( ColorRGBA.White );
         aNode.addLight( aLight );
+
 
 /***
 	    // Long cylinder that pokes out of the cube

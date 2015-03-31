@@ -478,6 +478,10 @@ public class CSGSphere
 	        if ( mScaleSlice != null ) {
 	        	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
 	        }
+	        // Apply rotation
+	    	if ( pContext.mSliceRotator != null ) {
+	    		pContext.mSliceRotator.multLocal( pUseVector );
+	    	}
     	}
         return( pUseVector );
     }
@@ -504,6 +508,10 @@ public class CSGSphere
             if ( mScaleSlice != null ) {
             	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
             }
+            // Apply rotation
+        	if ( pContext.mSliceRotator != null ) {
+        		pContext.mSliceRotator.multLocal( pUseVector );
+        	}
     	}
     	if ( mInverted ) {
     		// Invert the normal

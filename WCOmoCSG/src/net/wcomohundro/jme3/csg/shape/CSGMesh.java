@@ -32,8 +32,7 @@ import com.jme3.export.Savable;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
-import com.jme3.scene.Mesh.Mode;
-import com.jme3.scene.VertexBuffer.Type;
+import com.jme3.util.TangentBinormalGenerator;
 
 import java.io.IOException;
 import java.util.List;
@@ -156,6 +155,11 @@ public abstract class CSGMesh
         	for( Vector3f faceScale : mScaleFaceTexture ) {
         		this.scaleFaceTextureCoordinates( faceScale.x, faceScale.y, (int)faceScale.z );
         	}
+        }
+        // TangentBinormalGenerator directive
+        boolean generate = inCapsule.readBoolean( "generateTangentBinormal", false );
+        if ( generate ) {
+        	TangentBinormalGenerator.generate( this );
         }
     }
 

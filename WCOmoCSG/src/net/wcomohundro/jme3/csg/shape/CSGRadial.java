@@ -87,6 +87,10 @@ import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
         				 However, the texture applied to each slice is then scaled as well.
         				 Applying scale to the individual slice preserves the original
         				 texture mapping.  IE - check out the endcaps of a cylinder)
+        				 
+        twist -			total amount of angular twist from the back surface to the
+        				front surface, with an appropriate fractional amount applied
+        				to each slice
  		
  */
 public abstract class CSGRadial 
@@ -111,14 +115,13 @@ public abstract class CSGRadial
 		WeakReference<CSGRadialCoord[]> aReference = sRadialCoordCache.get( coordKey );
 		CSGRadialCoord[] coordList = (aReference == null) ? null : aReference.get();
 		if ( coordList == null ) synchronized( sRadialCoordCache ) {
-			// No in the cache, so create it now 
+			// Not in the cache, so create it now 
 			// (and it is not worth the effort to check the cache again once synchronized)
 	        float inverseRadialSamples = 1.0f / pRadialSamples;
 			coordList = new CSGRadialCoord[ pRadialSamples + 1 ];
 			
 			// Generate the coordinate values for each radial point
 	        for( int iRadial = 0; iRadial < pRadialSamples; iRadial += 1 ) {
-	        	if ( iRadial >= pRadialSamples ) iRadial = 0;
 	            float anAngle = (FastMath.TWO_PI * inverseRadialSamples * iRadial) + pFirstRadial;
 	            if ( anAngle > FastMath.TWO_PI ) anAngle -= FastMath.TWO_PI;
 	            coordList[ iRadial ] = new CSGRadialCoord( anAngle );
@@ -143,11 +146,11 @@ public abstract class CSGRadial
 
     /** The base radius of the surface (which may well match the zExtent) */
     protected float 		mRadius;
-    /** If closed, do the endcaps bulge out or are they flat? */
+    /** If closed, do the endcaps bulge out or are they flat? (subclass setting only, no accessors) */
     protected boolean		mFlatEnds;
     /** Per-slice scaling **/
     protected Vector2f		mScaleSlice;
-    /** Per-slice across all the slices */
+    /** Per-slice across all the slices (the total angle spread across all the slices) */
     protected float		 	mRotateSlices;
     
 	
@@ -173,9 +176,20 @@ public abstract class CSGRadial
 
     /** Configuration accessors */
     public int getRadialSamples() { return mRadialSamples; }
+    public void setRadialSamples( int pRadialSamples ) { mRadialSamples = pRadialSamples; }
+    
     public float getFirstRadial() { return mFirstRadial; }
+    public void setFirstRadial( float pFirstRadial ) { mFirstRadial = pFirstRadial; }
+    
     public float getRadius() { return mRadius; }
-    public boolean hasFlatEnds() { return mFlatEnds; }
+    public void setRadius( float pRadius ) { mRadius = pRadius; }
+    
+    public Vector2f getSliceScale() { return mScaleSlice; }
+    public void setSliceScale( Vector2f pScaling ) { mScaleSlice = pScaling; }
+    
+    public float getSliceRotation() { return mRotateSlices; }
+    public void setSliceRotation( float pTotalRotation ) { mRotateSlices = pTotalRotation; }
+    
     
     /** Rebuilds the sphere based on the current set of configuration parameters
      
@@ -291,11 +305,11 @@ public abstract class CSGRadial
 	        	pContext.mSliceTexture = getSliceTexture( vars.vect2d, pContext, aSurface );
 	        	
 	        	// Any per-slice rotation?
-	        	Quaternion aRotator = null;
+	        	pContext.mSliceRotator = null;
 	        	if ( mRotateSlices != 0 ) {
 	        		// What rotation should be applied to this position along the z
-	        		float rotateAngle = ((pContext.mZAxisFraction + 1.0f) / 2.0f) * mRotateSlices;
-	        		aRotator = (new Quaternion()).fromAngleNormalAxis( rotateAngle, Vector3f.UNIT_Z );
+	        		float rotateAngle = ((pContext.mZAxisFraction - 1.0f) / -2.0f) * mRotateSlices;
+	        		pContext.mSliceRotator = (new Quaternion()).fromAngleNormalAxis( rotateAngle, Vector3f.UNIT_Z );
 	        	}
 	            // Compute slice vertices with duplication at end point
 	            int iSave = pContext.mIndex;
@@ -306,18 +320,12 @@ public abstract class CSGRadial
 
 	                // Where is this vertex?
 	            	pContext.mPosVector = getRadialPosition( vars.vect1, pContext, aSurface );
-	            	if ( aRotator != null ) {
-	            		aRotator.multLocal( pContext.mPosVector );
-	            	}
 	                pContext.mPosBuf.put( pContext.mPosVector.x )
 	                				.put( pContext.mPosVector.y )
 	                				.put( pContext.mPosVector.z );
 	
 	                // What is the normal for this position?
 	                pContext.mNormVector = getRadialNormal( vars.vect4, pContext, aSurface );
-	            	if ( aRotator != null ) {
-	            		aRotator.multLocal( pContext.mNormVector );
-	            	}
 	                pContext.mNormBuf.put( pContext.mNormVector.x )
 	                				.put( pContext.mNormVector.y )
 	                				.put( pContext.mNormVector.z );
@@ -522,19 +530,23 @@ public abstract class CSGRadial
     	// Get the vector on the surface for this radial position
     	// By default, just operate on the unit circle
     	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
-        Vector3f posVector = pUseVector.set( aCoord.mCosine, aCoord.mSine, 0 );
+        pUseVector.set( aCoord.mCosine, aCoord.mSine, 0 );
         
         // Account for the actual radius
-        posVector.multLocal( pContext.mSliceRadius );
+        pUseVector.multLocal( pContext.mSliceRadius );
         
         // Account for the center
-        posVector.addLocal( pContext.mSliceCenter );
+        pUseVector.addLocal( pContext.mSliceCenter );
         
         // Apply scaling
         if ( mScaleSlice != null ) {
-        	posVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
+        	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
         }
-        return( posVector );
+        // Apply rotation
+    	if ( pContext.mSliceRotator != null ) {
+    		pContext.mSliceRotator.multLocal( pUseVector );
+    	}
+        return( pUseVector );
     }
     
     /** FOR SUBCLASS OVERRIDE: compute the normal of a given radial vertex */
@@ -695,35 +707,36 @@ class CSGRadialCoord
 /** Helper class for use during the geometry calculations */
 class CSGRadialContext
 {
-	int 				mSliceCount;
-    int 				mVertCount;
-    int					mIndex;
+	int 				mSliceCount;			// How many slices are being processed
+    int 				mVertCount;				// How many vertices are being generated
+    int					mIndex;					// The current index within the buffers
     
-    FloatBuffer 		mPosBuf;;
-    FloatBuffer 		mNormBuf;
-    FloatBuffer 		mTexBuf;
+    FloatBuffer 		mPosBuf;;				// Position points (3f)
+    FloatBuffer 		mNormBuf;				// Normal points (3f)
+    FloatBuffer 		mTexBuf;				// Texture points (2f)
     
-    float 				mInverseRadialSamples;
-    float 				mZAxisUniformPercent;
+    float 				mInverseRadialSamples;	// Percentage of each radial
+    float 				mZAxisUniformPercent;	// Percentage of each slice along z (evenly spaced)
     
-    CSGRadialCoord[]	mCoordList;
+    CSGRadialCoord[]	mCoordList;				// Sine/Cosine coordinates based on count of radials
     
-    float 				mAngleFraction;
-    float 				mPolarFraction;
-    float 				mZAxisFraction;
-    float 				mZAxisAbsolute;
+    float 				mAngleFraction;			// Distance along z as an angle  (-pi/2 : +pi/2)
+    float 				mPolarFraction;			// Polar representation of z
+    float 				mZAxisFraction;			// Percentage of actual current z (-1.0 : +1.0)
+    float 				mZAxisAbsolute;			// Actual absolute z point
     
-    Vector3f 			mSliceCenter;
-    float 				mSliceRadius;
-    Vector2f			mSliceTexture;
+    Vector3f 			mSliceCenter;			// Center point of the active slice
+    float 				mSliceRadius;			// Radius of this slice
+    Vector2f			mSliceTexture;			// Texture base for entire slice
+    Quaternion 			mSliceRotator;			// Rotation to be applied to this slice
     
-    int					mZOffset;			// Counter running along the zAxis
-    int					mRadialIndex;		// Counter running along the circular radial points
-    float				mRadialFraction;
+    int					mZOffset;				// Counter running along the zAxis
+    int					mRadialIndex;			// Counter running along the circular radial points
+    float				mRadialFraction;		// Percentage of distance along the radial surface (0.0 : +1.0)
     
-    Vector3f			mPosVector;
-    Vector3f			mNormVector;
-    Vector2f			mTexVector;
+    Vector3f			mPosVector;				// The position vector of the current radial point
+    Vector3f			mNormVector;			// The normal vector of the current radial point
+    Vector2f			mTexVector;				// The texture vector of the current radial point
     
     /** Initialize the context */
     CSGRadialContext(

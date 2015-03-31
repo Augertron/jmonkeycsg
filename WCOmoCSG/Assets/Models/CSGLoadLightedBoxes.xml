@@ -1,0 +1,53 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CSGSamples'>
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' z='0.0'/>
+    </transform>
+    <children>
+    	<!-- Just a cube with a texture -->
+        <com.jme3.scene.Geometry name='Box1'
+        		materialName='Textures/BrickWall/BrickWallNormal.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' generateTangentBinormal='true'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='Box1a'
+        		materialName='Textures/BrickWall/RedBrickRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='5.0' y='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+            		xExtent='1.0' yExtent='10.0' zExtent='1.0'>
+                <scaleFaces>
+                    <com.jme3.math.Vector3f x='1' y='10' z='5'/>
+                    <com.jme3.math.Vector3f x='1' y='10' z='10'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+  		<!-- An elongated, rotated box with a texture -->
+        <com.jme3.scene.Geometry name='Box2'
+        		materialName='Textures/Rock/Rock1Normal.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
+                <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+            		xExtent='2.0' yExtent='1.0' zExtent='1.0'  generateTangentBinormal='true'/>
+        </com.jme3.scene.Geometry>  
+        
+        <!-- Normal, Elongated, rotated, scaled box -->
+        <com.jme3.scene.Geometry name='Box3'
+        		materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='-0.039469503' z='0.19470917'/>
+                <translation class='com.jme3.math.Vector3f' x='15.0' y='0.0'/>
+                <scale class='com.jme3.math.Vector3f' x='0.75' y='0.75' z='0.75'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+            		xExtent='1.0' yExtent='1.0' zExtent='1.5'  generateTangentBinormal='true'/>
+        </com.jme3.scene.Geometry>
+    </children>
+</com.jme3.scene.Node>
