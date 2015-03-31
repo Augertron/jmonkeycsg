@@ -3,7 +3,7 @@
     <lights class='com.jme3.light.LightList'>
         <lights>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
-        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0.5' a='1'/>
         	</com.jme3.light.AmbientLight>
         	<com.jme3.light.PointLight name='BLight' enabled='true'>
         		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
@@ -16,5 +16,6 @@
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadLightedBoxes.xml'/>
    		<!-- com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleCylinders.xml'/>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleSpheres.xml'/ -->
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadLightedCorridor.xml'/>
      </assetLoaderKeyList>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

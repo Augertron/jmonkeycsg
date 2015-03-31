@@ -1,0 +1,57 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<material class='com.jme3.material.Material' material_def='Common/MatDefs/Light/Lighting.j3md'>
+	<parameters>
+	    <MapEntry key='UseMaterialColors'>
+	        <Savable class='com.jme3.material.MatParam' 
+	        	name='UseMaterialColors' value_bool='false' varType='Boolean'/>
+	    </MapEntry>
+	    <MapEntry key='Diffuse'>
+	        <Savable class='com.jme3.material.MatParam' 
+	        	name='Diffuse' varType='Vector4'>
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='1.0' g='1.0' b='1.0' a='1.0'/> 
+	        </Savable>
+	    </MapEntry>
+	    <MapEntry key='Specular'>
+	        <Savable class='com.jme3.material.MatParam' 
+	        	name='Specular'  varType='Vector4'>
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='1.0' g='1.0' b='1.0' a='1.0'/> 
+	        </Savable>
+	    </MapEntry>
+	    <MapEntry key='Shininess'>
+	        <Savable class='com.jme3.material.MatParam' 
+	        	name='Shininess' value_float='20.0' varType='Float'/>
+	    </MapEntry>
+	    
+	    <MapEntry key='DiffuseMap'>
+	        <Savable class='com.jme3.material.MatParamTexture' 
+	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
+	            <value_savable class='com.jme3.texture.Texture2D' 
+	            		minificationFilter='Trilinear' 
+	            		name='Textures/Terrain/Pond/Pond.jpg' 
+	            		wrapS='Repeat' wrapT='Repeat'
+	            		reference_ID='com.jme3.texture.Texture2D@PebblesDiffuse'>
+	                <key class='com.jme3.asset.TextureKey' 
+	                	generate_mips='true' 
+	                	name='Textures/Terrain/Pond/Pond.jpg'/>
+	            </value_savable>
+	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@PebblesDiffuse'/>
+	        </Savable>
+	    </MapEntry>
+	    
+	    <MapEntry key='NormalMap'>
+	        <Savable class='com.jme3.material.MatParamTexture' 
+	        		name='NormalMap' texture_unit='1' varType='Texture2D'>
+	            <value_savable class='com.jme3.texture.Texture2D' 
+	            		minificationFilter='Trilinear' 
+	            		name='Textures/Terrain/Pond/Pond_normal.png' 
+	            		reference_ID='com.jme3.texture.Texture2D@PebblesNormal'>
+	                <key class='com.jme3.asset.TextureKey' 
+	                	generate_mips='true' 
+	                	name='Textures/Terrain/Pond/Pond_normal.png'/>
+	            </value_savable>
+	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@PebblesNormal'/>
+	        </Savable>
+	    </MapEntry>
+ 
+	</parameters>
+</material>

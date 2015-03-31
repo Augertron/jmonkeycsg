@@ -58,6 +58,7 @@ import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
+import com.jme3.util.TangentBinormalGenerator;
 
 /**  Constructive Solid Geometry (CSG)
 
@@ -388,6 +389,12 @@ public class CSGGeonode
 		}
 		// Rebuild based on the shapes just loaded
 		regenerate();
+		
+        // TangentBinormalGenerator directive
+        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
+        if ( generate ) {
+        	TangentBinormalGenerator.generate( this );
+        }
 	}
 	
 	/////// Implement ConstructiveSolidGeometry
