@@ -34,6 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jme3.export.Savable;
+import com.jme3.math.Vector3f;
+import com.jme3.math.Vector2f;
+import com.jme3.util.TempVars;
 
 
 /** Constructive Solid Geometry (CSG)
@@ -83,7 +86,13 @@ public class CSGPartition
 		mMaterialIndex = pMaterialIndex;
 		
 		if ( pPolygons != null ) {
-			buildHierarchy( pPolygons, 0 );
+	        // Avoid some object churn by using the thread-specific 'temp' variables
+	        TempVars vars = TempVars.get();
+	        try {
+	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, 0 );
+	        } finally {
+	        	vars.release();
+	        }
 		}
 	}
 	public CSGPartition(
@@ -92,8 +101,16 @@ public class CSGPartition
 		mPolygons = new ArrayList<CSGPolygon>();
 		
 		if ( pPolygons != null ) {
+			// Use the material assigned to the first polygon
 			mMaterialIndex = pPolygons.get(0).getMaterialIndex();
-			buildHierarchy( pPolygons, 0 );
+			
+	        // Avoid some object churn by using the thread-specific 'temp' variables
+	        TempVars vars = TempVars.get();
+	        try {
+	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, 0 );
+	        } finally {
+	        	vars.release();
+	        }
 		}
 	}
 	
@@ -121,6 +138,8 @@ public class CSGPartition
 	/** 'CLIP' all the given polygons that are in front of this node */
 	public List<CSGPolygon> clipPolygons(
 		List<CSGPolygon>	pPolygons
+	,	Vector3f			pTemp3f
+	,	Vector2f			pTemp2f
 	) {
 		if ( mPlane == null ) {
 			// If we have no effective plane, then everything is retained
@@ -132,15 +151,15 @@ public class CSGPartition
 		for ( CSGPolygon aPolygon : pPolygons ) {
 			// NOTE that coplannar polygons are retained in front/back, based on which
 			//		way they are facing
-			mPlane.splitPolygon( aPolygon, frontPolys, backPolys, frontPolys, backPolys );
+			mPlane.splitPolygon( aPolygon, frontPolys, backPolys, frontPolys, backPolys, pTemp3f, pTemp2f );
 		}
 		if ( mFrontPartition != null ) {
 			// Include appropriate clipping from the front partition as well
-			frontPolys = mFrontPartition.clipPolygons( frontPolys );
+			frontPolys = mFrontPartition.clipPolygons( frontPolys, pTemp3f, pTemp2f );
 		}
 		if ( mBackPartition != null ) {
 			// Include appropriate clipping from the back partition as well
-			backPolys = mBackPartition.clipPolygons( backPolys );
+			backPolys = mBackPartition.clipPolygons( backPolys, pTemp3f, pTemp2f );
 			
 			// Keep it blended into the total list
 			frontPolys.addAll( backPolys );
@@ -153,11 +172,13 @@ public class CSGPartition
 	 */
 	public void clipTo(
 		CSGPartition		pOther
+	,	Vector3f			pTemp3f
+	,	Vector2f			pTemp2f
 	) {
 		// Reset the list of polygons that apply based on clipping from the other partition
-		mPolygons = pOther.clipPolygons( mPolygons );
-		if ( mFrontPartition != null ) mFrontPartition.clipTo( pOther );
-		if ( mBackPartition != null) mBackPartition.clipTo( pOther );
+		mPolygons = pOther.clipPolygons( mPolygons, pTemp3f, pTemp2f );
+		if ( mFrontPartition != null ) mFrontPartition.clipTo( pOther, pTemp3f, pTemp2f );
+		if ( mBackPartition != null) mBackPartition.clipTo( pOther, pTemp3f, pTemp2f );
 	}
 		
 	/** Invert this node */
@@ -181,6 +202,8 @@ public class CSGPartition
 	/** Build a hierarchy of nodes from a given set of polygons */
 	protected void buildHierarchy(
 		List<CSGPolygon>	pPolygons
+	,	Vector3f			pTemp3f
+	,	Vector2f			pTemp2f
 	,	int					pStackDepth
 	) {
 		if ( pPolygons.isEmpty() ) {
@@ -201,7 +224,7 @@ public class CSGPartition
 		List<CSGPolygon> back = new ArrayList<CSGPolygon>();
 		for( CSGPolygon aPolygon : pPolygons ) {
 			// NOTE that for coplannar, we do not care which direction the polygon faces
-			mPlane.splitPolygon( aPolygon, mPolygons, mPolygons, front, back );
+			mPlane.splitPolygon( aPolygon, mPolygons, mPolygons, front, back, pTemp3f, pTemp2f );
 		}
 		if ( !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
@@ -212,7 +235,7 @@ public class CSGPartition
 				this.mFrontPartition.mPolygons.addAll( front );
 			} else {
 				// Assign whatever is in the front
-				this.mFrontPartition.buildHierarchy( front, pStackDepth + 1 );
+				this.mFrontPartition.buildHierarchy( front, pTemp3f, pTemp2f, pStackDepth + 1 );
 			}
 		}
 		if ( !back.isEmpty() ) {
@@ -224,7 +247,7 @@ public class CSGPartition
 				mBackPartition.mPolygons.addAll( front );
 			} else {
 				// Assign whatever is in the back
-				mBackPartition.buildHierarchy( back, pStackDepth + 1 );
+				mBackPartition.buildHierarchy( back, pTemp3f, pTemp2f, pStackDepth + 1 );
 			}
 		}
 	}

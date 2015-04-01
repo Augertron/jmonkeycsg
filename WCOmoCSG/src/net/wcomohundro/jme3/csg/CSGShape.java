@@ -53,6 +53,7 @@ import com.jme3.material.Material;
 import com.jme3.material.MatParamTexture;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
+import com.jme3.util.TempVars;
 
 /** Constructive Solid Geometry (CSG)
  
@@ -279,12 +280,19 @@ public class CSGShape
 	) {
 		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
 		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
-		a.clipTo(b);
-		b.clipTo(a);
-		b.invert();
-		b.clipTo(a);
-		b.invert();
-		a.buildHierarchy( b.allPolygons( null ), 0 );
+		
+        // Avoid some object churn by using the thread-specific 'temp' variables
+        TempVars vars = TempVars.get();
+        try {
+			a.clipTo( b, vars.vect1, vars.vect2d );
+			b.clipTo( a, vars.vect1, vars.vect2d );
+			b.invert();
+			b.clipTo( a, vars.vect1, vars.vect2d );
+			b.invert();
+			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, 0 );
+        } finally {
+        	vars.release();
+        }
 		return( new CSGShape( a.allPolygons( null ), this.getOrder() ));
 	}
 	
@@ -295,15 +303,22 @@ public class CSGShape
 	) {
 		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
 		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
-		a.invert();
-		a.clipTo(b);
-		b.clipTo(a);
-		b.invert();
-		b.clipTo(a);
-		b.invert();
-		a.buildHierarchy( b.allPolygons( null ), 0 );
-		a.invert();
-		return( new CSGShape( a.allPolygons( null ), this.getOrder() ));
+		
+        // Avoid some object churn by using the thread-specific 'temp' variables
+        TempVars vars = TempVars.get();
+        try {
+			a.invert();
+			a.clipTo( b, vars.vect1, vars.vect2d );
+			b.clipTo( a, vars.vect1, vars.vect2d );
+			b.invert();
+			b.clipTo( a, vars.vect1, vars.vect2d );
+			b.invert();
+			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, 0 );
+			a.invert();
+        } finally {
+        	vars.release();
+        }
+		return( new CSGShape( a.allPolygons( null ), this.getOrder() ) );
 	}
 
 	/** Find the intersection with another shape */
@@ -313,14 +328,21 @@ public class CSGShape
 	) {
 		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
 	    CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
-	    a.invert();
-	    b.clipTo(a);
-	    b.invert();
-	    a.clipTo(b);
-	    b.clipTo(a);
-	    a.buildHierarchy( b.allPolygons( null ), 0 );
-	    a.invert();
-		return( new CSGShape( a.allPolygons( null ), this.getOrder() ));
+		
+        // Avoid some object churn by using the thread-specific 'temp' variables
+        TempVars vars = TempVars.get();
+        try {
+		    a.invert();
+		    b.clipTo( a, vars.vect1, vars.vect2d );
+		    b.invert();
+		    a.clipTo( b, vars.vect1, vars.vect2d );
+		    b.clipTo( a, vars.vect1, vars.vect2d);
+		    a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, 0 );
+		    a.invert();
+        } finally {
+        	vars.release();
+        }
+		return( new CSGShape( a.allPolygons( null ), this.getOrder() ) );
 	}
 
 	/** Produce the set of polygons that correspond to a given mesh */

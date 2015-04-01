@@ -13,9 +13,12 @@
     </lights>
 	<children/>
     <assetLoaderKeyList>
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGNormalTests.xml'/>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadLightedBoxes.xml'/>
-   		<!-- com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleCylinders.xml'/>
-   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleSpheres.xml'/ -->
+<?ignore
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleCylinders.xml'/>
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleSpheres.xml'/>
+?>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadLightedCorridor.xml'/>
      </assetLoaderKeyList>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

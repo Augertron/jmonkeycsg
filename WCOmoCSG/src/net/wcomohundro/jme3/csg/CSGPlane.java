@@ -40,6 +40,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
+import com.jme3.math.Vector2f;
 
 /**  Constructive Solid Geometry (CSG)
  
@@ -160,6 +161,8 @@ public class CSGPlane
 	, 	List<CSGPolygon> 	pCoplanarBack
 	, 	List<CSGPolygon> 	pFront
 	, 	List<CSGPolygon> 	pBack
+	,	Vector3f			pTemp3f
+	,	Vector2f			pTemp2f
 	) {
 		// A note from the web about what "dot" means in 3D graphics
 		// 		When deciding if a polygon is facing the camera, you need only calculate the dot product 
@@ -222,9 +225,9 @@ public class CSGPlane
 				}
 				if ((iType | jType) == SPANNING ) {
 					// If we cross the plane, then interpolate a new vertex on this plane
-					float percent = (mDot - mNormal.dot( iVertex.getPosition() )) 
-									/ mNormal.dot( jVertex.getPosition().subtract( iVertex.getPosition() ));
-					CSGVertex onPlane = iVertex.interpolate( jVertex, percent );
+					pTemp3f.set( jVertex.getPosition() ).subtractLocal( iVertex.getPosition() );
+					float percent = (mDot - mNormal.dot( iVertex.getPosition() )) / mNormal.dot( pTemp3f );
+					CSGVertex onPlane = iVertex.interpolate( jVertex, percent, pTemp3f, pTemp2f );
 					beforeVertices.add( onPlane );
 					behindVertices.add( onPlane.clone( false ) );
 				}

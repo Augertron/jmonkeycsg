@@ -87,10 +87,14 @@ public class CSGVertex
 	,	Transform		pTransform
 	) {
 		if ( pTransform != null ) {
-			mPosition = pTransform.transformVector( pPosition, null );
-			mNormal = pTransform.transformVector( pNormal, null );
+			// Adjust the position
+			mPosition = pTransform.transformVector( pPosition, pPosition );
+			// Only rotation affects the surface normal
+			mNormal = pTransform.getRotation().multLocal( pNormal );
+			// The texture does not budge
 			mTextureCoordinate = pTextureCoordinate;
 		} else {
+			// Use what was given
 			mPosition = pPosition;
 			mNormal = pNormal;
 			mTextureCoordinate = pTextureCoordinate;
@@ -103,7 +107,7 @@ public class CSGVertex
 	) {
 		if ( pFlipIt ) {
 			// Make a flipped copy (invert the normal)
-			return( new CSGVertex( mPosition.clone(), mNormal.negateLocal(), mTextureCoordinate.clone() ));
+			return( new CSGVertex( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone() ));
 		} else {
 			// Standard copy
 			return( new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));
@@ -123,16 +127,21 @@ public class CSGVertex
 	public CSGVertex interpolate(
 		CSGVertex 	pOther
 	, 	float		pPercentage
+	,	Vector3f	pTemp3f
+	,	Vector2f	pTemp2f
 	) {
 		Vector3f newPosition 
-			= this.mPosition.add( 
-					pOther.getPosition().subtract( this.mPosition ).mult( pPercentage ) );
+			= this.mPosition.add(
+				pTemp3f.set( pOther.getPosition() ).subtractLocal( this.mPosition ).multLocal( pPercentage ) );
+
 		Vector3f newNormal 
 			= this.mNormal.add( 
-					pOther.getNormal().subtract( this.mNormal ).mult( pPercentage ) );
+				pTemp3f.set( pOther.getNormal() ).subtractLocal( this.mNormal ).multLocal( pPercentage ) );
+		
 		Vector2f newTextureCoordinate 
 			= this.mTextureCoordinate.add( 
-					pOther.getTextureCoordinate().subtract( this.mTextureCoordinate ).mult( pPercentage ) );
+				pTemp2f.set( pOther.getTextureCoordinate() ).subtractLocal( this.mTextureCoordinate ).multLocal( pPercentage ) );
+		
 		return new CSGVertex( newPosition, newNormal, newTextureCoordinate );
 	}
 

@@ -3,11 +3,11 @@
 	<children>
 		<!-- A corridor -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
-        		singleMaterial='true' 
+        		singleMaterial='false' 
         		generateTangentBinormal='true'
-        		materialName='Textures/Debug/Wireframe.xml' >
-        		<!-- materialName='Textures/Debug/Normals.xml' > -->
-        		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+        		materialName='Textures/Rock/Rock1NormalRpt.xml'>
+        		<!-- materialName='Textures/Debug/Wireframe.xml' -->
+        		<!-- materialName='Textures/Debug/Normals.xml' -->
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0' y='10'/>
             </transform>
@@ -38,7 +38,7 @@
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
 
-                <net.wcomohundro.jme3.csg.CSGShape name='Interior' Operator='SKIP'
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' Operator='DIFFERENCE'
                 		materialName='Textures/BrickWall/BrickWallNormalRpt.xml'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
                     	 axisSamples='34' closed='true' height='1.0' radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'>
