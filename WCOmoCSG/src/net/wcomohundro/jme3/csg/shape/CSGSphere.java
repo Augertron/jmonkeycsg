@@ -114,41 +114,45 @@ public class CSGSphere
 
     /** Configuration accessors */
     public boolean hasEvenSlices() { return mEvenSlices; }
+    public void setEvenSlices( boolean pFlag ) { mEvenSlices = pFlag; }
+    
     public TextureMode getTextureMode() { return mTextureMode; }
+    public void setTextureMode( TextureMode pTextureMode ) { mTextureMode = pTextureMode; }
 
     
     /** Rebuilds the sphere based on the current set of configuration parameters */
     @Override
-    public void updateGeometry(
+    protected void updateGeometryProlog(
     ) {
     	if ( true ) { 
             // Allocate buffers for position/normals/texture
-        	// We generate an extra vertex around the radial sample where the last
-        	// vertex overlays the first.  
-    		// And even though the north/south poles are a single point, we need to 
-    		// generate different texture coordinates for the pole for each different 
-    		// radial, so we need a full set of vertices
-        	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
-        	CSGRadialContext aContext = getContext( sliceCount );
+        	CSGRadialContext aContext = getContext();
         	
+        	// Create all the vertices info
         	int southPoleIndex = 0;
         	int northPoleIndex = createGeometry( aContext );
 
-        	// There are 2 triangles for every radial point on every puck,
-            // and there are AxisSamples -1 pucks
-            int triCount = 2 * (mAxisSamples -1) * mRadialSamples;
-            if ( mClosed ) {
-            	// If the shape is closed, then there is one triangle for every radial point,
-            	// but there are two ends
-            	triCount += 2 * mRadialSamples;
-            }
             // Multiple, unique poles are provided
-            createIndices( aContext, triCount, southPoleIndex, northPoleIndex, false );
-            
+            VertexBuffer idxBuffer 
+	        	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, false );
+	        setBuffer( idxBuffer );
+	        
+	        if ( mLODFactors != null ) {
+	        	// Various Levels of Detail, with the zero slot being the master
+	        	VertexBuffer[] levels = new VertexBuffer[ mLODFactors.length + 1 ];
+	        	levels[0] = idxBuffer;
+	        	
+	        	// Generate each level
+	        	for( int i = 0, j = mLODFactors.length; i < j; i += 1 ) {
+	        		idxBuffer 
+	            		= createIndices( aContext, mLODFactors[i], southPoleIndex, northPoleIndex, false );
+	        		levels[ i + 1 ] = idxBuffer;
+	        	}
+	        	this.setLodLevels( levels );
+	        }
             // Establish the bounds
             updateBound();
             setStatic();
-            
             return;
     	}
 /********
@@ -374,13 +378,19 @@ public class CSGSphere
     /** FOR SUBCLASS OVERRIDE: allocate the context */
     @Override
     protected CSGRadialContext getContext(
-    	int		pSliceCount
     ) {
-    	 CSGSphereContext aContext = new CSGSphereContext( pSliceCount, mRadialSamples );
+    	// Allocate buffers for position/normals/texture
+    	// We generate an extra vertex around the radial sample where the last
+    	// vertex overlays the first.  
+		// And even though the north/south poles are a single point, we need to 
+		// generate different texture coordinates for the pole for each different 
+		// radial, so we need a full set of vertices
+    	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+   	 	CSGSphereContext aContext = new CSGSphereContext( sliceCount, mRadialSamples );
     	 
-    	 // The rSquared is constant for a given radius and can be calculated here
-    	 aContext.mRadiusSquared = mRadius * mRadius;
-    	 return( aContext );
+    	// The rSquared is constant for a given radius and can be calculated here
+    	aContext.mRadiusSquared = mRadius * mRadius;
+    	return( aContext );
     }
     
     /** FOR SUBCLASS OVERRIDE: fractional speaking, where are we along the z axis */
@@ -607,8 +617,8 @@ public class CSGSphere
         	// So what does this mean?
         	throw new IOException( "CSGSphere radius/zExtent mismatch" );
         }
-        // Standard trigger of updateGeometry() 
-        this.readComplete( pImporter );
+        // Standard trigger of updateGeometry() to build the shape 
+        this.updateGeometry();
     }
     
     /** Apply texture coordinate scaling to selected 'faces' of the sphere */

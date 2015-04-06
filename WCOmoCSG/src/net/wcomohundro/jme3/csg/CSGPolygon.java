@@ -130,18 +130,18 @@ public class CSGPolygon
 		// NOTE a deficiency in the OutputCapsule API which should operate on a List,
 		//		but instead requires an ArrayList
 		aCapsule.writeSavableArrayList( (ArrayList<CSGVertex>)mVertices
-										, "Vertices"
+										, "vertices"
 										, (ArrayList<CSGVertex>)sEmptyVertices );
-		aCapsule.write( mPlane, "Plane", null );
+		aCapsule.write( mPlane, "plane", null );
 	}
 	@Override
 	public void read(
 		JmeImporter 	pImporter
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule(this);
-		mVertices = (List<CSGVertex>)aCapsule.readSavableArrayList( "Vertices"
+		mVertices = (List<CSGVertex>)aCapsule.readSavableArrayList( "vertices"
 																	, (ArrayList<CSGVertex>)sEmptyVertices );
-		mPlane = (CSGPlane)aCapsule.readSavable( "Plane", null );
+		mPlane = (CSGPlane)aCapsule.readSavable( "plane", null );
 	}
 	
 	/** For DEBUG */

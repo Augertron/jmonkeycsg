@@ -157,7 +157,7 @@ public class CSGGeometry
 				case UNION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( null );
+						aProduct = aShape.clone( null, getLodLevel() );
 					} else {
 						// Blend together
 						aProduct = aProduct.union( aShape, null );
@@ -176,7 +176,7 @@ public class CSGGeometry
 				case INTERSECTION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( null );
+						aProduct = aShape.clone( null, getLodLevel() );
 					} else {
 						// Blend together
 						aProduct = aProduct.intersection( aShape, null );
@@ -216,7 +216,7 @@ public class CSGGeometry
 		// NOTE a deficiency in the OutputCapsule API which should operate on a List,
 		//		but instead requires an ArrayList
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
-		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "Shapes", null );
+		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "shapes", null );
 	}
 	
 	@Override
@@ -228,7 +228,7 @@ public class CSGGeometry
 		
 		// Look for the list of shapes
 		InputCapsule aCapsule = pImporter.getCapsule( this );
-		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "Shapes", null );
+		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
 		
 		// Look for list of external definitions
 		List<AssetKey> assetLoaderKeys

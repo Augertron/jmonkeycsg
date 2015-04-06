@@ -11,15 +11,15 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-3.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='SKIP' name='Cylinder'>
+                <net.wcomohundro.jme3.csg.CSGShape operator='SKIP' name='Cylinder'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
                     	closed='true' height='2.5' axisSamples='32' radialSamples='32' radius='1.1'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
      
         <!-- Unit cylinder  -->
@@ -28,8 +28,8 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0'/>
             </transform>
-            <Shapes>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='SKIP' name='Box'>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape operator='SKIP' name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 <net.wcomohundro.jme3.csg.CSGShape name='Cylinder'>
@@ -37,7 +37,7 @@
                     	 closed='true' height='3.14159' axisSamples='32' radialSamples='32' radius='0.5' textureMode='UNIFORM'/>
                     <scaleTexture class='com.jme3.math.Vector2f' x='1.0' y='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
         <!-- 'unit' cylinder in proportion with repeating texture -->
@@ -47,8 +47,8 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0'/>
             </transform>
-            <Shapes>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='SKIP' name='Box'>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape operator='SKIP' name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 <net.wcomohundro.jme3.csg.CSGShape name='Cylinder'>
@@ -56,7 +56,7 @@
                     	 axisSamples='32' closed='true' height='6.2831852' radialSamples='32' radius='1.0' textureMode='UNIFORM'/>
                     <scaleTexture class='com.jme3.math.Vector2f' x='4.0' y='4.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
 		<!-- Check the wireframe -->
@@ -65,12 +65,12 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='9.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Cylinder'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
                     	 axisSamples='32' closed='true' height='2.5' radialSamples='32' radius='1.1' radius2='1.5'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
         <!-- SKIP the cylinder, just the box -->
@@ -79,15 +79,15 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
             </transform>
-             <Shapes>
+             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='SKIP' name='Cylinder'>
+                <net.wcomohundro.jme3.csg.CSGShape operator='SKIP' name='Cylinder'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
                     	closed='true' height='2.5' axisSamples='32' radialSamples='32' radius='1.1'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
         <!-- SKIP the box, just the cylinder -->
@@ -96,15 +96,15 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='3.0'/>
             </transform>
-            <Shapes>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='SKIP' name='Box'>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape operator='SKIP' name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 <net.wcomohundro.jme3.csg.CSGShape name='Cylinder'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
                     	axisSamples='32' closed='true' height='2.5' radialSamples='32' radius='1.1'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
         <!-- SKIP the cylinder, just a bigger box -->
@@ -113,16 +113,16 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-6.0' y='3.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='2.0' zExtent='2.0'/>
                     <scaleTexture class='com.jme3.math.Vector2f' x='2' y='2'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='SKIP' name='Cylinder'>
+                <net.wcomohundro.jme3.csg.CSGShape operator='SKIP' name='Cylinder'>
                     <mesh axisSamples='32' class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
                     	 closed='true' height='2.5' radialSamples='32' radius='1.1'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
         
         <!-- SKIP the cylinder, just a scaled box -->
@@ -131,21 +131,21 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='3.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='2.0' zExtent='2.0'/>
              		<transform class='com.jme3.math.Transform'>
                 		<scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/>
             		</transform>
                </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
         <net.wcomohundro.jme3.csg.CSGGeometry name='CSGGeometry'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='9.0' y='3.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
              		<transform class='com.jme3.math.Transform'>
@@ -153,7 +153,7 @@
             		</transform>
                     <scaleTexture class='com.jme3.math.Vector2f' x='0.5' y='0.5'/>
                </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
     </children>

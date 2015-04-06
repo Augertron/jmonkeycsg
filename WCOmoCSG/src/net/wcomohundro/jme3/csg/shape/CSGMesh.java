@@ -71,6 +71,21 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	The various subclasses of CSGMesh are designed to be constructed by XML based import/export
  	files, where all the configuration parameters can be pulled from the XML, and then the
  	full mesh regenerated.
+ 	
+ 	Standard configuration support:
+ 	
+ 		scaleTexture - 			Vector2f that applies .scaleTextureCoordinates() to the shape after
+ 								its geometry has been rebuilt
+ 						
+ 		scaleFaces -			Array of Vector3f that applies x/y texture scaling to faces selected
+ 								by the bitmask defined in the z coordinate
+ 						
+ 		lodFactors -			Array of float values in the range 0.0 - 1.0, each of which causes
+ 								an LevelOfDetail to be built.  The smaller the percentage, the fewer
+ 								triangles are created for a given LOD.
+ 						
+ 		generateTangentBinormal - true/false if the TangentBinormal information should be
+ 								generated for appropriate lighting
 
  */
 public abstract class CSGMesh 
@@ -81,15 +96,75 @@ public abstract class CSGMesh
 	public static final String sCSGMeshRevision="$Rev$";
 	public static final String sCSGMeshDate="$Date$";
 
-	/** Retain the texture scaling configuration */
+	/** The texture scaling configuration */
 	protected Vector2f			mScaleTexture;
-	/** Retain the face texture scaling configuration */
+	/** The face texture scaling configuration: x/y are the texture scaling, z is integer bitmask of the faces */
 	protected List<Vector3f>	mScaleFaceTexture;
+	/** The LOD generation values */
+	protected float[]			mLODFactors;
+	/** TangentBinormal generation control */
+	protected boolean			mGenerateTangentBinormal;
 	
+	
+	/** Accessor to the overall ScaleTexture configuration */
+	public Vector2f getScaleTexture() { return mScaleTexture; }
+	public void setScaleTexture(
+		Vector2f	pScale
+	) {
+		mScaleTexture = pScale;
+	}
+	
+	/** Accessor to the per-face texture scale configuration */
+	public List<Vector3f> getScaleFaces() { return mScaleFaceTexture; }
+	public void setScaleFaces(
+		List<Vector3f>	pScale
+	) {
+		mScaleFaceTexture = pScale;
+	}
+	
+	/** Accessor to the LOD factors to apply */
+	public float[] getLODFactors() { return mLODFactors; }
+	public void setLODFactors(
+		float[]		pLODFactors
+	) {
+		mLODFactors = pLODFactors;
+	}
+	
+	/** Accessor to the TangentBinormal generation control flag */
+	public boolean isGenerateTangentBinormal() { return mGenerateTangentBinormal; }
+	public void setGenerateTangentBinormal(
+		boolean		pFlag
+	) {
+		mGenerateTangentBinormal = pFlag;
+	}
+			
 	/** Every CSGMesh is expected to be able to rebuild itself from its fundamental
 	 	configuration parameters.
 	 */
-	public abstract void updateGeometry();
+	public void updateGeometry(
+	) {
+		updateGeometryProlog();
+		updateGeometryEpilog();
+	}
+	/** FOR SUBCLASS OVERRIDE **/
+	protected void updateGeometryProlog() {}
+	protected void updateGeometryEpilog(
+	) {
+        // Apply any scaling required
+        if ( mScaleTexture != null ) {
+        	this.scaleTextureCoordinates( mScaleTexture );
+        }
+        if ( mScaleFaceTexture != null ) {
+        	// x and y are the normal texture scaling factors.  z is the bitmask of faces
+        	for( Vector3f faceScale : mScaleFaceTexture ) {
+        		this.scaleFaceTextureCoordinates( faceScale.x, faceScale.y, (int)faceScale.z );
+        	}
+        }
+        // Generate tangent binormals as needed
+        if ( mGenerateTangentBinormal ) {
+        	TangentBinormalGenerator.generate( this );
+        }
+	}
 	
 	/** If this CSGMesh supports various 'faces', then the texture scaling on each
 	 	separate face may be set independently
@@ -115,6 +190,8 @@ public abstract class CSGMesh
         // Extended attributes
         outCapsule.write( mScaleTexture, "scaleTexture", null );
         outCapsule.writeSavableArrayList( (ArrayList)mScaleFaceTexture, "scaleFaces", null );
+        outCapsule.write( mLODFactors, "lodFactors", null );
+        outCapsule.write( mGenerateTangentBinormal, "generateTangentBinormal", false );
     }
     @Override
     public void read(
@@ -129,40 +206,17 @@ public abstract class CSGMesh
     	// various subclasses have already loaded.
         this.setMode( inCapsule.readEnum( "mode", Mode.class, Mode.Triangles ) );
         
+        // Extended attributes
+        mScaleTexture = (Vector2f)inCapsule.readSavable( "scaleTexture", null );
+        mScaleFaceTexture = inCapsule.readSavableArrayList( "scaleFaces", null );
+        mLODFactors = inCapsule.readFloatArray( "lodFactors", null );
+        mGenerateTangentBinormal = inCapsule.readBoolean( "generateTangentBinormal", false );
+        
         //////// NOTE NOTE NOTE
         // 			That every CSGShape is expected to callback via readComplete()
         //			to generate the geometry and apply any final fixup
     }
     
-    /** FOR SUBCLASS CALLBACK - finish up the processing after all read configuration
-     							is complete.
-     */
-    protected void readComplete(
-    	JmeImporter		pImporter
-    ) throws IOException {
-    	// Reconstruct the shape
-        this.updateGeometry();
-        
-        // Extended attributes
-        InputCapsule inCapsule = pImporter.getCapsule( this );
-        mScaleTexture = (Vector2f)inCapsule.readSavable( "scaleTexture", null );
-        if ( mScaleTexture != null ) {
-        	this.scaleTextureCoordinates( mScaleTexture );
-        }
-        mScaleFaceTexture = inCapsule.readSavableArrayList( "scaleFaces", null );
-        if ( mScaleFaceTexture != null ) {
-        	// x and y are the normal texture scaling factors.  z is the bitmask of faces
-        	for( Vector3f faceScale : mScaleFaceTexture ) {
-        		this.scaleFaceTextureCoordinates( faceScale.x, faceScale.y, (int)faceScale.z );
-        	}
-        }
-        // TangentBinormalGenerator directive
-        boolean generate = inCapsule.readBoolean( "generateTangentBinormal", false );
-        if ( generate ) {
-        	TangentBinormalGenerator.generate( this );
-        }
-    }
-
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(

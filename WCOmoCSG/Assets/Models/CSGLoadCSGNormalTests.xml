@@ -10,7 +10,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-10.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
@@ -20,7 +20,7 @@
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
                </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
@@ -29,17 +29,17 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='-10.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='DIFFERENCE' name='OtherBox'>
+                <net.wcomohundro.jme3.csg.CSGShape operator='DIFFERENCE' name='OtherBox'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
@@ -48,17 +48,17 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='-10.0'/>
             </transform>
-             <Shapes>
+             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='INTERSECTION' name='OtherBox'>
+                <net.wcomohundro.jme3.csg.CSGShape operator='INTERSECTION' name='OtherBox'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Add a shorter box to a longer box -->
@@ -67,7 +67,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-15.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
@@ -77,7 +77,7 @@
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
                </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
@@ -86,17 +86,17 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='-15.0'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='DIFFERENCE' name='OtherBox'>
+                <net.wcomohundro.jme3.csg.CSGShape operator='DIFFERENCE' name='OtherBox'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
@@ -105,17 +105,17 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='-15.0'/>
             </transform>
-             <Shapes>
+             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
-                <net.wcomohundro.jme3.csg.CSGShape Operator='INTERSECTION' name='OtherBox'>
+                <net.wcomohundro.jme3.csg.CSGShape operator='INTERSECTION' name='OtherBox'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                     </transform>
                 </net.wcomohundro.jme3.csg.CSGShape>
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
     </children>

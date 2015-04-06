@@ -11,7 +11,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0' y='10'/>
             </transform>
-            <Shapes>
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
 	                    <scaleFaces>
@@ -24,7 +24,7 @@
                     </transform>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 
-                <net.wcomohundro.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'>
+                <net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'>
                 		<!-- materialName='Textures/Rock/Rock2.xml'> -->
                 		<!-- materialName='Textures/Rock/Rock1Rpt.xml'> -->
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.9' yExtent='0.5' zExtent='0.9'>
@@ -38,7 +38,7 @@
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
 
-                <net.wcomohundro.jme3.csg.CSGShape name='Interior' Operator='DIFFERENCE'
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
                 		materialName='Textures/BrickWall/BrickWallNormalRpt.xml'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
                     	 axisSamples='34' closed='true' height='1.0' radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'>
@@ -50,8 +50,7 @@
                         <scale class='com.jme3.math.Vector3f' x='1.95' y='1.95' z='19.9'/>
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
-	  
-            </Shapes>
+            </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
 	</children>

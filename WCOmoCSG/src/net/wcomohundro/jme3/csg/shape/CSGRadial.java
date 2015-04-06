@@ -33,7 +33,10 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
+import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
+import com.jme3.scene.VertexBuffer.Usage;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TempVars;
 
@@ -150,7 +153,7 @@ public abstract class CSGRadial
     protected boolean		mFlatEnds;
     /** Per-slice scaling **/
     protected Vector2f		mScaleSlice;
-    /** Per-slice across all the slices (the total angle spread across all the slices) */
+    /** Per-slice rotation across all the slices (the total angle spread across all the slices) */
     protected float		 	mRotateSlices;
     
 	
@@ -193,34 +196,35 @@ public abstract class CSGRadial
     
     /** Rebuilds the sphere based on the current set of configuration parameters
      
-    	THIS IMPLEMENTATION PROVIDES A SAMPLE TO COPY AND APPLY SPECIALIZATIONS IN ANY GIVEN SUBCLASS
-    	DO NOT EXPECT THIS IMPLEMENTATION TO PRODUCE AN APPROPRITE SHAPE
+****    	THIS IMPLEMENTATION PROVIDES A SAMPLE TO COPY AND APPLY SPECIALIZATIONS IN ANY GIVEN SUBCLASS ****
+****    	DO NOT EXPECT THIS IMPLEMENTATION TO PRODUCE AN APPROPRITE SHAPE							  ****
      */
     @Override
-    public void updateGeometry(
+    protected void updateGeometryProlog(
     ) {
-        // Allocate buffers for position/normals/texture
-    	// We generate an extra vertex around the radial sample where the last
-    	// vertex overlays the first.  
-		// And even though the north/south poles are a single point, we need to 
-		// generate different texture coordinates for the pole for each different 
-		// radial, so we need a full set of vertices
-    	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
-    	CSGRadialContext aContext = getContext( sliceCount );
+    	CSGRadialContext aContext = getContext();
     	
     	int southPoleIndex = 0;
     	int northPoleIndex = createGeometry( aContext );
 
-    	// There are 2 triangles for every radial point on every puck,
-        // and there are AxisSamples -1 pucks
-        int triCount = 2 * (mAxisSamples -1) * mRadialSamples;
-        if ( mClosed ) {
-        	// If the shape is closed, then there is one triangle for every radial point,
-        	// but there are two ends
-        	triCount += 2 * mRadialSamples;
-        }
-        createIndices( aContext, triCount, southPoleIndex, northPoleIndex, mFlatEnds );
+    	// Establish the IndexBuffer which maps the vertices to use
+        VertexBuffer idxBuffer 
+        	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, mFlatEnds );
+        setBuffer( idxBuffer );
         
+        if ( mLODFactors != null ) {
+        	// Various Levels of Detail, with the zero slot being the master
+        	VertexBuffer[] levels = new VertexBuffer[ mLODFactors.length + 1 ];
+        	levels[0] = idxBuffer;
+        	
+        	// Generate each level
+        	for( int i = 0, j = mLODFactors.length; i < j; i += 1 ) {
+        		idxBuffer 
+            		= createIndices( aContext, mLODFactors[i], southPoleIndex, northPoleIndex, mFlatEnds );
+        		levels[ i + 1 ] = idxBuffer;
+        	}
+        	this.setLodLevels( levels );
+        }
         // Establish the bounds
         updateBound();
         setStatic();
@@ -357,27 +361,33 @@ public abstract class CSGRadial
         }
         return( northPoleIndex );
     }
-    /** Service routine to allocate and set the index buffer */
-    protected void createIndices(
+    
+    /** Service routine to allocate and fill an index buffer */
+    protected VertexBuffer createIndices(
     	CSGRadialContext	pContext
-    ,	int					pTriangleCount
+    ,	float				pLODFactor
     ,	int					pSouthPoleIndex
     ,	int					pNorthPoleIndex
     ,	boolean				pSinglePoleVertex
     ) {
+    	// Accommodate the LOD factor
+    	int triangleCount = pContext.setReductionFactors( pLODFactor, mAxisSamples, mRadialSamples, mClosed );
+    	
         // Allocate the indices, 3 points on every triangle
-        ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * pTriangleCount );
-        setBuffer( Type.Index, 3, idxBuf );
+        ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * triangleCount );
 
         // Process along the axis, mapping the vertices of one slice to the slice in front of it
-        for( int iZ = 0, iZStart = 0; iZ < pContext.mSliceCount -1; iZ++ ) {
+        for( int iZStart = 0, zIndex = 0, zFactor; zIndex < pContext.mSliceCount -1; zIndex += zFactor ) {
+        	// Account for the starting points
             int i0 = iZStart;
             int i1 = i0 + 1;
-            iZStart += (mRadialSamples + 1);
+            
+        	zFactor = pContext.nextSliceFactor( zIndex, mClosed );
+            iZStart += (mRadialSamples + 1) * zFactor;
             int i2 = iZStart;
             int i3 = i2 + 1;
             
-        	if ( mClosed && (iZ == 0) ) {
+        	if ( mClosed && (zIndex == 0) ) {
                 // BackFace/SouthPole triangles
                 for( int i = 0; i < mRadialSamples; i += 1 ) {
                 	if ( pSinglePoleVertex ) {
@@ -407,7 +417,7 @@ public abstract class CSGRadial
 	                    }
                 	}
                 }
-        	} else if ( mClosed && (iZ == pContext.mSliceCount -2) ) {
+        	} else if ( mClosed && (zIndex == pContext.mSliceCount -2) ) {
                 // FrontFace/NorthPole triangles
                 for( int i = 0; i < mRadialSamples; i += 1 ) {
                 	if ( pSinglePoleVertex ) {
@@ -461,11 +471,14 @@ public abstract class CSGRadial
 	            }
         	}
         }
+        // Wrap as an Index buffer
+    	VertexBuffer vtxBuffer = new VertexBuffer( Type.Index );
+    	vtxBuffer.setupData( Usage.Dynamic, 3, Format.UnsignedShort, idxBuf );
+        return( vtxBuffer );
     }
     
     /** FOR SUBCLASS OVERRIDE: allocate the context */
     protected abstract CSGRadialContext getContext(
-    	int		pSliceCount
     );
     
     /** FOR SUBCLASS OVERRIDE: fractional speaking, where are we along the z axis (+/-)*/
@@ -608,7 +621,7 @@ public abstract class CSGRadial
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
-        // Let the super do its thing (which will updateGeometry as needed)
+        // Let the super do its thing
         super.read( pImporter );
         
         InputCapsule inCapsule = pImporter.getCapsule( this );
@@ -705,9 +718,10 @@ class CSGRadialCoord
 }
 
 /** Helper class for use during the geometry calculations */
-class CSGRadialContext
+abstract class CSGRadialContext
 {
 	int 				mSliceCount;			// How many slices are being processed
+	int					mSliceReductionFactor;	// For LOD - multiplier to skip slices
     int 				mVertCount;				// How many vertices are being generated
     int					mIndex;					// The current index within the buffers
     
@@ -750,5 +764,81 @@ class CSGRadialContext
     	mPosBuf = BufferUtils.createVector3Buffer( mVertCount );
         mNormBuf = BufferUtils.createVector3Buffer( mVertCount );
         mTexBuf = BufferUtils.createVector2Buffer( mVertCount );
+    }
+    
+    /** Establish the reduction factors for LOD processing, returning the count of triangles 
+     	produced at this level of reduction
+     */
+    int setReductionFactors(
+    	float		pLODFactor
+    ,	int			pAxisSamples
+    ,	int			pRadialSamples
+    ,	boolean		pClosed
+    ) {
+    	// Account for reduction to slices and radial points
+    	mSliceReductionFactor = 0;
+    	
+    	// There are 2 triangles for every radial point on every puck,
+        // and there are AxisSamples -1 pucks (1 puck defined by 2 slices)
+    	int useAxisSamples = pAxisSamples;
+    	
+    	if ( pLODFactor > 0.0f ) {
+    		// Reduce the number of slices by 'skipping' past selected slices (every second, every thirds...)
+    		// while we produce the Index buffer
+    		if ( pLODFactor > 0.5f ) {
+    			// Minimal 'skipping' is every other, so if you want some special LOD, then you get
+    			// a 50% reduction no matter what
+    			pLODFactor = 0.5f;
+    		}
+    		float reducedSliceCount = pAxisSamples * pLODFactor;
+    		mSliceReductionFactor = (int)(pAxisSamples / reducedSliceCount);
+    		
+    		if ( mSliceReductionFactor > 1 ) {
+	    		// Account for final slice
+	    		useAxisSamples = (pAxisSamples / mSliceReductionFactor) + 1;
+	    		if ( (pAxisSamples % mSliceReductionFactor) > 0 ) {
+	    			// Not an even multiple of the 'factor' so we will have an extra short slice to the end
+	    			useAxisSamples += 1;
+	    		}
+    		}
+    	}
+        int triCount = 2 * (useAxisSamples -1) * pRadialSamples;
+        if ( pClosed ) {
+        	// If the shape is closed, then there is one triangle for every radial point,
+        	// but there are two ends
+        	triCount += 2 * pRadialSamples;
+        }
+        return( triCount );
+    }
+    
+    /** For a given slice, how many slices to skip to during LOD processing */
+    int nextSliceFactor(
+    	int		pZIndex
+    ,	boolean	pClosed
+    ) {
+    	// If closed, zIndex == 0 is the backface (-1), zIndex == sliceCount-2 is the frontface (1)
+    	if ( pClosed && (pZIndex == 0) ) {
+    		// Southpole/Backface does not reduce
+    		return( 1 );
+    		
+    	} else if ( pClosed && (pZIndex == mSliceCount -2) ) {
+    		// Northpole/Frontface does not reduce
+    		return( 1 );
+    	}
+    	if ( mSliceReductionFactor > 1 ) {
+    		// We cannot skip past the very last slice
+    		int closedBias = (pClosed) ? 2 : 1;
+    		if ( pZIndex + mSliceReductionFactor > mSliceCount - closedBias ) {
+    			// Count of slices left to the last one
+    			return( mSliceCount - pZIndex - closedBias );
+    			
+    		} else {
+    			// Skip some slices
+    			return( mSliceReductionFactor );
+    		}
+    	} else {
+    		// No slices are being ignored
+    		return( 1 );
+    	}
     }
 }

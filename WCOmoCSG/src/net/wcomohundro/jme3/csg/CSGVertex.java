@@ -151,18 +151,18 @@ public class CSGVertex
 		JmeExporter		pExporter
 	) throws IOException {
 		OutputCapsule aCapsule = pExporter.getCapsule(this);
-		aCapsule.write( mPosition, "Position", Vector3f.ZERO );
-		aCapsule.write( mNormal, "Normal", Vector3f.ZERO );
-		aCapsule.write( mTextureCoordinate, "TexCoord", Vector2f.ZERO );
+		aCapsule.write( mPosition, "position", Vector3f.ZERO );
+		aCapsule.write( mNormal, "normal", Vector3f.ZERO );
+		aCapsule.write( mTextureCoordinate, "texCoord", Vector2f.ZERO );
 	}
 	@Override
 	public void read(
 		JmeImporter		pImporter
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule(this);
-		mPosition = (Vector3f)aCapsule.readSavable( "Position", Vector3f.ZERO );
-		mNormal = (Vector3f)aCapsule.readSavable( "Normal", Vector3f.ZERO );
-		mTextureCoordinate = (Vector2f)aCapsule.readSavable( "TexCoord", Vector2f.ZERO );
+		mPosition = (Vector3f)aCapsule.readSavable( "position", Vector3f.ZERO );
+		mNormal = (Vector3f)aCapsule.readSavable( "normal", Vector3f.ZERO );
+		mTextureCoordinate = (Vector2f)aCapsule.readSavable( "texCoord", Vector2f.ZERO );
 	}
 	
 	/** For Debug */

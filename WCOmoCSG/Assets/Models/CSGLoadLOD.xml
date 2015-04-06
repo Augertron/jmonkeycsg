@@ -1,0 +1,15 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+    <lights class='com.jme3.light.LightList'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
+	<children/>
+    <assetLoaderKeyList> 
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadLODCylinders.xml'/>
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadLODSpheres.xml'/>
+     </assetLoaderKeyList>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

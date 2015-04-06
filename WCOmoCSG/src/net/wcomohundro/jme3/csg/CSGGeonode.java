@@ -97,6 +97,8 @@ public class CSGGeonode
     protected boolean			mForceSingleMaterial;
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
+	/** Geometry has a variable for LOD level, but Spatial does not */
+	protected int				mLODLevel;
 
 	
 	/** Basic null constructor */
@@ -139,6 +141,15 @@ public class CSGGeonode
     	Material 	pMaterial
     ) {
         this.mMaterial = pMaterial;
+    }
+    
+    /** Accessor to the LOD level (ala Geometry) */
+    public int getLodLevel() { return mLODLevel; }
+    @Override
+    public void setLodLevel(
+    	int		pLODLevel
+    ) {
+    	mLODLevel = pLODLevel;
     }
 
 	/** Action to generate the mesh based on the given shapes */
@@ -197,7 +208,7 @@ public class CSGGeonode
 				case UNION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( materialIndex );
+						aProduct = aShape.clone( materialIndex, getLodLevel() );
 					} else {
 						// Blend together
 						aProduct = aProduct.union( aShape, materialIndex );
@@ -216,7 +227,7 @@ public class CSGGeonode
 				case INTERSECTION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( materialIndex );
+						aProduct = aShape.clone( materialIndex, getLodLevel() );
 					} else {
 						// Blend together
 						aProduct = aProduct.intersection( aShape, materialIndex );
@@ -344,7 +355,7 @@ public class CSGGeonode
 		// Save the shapes
 		// NOTE a deficiency in the OutputCapsule API which should operate on a List,
 		//		but instead requires an ArrayList
-		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "Shapes", null );
+		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "shapes", null );
 	}
 	
 	@Override
@@ -372,7 +383,7 @@ public class CSGGeonode
         mForceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  false );
         
 		// Look for the list of shapes
-		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "Shapes", null );
+		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
 		
 		// Look for list of external definitions
 		List<AssetKey> assetLoaderKeys
@@ -393,6 +404,7 @@ public class CSGGeonode
         // TangentBinormalGenerator directive
         boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
         if ( generate ) {
+        	// The Generator understands working the children of a Node
         	TangentBinormalGenerator.generate( this );
         }
 	}

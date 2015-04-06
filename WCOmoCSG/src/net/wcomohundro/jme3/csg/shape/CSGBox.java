@@ -116,22 +116,27 @@ public class CSGBox
 	}
 	
 	/** Accessors to the extents */
-    public final float getXExtent() { return mExtentX; }
-    public final float getYExtent() { return mExtentY; }
-    public final float getZExtent() { return mExtentZ; }
+    public float getXExtent() { return mExtentX; }
+    public void setXExtent( float pExtent ) { mExtentX = pExtent; }
+    
+    public float getYExtent() { return mExtentY; }
+    public void setYExtent( float pExtent ) { mExtentY = pExtent; }
+
+    public float getZExtent() { return mExtentZ; }
+    public void setZExtent( float pExtent ) { mExtentZ = pExtent; }
     
     
     /** Apply the change of geometry */
     @Override
-    public void updateGeometry(
+    protected void updateGeometryProlog(
     ) {
+    	// Shape specific generation
         duUpdateGeometryVertices();
         duUpdateGeometryNormals();
         duUpdateGeometryTextures();
         duUpdateGeometryIndices();
     }
 
-	
     /** Read the fundamental configuration parameters */
     @Override
     public void read(
@@ -147,8 +152,8 @@ public class CSGBox
         mExtentY = inCapsule.readFloat( "yExtent", 1 );
         mExtentZ = inCapsule.readFloat( "zExtent", 1 );
 
-        // Standard trigger of updateGeometry() 
-        this.readComplete( pImporter );
+        // Standard trigger of updateGeometry() to build the shape 
+        this.updateGeometry();
     }
     /** Preserve this shape */
     @Override

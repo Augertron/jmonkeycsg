@@ -47,6 +47,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.material.Material;
@@ -190,7 +191,7 @@ public class CSGShape
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
 	}
-	/** Constructor based on an explicit list of polygons */
+	/** Constructor based on an explicit list of polygons, as determined by a blend of shapes */
 	protected CSGShape(
 		List<CSGPolygon>	pPolygons
 	,	int					pOrder
@@ -205,10 +206,11 @@ public class CSGShape
 	@Override
 	public CSGShape clone(
 	) {
-		return( clone( 0 ) );
+		return( clone( 0, this.getLodLevel() ) );
 	}
 	public CSGShape clone(
 		Number		pMaterialIndex
+	,	int			pLODLevel
 	) {
 		CSGShape aClone;
 		
@@ -223,17 +225,19 @@ public class CSGShape
 		}
 		aClone.setOperator( mOperator );
 		aClone.setMaterialIndex( pMaterialIndex );
+//		aClone.setLodLevel( pLODLevel );
 		return( aClone );
 	}
 	
 	/** Accessor to the list of polygons */
-	public List<CSGPolygon> getPolygons(
+	protected List<CSGPolygon> getPolygons(
 		Number	pMaterialIndex
+	,	int		pLevelOfDetail
 	) { 
 		if ( mPolygons.isEmpty() && (this.mesh != null) ) {
 			// Generate the polygons
 			this.mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
-			mPolygons = fromMesh( this.mesh, this.getLocalTransform() );
+			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail );
 			
 		} else if ( !mPolygons.isEmpty() 
 				&& (pMaterialIndex != null)
@@ -278,8 +282,8 @@ public class CSGShape
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
-		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
+		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex, 0 ) );
+		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex, 0 ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -301,8 +305,8 @@ public class CSGShape
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
-		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
+		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex, 0 ) );
+		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex, 0 ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -326,8 +330,8 @@ public class CSGShape
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex ) );
-	    CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex ) );
+		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex, 0 ) );
+	    CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex, 0 ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -349,9 +353,22 @@ public class CSGShape
 	protected List<CSGPolygon> fromMesh(
 		Mesh		pMesh
 	,	Transform	pTransform
+	,	int			pLevelOfDetail
 	) {
 		// Convert the mesh in to appropriate polygons
-		IndexBuffer idxBuffer = pMesh.getIndexBuffer();
+	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
+		IndexBuffer idxBuffer = null;
+		if ( (pLevelOfDetail > 0) && (pLevelOfDetail < pMesh.getNumLodLevels()) ) {
+			// Look for the given level of detail
+			VertexBuffer lodBuffer = pMesh.getLodLevel( pLevelOfDetail );
+			if ( lodBuffer != null ) {
+				idxBuffer = IndexBuffer.wrapIndexBuffer( lodBuffer.getData() );
+			}
+		}
+		if ( idxBuffer == null ) {
+			// Use the 'standard'
+			idxBuffer = pMesh.getIndexBuffer();
+		}
 		FloatBuffer posBuffer = pMesh.getFloatBuffer(Type.Position);
 		FloatBuffer normBuffer = pMesh.getFloatBuffer(Type.Normal);
 		FloatBuffer texCoordBuffer = pMesh.getFloatBuffer(Type.TexCoord);
@@ -400,7 +417,7 @@ public class CSGShape
 	) {
 		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
 		
-		List<CSGPolygon> aPolyList = getPolygons( null );
+		List<CSGPolygon> aPolyList = getPolygons( null, 0 );
 		int anEstimateVertexCount = aPolyList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );
@@ -462,20 +479,7 @@ public class CSGShape
 		aMesh.setBuffer( Type.Normal, 3, createVector3Buffer( pNormalList ) );
 		aMesh.setBuffer( Type.TexCoord, 2, createVector2Buffer( pTexCoordList ) );
 		aMesh.setBuffer( Type.Index, 3, createIndexBuffer( pIndexList ) );
-/***
-		// Populate the appropriate mesh buffers (which are based on arrays)
-		Vector3f[] positionArray = pPositionList.toArray( new Vector3f[ pPositionList.size() ] );
-		Vector3f[] normalArray = pNormalList.toArray( new Vector3f[ pNormalList.size() ] );
-		Vector2f[] texCoordArray = pTexCoordList.toArray( new Vector2f[ pTexCoordList.size() ] );
-		int[] indicesIntArray = new int[ pIndexList.size() ];
-		for(int i = 0, j = pIndexList.size(); i < j; i += 1 ) {
-			indicesIntArray[i] = pIndexList.get(i);
-		}
-		aMesh.setBuffer( Type.Position, 3, BufferUtils.createFloatBuffer(positionArray));
-		aMesh.setBuffer( Type.Normal, 3, BufferUtils.createFloatBuffer(normalArray));
-		aMesh.setBuffer( Type.Index, 3, BufferUtils.createIntBuffer(indicesIntArray));
-		aMesh.setBuffer( Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoordArray));
-****/
+
 		aMesh.updateBound();
 		aMesh.updateCounts();
 		
@@ -492,8 +496,8 @@ public class CSGShape
 		super.write( pExporter );
 		
 		OutputCapsule capsule = pExporter.getCapsule( this );
-		capsule.write( mOrder, "Order", 0 );
-		capsule.write( mOperator, "Operator", CSGGeometry.CSGOperator.UNION );
+		capsule.write( mOrder, "order", 0 );
+		capsule.write( mOperator, "operator", CSGGeometry.CSGOperator.UNION );
 		if ( this.mesh == null ) {
 			// If not based on a Mesh, then preserve the given polygons
 			// NOTE a deficiency in the OutputCapsule API which should operate on a List,
@@ -512,8 +516,8 @@ public class CSGShape
 		super.read( pImporter );
 		
 		InputCapsule aCapsule = pImporter.getCapsule(this);
-		mOrder = aCapsule.readInt( "Order", 0 );
-		mOperator = aCapsule.readEnum( "Operator", CSGGeometry.CSGOperator.class, CSGGeometry.CSGOperator.UNION );
+		mOrder = aCapsule.readInt( "order", 0 );
+		mOperator = aCapsule.readEnum( "operator", CSGGeometry.CSGOperator.class, CSGGeometry.CSGOperator.UNION );
 		if ( this.mesh == null ) {
 			// If not based on a mesh, then restore via the polygons
 			mPolygons = (List<CSGPolygon>)aCapsule.readSavableArrayList( "Polygons"

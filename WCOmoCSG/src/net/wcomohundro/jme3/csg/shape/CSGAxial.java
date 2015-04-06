@@ -124,6 +124,9 @@ public abstract class CSGAxial
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
+        // Let the super do its thing
+        super.read( pImporter );
+        
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
         mAxisSamples = inCapsule.readInt( "axisSamples", 32 );
@@ -139,9 +142,6 @@ public abstract class CSGAxial
         }
         mClosed = inCapsule.readBoolean( "closed", true );
         mInverted = inCapsule.readBoolean( "inverted", mInverted );
-
-        // Let the super do its thing (which will updateGeometry as needed)
-        super.read( pImporter );
     }
         
 	/////// Implement ConstructiveSolidGeometry

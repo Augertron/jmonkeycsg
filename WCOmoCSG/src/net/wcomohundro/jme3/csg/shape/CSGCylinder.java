@@ -104,22 +104,24 @@ public class CSGCylinder
 
     /** Configuration accessors */
     public float getRadiusFront() { return mRadius; }
+    public void setRadiusFront( float pRadius ) { mRadius = pRadius; }
+    
     public float getRadiusBack() { return mRadiusBack; }
+    public void setRadiusBack( float pRadius ) { mRadiusBack = pRadius; }
+    
     public TextureMode getTextureMode() { return mTextureMode; }
+    public void setTextureMode( TextureMode pTextureMode ) { mTextureMode = pTextureMode; }
 
     
     /** Rebuilds the cylinder based on the current set of configuration parameters */
     @Override
-    public void updateGeometry(
+    protected void updateGeometryProlog(
     ) {
     	if ( true ) { 
             // Allocate buffers for position/normals/texture
-        	// We generate an extra vertex around the radial sample where the last
-        	// vertex overlays the first.  
-    		// If closed, then the end caps each have a full set of vertices
-        	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
-        	CSGRadialContext aContext = getContext( sliceCount );
+        	CSGRadialContext aContext = getContext();
         	
+        	// Create all the vertices info
         	int southPoleIndex = -1, northPoleIndex = -1;
         	createGeometry( aContext );
             if ( mClosed ) {
@@ -134,21 +136,27 @@ public class CSGCylinder
                 aContext.mNormBuf.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
                 aContext.mTexBuf.put( 0.5f ).put( 0.5f );
             }
-        	// There are 2 triangles for every radial point on every puck,
-            // and there are AxisSamples -1 pucks
-            int triCount = 2 * (mAxisSamples -1) * mRadialSamples;
-            if ( mClosed ) {
-            	// If the shape is closed, then there is one triangle for every radial point,
-            	// but there are two ends
-            	triCount += 2 * mRadialSamples;
-            }
             // The poles are represented by a single point
-            createIndices( aContext, triCount, southPoleIndex, northPoleIndex, true );
-            
+            VertexBuffer idxBuffer 
+	        	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, true );
+	        setBuffer( idxBuffer );
+	        
+	        if ( mLODFactors != null ) {
+	        	// Various Levels of Detail, with the zero slot being the master
+	        	VertexBuffer[] levels = new VertexBuffer[ mLODFactors.length + 1 ];
+	        	levels[0] = idxBuffer;
+	        	
+	        	// Generate each level
+	        	for( int i = 0, j = mLODFactors.length; i < j; i += 1 ) {
+	        		idxBuffer 
+	            		= createIndices( aContext, mLODFactors[i], southPoleIndex, northPoleIndex, true );
+	        		levels[ i + 1 ] = idxBuffer;
+	        	}
+	        	this.setLodLevels( levels );
+	        }
             // Establish the bounds
             updateBound();
             setStatic();
-            
             return;
     	}
 /*********
@@ -389,9 +397,14 @@ public class CSGCylinder
     /** FOR SUBCLASS OVERRIDE: allocate the context */
     @Override
     protected CSGRadialContext getContext(
-    	int 	pSliceCount
     ) {
-    	CSGCylinderContext aContext = new CSGCylinderContext( pSliceCount, mRadialSamples, mClosed );
+        // Allocate buffers for position/normals/texture
+    	// We generate an extra vertex around the radial sample where the last
+    	// vertex overlays the first.  
+		// And even though the north/south poles are a single point, we need to 
+		// generate different textures and normals for the two EXTRA end slices if closed
+    	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+    	CSGCylinderContext aContext = new CSGCylinderContext( sliceCount, mRadialSamples, mClosed );
     	
     	// Account for the span of the texture on the end caps
     	switch( mTextureMode ) {
@@ -630,8 +643,8 @@ public class CSGCylinder
         	// For a cylinder the default is 1
         	mExtentZ = 1;
         }
-        // Standard trigger of updateGeometry() 
-        this.readComplete( pImporter );
+        // Standard trigger of updateGeometry() to build the shape 
+        this.updateGeometry();
     }
     
     /** Apply texture coordinate scaling to selected 'faces' of the cylinder */
@@ -759,7 +772,7 @@ class CSGCylinderContext
     ,	int		pRadialSamples
     ,	boolean	pClosed
     ) {	
-    	// The sphere has RadialSamples (+1 for the overlapping end point) times the number of slices
+    	// The cylinder has RadialSamples (+1 for the overlapping end point) times the number of slices
     	// plus the 2 polar center points if closed
     	super( pSliceCount, pRadialSamples, (pSliceCount * (pRadialSamples + 1)) + (pClosed ? 2 : 0) );
     }
