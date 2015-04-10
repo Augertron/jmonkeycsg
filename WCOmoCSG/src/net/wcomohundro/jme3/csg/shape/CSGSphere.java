@@ -46,8 +46,6 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
-import net.wcomohundro.jme3.csg.shape.CSGCylinder.Face;
-
 
 /** Specialization/Copy of standard JME3 Sphere for unification with other CSG shapes
  	Like CSGCylinder (and the original Sphere) we render slices of the sphere along the
@@ -386,10 +384,8 @@ public class CSGSphere
 		// generate different texture coordinates for the pole for each different 
 		// radial, so we need a full set of vertices
     	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
-   	 	CSGSphereContext aContext = new CSGSphereContext( sliceCount, mRadialSamples );
+   	 	CSGSphereContext aContext = new CSGSphereContext( sliceCount, mRadialSamples, mRadius );
     	 
-    	// The rSquared is constant for a given radius and can be calculated here
-    	aContext.mRadiusSquared = mRadius * mRadius;
     	return( aContext );
     }
     
@@ -684,9 +680,13 @@ class CSGSphereContext
     CSGSphereContext(
     	int		pSliceCount
     ,	int		pRadialSamples
+    ,	float	pRadius
     ) {	
     	// The sphere has RadialSamples (+1 for the overlapping end point) times the number of slices
     	super( pSliceCount, pRadialSamples, pSliceCount * (pRadialSamples + 1) );
-    }
+    	
+    	// The rSquared is constant for a given radius and can be calculated here
+    	mRadiusSquared = pRadius * pRadius;
+   }
 
 }

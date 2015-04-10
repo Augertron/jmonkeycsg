@@ -43,44 +43,22 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
-import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
+import net.wcomohundro.jme3.csg.shape.CSGRadialCapped.TextureMode;
 
 
-/** Specialization/Copy of standard JME3 Cylinder that applies a standard texture to its end caps
+/** A CSG Cylinder is a 'capped' radial with standard slices that are simply perpendicular to the
+ 	zAxis.
  */
 public class CSGCylinder 
-	extends CSGRadial
+	extends CSGRadialCapped
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
 	public static final String sCSGCylinderRevision="$Rev$";
 	public static final String sCSGCylinderDate="$Date$";
 
-	/** Special TextureModes that can be appplied */
-    public enum TextureMode {
-        FLAT			// The texture of the end caps is simply flat
-    ,   UNIFORM			// Texture of end caps is flat and uniform in scale to the curved surface
-    ,	FLAT_LINEAR		// Flat end caps, curved surface is linear front-to-back
-    ,	UNIFORM_LINEAR	// Flat, uniform end caps, curved surface is linear front-to-back
-    }
-    
-	/** Identify the 3 faces of the cylinder  */
-	public enum Face {
-		BACK, SIDES, FRONT, NONE;
-		
-		private int mask;
-		Face() {
-			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
-		}
-		public int getMask() { return mask; }
-	}
-
-    /** The radius of the back cap */
-    protected float 		mRadiusBack;
-
-	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */
-	protected TextureMode	mTextureMode;
 	
+	/** Standard null constructor */
 	public CSGCylinder(
 	) {
 		this( 32, 32, 1, 1, 1, true, false, TextureMode.FLAT );
@@ -96,67 +74,16 @@ public class CSGCylinder
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
     ) {
-    	super( pAxisSamples, pRadialSamples, pRadiusFront, pClosed, pInverted, true );
-        mRadiusBack = pRadiusBack;
-        mExtentZ = pZExtent;			// This will override the default setting from the radius
-        mTextureMode = pTextureMode;
+    	super( pAxisSamples, pRadialSamples, pRadiusFront, pRadiusBack, pZExtent, pClosed, pInverted, pTextureMode );
     }
 
-    /** Configuration accessors */
-    public float getRadiusFront() { return mRadius; }
-    public void setRadiusFront( float pRadius ) { mRadius = pRadius; }
-    
-    public float getRadiusBack() { return mRadiusBack; }
-    public void setRadiusBack( float pRadius ) { mRadiusBack = pRadius; }
-    
-    public TextureMode getTextureMode() { return mTextureMode; }
-    public void setTextureMode( TextureMode pTextureMode ) { mTextureMode = pTextureMode; }
-
-    
     /** Rebuilds the cylinder based on the current set of configuration parameters */
     @Override
     protected void updateGeometryProlog(
     ) {
     	if ( true ) { 
-            // Allocate buffers for position/normals/texture
-        	CSGRadialContext aContext = getContext();
-        	
-        	// Create all the vertices info
-        	int southPoleIndex = -1, northPoleIndex = -1;
-        	createGeometry( aContext );
-            if ( mClosed ) {
-            	// Two extra vertices for the centers of the end caps
-            	southPoleIndex = aContext.mIndex++;
-            	aContext.mPosBuf.put( 0 ).put( 0 ).put( -mExtentZ ); // bottom center
-            	aContext.mNormBuf.put( 0 ).put( 0 ).put( -1 * (mInverted ? -1 : 1) );
-            	aContext.mTexBuf.put( 0.5f ).put( 0.5f );
-                
-            	northPoleIndex = aContext.mIndex++;
-                aContext.mPosBuf.put( 0).put( 0 ).put( mExtentZ); // top center
-                aContext.mNormBuf.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
-                aContext.mTexBuf.put( 0.5f ).put( 0.5f );
-            }
-            // The poles are represented by a single point
-            VertexBuffer idxBuffer 
-	        	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, true );
-	        setBuffer( idxBuffer );
-	        
-	        if ( mLODFactors != null ) {
-	        	// Various Levels of Detail, with the zero slot being the master
-	        	VertexBuffer[] levels = new VertexBuffer[ mLODFactors.length + 1 ];
-	        	levels[0] = idxBuffer;
-	        	
-	        	// Generate each level
-	        	for( int i = 0, j = mLODFactors.length; i < j; i += 1 ) {
-	        		idxBuffer 
-	            		= createIndices( aContext, mLODFactors[i], southPoleIndex, northPoleIndex, true );
-	        		levels[ i + 1 ] = idxBuffer;
-	        	}
-	        	this.setLodLevels( levels );
-	        }
-            // Establish the bounds
-            updateBound();
-            setStatic();
+            // Standard 'capped' construction
+    		super.updateGeometryProlog();
             return;
     	}
 /*********
@@ -394,7 +321,7 @@ public class CSGCylinder
 *********/
     }
     
-    /** FOR SUBCLASS OVERRIDE: allocate the context */
+    /** OVERRIDE: allocate the context */
     @Override
     protected CSGRadialContext getContext(
     ) {
@@ -404,28 +331,13 @@ public class CSGCylinder
 		// And even though the north/south poles are a single point, we need to 
 		// generate different textures and normals for the two EXTRA end slices if closed
     	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
-    	CSGCylinderContext aContext = new CSGCylinderContext( sliceCount, mRadialSamples, mClosed );
-    	
-    	// Account for the span of the texture on the end caps
-    	switch( mTextureMode ) {
-	    case UNIFORM:
-	    case UNIFORM_LINEAR:
-	    	// UNIFORM end caps are inherently scaled so match the texture scaling of the curved surface
-	    	aContext.mEndcapTextureBiasX = aContext.mEndcapTextureBiasY = FastMath.INV_PI;
-	    	break;
-	    default:
-	    	// Simple FLAT end caps act like a circular cookie-cutter applied on the texture
-	    	aContext.mEndcapTextureBiasX = aContext.mEndcapTextureBiasY = 1.0f;
-	    	break;
-	    }
-    	if ( mScaleSlice != null ) {
-    		aContext.mEndcapTextureBiasX *= mScaleSlice.x;
-    		aContext.mEndcapTextureBiasY *= mScaleSlice.y;
-    	}
+    	CSGCylinderContext aContext 
+    		= new CSGCylinderContext( sliceCount, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
+
     	return( aContext );
     }
 
-    /** FOR SUBCLASS OVERRIDE: fractional speaking, where are we along the z axis */
+    /** OVERRIDE: fractional speaking, where are we along the z axis */
     @Override
     protected float getZAxisFraction( 
     	CSGRadialContext 	pContext
@@ -435,7 +347,7 @@ public class CSGCylinder
     	return( super.getZAxisFraction( pContext, pSurface ) );
     }
     
-    /** FOR SUBCLASS OVERRIDE: where is the center of the given slice */
+    /** OVERRIDE: where is the center of the given slice */
     @Override
     protected Vector3f getSliceCenter(
     	Vector3f			pUseVector
@@ -445,32 +357,8 @@ public class CSGCylinder
     	// By default, the center is ON the zAxis at the given absolute z position
     	return( super.getSliceCenter( pUseVector, pContext, pSurface ) );
     }
-    
-    /** FOR SUBCLASS OVERRIDE: what is the radius of the Radial at this slice */
-    @Override
-    protected float getSliceRadius(
-        CSGRadialContext 	pContext
-    ,	int					pSurface
-    ) {
-    	// Since it is simplest, by default, we assume a constant radius (like a cylinder)
-    	// Account for differing radii
-    	float aRadius = ((mRadius - mRadiusBack) * pContext.mZAxisFraction) + mRadiusBack;
-    	return( aRadius );
-    }
-    
-    /** FOR SUBCLASS OVERRIDE: prepare the texture for the entire slice */
-    @Override
-    protected Vector2f getSliceTexture(
-    	Vector2f			pUseVector
-    ,	CSGRadialContext 	pContext
-    ,	int					pSurface
-    ) {
-    	// Nothing special at the slice
-    	pUseVector.set( Vector2f.ZERO );
-    	return( pUseVector );
-    }
-    
-    /** FOR SUBCLASS OVERRIDE: compute the position of a given radial vertex */
+      
+    /** OVERRIDE: compute the position of a given radial vertex */
     @Override
     protected Vector3f getRadialPosition(
     	Vector3f			pUseVector
@@ -498,7 +386,7 @@ public class CSGCylinder
 	    return( pUseVector );
     }
     
-    /** FOR SUBCLASS OVERRIDE: compute the normal of a given radial vertex */
+    /** OVERRIDE: compute the normal of a given radial vertex */
     @Override
     protected Vector3f getRadialNormal(
     	Vector3f			pUseVector
@@ -555,75 +443,12 @@ public class CSGCylinder
     	return( pUseVector );
     }
     
-    /** FOR SUBCLASS OVERRIDE: compute the texture of a given radial vertex */
-    @Override
-    protected Vector2f getRadialTexture(
-    	Vector2f			pUseVector
-    ,	CSGRadialContext 	pContext
-    ,	int					pSurface
-    ) {
-    	CSGCylinderContext myContext = (CSGCylinderContext)pContext;
-
-        // Apply scaling ONLY to the end caps so that we retain the cookie-cutout style
-    	// of texture without screwing up the curved crust.  Scaling is reflected in the
-    	// EndcapTextureBias
-    	if ( pSurface < 0 ) {
-        	// Map the texture to the bottom cap (facing the other way, right to left)
-    		// NOTE no scaling of the end caps
-        	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
-    		pUseVector.set(
-    			0.5f - ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBiasX)
-			,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBiasY) );
-    		
-    	} else if ( pSurface > 0 ) {
-        	// Map the texture to the top cap (simple left to right)
-    		// NOTE no scaling of the end caps
-        	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
-    		pUseVector.set(
-        		0.5f + ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBiasX)
-    		,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBiasY) );
-    	
-    	} else {
-        	// Map the texture along the curved crust/surface
-    		float radialFraction = myContext.mRadialFraction;
-    		if ( myContext.mRadialIndex == 0 ) {
-    			// Start at the very beginning
-    			radialFraction = 0.0f;
-    		
-    		} if ( myContext.mRadialIndex >= this.mRadialSamples ) {
-    			// Loop around back to the beginning
-    			radialFraction = 1.0f;
-    		}
-            switch( mTextureMode ) {
-            case FLAT:
-            case UNIFORM:
-            	// Run the texture around the circle
-            	pUseVector.set(
-            		(mInverted) ? 1.0f - radialFraction : radialFraction
-            	,	(myContext.mZAxisUniformPercent * (float)myContext.mZOffset) / 2.0f );                    	
-            	break;
-            default:
-            	// Run the texture linearly from front to back
-            	pUseVector.set(
-            		(myContext.mZAxisUniformPercent * (float)myContext.mZOffset) / 2.0f
-            	,	(mInverted) ? radialFraction : 1.0f - radialFraction );	
-            	break;
-            }
-    	}
-
-    	return( pUseVector );
-    }
-
-    /** Support texture scaling */
+    /** Support cylinder specific configuration parameters */
     @Override
     public void write(
     	JmeExporter		pExporter
     ) throws IOException {
     	super.write( pExporter );
-    	
-        OutputCapsule outCapsule = pExporter.getCapsule( this );
-        outCapsule.write( mRadiusBack, "radius2", mRadius );
-        outCapsule.write( mTextureMode, "textureMode", TextureMode.FLAT );
     }
     @Override
     public void read(
@@ -632,119 +457,10 @@ public class CSGCylinder
         // Let the super do its thing
         super.read( pImporter );
 
-        InputCapsule inCapsule = pImporter.getCapsule( this );
-        
-        // The super will have read 'radius'
-        mRadiusBack = inCapsule.readFloat( "radius2", mRadius );
-        mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.FLAT );
-
-        // Super processing of zExtent reads to zero to allow us to apply an appropriate default here
-        if ( mExtentZ == 0 ) {
-        	// For a cylinder the default is 1
-        	mExtentZ = 1;
-        }
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
     }
-    
-    /** Apply texture coordinate scaling to selected 'faces' of the cylinder */
-    @Override
-    public void scaleFaceTextureCoordinates(
-    	float		pX
-    ,	float		pY
-    ,	int			pFaceMask
-    ) {
-    	// Operate on the TextureCoordinate buffer
-        VertexBuffer tc = getBuffer(Type.TexCoord);
-        if (tc == null)
-            throw new IllegalStateException("The mesh has no texture coordinates");
 
-        if (tc.getFormat() != VertexBuffer.Format.Float)
-            throw new UnsupportedOperationException("Only float texture coord format is supported");
-
-        if (tc.getNumComponents() != 2)
-            throw new UnsupportedOperationException("Only 2D texture coords are supported");
-
-        FloatBuffer aBuffer = (FloatBuffer)tc.getData();
-        aBuffer.clear();
-        
-        // What surfaces are we dealing with?
-        boolean doBack = (pFaceMask & Face.BACK.getMask()) != 0;
-        boolean doFront = (pFaceMask & Face.FRONT.getMask()) != 0;
-        boolean doSides = (pFaceMask & Face.SIDES.getMask()) != 0;
-        
-        // If closed, we will generate 2 extra slices, one for top and one for bottom
-        // Vertices are generated in a standard way for the these special slices, but there
-        // is no puck with an edge.  Instead, the triangles describe the flat closed face.
-        // For that, we will have 2 extra vertices that describe the center of the face.
-        int index = 0;
-        int aSliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
-        int aRadialCount = mRadialSamples + 1;
-        for( int axisCount = 0; axisCount < aSliceCount; axisCount += 1 ) {
-            Face whichFace = Face.NONE;
-            if ( mClosed ) {
-            	// The first slice is the closed bottom, and the last slice is the closed top
-                if (axisCount == 0) {
-                	if ( doBack ) {
-                		// Actively processing the back
-                		whichFace = Face.BACK;
-                	}
-                } else if (axisCount == aSliceCount - 1) {
-                	if ( doFront ) {
-                		// Actively processing the front
-                		whichFace = Face.FRONT;
-                	}
-                } else {
-                	if ( doSides ) {
-                		// Actively processing the sides
-                		whichFace = Face.SIDES;
-                	}
-                }
-            } else {
-            	if ( doSides ) {
-            		// Actively processing the sides
-            		whichFace = Face.SIDES;
-            	}
-            }
-            if ( whichFace == Face.NONE ) {
-            	// Nothing is this slice to process
-            	index += (2 * aRadialCount);
-            } else {
-            	for( int i = 0; i < aRadialCount; i += 1 ) {
-            		// Scale these points
-            		index = applyScale( index, aBuffer, pX, pY, true );
-            	}
-            }
-    	}
-        if ( mClosed ) {
-        	// Two extra vertices for the centers of the end caps
-        	index = applyScale( index, aBuffer, pX, pY, doBack );
-        	index = applyScale( index, aBuffer, pX, pY, doFront );
-        }
-    	aBuffer.clear();
-        tc.updateData( aBuffer );
-    }
-    /** Service routine to apply scaling within the texture buffer */
-    protected int applyScale(
-    	int			pIndex
-    ,	FloatBuffer pBuffer
-	,	float		pX
-	,	float		pY
-    ,	boolean		pApplyScale
-    ) {
-    	if ( pApplyScale ) {
-			float x = pBuffer.get( pIndex  );
-			float y = pBuffer.get( pIndex + 1 );
-
-            x *= pX;
-            y *= pY;
-            pBuffer.put( pIndex++, x ).put( pIndex++, y );        		
-    	} else {
-    		pIndex += 2;
-    	}
-    	return( pIndex );
-    }
-    
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(
@@ -760,21 +476,19 @@ public class CSGCylinder
 }
 /** Helper class for use during the geometry calculations */
 class CSGCylinderContext
-	extends CSGRadialContext
+	extends CSGRadialCappedContext
 {
-    float		mEndcapTextureBiasX;
-    float		mEndcapTextureBiasY;
-    Vector3f[] 	mRadialNormals;
+    Vector3f[] 	mRadialNormals;		// Helper for the normals on each slice
 	
     /** Initialize the context */
     CSGCylinderContext(
-    	int		pSliceCount
-    ,	int		pRadialSamples
-    ,	boolean	pClosed
+    	int							pSliceCount
+    ,	int							pRadialSamples
+    ,	boolean						pClosed
+    ,	CSGRadialCapped.TextureMode	pTextureMode
+    ,	Vector2f					pScaleSlice
     ) {	
-    	// The cylinder has RadialSamples (+1 for the overlapping end point) times the number of slices
-    	// plus the 2 polar center points if closed
-    	super( pSliceCount, pRadialSamples, (pSliceCount * (pRadialSamples + 1)) + (pClosed ? 2 : 0) );
+    	super( pSliceCount, pRadialSamples, pClosed, pTextureMode, pScaleSlice );
     }
 
 }

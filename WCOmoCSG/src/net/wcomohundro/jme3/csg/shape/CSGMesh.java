@@ -105,6 +105,12 @@ public abstract class CSGMesh
 	/** TangentBinormal generation control */
 	protected boolean			mGenerateTangentBinormal;
 	
+	/** FOR POSSIBLE SUBCLASS OVERRIDE: Resolve this mesh, with possible 'debug' delegate representation */
+	public Mesh resolveMesh(
+		boolean		pDebug
+	) {
+		return( this );
+	}
 	
 	/** Accessor to the overall ScaleTexture configuration */
 	public Vector2f getScaleTexture() { return mScaleTexture; }

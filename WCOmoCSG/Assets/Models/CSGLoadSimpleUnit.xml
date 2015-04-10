@@ -9,8 +9,11 @@
     </lights>
 	<children/>
     <assetLoaderKeyList>
+<?ignore
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleUnitBoxes.xml'/>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleUnitCylinders.xml'/>
    		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleUnitSpheres.xml'/>
+?>
+   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadSimpleUnitPipes.xml'/>
      </assetLoaderKeyList>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

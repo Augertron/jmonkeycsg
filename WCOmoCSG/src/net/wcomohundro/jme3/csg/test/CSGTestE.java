@@ -52,6 +52,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
+import com.jme3.font.BitmapText;
 
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
@@ -79,7 +80,9 @@ public class CSGTestE
 	};
 	
 	/** Which scene is currently being viewed */
-	protected int		mSceneIndex;
+	protected int			mSceneIndex;
+	/** Spot for a bit of text */
+	protected BitmapText	mTextDisplay;
 
 	public CSGTestE(
 	) {
@@ -91,6 +94,9 @@ public class CSGTestE
 		// Free the mouse up for debug support
 	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
+	    
+	    // Establish the text display
+	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
 	    
         /** Ready interaction */
         createListeners();
@@ -121,6 +127,7 @@ public class CSGTestE
     	} catch( Exception ex ) {
     		System.out.println( "***Load Scene Failed: " + ex );
     	}
+    	CSGTestDriver.postText( this, mTextDisplay, sceneName );
     	return( (Spatial)aNode );
     }
     

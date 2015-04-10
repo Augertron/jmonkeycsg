@@ -138,6 +138,12 @@
  	<li>The radial distortion of the texture at the Sphere's poles has been eliminated.</li>
  	<li>You can choose to run the curved surface texture of a Cylinder along the height, rather
  		than along the circumference.</li>
+ 	<li>An x/y scale can be applied to every individual slice along the z-axis.</li>
+ 	<li>A rotation can be applied to every individual slice around the z-axis.  This results
+ 		in a twisted final shape.</li>
+ 	<li>LOD processing is supported by reducing the number of slices by a given percentage. 
+ 	<br>A future enhancement is to reduce the number of radial points as well.</li>
+ 	<li>TangentBinormal generation can be triggered by a setting in the XML Savable file.</li>
  	</ul>
  	</p>
  	 
@@ -212,7 +218,7 @@
         &lt;children&gt;
             &lt;net.wcomohundro.jme3.csg.CSGGeonode name='ACorridor'
                     materialName='Textures/Rock/Rock1Rpt.xml'&gt;
-                &lt;Shapes&gt;
+                &lt;shapes&gt;
                     &lt;net.wcomohundro.jme3.csg.CSGShape name='Exterior'&gt;
                         &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
                                 xExtent='1.0' yExtent='1.0' zExtent='1.0'&gt;
@@ -226,7 +232,7 @@
                         &lt;/transform&gt;
                     &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
                     
-                    &lt;net.wcomohundro.jme3.csg.CSGShape name='Interior' Operator='DIFFERENCE'
+                    &lt;net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
                             materialName='Textures/BrickWall/BrickWallRpt.xml'&gt;
                         &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
                                 closed='true' height='1.0' radius='0.5' textureMode='FLAT_LINEAR'&gt;
@@ -239,14 +245,14 @@
                         &lt;/transform&gt;
                     &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
 		
-                    &lt;net.wcomohundro.jme3.csg.CSGShape name='Doorway' Operator='DIFFERENCE'&gt;
+                    &lt;net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'&gt;
                         &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
                              xExtent='0.9' yExtent='0.5' zExtent='0.9'/&gt;
                         &lt;transform class='com.jme3.math.Transform'&gt;
                             &lt;translation class='com.jme3.math.Vector3f' x='0' y='0.5' z='10'/&gt;
                         &lt;/transform&gt;
                     &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
-                &lt;/Shapes&gt;
+                &lt;/shapes&gt;
             &lt;/net.wcomohundro.jme3.csg.CSGGeonode&gt;
         &lt;/children&gt;
     &lt;/net.wcomohundro.jme3.csg.CSGLinkNode&gt;

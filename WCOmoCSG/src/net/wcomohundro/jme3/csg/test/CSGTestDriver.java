@@ -25,6 +25,9 @@
 package net.wcomohundro.jme3.csg.test;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.font.BitmapFont;
+import com.jme3.font.BitmapText;
+import com.jme3.renderer.Camera;
 
 public class CSGTestDriver 
 {
@@ -46,5 +49,27 @@ public class CSGTestDriver
 	    app.start();
 	}
 
+	/** Service routine to display a bit of text */
+	public static BitmapText defineTextDisplay(
+		SimpleApplication	pApplication
+	,	BitmapFont 			pGuiFont
+	) {
+		BitmapText textDisplay = new BitmapText( pGuiFont, false );
+    	textDisplay.setSize( pGuiFont.getCharSet().getRenderedSize() );
+
+    	pApplication.getGuiNode().attachChild( textDisplay );
+    	return( textDisplay );
+	}
+	/** Service routine to post a bit of text */
+    public static void postText(
+    	SimpleApplication	pApplication
+    ,	BitmapText			pTextDisplay
+    ,	String				pMessage
+    ) {
+        pTextDisplay.setText( pMessage );
+        
+        Camera aCam = pApplication.getCamera();
+        pTextDisplay.setLocalTranslation( (aCam.getWidth() - pTextDisplay.getLineWidth()) / 2, aCam.getHeight(), 0);
+    }
 
 }

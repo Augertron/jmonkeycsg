@@ -36,6 +36,7 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.util.BufferUtils;
+import com.jme3.util.TempVars;
 
 import static com.jme3.util.BufferUtils.*;
 
@@ -56,8 +57,8 @@ public abstract class CSGRadialCapped
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGRadialCappedRevision="$Rev: 39 $";
-	public static final String sCSGRadialCappedDate="$Date: 2015-04-06 13:21:03 -0500 (Mon, 06 Apr 2015) $";
+	public static final String sCSGRadialCappedRevision="$Rev$";
+	public static final String sCSGRadialCappedDate="$Date$";
 
 	/** Special TextureModes that can be applied */
     public enum TextureMode {
@@ -124,18 +125,46 @@ public abstract class CSGRadialCapped
     	// Create all the vertices info
     	int southPoleIndex = -1, northPoleIndex = -1;
     	createGeometry( aContext );
-        if ( mClosed ) {
+    	
+        if ( mClosed ) { TempVars vars = TempVars.get(); try {
         	// Two extra vertices for the centers of the end caps
         	southPoleIndex = aContext.mIndex++;
-        	aContext.mPosBuf.put( 0 ).put( 0 ).put( -mExtentZ ); // bottom center
-        	aContext.mNormBuf.put( 0 ).put( 0 ).put( -1 * (mInverted ? -1 : 1) );
-        	aContext.mTexBuf.put( 0.5f ).put( 0.5f );
+        	//aContext.mPosBuf.put( 0 ).put( 0 ).put( -mExtentZ ); // bottom center
+        	//aContext.mNormBuf.put( 0 ).put( 0 ).put( -1 * (mInverted ? -1 : 1) );
+        	
+        	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, -1 );
+        	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, -1 );
+            aContext.mPosBuf.put( aContext.mPosVector.x )
+            				.put( aContext.mPosVector.y )
+            				.put( aContext.mPosVector.z );
+
+        	aContext.mNormVector = getCenterNormal( vars.vect4, aContext, -1 );
+            aContext.mNormBuf.put( aContext.mNormVector.x )
+            				.put( aContext.mNormVector.y )
+            				.put( aContext.mNormVector.z );
+
+            aContext.mTexBuf.put( 0.5f ).put( 0.5f );
             
         	northPoleIndex = aContext.mIndex++;
-            aContext.mPosBuf.put( 0).put( 0 ).put( mExtentZ); // top center
-            aContext.mNormBuf.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
+            //aContext.mPosBuf.put( 0).put( 0 ).put( mExtentZ); // top center
+            //aContext.mNormBuf.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
+        	
+        	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, 1 );
+        	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, 1 );
+            aContext.mPosBuf.put( aContext.mPosVector.x )
+            				.put( aContext.mPosVector.y )
+            				.put( aContext.mPosVector.z );
+
+        	aContext.mNormVector = getCenterNormal( vars.vect4, aContext, 1 );
+            aContext.mNormBuf.put( aContext.mNormVector.x )
+            				.put( aContext.mNormVector.y )
+            				.put( aContext.mNormVector.z );
+
             aContext.mTexBuf.put( 0.5f ).put( 0.5f );
-        }
+        } finally {
+        	// Return the borrowed vectors
+        	vars.release();
+        }}
         // The poles are represented by a single point
         VertexBuffer idxBuffer 
         	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, true );
@@ -212,7 +241,7 @@ public abstract class CSGRadialCapped
     ,	CSGRadialContext 	pContext
     ,	int					pSurface
     ) {
-    	CSGCylinderContext myContext = (CSGCylinderContext)pContext;
+    	CSGRadialCappedContext myContext = (CSGRadialCappedContext)pContext;
 
         // Apply scaling ONLY to the end caps so that we retain the cookie-cutout style
     	// of texture without screwing up the curved crust.  Scaling is reflected in the
@@ -263,6 +292,28 @@ public abstract class CSGRadialCapped
 
     	return( pUseVector );
     }
+    
+    /** FOR SUBCLASS OVERRIDE: what is the center of the endcap */
+    protected Vector3f getCenterPosition(
+     	Vector3f			pUseVector
+    ,	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	// By default, the center is in the center on the zAxis
+    	pUseVector.set( pContext.mSliceCenter );
+    	return( pUseVector );
+    }
+
+    /** FOR SUBCLASS OVERRIDE: what is the center normal of the endcap */
+    protected Vector3f getCenterNormal(
+     	Vector3f			pUseVector
+    ,	CSGRadialContext 	pContext
+    ,	int					pSurface
+    ) {
+    	// By default, the center is in the center on the zAxis
+    	pUseVector.set( pContext.mSliceCenter.x, pContext.mSliceCenter.y, pSurface * (mInverted ? -1 : 1));
+    	return( pUseVector );
+    }
 
     /** Support capped radial specific configuration parameters */
     @Override
@@ -293,8 +344,6 @@ public abstract class CSGRadialCapped
         	// For a cylinder the default is 1
         	mExtentZ = 1;
         }
-        // Standard trigger of updateGeometry() to build the shape 
-        this.updateGeometry();
     }
     
     /** Apply texture coordinate scaling to selected 'faces' of the cylinder */

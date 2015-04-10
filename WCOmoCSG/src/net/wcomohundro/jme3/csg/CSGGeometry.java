@@ -54,6 +54,9 @@ import com.jme3.bounding.BoundingVolume;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 
+import net.wcomohundro.jme3.csg.shape.CSGMesh;
+
+
 /**  Constructive Solid Geometry (CSG)
 
 	The CSGGeometry class extends the basic JME Geometry to support the blending of various CSG shapes.
@@ -68,6 +71,8 @@ import com.jme3.util.TangentBinormalGenerator;
  	
  	I had considered deprecating this class, but we may still trip over a need for a simple Geometry.
  	So long as you can tolerate a single Material, then this class may still be of interest to you.
+ 	I have also added the design concept of this Geometry being in 'debug' mode, where the 
+ 	associated Mesh can provide us with an alternate, debug representation of itself.
  	
  	@see CSGGeonode - which is rooted in Node and creates independent sub-Geometries
  					  to handle the different meshes/textures
@@ -82,6 +87,9 @@ public class CSGGeometry
 
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
+	/** Control flag for the special 'debug' mode */
+	protected boolean			mDebugMesh;
+	
 
 	/** Basic null constructor */
 	public CSGGeometry(
@@ -101,6 +109,11 @@ public class CSGGeometry
 	) {
 		super( pName, pMesh );
 	}
+	
+	/** Accessor to the debug mesh control flag */
+	public boolean isDebugMesh() { return mDebugMesh; }
+	public void setDebugMesh( boolean pFlag ) { mDebugMesh = pFlag; }
+	
 	
 	/** Add a shape to this geometry */
 	public void addShape(
@@ -123,15 +136,28 @@ public class CSGGeometry
 		}
 	}
 	
-	/** Access to the mesh 
-	 	OVERRIDE strictly for a debug hook
-	 */
+	/** MESH level accessors that allow us to 'delegate' the given mesh */
 	@Override
     public Mesh getMesh(
     ) {
         return( mesh );
     }
-	
+	@Override
+    public BoundingVolume getModelBound(
+    ) {
+        return( getMesh().getBound() );
+    }
+	@Override
+    public int getVertexCount(
+    ) {
+        return( getMesh().getVertexCount() );
+    }
+	@Override
+    public int getTriangleCount(
+    ) {
+        return( getMesh().getTriangleCount() );
+    }
+
 	/** For CSGGeonode use -- allow non protected access to updateWorldBound
 	 						  and the resulting bound
 	 */
@@ -195,6 +221,9 @@ public class CSGGeometry
 					this.setMesh( meshList.get( 0 ) );
 				}
 			}
+		} else if ( this.mesh instanceof CSGMesh ) {
+			// If in 'debug' mode, look for a possible delegate
+			this.mesh = ((CSGMesh)this.mesh).resolveMesh( mDebugMesh );
 		}
 	}
 
@@ -223,11 +252,15 @@ public class CSGGeometry
 	public void read(
 		JmeImporter		pImporter
 	) throws IOException {
+		InputCapsule aCapsule = pImporter.getCapsule( this );
+		
 		// Let the super do its thing
 		super.read( pImporter );
 		
+		// Debug support
+		mDebugMesh = aCapsule.readBoolean( "debugMesh", false );
+		
 		// Look for the list of shapes
-		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
 		
 		// Look for list of external definitions
