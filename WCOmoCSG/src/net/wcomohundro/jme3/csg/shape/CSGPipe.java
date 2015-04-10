@@ -53,7 +53,20 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGRadialCapped.TextureMode;
 
 
-/** A CSG Pipe is a 'capped' radial whose slices follow a given curve
+/** A CSG Pipe is a 'capped' radial whose slices follow a given curve.
+ 	If the curve happens to be a straight line, then you have generated a cylinder.
+ 	
+ 	Otherwise, we allocate the 'slices' to appropriate points along the given spline.
+ 	Each point defines the center of the radial circle used to generate the vertices.
+ 	The vectors between each point and its adjacent, neighbor points determines the
+ 	surface normal of the slice.  This surface normal then defines a rotation to apply
+ 	to all the generated vertices.
+ 	
+ 	The result is a set of slices where each slice is perpendicular to the curve at
+ 	its center point.
+ 	Of course, if you twist the curve too tightly, then the slices can bunch up and 
+ 	give you an unpleasant shape.  But gentle curves with an appropriate number of 
+ 	slices can produce pipes of reasonable appearance.
  */
 public class CSGPipe 
 	extends CSGRadialCapped
@@ -230,13 +243,16 @@ public class CSGPipe
     ,	int					pSurface
     ) {
     	CSGPipeContext myContext = (CSGPipeContext)pContext;
+		if ( myContext.mRadialNormals == null ) {
+    		// Precalculate and cache the normals we will need
+        	myContext.mRadialNormals = calculateRadialNormals( pContext, mRadius, mRadiusBack, pUseVector );
+		}
     	if ( pSurface != 0 ) {
     		// Backface/Frontface processing perpendicular to x/y plane, using the -1/+1 of the surface
     		pUseVector.set( 0, 0, (float)pSurface );
     	} else {
-    		// Use the perpendicular to the unit circle
-        	CSGRadialCoord aCoord = myContext.mCoordList[ pContext.mRadialIndex ];
-            pUseVector.set( aCoord.mCosine, aCoord.mSine, 0 );
+    		// Use the prebuilt, cached normal
+    		pUseVector.set( myContext.mRadialNormals[ myContext.mRadialIndex ] ); 
     		
             // Apply scaling
             if ( mScaleSlice != null ) {

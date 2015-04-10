@@ -52,8 +52,14 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	z-axis.  AxisSamples determines how many slices to produce, and RadialSamples 
  	determines how many vertices to produce around the circle for each slice.
  	
+ 	The basic idea is to alter the active radius of the radial circle at each slice
+ 	point along the zAxis.  If you alter this value to match the appropriate sine/cosine
+ 	then the result is a sphere.  You can set the generation to produce even slices 
+ 	along the entire range of z, or you can vary the z slice width to produce more slices
+ 	where the values change most rapidly.  This gives you a smoother looking sphere.
+ 	
  	I have altered the how textures are applied to the poles to (ZAXIS, PROJECTED) so that
- 	the swirlly radial distortion is eliminated.
+ 	the radial distortion in the base jme3 class is eliminated.
  	 
  	NOTE that for a while, I was going to support 'eccentricity' in the generation of the
  		sphere to provide oblate/prolate spheroids.  But then I can came across a telling

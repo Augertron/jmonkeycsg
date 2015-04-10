@@ -71,6 +71,10 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	The various subclasses of CSGMesh are designed to be constructed by XML based import/export
  	files, where all the configuration parameters can be pulled from the XML, and then the
  	full mesh regenerated.
+ 	The regenerated mesh can then have:
+ 		1)	special texture processing applied
+ 		2)	LevelOfDetail generation
+ 		3)	TangentBinormal generation (for lighting support)
  	
  	Standard configuration support:
  	

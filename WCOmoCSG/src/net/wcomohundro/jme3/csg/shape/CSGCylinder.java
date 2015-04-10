@@ -82,7 +82,7 @@ public class CSGCylinder
     protected void updateGeometryProlog(
     ) {
     	if ( true ) { 
-            // Standard 'capped' construction
+            // Standard 'capped' construction driven by the callbacks
     		super.updateGeometryProlog();
             return;
     	}
@@ -396,29 +396,7 @@ public class CSGCylinder
     	CSGCylinderContext myContext = (CSGCylinderContext)pContext;
 		if ( myContext.mRadialNormals == null ) {
     		// Precalculate and cache the normals we will need
-        	myContext.mRadialNormals = new Vector3f[ mRadialSamples + 1 ];
-            Vector3f vHeight = Vector3f.UNIT_Z.mult( getHeight() );
-            Vector3f vRadial = new Vector3f();
-
-            for( int radialCount = 0; radialCount < mRadialSamples + 1; radialCount += 1 ) {
-            	// Perpendicular to the tangent of the circle at this radial point
-            	// within the x/y plane (z = 0)
-            	CSGRadialCoord aCoord = myContext.mCoordList[ radialCount ];
-                vRadial.set( aCoord.mCosine, aCoord.mSine, 0 );
-                
-                if ( mRadius != mRadiusBack ) {
-                	// If the radii are different, then the surface slants in the
-                	// z Plane
-                	Vector3f vRadius = vRadial.mult( mRadius );
-                	Vector3f vRadius2 = vRadial.mult( mRadiusBack );
-                	Vector3f vMantle = vHeight.subtract( vRadius2.subtract( vRadius ) );
-                	Vector3f vTangent = vRadial.cross( Vector3f.UNIT_Z );
-                	myContext.mRadialNormals[ radialCount ] = vMantle.cross( vTangent ).normalize();
-                } else {
-                	// Keep a copy of this normal for future fast access
-                	myContext.mRadialNormals[ radialCount ] = vRadial.clone();
-                }
-            }
+        	myContext.mRadialNormals = calculateRadialNormals( pContext, mRadius, mRadiusBack, pUseVector );
 		}
     	if ( pSurface != 0 ) {
     		// Backface/Frontface processing perpendicular to x/y plane, using the -1/+1 of the surface
@@ -478,8 +456,6 @@ public class CSGCylinder
 class CSGCylinderContext
 	extends CSGRadialCappedContext
 {
-    Vector3f[] 	mRadialNormals;		// Helper for the normals on each slice
-	
     /** Initialize the context */
     CSGCylinderContext(
     	int							pSliceCount

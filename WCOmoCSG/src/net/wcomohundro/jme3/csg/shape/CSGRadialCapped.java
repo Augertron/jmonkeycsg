@@ -47,7 +47,8 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 
 /** Specialization of a radial CSG shape that has:
- 	1)	Flat end caps
+ 	1)	Optional, flat end caps
+ 		(if no end caps are produced, ie shape not closed, then you can see inside it)
  	2)	Uniformly varying slice radius (ie, front/back radii that apply to the end caps)
  	
  	Subclasses are expected to determine the placement of the slices
@@ -81,7 +82,6 @@ public abstract class CSGRadialCapped
 
     /** The radius of the back cap */
     protected float 		mRadiusBack;
-
 	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */
 	protected TextureMode	mTextureMode;
 	
@@ -314,6 +314,47 @@ public abstract class CSGRadialCapped
     	pUseVector.set( pContext.mSliceCenter.x, pContext.mSliceCenter.y, pSurface * (mInverted ? -1 : 1));
     	return( pUseVector );
     }
+    
+    /** Service routine to precalculate a set of normals for the various radial points */
+    protected Vector3f[] calculateRadialNormals(
+    	CSGRadialContext 	pContext
+    ,	float				pRadiusFront
+    ,	float				pRadiusBack
+    ,	Vector3f			pTempVector
+    ) {
+    	// Precalculate the normals we will need
+        Vector3f[] radialNormals = new Vector3f[ mRadialSamples + 1 ];
+        	
+        // If the radii differ, then we will need a slant in Z.  We assume that
+        // the slant is spread evenly across the entire z extent
+        Vector3f vHeight = (pRadiusFront == pRadiusBack) ? null : Vector3f.UNIT_Z.mult( getHeight() );
+
+        // Walk around all the radial points
+        for( int radialCount = 0; radialCount < mRadialSamples + 1; radialCount += 1 ) {
+        	// Perpendicular to the tangent of the circle at this radial point
+        	// within the x/y plane (z = 0)
+        	CSGRadialCoord aCoord = pContext.mCoordList[ radialCount ];
+        	pTempVector.set( aCoord.mCosine, aCoord.mSine, 0 );
+            
+            if ( vHeight != null ) {
+            	// If the radii are different, then the surface slants in the z Plane
+            	Vector3f vRadiusFront = pTempVector.mult( pRadiusFront );
+            	Vector3f vRadiusBack = pTempVector.mult( pRadiusFront );
+            	
+            	// Account for how the height differs across the entire extent
+            	Vector3f vHeightDifference = vRadiusBack.subtractLocal( vRadiusFront );
+            	Vector3f vMantle = vHeight.subtract( vHeightDifference );
+            	
+            	Vector3f vTangent = pTempVector.cross( Vector3f.UNIT_Z );
+            	radialNormals[ radialCount ] = vMantle.crossLocal( vTangent ).normalizeLocal();
+            } else {
+            	// Keep a copy of this normal for future fast access
+            	radialNormals[ radialCount ] = pTempVector.clone();
+            }
+        }
+        return( radialNormals );
+	};
+
 
     /** Support capped radial specific configuration parameters */
     @Override
@@ -346,7 +387,7 @@ public abstract class CSGRadialCapped
         }
     }
     
-    /** Apply texture coordinate scaling to selected 'faces' of the cylinder */
+    /** Apply texture coordinate scaling to selected 'faces' of the shape */
     @Override
     public void scaleFaceTextureCoordinates(
     	float		pX
@@ -461,6 +502,7 @@ public abstract class CSGRadialCapped
 class CSGRadialCappedContext
 	extends CSGRadialContext
 {
+    Vector3f[] 	mRadialNormals;			// Helper for the normals on each slice
     float		mEndcapTextureBiasX;
     float		mEndcapTextureBiasY;
 	

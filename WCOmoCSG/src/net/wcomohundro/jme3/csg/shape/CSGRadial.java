@@ -60,7 +60,7 @@ import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
  	radial points desired.  The assumption is that a given application is very likely to settle
  	on an appropriate count of radial samples that will be used over and over.
  	
- 	.updateGeometry() provides a basic framework of iterating along the zAxis to 
+ 	.updateGeometryProlog() provides a basic framework of iterating along the zAxis to 
  	produce a center point for each slice, and then iterating radially along the 
  	circle's surface to produce the vertices.
  	The structure CSGRadialContext holds all the dynamic elements computed during 
@@ -70,6 +70,9 @@ import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
  	Subclasses are expected to override the callback processing routines.  Sample
  	defaults are provided just to get you started.  Subclasses may also extend the
  	context element to provide their own contextual definitions.
+ 	
+ 	Interesting effects are produced by 'scaling' each individual slice.
+ 	Interesting effects are produced by 'rotating' each individual slice.
  	
  	Configuration Settings:
  	 	radialSamples - the count of sampling points around the circle.
@@ -635,7 +638,6 @@ public abstract class CSGRadial
         if ( (scaleX != 1.0f) || (scaleY != 1.0f) ) {
         	mScaleSlice = new Vector2f( scaleX, scaleY );
         }
-        
         mRotateSlices = readPiValue( inCapsule, "twist", 0 );
     }
     
