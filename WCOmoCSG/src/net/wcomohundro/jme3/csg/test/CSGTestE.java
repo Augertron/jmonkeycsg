@@ -67,15 +67,15 @@ public class CSGTestE
 		null
 
 	,	"Assets/Models/CSGLoadSimpleUnit.xml"
-	,	"Assets/Models/CSGLoadSimple.xml"
+//	,	"Assets/Models/CSGLoadSimple.xml"
 //	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
 //	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
-	,	"Assets/Models/CSGLoadMultiTexture.xml"
+//	,	"Assets/Models/CSGLoadMultiTexture.xml"
 	
-	,	"Assets/Models/CSGLoadTextureCylinders.xml"
-	,	"Assets/Models/CSGLoadLighted.xml"
+//	,	"Assets/Models/CSGLoadTextureCylinders.xml"
+//	,	"Assets/Models/CSGLoadLighted.xml"
 		
-	,	"Assets/Models/CSGLoadLOD.xml"
+//	,	"Assets/Models/CSGLoadLOD.xml"
 
 	};
 	

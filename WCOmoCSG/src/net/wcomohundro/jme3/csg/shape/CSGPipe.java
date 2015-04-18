@@ -77,7 +77,7 @@ public class CSGPipe
 	public static final String sCSGPipeDate="$Date$";
 
 	/** The splice that determines the positioning of the various slices */
-	protected Spline	mSlicePath;
+	protected CSGSplineGenerator	mSlicePath;
 	
 	
 	/** Standard null constructor */
@@ -101,16 +101,20 @@ public class CSGPipe
     }
     
     /** Accessor to the curve that provides the path of the slices */
-    public Spline getSlicePath() { return mSlicePath; }
-    public void setSlicePath( Spline pCurve ) { mSlicePath = pCurve; }
+    public Spline getSlicePath() { return (mSlicePath == null) ? null : mSlicePath.getSpline(); }
+    public void setSlicePath( Spline pCurve ) { if ( mSlicePath != null ) mSlicePath.setSpline( pCurve ); }
     
-	/** FOR POSSIBLE SUBCLASS OVERRIDE: Resolve this mesh, with possible 'debug' delegate representation */
+	/** SUBCLASS OVERRIDE: Resolve this mesh, with possible 'debug' delegate representation */
+    @Override
 	public Mesh resolveMesh(
 		boolean		pDebug
 	) {
 		if ( pDebug ) {
-			// Display the spline
-			Curve aCurve = new Curve( mSlicePath, mAxisSamples / mSlicePath.getControlPoints().size() );
+			// Display the spline in debug mode
+			List<Vector3f> centerList = computeCenters();
+			Spline aLine = new Spline( SplineType.Linear, centerList, 0, false );
+			//Spline aLine = mSlicePath.getSpline();
+			Curve aCurve = new Curve( aLine, this.mAxisSamples / aLine.getSegmentsLength().size() );
 			return( aCurve );
 		} else {
 			// Display the pipe
@@ -128,7 +132,7 @@ public class CSGPipe
     		if ( mExtentZ == 0 ) mExtentZ = 1.0f;
     		Vector3f[] endPoints 
     			= new Vector3f[] { new Vector3f( 0, 0, mExtentZ ), new Vector3f( 0, 0, -mExtentZ ) };
-    		mSlicePath = new Spline( SplineType.Linear, endPoints, 0, false );
+    		mSlicePath = new CSGSplineGenerator( endPoints );
     	} else {
     		// Use the length of the spline as the z extent
     		mExtentZ = mSlicePath.getTotalLength() / 2.0f;
@@ -217,7 +221,13 @@ public class CSGPipe
         // Account for the actual radius
         pUseVector.multLocal( pContext.mSliceRadius );
         
-        // Account for the center
+    	// Apply any rotation required by the underlying spline
+    	if ( myContext.mSliceSplineRotation != null ) {
+    		// Remember that we are building the unit circle around the center point, 
+    		// so apply the 'curve' before we adjust the center
+    		myContext.mSliceSplineRotation.multLocal( pUseVector );
+    	}
+        // Account for the actual center
         pUseVector.addLocal( pContext.mSliceCenter );
 
         // Apply scaling
@@ -227,10 +237,6 @@ public class CSGPipe
         // Apply individual slice rotation around the zAxis
     	if ( pContext.mSliceRotator != null ) {
     		pContext.mSliceRotator.multLocal( pUseVector );
-    	}
-    	// Apply any rotation required by the underlying spline
-    	if ( myContext.mSliceSplineRotation != null ) {
-    		myContext.mSliceSplineRotation.multLocal( pUseVector );
     	}
 	    return( pUseVector );
     }
@@ -287,13 +293,16 @@ public class CSGPipe
 		myContext.mSliceNormal = new Vector3f();
 		myContext.mSliceSplineRotation = computeSliceNormal( myContext.mSliceNormal, myContext, pSurface );
 
-    	// Start with the center
-    	pUseVector.set( pContext.mSliceCenter );
-    	
+		// Start with the unit circle center
+		pUseVector.set( 0, 0, 0 );
+		
     	// Apply any rotation required by the underlying spline
     	if ( myContext.mSliceSplineRotation != null ) {
     		myContext.mSliceSplineRotation.multLocal( pUseVector );
     	}
+    	// Account for the actual center
+    	pUseVector.addLocal( pContext.mSliceCenter );
+    	
     	return( pUseVector );
     }
 
@@ -323,47 +332,7 @@ public class CSGPipe
     protected List<Vector3f> computeCenters(
     ) {
     	// We need a center point for every sample taken along the zAxis
-    	List<Vector3f> centerList = new ArrayList( this.mAxisSamples );
-    	
-    	// We will try to assign center points evenly along the curve, but we
-    	// will base it on the lengths of the various segments
-    	int sampleCount = 0;
-    	float fullLength = mSlicePath.getTotalLength();
-    	List<Float> allSegmentLengths = mSlicePath.getSegmentsLength();
-    	int segmentCount = allSegmentLengths.size() -1;
-    	
-    	// We assume that there is one more 'control point' than there are segments,
-    	// so the last center point is always special
-    	for( int i = 0; i <= segmentCount; i += 1 ) {
-    		float thisSegmentPortion = allSegmentLengths.get( i ).floatValue() / fullLength;
-    		int thisSegmentSamples = (int)(this.mAxisSamples * thisSegmentPortion);
-    		if ( thisSegmentSamples == 0 ) {
-    			// Every segment gets at least one sample
-    			thisSegmentSamples = 1;
-    		}
-    		// Accommodate the 'slop' in the last segment, always leaving out the last
-    		// @todo - think about spreading the slop around
-    		if ( i == segmentCount ) {
-    			// Adjust the samples we take in the last segment
-    			// Since we are truncating, and not rounding, we should not have to worry
-    			// about having too many samples, only too few
-    			thisSegmentSamples = this.mAxisSamples - sampleCount -1;
-    		}
-    		sampleCount += thisSegmentSamples;
-
-    		// Generate samples within this segment
-    		for( int j = 0; j < thisSegmentSamples; j += 1 ) {
-    			float percentWithinSegment = 0.0f;
-    			if ( j > 0 ) percentWithinSegment = (float)j / (float)thisSegmentSamples;
-    			Vector3f centerPoint = mSlicePath.interpolate( percentWithinSegment, i, null );
-    			centerList.add( centerPoint );
-    		}
-    		if ( i == segmentCount ) {
-    	    	// The last sample comes from the final control point (100% from the current to the next)
-    			Vector3f centerPoint = mSlicePath.interpolate( 1.0f, i, null );
-    			centerList.add( centerPoint );   			
-    		}
-    	}
+    	List<Vector3f> centerList = mSlicePath.interpolate( this.mAxisSamples );
     	return( centerList );
     }
     
@@ -424,7 +393,7 @@ public class CSGPipe
     	// Each slice is defined in the x/y plane.  See if it has stayed there
     	if ( !Vector3f.UNIT_Z.equals( pSliceNormal ) ) {
     		// We must apply a rotation to the slice to match the spline
-if ( false ) {
+if ( true ) {
     	    float cos_theta = Vector3f.UNIT_Z.dot( pSliceNormal );
     	    float angle = FastMath.acos( cos_theta );
     		Vector3f anAxis = Vector3f.UNIT_Z.cross( pSliceNormal ).normalizeLocal();
@@ -438,7 +407,7 @@ if ( false ) {
     return quat::fromaxisangle(angle, w);
  */
     	    
-if ( true ) {	// Looks like the following gets you the same results as above with fewer calculations....
+if ( false ) {	// Looks like the following gets you the same results as above with fewer calculations....
     		float real_part = 1.0f + Vector3f.UNIT_Z.dot( pSliceNormal );
     		Vector3f aVector = Vector3f.UNIT_Z.cross( pSliceNormal );
     		sliceRotation = new Quaternion( aVector.x, aVector.y, aVector.z, real_part );
@@ -481,8 +450,7 @@ if ( true ) {	// Looks like the following gets you the same results as above wit
         OutputCapsule outCapsule = pExporter.getCapsule( this );
         if ( mSlicePath != null ) {
         	// Save it as a generated element
-        	CSGSplineGenerator aPath = new CSGSplineGenerator( mSlicePath );
-        	outCapsule.write( aPath, "slicePath", null );
+        	outCapsule.write( mSlicePath, "slicePath", null );
         }
     }
     @Override
@@ -493,10 +461,8 @@ if ( true ) {	// Looks like the following gets you the same results as above wit
         super.read( pImporter );
 
         InputCapsule inCapsule = pImporter.getCapsule( this );
-        CSGSplineGenerator aPath = (CSGSplineGenerator)inCapsule.readSavable( "slicePath", null );
-        if ( aPath != null ) {
-        	mSlicePath = aPath.getSpline();
-        }
+        mSlicePath = (CSGSplineGenerator)inCapsule.readSavable( "slicePath", null );
+
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
     }
