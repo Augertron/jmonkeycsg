@@ -24,6 +24,14 @@
 **/
 package net.wcomohundro.jme3.csg.test;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
@@ -60,6 +68,7 @@ public class CSGTestDriver
     	pApplication.getGuiNode().attachChild( textDisplay );
     	return( textDisplay );
 	}
+	
 	/** Service routine to post a bit of text */
     public static void postText(
     	SimpleApplication	pApplication
@@ -72,4 +81,40 @@ public class CSGTestDriver
         pTextDisplay.setLocalTranslation( (aCam.getWidth() - pTextDisplay.getLineWidth()) / 2, aCam.getHeight(), 0);
     }
 
+    /** Service routine to fill a list of strings */
+    public static List<String> readStrings(
+    	String			pFileName
+    ,	List<String>	pSeedValues
+    ,	String[]		pDefaultValues
+    ) {
+    	if ( pSeedValues == null ) pSeedValues = new ArrayList();
+    	int initialCount = pSeedValues.size();
+    	
+		// Look for a given list
+		File aFile = new File( pFileName );
+		if ( aFile.exists() ) {
+			LineNumberReader aReader = null;
+			try {
+				aReader = new LineNumberReader( new FileReader( aFile ) );
+				String aLine;
+				while( (aLine = aReader.readLine()) != null ) {
+					// Remember this line
+					aLine = aLine.trim();
+					
+					if ( (aLine.length() > 0) && !aLine.startsWith( "//" ) ) {
+						pSeedValues.add( aLine );
+					}
+				}
+			} catch( IOException ex ) {
+				System.out.println( "*** Initialization failed: " + ex );
+			} finally {
+				if ( aReader != null ) try { aReader.close(); } catch( Exception ignore ) {}
+			}
+		}
+		// If nothing was loaded, then revert back to canned list
+		if ( (pSeedValues.size() == initialCount) && (pDefaultValues != null) ) {
+			Collections.addAll( pSeedValues, pDefaultValues );
+		}
+    	return( pSeedValues );
+    }
 }

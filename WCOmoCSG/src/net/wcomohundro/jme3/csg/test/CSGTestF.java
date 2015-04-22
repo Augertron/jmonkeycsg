@@ -76,12 +76,12 @@ public class CSGTestF
 	protected static String[] sSceneList = new String[] {
 		null
 
-//	,	"Assets/Models/CSGLoadSimpleUnit.xml"
-//	,	"Assets/Models/CSGLoadSimple.xml"
-//	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
-//	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
-	,	"Assets/Models/CSGLoadNonMultiTexture.xml"
-	,	"Assets/Models/CSGLoadMultiTexture.xml"
+//	,	"Models/CSGLoadSimpleUnit.xml"
+//	,	"Models/CSGLoadSimple.xml"
+//	,	"Models/CSGLoadCSGCubeCylinder.xml"
+//	,	"Models/CSGLoadCSGCubeCube.xml"
+	,	"Models/CSGLoadNonMultiTexture.xml"
+	,	"Models/CSGLoadMultiTexture.xml"
 
 	};
 	
@@ -109,7 +109,7 @@ public class CSGTestF
         createListeners();
         
         /** Load the scene, leveraging the XMLImporter */
-        assetManager.registerLocator( ".", FileLocator.class );
+        assetManager.registerLocator( "./Assets", FileLocator.class );
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
 	    
 	    Spatial aScene = loadScene();

@@ -9,8 +9,8 @@
     </lights>
 	<children/>
     <assetLoaderKeyList>
-   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCubeA.xml'/>
-   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeCubeB.xml'/>
-   		<com.jme3.asset.FilterKey name='Assets/Models/CSGLoadCSGCubeSphereC.xml'/>
+   		<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeCubeA.xml'/>
+   		<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeCubeB.xml'/>
+   		<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeSphereC.xml'/>
      </assetLoaderKeyList>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

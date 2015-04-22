@@ -24,7 +24,7 @@
 **/
 package net.wcomohundro.jme3.csg.test;
 
-import java.io.File;
+import java.util.List;
 import java.util.ArrayList;
 
 import com.jme3.app.DebugKeysAppState;
@@ -58,28 +58,29 @@ import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 
+
 /** Exercise the import facility */
 public class CSGTestE 
 	extends SimpleApplication 
 {
-	/** List of input scenes to cycle through */
+	/** Default list of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
 		null
 
-	,	"Assets/Models/CSGLoadSimpleUnit.xml"
-//	,	"Assets/Models/CSGLoadSimple.xml"
-//	,	"Assets/Models/CSGLoadCSGCubeCylinder.xml"
-//	,	"Assets/Models/CSGLoadCSGCubeCube.xml"
-//	,	"Assets/Models/CSGLoadMultiTexture.xml"
+	,	"Models/CSGLoadSimpleUnit.xml"
+	,	"Models/CSGLoadSimple.xml"
+	,	"Models/CSGLoadMultiTexture.xml"
 	
-//	,	"Assets/Models/CSGLoadTextureCylinders.xml"
-//	,	"Assets/Models/CSGLoadLighted.xml"
+	,	"Models/CSGLoadTextureCylinders.xml"
+	,	"Models/CSGLoadLighted.xml"
 		
-//		,	"Assets/Models/CSGLoadLOD.xml"
-		,	"Assets/Models/CSGLoadSmoothedPipes.xml"
+	,	"Models/CSGLoadLOD.xml"
+	,	"Models/CSGLoadSmoothedPipes.xml"
 
 	};
 	
+	/** List of available scenes */
+	protected List<String>	mSceneList;
 	/** Which scene is currently being viewed */
 	protected int			mSceneIndex;
 	/** Spot for a bit of text */
@@ -88,7 +89,13 @@ public class CSGTestE
 	public CSGTestE(
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		
+		// Initialize the scene list
+		mSceneList = new ArrayList();
+		mSceneList.add( null );		// Start with a blank
+		CSGTestDriver.readStrings( "./CSGTestE.txt", mSceneList, sSceneList );
 	}
+	
     @Override
     public void simpleInitApp(
     ) {
@@ -103,7 +110,7 @@ public class CSGTestE
         createListeners();
         
         /** Load the scene, leveraging the XMLImporter */
-        assetManager.registerLocator( ".", FileLocator.class );
+        assetManager.registerLocator( "./Assets", FileLocator.class );
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
 	    
 	    Spatial aScene = loadScene();
@@ -117,16 +124,16 @@ public class CSGTestE
     ) {
     	// For now, rely on a FilterKey which does not support caching
     	Object aNode = null;
-    	String sceneName = sSceneList[ mSceneIndex ];
+    	String sceneName = mSceneList.get( mSceneIndex );
     	if ( sceneName != null ) try {
     		// For testing, suppress the cache
-	    	// ModelKey aKey = new ModelKey( sceneName );
-	    	// aNode = assetManager.loadModel( aKey );
 	    	NonCachingKey aKey = new NonCachingKey( sceneName );
 	    	aNode = assetManager.loadAsset( aKey );
 
     	} catch( Exception ex ) {
     		System.out.println( "***Load Scene Failed: " + ex );
+    	} else {
+    		sceneName = "<ENTER> to cycle through the scenes, QWASDZ to move, <ESC> to exit";
     	}
     	CSGTestDriver.postText( this, mTextDisplay, sceneName );
     	return( (Spatial)aNode );
@@ -151,7 +158,7 @@ public class CSGTestE
                         
                         // Select next scene
                         mSceneIndex += 1;
-                        if ( mSceneIndex >= sSceneList.length ) mSceneIndex = 0;
+                        if ( mSceneIndex >= mSceneList.size() ) mSceneIndex = 0;
                         
                         // And load it
                 	    Spatial aScene = loadScene();

@@ -76,7 +76,7 @@ public class CSGTestG
 	protected static String[] sSceneList = new String[] {
 		null
 
-	,	"Assets/Models/CSGLoadLOD.xml"
+	,	"Models/CSGLoadLOD.xml"
 
 	};
 	
@@ -98,7 +98,7 @@ public class CSGTestG
         createListeners();
         
         /** Load the scene, leveraging the XMLImporter */
-        assetManager.registerLocator( ".", FileLocator.class );
+        assetManager.registerLocator( "./Assets", FileLocator.class );
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
 	    
 	    Spatial aScene = loadScene();
