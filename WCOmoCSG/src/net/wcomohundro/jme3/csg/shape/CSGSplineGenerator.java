@@ -98,7 +98,7 @@ public class CSGSplineGenerator
 	) {
 		mPointList = pPointList;
 		if ( mPointList != null ) {
-			// There is not explicit spline
+			// There is no explicit spline
 			mSpline = null;
 			
 			// Calculate the distances of all the segments
@@ -132,7 +132,13 @@ public class CSGSplineGenerator
 		return( aDistance );
 	}
 	
-	/** Produce a set of points along the given curve */
+	/** Produce a set of points along the given curve 
+	 	@return - a List of points along the curve with at least pSampleCount entries
+	 				(possibly more if the curve demands it)
+	 	NOTE
+	 		that once upon a time, I had hoped that these would be evenly spaced, but
+	 		the underlying Spline processing does not currently provide such a mechanism.
+	 */
 	public List<Vector3f> interpolate(
 		int			pSampleCount
 	) {
@@ -157,9 +163,18 @@ public class CSGSplineGenerator
 			// The following gives you a rather smooth (circular??) arc
 			//		0.0 / 0.0 / 1.0,  0.0 / 0.0 / 0.4,  -0.4 / 0.0 / 0.0,  -1.0 / 0.0 / 0.0
 			splinePointBias = 3;
+			
+			// FYI -- Spline.interpolate( percentToNextControlPoint, ... )
+			//			does NOT give you evenly spaced points (in terms of straight line
+			//			distance between the points). Maybe the distance along the curve is
+			//			the same (I don't think so) but for sure, the direct point-to-point
+			//			distance varies.  So we end up with a set of non-evenly spaced
+			//			points.
+			//	@see http://math.stackexchange.com/questions/15896/find-points-along-a-bezier-curve-that-are-equal-distance-from-one-another
 			break;
 			
 		case Nurb:
+			// 20Apr2015 - I do not understand the following (which I grabbed from Curve)
 	        float minKnot = mSpline.getMinNurbKnot();
 	        float maxKnot = mSpline.getMaxNurbKnot();
 	        float deltaU = (maxKnot - minKnot) / pSampleCount;
@@ -208,9 +223,8 @@ public class CSGSplineGenerator
     		// @todo - think about spreading the slop around
     		if ( i == segmentCount ) {
     			// Adjust the samples we take in the last segment
-    			// Since we are truncating, and not rounding, we should not have to worry
-    			// about having too many samples, only too few
     			thisSegmentSamples = pSampleCount - sampleCount -1;
+    			if ( thisSegmentSamples <= 0 ) thisSegmentSamples = 1;
     		}
     		sampleCount += thisSegmentSamples;
 

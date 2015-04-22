@@ -358,6 +358,9 @@ public abstract class CSGRadial
 	            	pContext.mZOffset += 1;
 	            }
 	        }
+	        // Apply any smoothing that may be needed
+	        smoothSurface( pContext, vars );
+	        
         } finally {
         	// Return the borrowed vectors
         	vars.release();
@@ -365,6 +368,13 @@ public abstract class CSGRadial
         return( northPoleIndex );
     }
     
+    /** FOR SUBCLASS OVERRIDE: apply any 'smoothing' needed on the surface */
+    protected void smoothSurface(
+        CSGRadialContext	pContext
+    ,	TempVars			pTempVars
+    ) {
+    }
+  
     /** Service routine to allocate and fill an index buffer */
     protected VertexBuffer createIndices(
     	CSGRadialContext	pContext
@@ -756,17 +766,30 @@ abstract class CSGRadialContext
     
     /** Initialize the context */
     CSGRadialContext(
-    	int		pSliceCount
+    	int		pAxisSamples
     ,	int		pRadialSamples
-    ,	int		pVertexCount
+    ,	boolean	pIsClosed
     ) {	
-    	mSliceCount = pSliceCount;
-    	mVertCount = pVertexCount;
+    	mSliceCount = resolveSliceCount( pAxisSamples, pIsClosed );
+    	mVertCount = resolveVetexCount( mSliceCount, pRadialSamples, pIsClosed );
 
     	mPosBuf = BufferUtils.createVector3Buffer( mVertCount );
         mNormBuf = BufferUtils.createVector3Buffer( mVertCount );
         mTexBuf = BufferUtils.createVector2Buffer( mVertCount );
     }
+    
+    /** How many slices are needed? */
+    protected abstract int resolveSliceCount(
+    	int			pAxisSamples
+    ,	boolean		pIsClosed
+    );
+    
+    /** How many vertices are produced? */
+    protected abstract int resolveVetexCount(
+    	int			pSliceCount
+    ,	int			pRadialSamples
+    ,	boolean		pIsClosed
+    );
     
     /** Establish the reduction factors for LOD processing, returning the count of triangles 
      	produced at this level of reduction

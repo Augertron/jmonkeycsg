@@ -75,7 +75,8 @@ public class CSGTestE
 //	,	"Assets/Models/CSGLoadTextureCylinders.xml"
 //	,	"Assets/Models/CSGLoadLighted.xml"
 		
-//	,	"Assets/Models/CSGLoadLOD.xml"
+//		,	"Assets/Models/CSGLoadLOD.xml"
+		,	"Assets/Models/CSGLoadSmoothedPipes.xml"
 
 	};
 	

@@ -389,8 +389,7 @@ public class CSGSphere
 		// And even though the north/south poles are a single point, we need to 
 		// generate different texture coordinates for the pole for each different 
 		// radial, so we need a full set of vertices
-    	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
-   	 	CSGSphereContext aContext = new CSGSphereContext( sliceCount, mRadialSamples, mRadius );
+   	 	CSGSphereContext aContext = new CSGSphereContext( mAxisSamples, mRadialSamples, mClosed, mRadius );
     	 
     	return( aContext );
     }
@@ -684,15 +683,40 @@ class CSGSphereContext
 	
     /** Initialize the context */
     CSGSphereContext(
-    	int		pSliceCount
+    	int		pAxisSamples
     ,	int		pRadialSamples
+    ,	boolean	pIsClosed
     ,	float	pRadius
     ) {	
     	// The sphere has RadialSamples (+1 for the overlapping end point) times the number of slices
-    	super( pSliceCount, pRadialSamples, pSliceCount * (pRadialSamples + 1) );
+    	super( pAxisSamples, pRadialSamples, pIsClosed );
     	
     	// The rSquared is constant for a given radius and can be calculated here
     	mRadiusSquared = pRadius * pRadius;
    }
+    
+    /** How many slices are needed? */
+    @Override
+    protected int resolveSliceCount(
+    	int			pAxisSamples
+    ,	boolean		pIsClosed
+    ) {
+		// Even though the north/south poles are a single point, we need to 
+		// generate different textures and normals for the two EXTRA end slices if closed
+    	int sliceCount = (pIsClosed) ? pAxisSamples + 2 : pAxisSamples;
+    	return( sliceCount );
+    }
+
+    /** How many vertices are produced? */
+    @Override
+    protected int resolveVetexCount(
+    	int			pSliceCount
+    ,	int			pRadialSamples
+    ,	boolean		pIsClosed
+    ) {
+    	// The cylinder has RadialSamples (+1 for the overlapping end point) times the number of slices
+    	int vertCount = pSliceCount * (pRadialSamples + 1);
+    	return( vertCount );
+    }
 
 }

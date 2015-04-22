@@ -330,9 +330,8 @@ public class CSGCylinder
     	// vertex overlays the first.  
 		// And even though the north/south poles are a single point, we need to 
 		// generate different textures and normals for the two EXTRA end slices if closed
-    	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
     	CSGCylinderContext aContext 
-    		= new CSGCylinderContext( sliceCount, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
+    		= new CSGCylinderContext( mAxisSamples, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
 
     	return( aContext );
     }
@@ -458,13 +457,13 @@ class CSGCylinderContext
 {
     /** Initialize the context */
     CSGCylinderContext(
-    	int							pSliceCount
+    	int							pAxisSamples
     ,	int							pRadialSamples
     ,	boolean						pClosed
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
     ) {	
-    	super( pSliceCount, pRadialSamples, pClosed, pTextureMode, pScaleSlice );
+    	super( pAxisSamples, pRadialSamples, pClosed, pTextureMode, pScaleSlice );
     }
 
 }

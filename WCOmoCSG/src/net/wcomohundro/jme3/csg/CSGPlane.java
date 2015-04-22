@@ -85,7 +85,7 @@ public class CSGPlane
 	) {
 		// Compute the normal vector
 		Vector3f aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
-		return new CSGPlane( aNormal, aNormal.dot( pA ) );
+		return new CSGPlane( aNormal, pA, aNormal.dot( pA ), -1 );
 	}
 	/** Factory method to produce a plane from a set of vertices */
 	public static CSGPlane fromVertices(
@@ -107,19 +107,34 @@ public class CSGPlane
 	protected Vector3f	mNormal;
 	/** Quick access to its DOT for comparison purposes */
 	protected float		mDot;
+	/** An arbitrary point on the plane */
+	protected Vector3f	mPointOnPlane;
+	/** Arbitrary 'mark' value for external users of a given plane */
+	protected int		mMark;
 	
 	/** Standard null constructor */
 	public CSGPlane(
 	) {
-		this( Vector3f.ZERO, 0f );
+		this( Vector3f.ZERO, Vector3f.ZERO, 0f, -1 );
+	}
+	/** Constructor based on a given normal and point on the plane */
+	public CSGPlane(
+		Vector3f	pNormal
+	,	Vector3f	pPointOnPlane
+	) {
+		this( pNormal, pPointOnPlane, pNormal.dot( pPointOnPlane ), -1 );
 	}
 	/** Internal constructor for a given normal and dot */
 	protected CSGPlane(
 		Vector3f	pNormal
+	,	Vector3f	pPointOnPlane
 	,	float		pDot
+	,	int			pMarkValue
 	) {
 		mNormal = pNormal;
+		mPointOnPlane = pPointOnPlane;
 		mDot = pDot;
+		mMark = pMarkValue;
 	}
 	
 	/** Return a copy */
@@ -128,11 +143,46 @@ public class CSGPlane
 	) {
 		if ( pFlipIt ) {
 			// Flipped copy
-			return( new CSGPlane( mNormal.negate(), -mDot ) );
+			return( new CSGPlane( mNormal.negate(), mPointOnPlane, -mDot, -1 ) );
 		} else {
 			// Standard use of this immutable copy
 			return( this );
 		}
+	}
+	
+	/** Accessor to the mark value */
+	public int getMark() { return mMark; }
+	public void setMark( int pMarkValue ) { mMark = pMarkValue; }
+	
+	
+	/** Check if a given point is in 'front' or 'behind' this plane.
+	 	@return -  -1 if behind
+	 				0 if on the plane
+	 			   +1 if in front
+	 */
+	public int pointPosition(
+		Vector3f	pPoint
+	) {
+		// How far away is the givne point
+		float distanceToPlane = mNormal.dot( pPoint ) - mDot;
+		
+		// If within a given tolerance, it is the same plane
+		int aPosition = (distanceToPlane < -EPSILON) ? -1 : (distanceToPlane > EPSILON) ? 1 : 0;
+		return( aPosition );
+	}
+	
+	/** Find the projection of a given point onto this plane */
+	public Vector3f pointProjection(
+		Vector3f	pPoint
+	,	Vector3f	pPointStore
+	) {
+		// Digging around the web, I found the following:
+		//		q_proj = q - dot(q - p, n) * n
+		float dot = pPointStore.set( pPoint ).subtractLocal( mPointOnPlane ).dot( mNormal );
+		pPointStore.set( pPoint ).subtractLocal( mNormal.mult( dot ) );
+		
+		//pPointStore.set( pPoint ).subtractLocal( dot, dot, dot ).multLocal( mNormal );
+		return( pPointStore );
 	}
 	
 	/** Provide a service that knows how to assign a given polygon to an appropriate 

@@ -508,15 +508,13 @@ class CSGRadialCappedContext
 	
     /** Initialize the context */
     CSGRadialCappedContext(
-    	int							pSliceCount
+    	int							pAxisSamples
     ,	int							pRadialSamples
     ,	boolean						pClosed
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
     ) {	
-    	// The cylinder has RadialSamples (+1 for the overlapping end point) times the number of slices
-    	// plus the 2 polar center points if closed
-    	super( pSliceCount, pRadialSamples, (pSliceCount * (pRadialSamples + 1)) + (pClosed ? 2 : 0) );
+    	super( pAxisSamples, pRadialSamples, pClosed );
     	
     	// Account for the span of the texture on the end caps
     	switch( pTextureMode ) {
@@ -535,6 +533,31 @@ class CSGRadialCappedContext
     		mEndcapTextureBiasY *= pScaleSlice.y;
     	}
 
+    }
+    
+    /** How many slices are needed? */
+    @Override
+    protected int resolveSliceCount(
+    	int			pAxisSamples
+    ,	boolean		pIsClosed
+    ) {
+		// Even though the north/south poles are a single point, we need to 
+		// generate different textures and normals for the two EXTRA end slices if closed
+    	int sliceCount = (pIsClosed) ? pAxisSamples + 2 : pAxisSamples;
+    	return( sliceCount );
+    }
+
+    /** How many vertices are produced? */
+    @Override
+    protected int resolveVetexCount(
+    	int			pSliceCount
+    ,	int			pRadialSamples
+    ,	boolean		pIsClosed
+    ) {
+    	// The cylinder has RadialSamples (+1 for the overlapping end point) times the number of slices
+    	// plus the 2 polar center points if closed
+    	int vertCount = (pSliceCount * (pRadialSamples + 1)) + (pIsClosed ? 2 : 0);
+    	return( vertCount );
     }
 
 }

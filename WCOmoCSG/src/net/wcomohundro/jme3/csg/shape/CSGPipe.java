@@ -40,9 +40,8 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.scene.shape.Curve;
-
 import com.jme3.util.BufferUtils;
-import static com.jme3.util.BufferUtils.*;
+import com.jme3.util.TempVars;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -50,7 +49,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
-import net.wcomohundro.jme3.csg.shape.CSGRadialCapped.TextureMode;
+import net.wcomohundro.jme3.csg.CSGPlane;
 
 
 /** A CSG Pipe is a 'capped' radial whose slices follow a given curve.
@@ -78,6 +77,10 @@ public class CSGPipe
 
 	/** The splice that determines the positioning of the various slices */
 	protected CSGSplineGenerator	mSlicePath;
+	/** Control flag to force 'perpendicular' endcaps */
+	protected boolean				mPerpendicularEnds;
+	/** Control flag to apply smoothing */
+	protected boolean				mSmoothSurface;
 	
 	
 	/** Standard null constructor */
@@ -141,6 +144,164 @@ public class CSGPipe
     	super.updateGeometryProlog();   	
     }
     
+    /** OVERRIDE: apply any 'smoothing' needed on the surface, trying to eliminate crumples */
+    @Override
+    protected void smoothSurface(
+        CSGRadialContext	pContext
+    ,	TempVars			pTempVars
+    ) {
+    	if ( mSmoothSurface ) {
+    		// Scan the surface, looking for crumple points where radial points on one slice
+    		// pushes through/overlaps the equivalent point on a different slice.
+        	CSGPipeContext myContext = (CSGPipeContext)pContext;
+   		
+    		// NOTE that we treat the endcaps as inviolate, so we work from the ends to 
+    		//		the middle
+        	int startPoint = (this.mClosed) ? 1 : 0;
+        	int endPoint = (this.mClosed) ? pContext.mSliceCount -2 : pContext.mSliceCount -1;
+    		int midPoint = pContext.mSliceCount / 2;
+    		
+    		// Every slice has mRadialSamples +1 entries
+    		int slice3fBias = (mRadialSamples + 1) * 3;
+    		int slice2fBias = (mRadialSamples + 1) * 2;
+    		
+    		for( int i = startPoint; i < midPoint; i += 1 ) {
+    			smoothSlice( myContext, i, +1, slice3fBias, slice2fBias, pTempVars );
+    		}
+    		for( int i = endPoint; i > midPoint; i -= 1 ) {
+    			smoothSlice( myContext, i, -1, slice3fBias, slice2fBias, pTempVars );
+    		}
+    	}
+    }
+    /** Service routine that checks the points on one slice for overlap with another */
+    protected void smoothSlice(
+    	CSGPipeContext 	pContext
+    ,	int				pBaseIndex
+    ,	int				pScanDirection
+    ,	int				pOffset3f
+    ,	int				pOffset2f
+    ,	TempVars		pTempVars
+    ) {
+    	Vector3f checkPosition = pTempVars.vect1;
+    	Vector3f basePosition = pTempVars.vect2;
+    	Vector3f baseNormal = pTempVars.vect3;
+    	Vector2f baseTexture = pTempVars.vect2d;
+
+    	// We check all points against the Plane of the base
+    	CSGPlane basePlane = pContext.mSlicePlanes.get( pBaseIndex );
+    	CSGPlane thisPlane = pContext.mSlicePlanes.get( pBaseIndex + pScanDirection );
+    	
+    	// Locate each radial point in question
+    	int floatIdx = (pBaseIndex + pScanDirection) * pOffset3f;
+    	int texIdx = (pBaseIndex + pScanDirection) * pOffset2f;
+    	
+    	for( int i = 0; i <= mRadialSamples; i += 1, texIdx += 2 ) {
+    		// We are interested in the position
+    		int floatIdx0 = floatIdx++;
+    		int floatIdx1 = floatIdx++;
+    		int floatIdx2 = floatIdx++;
+	    	checkPosition.set( pContext.mPosBuf.get( floatIdx0 )
+	    					,	pContext.mPosBuf.get( floatIdx1 )
+	    					,	pContext.mPosBuf.get( floatIdx2 ) );
+	    	
+	    	// Where is this point in relationship to the plane of the base slice?
+	    	// @todo - I think there is a problem with the 'planes' if the slices are rotated.....
+	    	CSGPlane overlappedPlane
+	    		= checkPointOverlap( pContext, thisPlane, checkPosition, basePlane, pBaseIndex, pScanDirection );
+	    	if ( overlappedPlane != null ) {
+	    		// This given point is on the wrong side of the overlapped plane
+if ( false ) {
+				// Experiment with the projection of the given point onto the overlapped plane
+				// Just using a copy of the base (see below) seems to give a better shape
+		    	overlappedPlane.pointProjection( checkPosition, basePosition );
+		    	pContext.mPosBuf.put( floatIdx0, basePosition.x )
+								.put( floatIdx1, basePosition.y )
+								.put( floatIdx2, basePosition.z );
+} 
+if ( true ) {
+				// Use the corresponding point from the base
+				int baseIdx0 = floatIdx0 - (pOffset3f * pScanDirection);
+				int baseIdx1 = baseIdx0 + 1;
+				int baseIdx2 = baseIdx0 + 2;
+				
+				basePosition.set( pContext.mPosBuf.get( baseIdx0 )
+								,	pContext.mPosBuf.get( baseIdx1 )
+								,	pContext.mPosBuf.get( baseIdx2 ) );
+		    	baseNormal.set( pContext.mNormBuf.get( baseIdx0 )
+    						,	pContext.mNormBuf.get( baseIdx1 )
+    						,	pContext.mNormBuf.get( baseIdx2 ) );
+		    	
+		    	int baseTexIdx = texIdx - (pOffset2f * pScanDirection);
+		    	baseTexture.set( pContext.mTexBuf.get( baseTexIdx )
+								,	pContext.mTexBuf.get( baseTexIdx + 1 ) );
+		    	
+		    	// Overwrite the point on the wrong side of the base slice with info
+		    	// from the base slice itself
+		    	pContext.mPosBuf.put( floatIdx0, basePosition.x )
+		    					.put( floatIdx1, basePosition.y )
+		    					.put( floatIdx2, basePosition.z );
+		    	pContext.mNormBuf.put( floatIdx0, baseNormal.x )
+								.put( floatIdx1, baseNormal.y )
+								.put( floatIdx2, baseNormal.z );
+		    	
+		    	// Using the original texture seems to give us a better effect
+		    	//pContext.mTexBuf.put( texIdx, baseTexture.x )
+		    	//				.put( texIdx + 1, baseTexture.y );
+}
+	    	}
+    	}
+    }
+    /** Service routine to check if a given point is on the proper side of a
+     	a plane that defines a 'base' slice.  If the point is on the proper side, then 
+     	null is returned.  If the point overlaps the slice, then the base plane that is
+     	being overlapped is returned.
+     	
+     	We keep track of any slice whose points were adjusted due to overlap.
+     	This is done by 'marking' that slice with the index of the plane it collided with.
+     	That way, if B overlaps with A, a check of C against B will know to also check
+     	C against A.
+     */
+    protected CSGPlane checkPointOverlap(
+        CSGPipeContext 	pContext
+    ,	CSGPlane		pThisPlane
+    ,	Vector3f		pPoint
+    ,	CSGPlane		pBasePlane
+    ,	int				pBaseIndex
+    ,	int				pScanDirection
+    ) {
+    	// Where is this point in relationship to the plane of the base slice?
+    	int pointPlaneRelationship = pBasePlane.pointPosition( pPoint );
+
+    	if ( ((pointPlaneRelationship < 0) && (pScanDirection > 0))
+    	|| ((pointPlaneRelationship > 0) && (pScanDirection < 0)) ) {
+    		// This given point is on the wrong side of the base plane.
+    		if ( pThisPlane.getMark() < 0 ) {
+    			// Mark this plane to indicate that an overlap was detected
+    			pThisPlane.setMark( pBaseIndex );
+    		}
+    		return( pBasePlane );
+    	}
+    	// No direct problems with the base BUT it is
+    	// possible that the 'base' slice we are checking against had
+    	// its own problems with a prior slice
+    	int priorPlaneIndex = pBasePlane.getMark();
+    	while( priorPlaneIndex >= 0 ) {
+    		// Confirm against the prior plane
+        	CSGPlane priorPlane = pContext.mSlicePlanes.get( priorPlaneIndex );
+        	CSGPlane overlappedPlane
+        		= checkPointOverlap( pContext, pThisPlane, pPoint, priorPlane, priorPlaneIndex, pScanDirection );
+        	if ( overlappedPlane != null ) {
+        		// This given point is on the wrong side of some prior plane
+        		return( overlappedPlane );
+        	}
+        	// Keep looking for problems with prior planes
+        	priorPlaneIndex = priorPlane.getMark();
+    	}
+    	// We have checked against all possible prior planes that we could overlap with
+    	// and everything looks good for this point
+    	return( null );
+    }
+    
     /** OVERRIDE: allocate the context */
     @Override
     protected CSGRadialContext getContext(
@@ -150,10 +311,15 @@ public class CSGPipe
     	// vertex overlays the first.  
 		// And even though the north/south poles are a single point, we need to 
 		// generate different textures and normals for the two EXTRA end slices if closed
-    	int sliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+    	
+    	// And remember the curve itself could require more AxisSamples than what was requested
+		List<Vector3f> centerList = computeCenters();
+		if ( centerList.size() > mAxisSamples ) {
+			mAxisSamples = centerList.size();
+		}
     	CSGPipeContext aContext 
-    		= new CSGPipeContext( sliceCount, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
-
+    		= new CSGPipeContext( mAxisSamples, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
+    	aContext.mCenterList = centerList;
     	return( aContext );
     }
 
@@ -352,13 +518,9 @@ public class CSGPipe
     	if ( pSurface < 0 ) {
     		// Back face, which shares the last point
     		centerIndex = lastIndex;
-    		//thisCenter =  pContext.mCenterList.get( lastIndex );
-    		//priorCenter =  pContext.mCenterList.get( lastIndex -1 );
     	} else if ( pSurface > 0 ) {
     		// Front face, which shares the first point
     		centerIndex = 0;
-    		//thisCenter = pContext.mCenterList.get( 0 );
-    		//nextCenter = pContext.mCenterList.get( 1 );
     	} else {
     		// Along the surface of the pipe 
     		// (where mZOffset acts like a simple counter, but from back to front)
@@ -373,10 +535,10 @@ public class CSGPipe
     	}
     	if ( priorCenter == null ) {
     		// Must be at the front, so track from NEXT back to THIS
-    		pSliceNormal.set( thisCenter ).subtractLocal( nextCenter ).normalizeLocal();
+    		normalizeEndSlice( pSliceNormal.set( thisCenter ).subtractLocal( nextCenter ) );
        	} else if ( nextCenter == null ) {
     		// Must be at the back, so track from THIS back to PRIOR
-    		pSliceNormal.set( priorCenter ).subtractLocal( thisCenter ).normalizeLocal();
+       		normalizeEndSlice( pSliceNormal.set( priorCenter ).subtractLocal( thisCenter ) );
     	} else {
     		// We may need a blend 
     		pSliceNormal.set( priorCenter ).subtractLocal( thisCenter ).normalizeLocal();
@@ -393,7 +555,7 @@ public class CSGPipe
     	// Each slice is defined in the x/y plane.  See if it has stayed there
     	if ( !Vector3f.UNIT_Z.equals( pSliceNormal ) ) {
     		// We must apply a rotation to the slice to match the spline
-if ( true ) {
+if ( false ) {
     	    float cos_theta = Vector3f.UNIT_Z.dot( pSliceNormal );
     	    float angle = FastMath.acos( cos_theta );
     		Vector3f anAxis = Vector3f.UNIT_Z.cross( pSliceNormal ).normalizeLocal();
@@ -407,7 +569,7 @@ if ( true ) {
     return quat::fromaxisangle(angle, w);
  */
     	    
-if ( false ) {	// Looks like the following gets you the same results as above with fewer calculations....
+if ( true ) {	// Looks like the following gets you the same results as above with fewer calculations....
     		float real_part = 1.0f + Vector3f.UNIT_Z.dot( pSliceNormal );
     		Vector3f aVector = Vector3f.UNIT_Z.cross( pSliceNormal );
     		sliceRotation = new Quaternion( aVector.x, aVector.y, aVector.z, real_part );
@@ -437,7 +599,31 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
     return normalize(quat(real_part, w.x, w.y, w.z));
 **/
     	}
+    	if ( mSmoothSurface ) {
+    		// If we plan on smoothing the resultant surface, we need to keep track of
+    		// the 'plane' that defines every slice
+    		// NOTE that we use a null plane as a placeholder in the list for the endcaps
+    		CSGPlane slicePlane = (pSurface == 0) ? new CSGPlane( pSliceNormal, thisCenter ) : null;
+    		
+    		if ( pContext.mSlicePlanes == null ) pContext.mSlicePlanes = new ArrayList( pContext.mSliceCount );
+    		pContext.mSlicePlanes.add( slicePlane );
+    	}
     	return( sliceRotation );
+    }
+    
+    /** Service routine to normalize and force an end slice normal to be 'perpendicular' */
+    protected Vector3f normalizeEndSlice(
+    	Vector3f		pEndCapNormal
+    ) {
+    	pEndCapNormal.normalizeLocal();
+    	
+    	if ( mPerpendicularEnds ) {
+    		// Force this normal to the nearest perpendicular
+    		pEndCapNormal.set( (float)Math.round( pEndCapNormal.x )
+    						,	(float)Math.round( pEndCapNormal.y )
+    						,	(float)Math.round( pEndCapNormal.z ) );
+    	}
+    	return( pEndCapNormal );
     }
     
     /** Support Pipe specific configuration parameters */
@@ -452,6 +638,8 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
         	// Save it as a generated element
         	outCapsule.write( mSlicePath, "slicePath", null );
         }
+        outCapsule.write( mPerpendicularEnds, "perpendicularEnds", false );
+        outCapsule.write( mSmoothSurface, "smoothSurface", false );
     }
     @Override
     public void read(
@@ -462,6 +650,8 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
 
         InputCapsule inCapsule = pImporter.getCapsule( this );
         mSlicePath = (CSGSplineGenerator)inCapsule.readSavable( "slicePath", null );
+        mPerpendicularEnds = inCapsule.readBoolean( "perpendicularEnds", false );
+        mSmoothSurface = inCapsule.readBoolean( "smoothSurface",  false );
 
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
@@ -488,19 +678,33 @@ class CSGPipeContext
 	List<Vector3f>		mCenterList;
 	/** Surface normal to the current slice */
 	Vector3f			mSliceNormal;
+	/** Planes associated with every slice */
+	List<CSGPlane>		mSlicePlanes;
 	/** Rotation to apply to the slice to match the spline */
 	Quaternion			mSliceSplineRotation;
 	
 	
     /** Initialize the context */
     CSGPipeContext(
-    	int							pSliceCount
+    	int							pAxisSamples
     ,	int							pRadialSamples
     ,	boolean						pClosed
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
     ) {	
-    	super( pSliceCount, pRadialSamples, pClosed, pTextureMode, pScaleSlice );
+    	super( pAxisSamples, pRadialSamples, pClosed, pTextureMode, pScaleSlice );
+    }
+    
+    /** How many slices are needed? */
+    @Override
+    protected int resolveSliceCount(
+    	int			pAxisSamples
+    ,	boolean		pIsClosed
+    ) {
+		// Even though the north/south poles are a single point, we need to 
+		// generate different textures and normals for the two EXTRA end slices if closed
+    	int sliceCount = (pIsClosed) ? pAxisSamples + 2 : pAxisSamples;
+    	return( sliceCount );
     }
 
 }
