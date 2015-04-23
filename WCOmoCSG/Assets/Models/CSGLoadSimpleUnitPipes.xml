@@ -74,7 +74,7 @@
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-15.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='15' twist='PI/2' scaleSliceY='0.5' smoothSurface='false'>
+            		axisSamples='15' twist='PI/2' scaleSliceY='0.5' smoothSurface='true'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
             		<controlPoints>
 	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
@@ -101,6 +101,23 @@
 	            </slicePath>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
+        <com.jme3.scene.Geometry name='Box8'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-21.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='15' radialSamples='4' firstRadial='PI/4' smoothSurface='false'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+            </mesh>
+        </com.jme3.scene.Geometry>
 
         <!-- Wireframe -->
         <com.jme3.scene.Geometry name='Box1'
@@ -195,7 +212,7 @@
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-15.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='15' twist='PI/2' scaleSliceY='0.5' smoothSurface='false'>
+            		axisSamples='15' twist='PI/2' scaleSliceY='0.5' smoothSurface='true'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
             		<controlPoints>
 	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
@@ -222,6 +239,23 @@
 	            </slicePath>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
+        <com.jme3.scene.Geometry name='Box8'
+        		materialName='Textures/Debug/Wireframe.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-21.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='15' radialSamples='4' firstRadial='PI/4' smoothSurface='false'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+            </mesh>
+        </com.jme3.scene.Geometry>
 
         <!-- Brickwall -->
         <com.jme3.scene.Geometry name='Box1'
@@ -293,7 +327,7 @@
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-15.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='15' twist='PI/2' scaleSliceY='0.5' smoothSurface='false'>
+            		axisSamples='15' twist='PI/2' scaleSliceY='0.5' smoothSurface='true'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
             		<controlPoints>
 	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
@@ -320,6 +354,23 @@
 	            </slicePath>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
+        <com.jme3.scene.Geometry name='Box8'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-21.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='15' radialSamples='4' firstRadial='PI/4' smoothSurface='false'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+            </mesh>
+       </com.jme3.scene.Geometry>
         
    		<!-- Rock1 -->
         <com.jme3.scene.Geometry name='Box1'

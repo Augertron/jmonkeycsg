@@ -561,9 +561,6 @@ public abstract class CSGRadial
         // Account for the actual radius
         pUseVector.multLocal( pContext.mSliceRadius );
         
-        // Account for the center
-        pUseVector.addLocal( pContext.mSliceCenter );
-        
         // Apply scaling
         if ( mScaleSlice != null ) {
         	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
@@ -572,6 +569,9 @@ public abstract class CSGRadial
     	if ( pContext.mSliceRotator != null ) {
     		pContext.mSliceRotator.multLocal( pUseVector );
     	}
+        // Account for the center
+        pUseVector.addLocal( pContext.mSliceCenter );
+        
         return( pUseVector );
     }
     

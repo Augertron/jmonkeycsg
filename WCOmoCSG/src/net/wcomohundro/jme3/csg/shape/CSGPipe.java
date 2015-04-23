@@ -144,7 +144,21 @@ public class CSGPipe
     	super.updateGeometryProlog();   	
     }
     
-    /** OVERRIDE: apply any 'smoothing' needed on the surface, trying to eliminate crumples */
+    /** OVERRIDE: apply any 'smoothing' needed on the surface, trying to eliminate crumples.
+     		We do this by walking through all the 'position' points on every slice. We look
+     		to see if any given point is on the wrong side of the 'plane' of the previous
+     		slice.  This means that the point is poking through the previous slice, which
+     		then looks like crumple on the surface.
+     		
+     		If we find such a point, then we do not use that point, but rather the
+     		corresponding point on the prior slice.  This ensures that nothing sticks through.
+     		
+     		@todo - look into a better solution than just using the point from the prior slice,
+     				since this is likely to give us some flat triangles.  I have experimented
+     				with using the point on the prior slice that is a projection of the real
+     				point on the prior slice plane, but either my projection calculation is
+     				incorrect, or it just doesn't look that good.
+      */
     @Override
     protected void smoothSurface(
         CSGRadialContext	pContext
@@ -260,6 +274,9 @@ if ( true ) {
      	This is done by 'marking' that slice with the index of the plane it collided with.
      	That way, if B overlaps with A, a check of C against B will know to also check
      	C against A.
+     	
+     	@return - null if there is no overlap, otherwise return the plane that has
+     			  the overlap (typically pBasePlane, but possibly something deeper)
      */
     protected CSGPlane checkPointOverlap(
         CSGPipeContext 	pContext
@@ -387,15 +404,6 @@ if ( true ) {
         // Account for the actual radius
         pUseVector.multLocal( pContext.mSliceRadius );
         
-    	// Apply any rotation required by the underlying spline
-    	if ( myContext.mSliceSplineRotation != null ) {
-    		// Remember that we are building the unit circle around the center point, 
-    		// so apply the 'curve' before we adjust the center
-    		myContext.mSliceSplineRotation.multLocal( pUseVector );
-    	}
-        // Account for the actual center
-        pUseVector.addLocal( pContext.mSliceCenter );
-
         // Apply scaling
         if ( mScaleSlice != null ) {
         	pUseVector.multLocal( mScaleSlice.x, mScaleSlice.y, 1.0f );
@@ -404,6 +412,15 @@ if ( true ) {
     	if ( pContext.mSliceRotator != null ) {
     		pContext.mSliceRotator.multLocal( pUseVector );
     	}
+    	// Apply any rotation required by the underlying spline
+		// Remember that we are building the unit circle around the center point, 
+		// so apply the 'curve' before we adjust the center, but after any scaling
+    	if ( myContext.mSliceSplineRotation != null ) {
+    		myContext.mSliceSplineRotation.multLocal( pUseVector );
+    	}
+        // Account for the actual center
+        pUseVector.addLocal( pContext.mSliceCenter );
+
 	    return( pUseVector );
     }
     
