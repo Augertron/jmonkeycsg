@@ -640,57 +640,17 @@ public abstract class CSGRadial
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
         mRadialSamples = inCapsule.readInt( "radialSamples", mRadialSamples );
-        mFirstRadial = readPiValue( inCapsule, "firstRadial", 0 );
+        mFirstRadial = ConstructiveSolidGeometry.readPiValue( inCapsule, "firstRadial", 0 );
         mRadius = inCapsule.readFloat( "radius", mRadius );
         
-        float scaleX = readPiValue( inCapsule, "scaleSliceX", 1.0f );
-        float scaleY = readPiValue( inCapsule, "scaleSliceY", 1.0f );
+        float scaleX = ConstructiveSolidGeometry.readPiValue( inCapsule, "scaleSliceX", 1.0f );
+        float scaleY = ConstructiveSolidGeometry.readPiValue( inCapsule, "scaleSliceY", 1.0f );
         if ( (scaleX != 1.0f) || (scaleY != 1.0f) ) {
         	mScaleSlice = new Vector2f( scaleX, scaleY );
         }
-        mRotateSlices = readPiValue( inCapsule, "twist", 0 );
+        mRotateSlices = ConstructiveSolidGeometry.readPiValue( inCapsule, "twist", 0 );
     }
     
-    /** Service routine to interpret a Savable.read() float value that can take the form
-     		xxxPI/yyy
-     	that supports fractional values of PI
-     */
-    protected float readPiValue(
-    	InputCapsule	pCapsule
-    ,	String			pValueName
-    ,	float			pDefaultValue
-    ) throws IOException {
-    	float aFloatValue = pDefaultValue;
-    	
-    	// Read the value as a string so we can test for "PI"
-        String piText = pCapsule.readString( pValueName, null );
-        if ( piText != null ) {
-        	// Something explicitly given, figure out what
-        	piText = piText.toUpperCase();
-        	int index = piText.indexOf( "PI" );
-        	if ( index >= 0 ) {
-        		// Decipher things like 3PI/4
-        		int numenator = 1;
-        		int denominator = 1;
-        		if ( index > 0 ) {
-        			// Some integer multiplier of PI
-        			numenator = Integer.parseInt( piText.substring( 0, index ) );
-        		}
-        		index += 2;
-        		if ( (index < piText.length() -1) 
-        		&& (piText.charAt( index++ ) == '/') ) {
-        			// Some integer divisor of PI
-        			denominator = Integer.parseInt( piText.substring( index ) );
-        		}
-        		aFloatValue = ((float)numenator * FastMath.PI) / (float)denominator;
-        	} else {
-        		// If not PI, then its just a float
-        		aFloatValue = Float.parseFloat( piText );
-        	}
-        }
-    	return( aFloatValue );
-    }
-       
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(

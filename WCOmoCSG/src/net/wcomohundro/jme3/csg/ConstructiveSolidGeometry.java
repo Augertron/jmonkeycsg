@@ -30,6 +30,11 @@
 **/
 package net.wcomohundro.jme3.csg;
 
+import java.io.IOException;
+
+import com.jme3.export.InputCapsule;
+import com.jme3.math.FastMath;
+
 /** Constructive solid geometry (CSG) (formerly called computational binary solid geometry) is a 
  	technique used in 3D solid modeling. Constructive solid geometry allows a modeler to create 
  	a complex surface or object by using Boolean operators to combine objects. Often CSG presents 
@@ -123,6 +128,46 @@ public interface ConstructiveSolidGeometry
 	,	SKIP
 	}
 	
+    /** Service routine to interpret a Savable.read() float value that can take the form
+			xxxPI/yyy
+		that supports fractional values of PI
+	*/
+	public static float readPiValue(
+		InputCapsule	pCapsule
+	,	String			pValueName
+	,	float			pDefaultValue
+	) throws IOException {
+		float aFloatValue = pDefaultValue;
+		
+		// Read the value as a string so we can test for "PI"
+		String piText = pCapsule.readString( pValueName, null );
+		if ( piText != null ) {
+			// Something explicitly given, figure out what
+			piText = piText.toUpperCase();
+			int index = piText.indexOf( "PI" );
+			if ( index >= 0 ) {
+				// Decipher things like 3PI/4
+				int numenator = 1;
+				int denominator = 1;
+				if ( index > 0 ) {
+					// Some integer multiplier of PI
+					numenator = Integer.parseInt( piText.substring( 0, index ) );
+				}
+				index += 2;
+				if ( (index < piText.length() -1) 
+				&& (piText.charAt( index++ ) == '/') ) {
+					// Some integer divisor of PI
+					denominator = Integer.parseInt( piText.substring( index ) );
+				}
+				aFloatValue = ((float)numenator * FastMath.PI) / (float)denominator;
+			} else {
+				// If not PI, then its just a float
+				aFloatValue = Float.parseFloat( piText );
+			}
+		}
+		return( aFloatValue );
+	}
+
 	/** Version tracking support 
 	 	(I plan to roll these numbers manually when something interesting happens) */
 	public static final int sCSGVersionMajor = 0;

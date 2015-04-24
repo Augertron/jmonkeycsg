@@ -24,6 +24,8 @@
 **/
 package net.wcomohundro.jme3.csg.shape;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +36,7 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Spline;
 import com.jme3.math.Spline.SplineType;
@@ -41,18 +44,48 @@ import com.jme3.math.Spline.SplineType;
 /** Define a helper class that can construct a Spline for us, especially from .xml Savable files.
  	It also understands how to interact with a Spline to produce a set of points along the given 
  	spline.
+ 	The CSGSplineGenerator eliminates the need to alter the core jme3 Spline code to produce
+ 	itself from Savable settings.  Instead, this class produces the desired Spline.
+ 	
+ 	This class also understands producing a circular arc from a radius and radians amount.
+ 	This eliminates the need to figure out what a circle looks like in terms of Spline control points.
+ 	
+ 	Configuration Settings:
+ 		cycle -			true/false if the Spline closes back onto its starting point
+ 		
+ 	--- to generate a spline ---
+ 		controlPoints -	a List of Vector3f control points, appropriate to the type of Spline
+ 		
+ 		type -			what kind of Spline to produce, as defined by SplineType
+ 		
+ 		curveTension -	the Spline tension to apply
+ 		
+	--- to generate a circular arc ---
+		radius -		the circle's radius
+		
+		arc -			count of radians the arc is to span (such as 'PI/2' for a quarter circle)
  */
 public class CSGSplineGenerator
-	implements Savable
+	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGSplineGeneratorRevision="$Rev$";
+	public static final String sCSGSplineGeneratorDate="$Date$";
+
+	/** Define a 'tolerance' for when a point approaches zero or a given limit */
+	public static final float EPSILON = (float)1e-7;
+
 	/** The Spline */
 	protected Spline			mSpline;
 	/** Explicit set of curve points (rather than working off of a spline) */
 	protected List<Vector3f>	mPointList;
 	/** The lengths of the various segments */
 	protected List<Float>		mSegmentLengths;
-
 	
+	/** Circular arc: radius and span */
+	protected float				mArcRadius;
+	protected float				mArcRadians;
+
 	
 	/** Null constructor */
 	public CSGSplineGenerator(
@@ -119,15 +152,22 @@ public class CSGSplineGenerator
 	public List<Float> getSegmentLengths() { return mSegmentLengths; }
 	public int getSegmentCount(
 	) {
-		return( mSegmentLengths.size() );
+		return( (mSegmentLengths == null) ? 1 : mSegmentLengths.size() );
 	}
 	
 	/** What is the length of all the segments */
 	public float getTotalLength(
 	) {
 		float aDistance = 0.0f;
-		for( Float aValue : mSegmentLengths ) {
-			aDistance += aValue.floatValue();
+		
+		if ( mSegmentLengths != null ) {
+			// Believe the segments provided by the Spline
+			for( Float aValue : mSegmentLengths ) {
+				aDistance += aValue.floatValue();
+			}
+		} else {
+			// The length of the circular arc
+			aDistance = mArcRadius * mArcRadians;
 		}
 		return( aDistance );
 	}
@@ -141,15 +181,22 @@ public class CSGSplineGenerator
 	 */
 	public List<Vector3f> interpolate(
 		int			pSampleCount
+	,	float		pLimit
 	) {
 		if ( mSpline == null ) {
-			if ( pSampleCount == mPointList.size() ) {
-				// Just use the explicit list we have
-				return( mPointList );
+			if ( mPointList == null ) {
+				// We must be generating a circular arc
+				return( generateArc( pSampleCount, mArcRadius, mArcRadians ) );
+			} else {
+				// Use the explicit point list
+				if ( pSampleCount == mPointList.size() ) {
+					// Just use the explicit list we have
+					return( mPointList );
+				}
+				// Let a linear spline do the work for us
+				mSpline = new Spline( SplineType.Linear, mPointList, 0, false );
+				mSegmentLengths = mSpline.getSegmentsLength();
 			}
-			// Let a linear spline do the work for us
-			mSpline = new Spline( SplineType.Linear, mPointList, 0, false );
-			mSegmentLengths = mSpline.getSegmentsLength();
 		}
 		// The control points within the spline are defined differently for the different types
 		List<Vector3f> pointList = new ArrayList( pSampleCount );
@@ -233,17 +280,63 @@ public class CSGSplineGenerator
     			float percentWithinSegment = 0.0f;
     			if ( j > 0 ) percentWithinSegment = (float)j / (float)thisSegmentSamples;
     			Vector3f centerPoint = mSpline.interpolate( percentWithinSegment, pointIdx, null );
-    			pointList.add( centerPoint );
+    			pointList.add( standardizePoint( centerPoint, pLimit ) );
     		}
     		if ( i == segmentCount ) {
     	    	// The last sample comes from the final control point (100% from the current to the next)
     			Vector3f centerPoint = mSpline.interpolate( 1.0f, pointIdx, null );
-    			pointList.add( centerPoint );   			
+    			pointList.add( standardizePoint( centerPoint, pLimit ) );   			
     		}
     	}
     	return( pointList );
 	}
 	
+	/** Service routine to 'standardize' a point accounting for values close to zero or a limit */
+	protected Vector3f standardizePoint(
+		Vector3f	pPoint
+	,	float		pLimit
+	) {
+		if ( (pPoint.x > -EPSILON) && (pPoint.x < EPSILON) ) pPoint.x = 0.0f;
+		if ( (pPoint.y > -EPSILON) && (pPoint.y < EPSILON) ) pPoint.y = 0.0f;
+		if ( (pPoint.z > -EPSILON) && (pPoint.z < EPSILON) ) pPoint.z = 0.0f;
+		
+		if ( pLimit > EPSILON ) {
+			float xDistance = pLimit - Math.abs( pPoint.x );
+			float yDistance = pLimit - Math.abs( pPoint.y );
+			float zDistance = pLimit - Math.abs( pPoint.z );
+			if ( (xDistance > -EPSILON) && (xDistance < EPSILON) ) pPoint.x = (pPoint.x < 0) ? -pLimit : pLimit;
+			if ( (yDistance > -EPSILON) && (yDistance < EPSILON) ) pPoint.y = (pPoint.y < 0) ? -pLimit : pLimit;
+			if ( (zDistance > -EPSILON) && (zDistance < EPSILON) ) pPoint.z = (pPoint.z < 0) ? -pLimit : pLimit;
+		}	
+		return( pPoint );
+	}
+	
+	/** Service routine to generate an arc of given radius and span */
+	protected List<Vector3f> generateArc(
+		int			pRadialSamples
+	,	float		pRadius
+	,	float		pRadians
+	) {
+		// Generate a circle of the given radius, in the x/z plane, starting from (0,0,radius)
+		List<Vector3f> pointList = new ArrayList( pRadialSamples );
+		
+        float inverseRadialSamples = 1.0f / (pRadialSamples -1);
+		
+		// Generate the coordinate values for each radial point
+        for( int iRadial = 0, lastRadial = pRadialSamples -1; iRadial < pRadialSamples; iRadial += 1 ) {
+            float anAngle = (iRadial == lastRadial) ? pRadians : pRadians * inverseRadialSamples * iRadial;
+            if ( anAngle > FastMath.TWO_PI ) anAngle -= FastMath.TWO_PI;
+            
+    		float aCosine = FastMath.cos( anAngle );
+            float aSine = FastMath.sin( anAngle );
+            
+            // The point just follows the sine wave
+            Vector3f aPoint = new Vector3f( aSine, 0, aCosine );
+            aPoint.multLocal( pRadius );
+            pointList.add( standardizePoint( aPoint, pRadius ) );
+        }
+		return( pointList );
+	}
 	
 	/** Implement minimal Savable */
     @Override
@@ -251,10 +344,17 @@ public class CSGSplineGenerator
     	JmeExporter		pExporter
     ) throws IOException {
         OutputCapsule outCapsule = pExporter.getCapsule( this );
-        outCapsule.writeSavableArrayList( (ArrayList)mSpline.getControlPoints(), "controlPoints", null );
-        outCapsule.write( mSpline.getType(), "type", SplineType.Linear );
-        outCapsule.write( mSpline.getCurveTension(), "curveTension", 0.5f );
-        outCapsule.write( mSpline.isCycle(), "cycle", false );
+        if ( mSpline != null ) {
+	        outCapsule.writeSavableArrayList( (ArrayList)mSpline.getControlPoints(), "controlPoints", null );
+	        outCapsule.write( mSpline.getType(), "type", SplineType.Linear );
+	        outCapsule.write( mSpline.getCurveTension(), "curveTension", 0.5f );
+	        outCapsule.write( mSpline.isCycle(), "cycle", false );
+        } else if ( mPointList != null ) {
+	        outCapsule.writeSavableArrayList( (ArrayList)mPointList, "controlPoints", null );        	
+        } else {
+        	outCapsule.write( mArcRadius, "radius", 1.0f );
+        	outCapsule.write( mArcRadians, "arc", FastMath.HALF_PI );
+        }
     }
 
     @Override
@@ -265,11 +365,16 @@ public class CSGSplineGenerator
 
         List<Vector3f> controlPoints = (ArrayList<Vector3f>)in.readSavableArrayList( "controlPoints", null );
         SplineType aType = in.readEnum( "type", SplineType.class, SplineType.Linear );
-        float curveTension = in.readFloat ("curveTension", 0.5f );
+        float curveTension = in.readFloat( "curveTension", 0.5f );
         boolean doCycle = in.readBoolean( "cycle", false );
         
         // Build the spline
-        if ( aType == SplineType.Linear ) {
+        if ( controlPoints == null ) {
+        	// If given no control points, then assume we are working on a circular arc
+            mArcRadius = in.readFloat( "radius", 1.0f );
+            mArcRadians = ConstructiveSolidGeometry.readPiValue( in, "arc", FastMath.HALF_PI );
+        	
+        } else if ( aType == SplineType.Linear ) {
         	// A spline is not needed for linear, all we want is the given set of points
         	setPointList( controlPoints );
         } else {
@@ -277,5 +382,16 @@ public class CSGSplineGenerator
         	setSpline( new Spline( aType, controlPoints, curveTension, doCycle ) );
         }
     }
+
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+													, sCSGSplineGeneratorRevision
+													, sCSGSplineGeneratorDate
+													, pBuffer ) );
+	}
 
 }

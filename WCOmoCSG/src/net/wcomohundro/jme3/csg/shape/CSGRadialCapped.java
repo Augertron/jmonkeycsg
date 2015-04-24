@@ -311,7 +311,7 @@ public abstract class CSGRadialCapped
     ,	int					pSurface
     ) {
     	// By default, the center is in the center on the zAxis
-    	pUseVector.set( pContext.mSliceCenter.x, pContext.mSliceCenter.y, pSurface * (mInverted ? -1 : 1));
+    	pUseVector.set( 0, 0, pSurface * (mInverted ? -1 : 1));
     	return( pUseVector );
     }
     

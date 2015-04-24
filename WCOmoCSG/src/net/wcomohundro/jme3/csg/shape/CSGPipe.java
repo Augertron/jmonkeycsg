@@ -63,9 +63,22 @@ import net.wcomohundro.jme3.csg.CSGPlane;
  	
  	The result is a set of slices where each slice is perpendicular to the curve at
  	its center point.
+ 	
  	Of course, if you twist the curve too tightly, then the slices can bunch up and 
  	give you an unpleasant shape.  But gentle curves with an appropriate number of 
- 	slices can produce pipes of reasonable appearance.
+ 	slices can produce pipes of reasonable appearance. The smoothSurface option
+ 	attempts to smooth out such crumples, but it can only do so much (as a significant
+ 	processing cost when generating the mesh)
+ 	
+ 	Configuration Settings:
+ 		slicePath - 		an instance of CSGSplineGenerator that defines the path to follow.
+ 		
+ 		perpendicularEnds - true/false if the end caps should be forced parallel/perpendicular
+ 							to every axis. This is handy for a path like a quarter of a circle.
+ 							
+ 		smoothSurface -		true/false if smoothing should be applied to the final surface, 
+ 							eliminating slices that may poke through other slices
+
  */
 public class CSGPipe 
 	extends CSGRadialCapped
@@ -499,11 +512,8 @@ if ( true ) {
     	CSGPipeContext myContext = (CSGPipeContext)pContext;
 
     	// Start with the center with the z normalized to match the surface
-    	pUseVector.set( pContext.mSliceCenter.x, pContext.mSliceCenter.y, pSurface );
-    	if ( mInverted ) {
-    		// Invert the normal
-    		pUseVector.multLocal( -1 );
-    	}
+    	pUseVector = super.getCenterNormal( pUseVector, pContext, pSurface );
+    	
     	// Apply any rotation required by the underlying spline
     	if ( myContext.mSliceSplineRotation != null ) {
     		myContext.mSliceSplineRotation.multLocal( pUseVector );
@@ -515,7 +525,9 @@ if ( true ) {
     protected List<Vector3f> computeCenters(
     ) {
     	// We need a center point for every sample taken along the zAxis
-    	List<Vector3f> centerList = mSlicePath.interpolate( this.mAxisSamples );
+    	// (and note that we treat anything around the mRadius value as a 'limit', truncating
+    	//  the point back to the limit if it is rather close)
+    	List<Vector3f> centerList = mSlicePath.interpolate( this.mAxisSamples, this.mRadius );
     	return( centerList );
     }
     
