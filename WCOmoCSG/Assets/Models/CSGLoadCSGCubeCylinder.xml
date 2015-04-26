@@ -9,10 +9,10 @@
     </lights>
 	<children/>
     <assetLoaderKeyList>
-    	<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeCylinderA.xml'/>
-    	<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeCylinderB.xml'/>  
-    	<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeCylinderC.xml'/>
-    	<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeCylinderD.xml'/>
-   		<com.jme3.asset.FilterKey name='Models/CSGLoadCSGCubeCylinderE.xml'/>
+    	<com.jme3.asset.NonCachingKey name='Models/CSGLoadCSGCubeCylinderA.xml'/>
+    	<com.jme3.asset.NonCachingKey name='Models/CSGLoadCSGCubeCylinderB.xml'/>  
+    	<com.jme3.asset.NonCachingKey name='Models/CSGLoadCSGCubeCylinderC.xml'/>
+    	<com.jme3.asset.NonCachingKey name='Models/CSGLoadCSGCubeCylinderD.xml'/>
+   		<com.jme3.asset.NonCachingKey name='Models/CSGLoadCSGCubeCylinderE.xml'/>
      </assetLoaderKeyList>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

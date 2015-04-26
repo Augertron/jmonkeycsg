@@ -88,6 +88,14 @@ public class CSGPipe
 	public static final String sCSGPipeRevision="$Rev$";
 	public static final String sCSGPipeDate="$Date$";
 
+	/** An exact 180deg rotation will occur with a slice normal of (0,0,-1) */
+	public static final Vector3f UNIT_NEGZ = new Vector3f( 0, 0, -1 );
+	public static final Quaternion ROTATE_180 = new Quaternion();
+	static {
+		ROTATE_180.fromAngleNormalAxis( FastMath.PI, Vector3f.UNIT_Y );
+	}
+
+	
 	/** The splice that determines the positioning of the various slices */
 	protected CSGSplineGenerator	mSlicePath;
 	/** Control flag to force 'perpendicular' endcaps */
@@ -582,7 +590,11 @@ if ( true ) {
     		}
     	}
     	// Each slice is defined in the x/y plane.  See if it has stayed there
-    	if ( !Vector3f.UNIT_Z.equals( pSliceNormal ) ) {
+    	if ( UNIT_NEGZ.equals( pSliceNormal ) ) {
+    		// 180deg rotation required
+    		sliceRotation = ROTATE_180;
+
+    	} else if ( !Vector3f.UNIT_Z.equals( pSliceNormal ) ) {
     		// We must apply a rotation to the slice to match the spline
 if ( false ) {
     	    float cos_theta = Vector3f.UNIT_Z.dot( pSliceNormal );
@@ -598,7 +610,8 @@ if ( false ) {
     return quat::fromaxisangle(angle, w);
  */
     	    
-if ( true ) {	// Looks like the following gets you the same results as above with fewer calculations....
+if ( true ) {	// Looks like the following gets you the same results as above with fewer calculations
+				// BUT YOU MUST DEAL WITH THE 180 degree PROBLEM (which occurs on 3/4 circle)
     		float real_part = 1.0f + Vector3f.UNIT_Z.dot( pSliceNormal );
     		Vector3f aVector = Vector3f.UNIT_Z.cross( pSliceNormal );
     		sliceRotation = new Quaternion( aVector.x, aVector.y, aVector.z, real_part );

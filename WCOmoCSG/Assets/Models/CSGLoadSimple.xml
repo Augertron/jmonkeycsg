@@ -9,8 +9,9 @@
     </lights>
 	<children/>
     <assetLoaderKeyList>
-   		<com.jme3.asset.FilterKey name='Models/CSGLoadSimpleBoxes.xml'/>
-   		<com.jme3.asset.FilterKey name='Models/CSGLoadSimpleCylinders.xml'/>
-   		<com.jme3.asset.FilterKey name='Models/CSGLoadSimpleSpheres.xml'/>
+   		<com.jme3.asset.NonCachingKey name='Models/CSGLoadSimpleBoxes.xml'/>
+   		<com.jme3.asset.NonCachingKey name='Models/CSGLoadSimpleCylinders.xml'/>
+   		<com.jme3.asset.NonCachingKey name='Models/CSGLoadSimpleSpheres.xml'/>
+   		<com.jme3.asset.NonCachingKey name='Models/CSGLoadSimplePipes.xml'/>
      </assetLoaderKeyList>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

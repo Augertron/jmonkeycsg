@@ -71,8 +71,6 @@ public class CSGLinkNode
 				}
 			}
 		}
-
-		
     }
 	/////// Implement ConstructiveSolidGeometry
 	@Override
