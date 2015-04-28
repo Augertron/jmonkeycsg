@@ -300,6 +300,7 @@ public class CSGSplineGenerator
 		if ( (pPoint.y > -EPSILON) && (pPoint.y < EPSILON) ) pPoint.y = 0.0f;
 		if ( (pPoint.z > -EPSILON) && (pPoint.z < EPSILON) ) pPoint.z = 0.0f;
 		
+/*** 28April2015 - I am waffling about whether the following does anything usefull or not -- for not, NOT
 		if ( pLimit > EPSILON ) {
 			float xDistance = pLimit - Math.abs( pPoint.x );
 			float yDistance = pLimit - Math.abs( pPoint.y );
@@ -307,7 +308,8 @@ public class CSGSplineGenerator
 			if ( (xDistance > -EPSILON) && (xDistance < EPSILON) ) pPoint.x = (pPoint.x < 0) ? -pLimit : pLimit;
 			if ( (yDistance > -EPSILON) && (yDistance < EPSILON) ) pPoint.y = (pPoint.y < 0) ? -pLimit : pLimit;
 			if ( (zDistance > -EPSILON) && (zDistance < EPSILON) ) pPoint.z = (pPoint.z < 0) ? -pLimit : pLimit;
-		}	
+		}
+***/
 		return( pPoint );
 	}
 	

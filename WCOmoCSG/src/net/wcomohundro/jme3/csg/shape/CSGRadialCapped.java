@@ -52,6 +52,12 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	2)	Uniformly varying slice radius (ie, front/back radii that apply to the end caps)
  	
  	Subclasses are expected to determine the placement of the slices
+ 	
+ 	 Configuration Settings:
+ 		radius2 - 		radius that applies to the back endcap
+ 		
+ 		textureMode -	how to apply the texture to the surfaces
+
  */
 public abstract class CSGRadialCapped 
 	extends CSGRadial

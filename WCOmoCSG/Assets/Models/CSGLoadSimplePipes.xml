@@ -61,7 +61,7 @@
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-22.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='30' perpendicularEnds='true'>
+            		axisSamples='30' pipeEnds='PERPENDICULAR'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='PI'/>
                 <scaleFaces>
                 	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
@@ -75,7 +75,7 @@
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-30.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='45' radialSamples='4' firstRadial='PI/4' perpendicularEnds='true' smoothSurface='false'>
+            		axisSamples='45' radialSamples='4' firstRadial='PI/4' pipeEnds='PERPENDICULAR' smoothSurface='false'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='3PI/2' />
                 <scaleFaces>
                 	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
@@ -140,7 +140,7 @@
                 <translation class='com.jme3.math.Vector3f' x='5.0' y='0.0' z='-22.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='30' perpendicularEnds='true'>
+            		axisSamples='30' pipeEnds='PERPENDICULAR'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='PI'/>
                 <scaleFaces>
                 	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
@@ -154,7 +154,7 @@
                 <translation class='com.jme3.math.Vector3f' x='5.0' y='0.0' z='-30.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='45' radialSamples='4' firstRadial='PI/4' perpendicularEnds='true' smoothSurface='false'>
+            		axisSamples='45' radialSamples='4' firstRadial='PI/4' pipeEnds='PERPENDICULAR' smoothSurface='false'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='3PI/2' />
                 <scaleFaces>
                 	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
@@ -225,7 +225,7 @@
                 <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0' z='-22.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='30' perpendicularEnds='true'>
+            		axisSamples='30' pipeEnds='PERPENDICULAR'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='PI'/>
                 <scaleFaces>
                 	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
@@ -239,7 +239,7 @@
                 <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0' z='-30.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='45' radialSamples='4' firstRadial='PI/4' perpendicularEnds='true' smoothSurface='false'>
+            		axisSamples='45' radialSamples='4' firstRadial='PI/4' pipeEnds='PERPENDICULAR' smoothSurface='false'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='3PI/2' />
                 <scaleFaces>
                 	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>

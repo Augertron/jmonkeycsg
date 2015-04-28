@@ -73,8 +73,11 @@ import net.wcomohundro.jme3.csg.CSGPlane;
  	Configuration Settings:
  		slicePath - 		an instance of CSGSplineGenerator that defines the path to follow.
  		
- 		perpendicularEnds - true/false if the end caps should be forced parallel/perpendicular
- 							to every axis. This is handy for a path like a quarter of a circle.
+ 		pipeEnds - 			adjust the slice-normal orientation of the end slices:
+ 							STANDARD - normal orientation based on the last point of the curve
+ 							PERPENDICULAR - force parallel/perpendicular to the xyz axes
+ 							PERPENDICULAR45 - force parallel/perpendicular/45deg to the xyz axes
+ 							CROPPED - ignore the curve end points EXCEPT to influence the slice-normal
  							
  		smoothSurface -		true/false if smoothing should be applied to the final surface, 
  							eliminating slices that may poke through other slices
@@ -94,12 +97,20 @@ public class CSGPipe
 	static {
 		ROTATE_180.fromAngleNormalAxis( FastMath.PI, Vector3f.UNIT_Y );
 	}
+	
+	/** Variations of how the pipe ends are treated */
+	public enum PipeEnds { 
+		STANDARD			// End slice is generated 'normally', perpendicular to the last point of the curve
+	, 	PERPENDICULAR		// End slice is generated perpendicular to the x/y/z axes
+	,	PERPENDICULAR45		// End slice is generated perpendicular/40degree to the x/y/z axes
+	, 	CROPPED 			// Curve end points do NOT produce a slice, they only influence the last slice normal
+	}
 
 	
 	/** The splice that determines the positioning of the various slices */
 	protected CSGSplineGenerator	mSlicePath;
-	/** Control flag to force 'perpendicular' endcaps */
-	protected boolean				mPerpendicularEnds;
+	/** Control flag to force special processing on the ending slices */
+	protected PipeEnds				mPipeEnds;
 	/** Control flag to apply smoothing */
 	protected boolean				mSmoothSurface;
 	
@@ -352,9 +363,6 @@ if ( true ) {
     	
     	// And remember the curve itself could require more AxisSamples than what was requested
 		List<Vector3f> centerList = computeCenters();
-		if ( centerList.size() > mAxisSamples ) {
-			mAxisSamples = centerList.size();
-		}
     	CSGPipeContext aContext 
     		= new CSGPipeContext( mAxisSamples, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
     	aContext.mCenterList = centerList;
@@ -387,13 +395,19 @@ if ( true ) {
     	}
     	// Return the center point as defined on the spline
     	// NOTE that mZOffset runs from back to front, but we computed the centers front to back
+    	int firstIndex = 0;
     	int lastIndex = myContext.mCenterList.size() -1;
+    	if ( this.mPipeEnds == PipeEnds.CROPPED ) {
+    		// The end points of the curve are cropped off and are NOT true centers
+    		firstIndex += 1;
+    		lastIndex -= 1;
+    	}
     	if ( pSurface < 0 ) {
     		// Back face, which shares the last point
     		pUseVector.set( myContext.mCenterList.get( lastIndex ) );
     	} else if ( pSurface > 0 ) {
     		// Front face, which shares the first point
-    		pUseVector.set( myContext.mCenterList.get( 0 ) );
+    		pUseVector.set( myContext.mCenterList.get( firstIndex ) );
     	} else {
     		// Along the surface of the pipe (where mZOffset acts like a simple counter)
     		pUseVector.set( myContext.mCenterList.get( lastIndex - pContext.mZOffset ) );
@@ -533,9 +547,24 @@ if ( true ) {
     protected List<Vector3f> computeCenters(
     ) {
     	// We need a center point for every sample taken along the zAxis
-    	// (and note that we treat anything around the mRadius value as a 'limit', truncating
-    	//  the point back to the limit if it is rather close)
-    	List<Vector3f> centerList = mSlicePath.interpolate( this.mAxisSamples, this.mRadius );
+    	// If the ends are CROPPED, then we need 2 extra points
+    	int sampleCount = this.mAxisSamples;
+    	if ( this.mPipeEnds == PipeEnds.CROPPED ) {
+    		// We will NOT be generating a slice for these extra points, but they will
+    		// influence the sliceNormal of the end caps
+    		sampleCount += 2;
+    	}
+    	List<Vector3f> centerList = mSlicePath.interpolate( sampleCount, 0 ); // Limit not active: , this.mRadius );
+
+    	// Account for possibility that the curve (based on its count of segments) requires 
+    	// more samples than we asked for
+    	if ( centerList.size() > sampleCount ) {
+			mAxisSamples = centerList.size();
+			if ( this.mPipeEnds == PipeEnds.CROPPED ) {
+				// The CROPPED end caps do not count
+				mAxisSamples -= 2;
+			}
+		}
     	return( centerList );
     }
     
@@ -547,7 +576,13 @@ if ( true ) {
     ,	CSGPipeContext 		pContext
     ,	int					pSurface
     ) {
+    	int firstIndex = 0;
     	int lastIndex = pContext.mCenterList.size() -1;
+    	if ( this.mPipeEnds == PipeEnds.CROPPED ) {
+    		// The ends of the curve only influence the sliceNormal, they do not produce slices
+    		firstIndex += 1;
+    		lastIndex -= 1;
+    	}
 		Vector3f thisCenter, priorCenter = null, nextCenter = null;
 		Quaternion sliceRotation = null;
 		
@@ -557,7 +592,7 @@ if ( true ) {
     		centerIndex = lastIndex;
     	} else if ( pSurface > 0 ) {
     		// Front face, which shares the first point
-    		centerIndex = 0;
+    		centerIndex = firstIndex;
     	} else {
     		// Along the surface of the pipe 
     		// (where mZOffset acts like a simple counter, but from back to front)
@@ -567,7 +602,7 @@ if ( true ) {
     	if ( centerIndex > 0 ) {
         	priorCenter =  pContext.mCenterList.get( centerIndex -1 );        			
     	}
-    	if ( centerIndex < lastIndex ) {
+    	if ( centerIndex < pContext.mCenterList.size() -1 ) {
         	nextCenter = pContext.mCenterList.get( centerIndex + 1 );	
     	}
     	if ( priorCenter == null ) {
@@ -577,14 +612,14 @@ if ( true ) {
     		// Must be at the back, so track from THIS back to PRIOR
        		normalizeEndSlice( pSliceNormal.set( priorCenter ).subtractLocal( thisCenter ) );
     	} else {
-    		// We may need a blend 
+    		// We may need a blend across the given 3 points
     		pSliceNormal.set( priorCenter ).subtractLocal( thisCenter ).normalizeLocal();
     		Vector3f otherNormal = nextCenter.clone().subtractLocal( thisCenter ).normalizeLocal();
     		
     		// Aligned normals will be 180 degrees / PI radians apart
     		float angleBetween = pSliceNormal.angleBetween( otherNormal );
     		angleBetween -= FastMath.PI;
-    		if ( (angleBetween > 0.001f) || (angleBetween < -0.001f) ) {
+    		if ( (angleBetween > 0.0001f) || (angleBetween < -0.0001f) ) {
     			// The normals are not in line, so we need some kind of blend
     			pSliceNormal.subtractLocal( otherNormal ).normalizeLocal();
     		}
@@ -659,11 +694,30 @@ if ( true ) {	// Looks like the following gets you the same results as above wit
     ) {
     	pEndCapNormal.normalizeLocal();
     	
-    	if ( mPerpendicularEnds ) {
-    		// Force this normal to the nearest perpendicular
-    		pEndCapNormal.set( (float)Math.round( pEndCapNormal.x )
-    						,	(float)Math.round( pEndCapNormal.y )
-    						,	(float)Math.round( pEndCapNormal.z ) );
+    	switch( mPipeEnds ) {
+    		case PERPENDICULAR:
+	    		// Force this normal to the nearest perpendicular
+	    		pEndCapNormal.set( (float)Math.round( pEndCapNormal.x )
+	    						,	(float)Math.round( pEndCapNormal.y )
+	    						,	(float)Math.round( pEndCapNormal.z ) );
+	    		break;
+    		case PERPENDICULAR45:
+    			float x = pEndCapNormal.x, y = pEndCapNormal.y, z = pEndCapNormal.z;
+    			
+    			if ( (x > 0.25) && (x < 0.75) ) { x = 0.5f;
+    			} else if ( (x < -0.25) && (x > -0.75) ) { x = -0.5f;
+    			} else { x = (float)Math.round( x ); }
+    			
+    			if ( (y > 0.25) && (y < 0.75) ) { y = 0.5f;
+    			} else if ( (y < -0.25) && (y > -0.75) ) { y = -0.5f;
+    			} else { y = (float)Math.round( y ); }
+    			
+    			if ( (z > 0.25) && (z < 0.75) ) { z = 0.5f;
+    			} else if ( (z < -0.25) && (z > -0.75) ) { z = -0.5f;
+    			} else { z = (float)Math.round( z ); }
+    			
+    			pEndCapNormal.set( x, y, z ).normalizeLocal();
+    			break;
     	}
     	return( pEndCapNormal );
     }
@@ -680,7 +734,7 @@ if ( true ) {	// Looks like the following gets you the same results as above wit
         	// Save it as a generated element
         	outCapsule.write( mSlicePath, "slicePath", null );
         }
-        outCapsule.write( mPerpendicularEnds, "perpendicularEnds", false );
+        outCapsule.write( mPipeEnds, "pipeEnds", PipeEnds.STANDARD );
         outCapsule.write( mSmoothSurface, "smoothSurface", false );
     }
     @Override
@@ -692,7 +746,7 @@ if ( true ) {	// Looks like the following gets you the same results as above wit
 
         InputCapsule inCapsule = pImporter.getCapsule( this );
         mSlicePath = (CSGSplineGenerator)inCapsule.readSavable( "slicePath", null );
-        mPerpendicularEnds = inCapsule.readBoolean( "perpendicularEnds", false );
+        mPipeEnds = inCapsule.readEnum( "pipeEnds", PipeEnds.class, PipeEnds.STANDARD );
         mSmoothSurface = inCapsule.readBoolean( "smoothSurface",  false );
 
         // Standard trigger of updateGeometry() to build the shape 
