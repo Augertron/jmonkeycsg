@@ -278,16 +278,21 @@ public abstract class CSGRadial
         	pContext.mZOffset = 0;
 	        for( int zIndex = 0; zIndex < pContext.mSliceCount; zIndex += 1 ) {
 	        	// If closed, zIndex == 0 is the backface (-1), zIndex == sliceCount-1 is the frontface (1)
-	        	int aSurface = 0;				// On the curve/crust
+	        	int aSurface = 0;					// On the curve/crust
+	        	int zOffsetAdjust = 1;				// Account for change of z offset
 	        	if ( mClosed && (zIndex == 0) ) {
 	        		// Southpole/Backface
 	        		aSurface = -1;
 	        		southPoleIndex = pContext.mIndex;
 	        		
+	        		if ( mFlatEnds ) zOffsetAdjust = 0;
+	        		
 	        	} else if ( mClosed && (zIndex == pContext.mSliceCount -1) ) {
 	        		// Northpole/Frontface
 	        		aSurface = 1;
 	        		northPoleIndex = pContext.mIndex;
+	        		
+	        		if ( mFlatEnds ) zOffsetAdjust = 0;
 	        	}
 	        	// Angle based on where we are along the zAxis
 	        	pContext.mAngleFraction
@@ -353,10 +358,7 @@ public abstract class CSGRadial
             					.put( pContext.mTexVector.y );
 
 	            pContext.mIndex += 1;
-	            if ( !mFlatEnds || (aSurface == 0) ) {
-	            	// We have consumed z space
-	            	pContext.mZOffset += 1;
-	            }
+	            pContext.mZOffset += zOffsetAdjust;
 	        }
 	        // Apply any smoothing that may be needed
 	        smoothSurface( pContext, vars );

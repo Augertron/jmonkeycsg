@@ -34,6 +34,8 @@ import java.io.IOException;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
 
 /** Constructive solid geometry (CSG) (formerly called computational binary solid geometry) is a 
  	technique used in 3D solid modeling. Constructive solid geometry allows a modeler to create 
@@ -167,6 +169,69 @@ public interface ConstructiveSolidGeometry
 		}
 		return( aFloatValue );
 	}
+	
+    /** Service routine to set a rotation based on two vectors 
+	 	
+	 	I am keeping this around strictly for historical documentation. It may be useful
+	 	agains sometime in the future.  In any case, watch out for 0 and 180 degree rotation
+	 */
+	public static Quaternion computeQuaternion(
+		Vector3f	pNormalU
+	,	Vector3f	pNormalV
+	) {
+		Quaternion aRotation;
+if ( true ) {
+		aRotation = new Quaternion();
+		
+		// Since we are working on 'normals', we know that the 'dot' will be 
+		// in the range -1 : +1, so arccosine will operate properly
+	    float cos_theta = pNormalU.dot( pNormalV );
+	    float anAngle = FastMath.acos( cos_theta );
+	
+		Vector3f anAxis = pNormalU.cross( pNormalV ).normalizeLocal();
+		aRotation.fromAngleNormalAxis( anAngle, anAxis );
+}   	    
+/** FROM   http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
+	float cos_theta = dot(normalize(u), normalize(v));
+	float angle = acos(cos_theta);
+	vec3 w = normalize(cross(u, v));
+	return quat::fromaxisangle(angle, w);
+*/
+		    
+if ( false ) {	// Looks like the following gets you the same results as above with fewer calculations
+				// BUT YOU MUST DEAL WITH THE 180 degree PROBLEM (which occurs on 3/4 circle)
+		float real_part = 1.0f + pNormalU.dot( pNormalV );
+		Vector3f aVector = pNormalU.cross( pNormalV );
+		aRotation = new Quaternion( aVector.x, aVector.y, aVector.z, real_part );
+		aRotation.normalizeLocal();
+}
+/** FROM   http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-finalqa
+		// If you know you are exclusively dealing with unit vectors, you can replace all 
+		// occurrences of norm_u_norm_v with the value 1.0f in order to avoid a useless square root.
+	float norm_u_norm_v = sqrt(dot(u, u) * dot(v, v));
+	float real_part = norm_u_norm_v + dot(u, v);
+	vec3 w;
+	
+	if (real_part < 1.e-6f * norm_u_norm_v)
+	{
+	    // If u and v are exactly opposite, rotate 180 degrees
+	    // around an arbitrary orthogonal axis. Axis normalisation
+	    // can happen later, when we normalise the quaternion.
+	    real_part = 0.0f;
+	    w = abs(u.x) > abs(u.z) ? vec3(-u.y, u.x, 0.f)
+	                            : vec3(0.f, -u.z, u.y);
+	}
+	else
+	{
+	    // Otherwise, build quaternion the standard way.
+	    w = cross(u, v);
+	}
+	return normalize(quat(real_part, w.x, w.y, w.z));
+**/
+		return( aRotation );
+	}
+
+
 
 	/** Version tracking support 
 	 	(I plan to roll these numbers manually when something interesting happens) */

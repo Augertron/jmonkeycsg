@@ -60,10 +60,18 @@ import com.jme3.math.Spline.SplineType;
  		
  		curveTension -	the Spline tension to apply
  		
+ 		
 	--- to generate a circular arc ---
 		radius -		the circle's radius
 		
 		arc -			count of radians the arc is to span (such as 'PI/2' for a quarter circle)
+		
+		firstRadial -	radial point (angle) where to start the arc (such as 'PI/2' for starting at 90deg)
+		
+		
+	--- to generate a circular helix (in addition to arc)---		
+		helix -			height of the helix
+
  */
 public class CSGSplineGenerator
 	implements Savable, ConstructiveSolidGeometry
@@ -85,6 +93,9 @@ public class CSGSplineGenerator
 	/** Circular arc: radius and span */
 	protected float				mArcRadius;
 	protected float				mArcRadians;
+	protected float				mArcFirstRadial;
+	/** Height of a given helix */
+	protected float				mHelixHeight;
 
 	
 	/** Null constructor */
@@ -168,6 +179,12 @@ public class CSGSplineGenerator
 		} else {
 			// The length of the circular arc
 			aDistance = mArcRadius * mArcRadians;
+			
+			if ( mHelixHeight > 0 ) {
+				// When we stretch the circle in y, then it get a litter longer
+				// length = sqroot( height**2 + circumference**2 )
+				aDistance = FastMath.sqrt( (mHelixHeight * mHelixHeight) + (aDistance * aDistance) );
+			}
 		}
 		return( aDistance );
 	}
@@ -186,7 +203,7 @@ public class CSGSplineGenerator
 		if ( mSpline == null ) {
 			if ( mPointList == null ) {
 				// We must be generating a circular arc
-				return( generateArc( pSampleCount, mArcRadius, mArcRadians ) );
+				return( generateArc( pSampleCount, mArcRadius, mArcRadians, mArcFirstRadial ) );
 			} else {
 				// Use the explicit point list
 				if ( pSampleCount == mPointList.size() ) {
@@ -300,7 +317,7 @@ public class CSGSplineGenerator
 		if ( (pPoint.y > -EPSILON) && (pPoint.y < EPSILON) ) pPoint.y = 0.0f;
 		if ( (pPoint.z > -EPSILON) && (pPoint.z < EPSILON) ) pPoint.z = 0.0f;
 		
-/*** 28April2015 - I am waffling about whether the following does anything usefull or not -- for not, NOT
+/*** 28April2015 - I am waffling about whether the following does anything useful or not -- for now: NOT
 		if ( pLimit > EPSILON ) {
 			float xDistance = pLimit - Math.abs( pPoint.x );
 			float yDistance = pLimit - Math.abs( pPoint.y );
@@ -318,23 +335,31 @@ public class CSGSplineGenerator
 		int			pRadialSamples
 	,	float		pRadius
 	,	float		pRadians
+	,	float		pFirstRadial
 	) {
 		// Generate a circle of the given radius, in the x/z plane, starting from (0,0,radius)
 		List<Vector3f> pointList = new ArrayList( pRadialSamples );
 		
         float inverseRadialSamples = 1.0f / (pRadialSamples -1);
+        
+        // If it is a helix, then evenly distribute the change in height over the radial samples.
+        float changeOfHeight = (mHelixHeight == 0f) ? 0f : mHelixHeight * inverseRadialSamples;
 		
 		// Generate the coordinate values for each radial point
         for( int iRadial = 0, lastRadial = pRadialSamples -1; iRadial < pRadialSamples; iRadial += 1 ) {
-            float anAngle = (iRadial == lastRadial) ? pRadians : pRadians * inverseRadialSamples * iRadial;
+            float anAngle = (iRadial == lastRadial) 
+            				? pRadians + pFirstRadial
+            				: (pRadians * inverseRadialSamples * iRadial) + pFirstRadial;
             if ( anAngle > FastMath.TWO_PI ) anAngle -= FastMath.TWO_PI;
             
     		float aCosine = FastMath.cos( anAngle );
             float aSine = FastMath.sin( anAngle );
             
-            // The point just follows the sine wave
+            float aHeight = (iRadial == lastRadial) ? mHelixHeight : changeOfHeight * iRadial;
+            
+            // The point just follows the sine wave in x/z
             Vector3f aPoint = new Vector3f( aSine, 0, aCosine );
-            aPoint.multLocal( pRadius );
+            aPoint.multLocal( pRadius ).setY( aHeight );
             pointList.add( standardizePoint( aPoint, pRadius ) );
         }
 		return( pointList );
@@ -356,6 +381,9 @@ public class CSGSplineGenerator
         } else {
         	outCapsule.write( mArcRadius, "radius", 1.0f );
         	outCapsule.write( mArcRadians, "arc", FastMath.HALF_PI );
+        	outCapsule.write( mArcFirstRadial, "firstRadial", 0.0f );
+        	
+        	outCapsule.write( mHelixHeight, "helix", 0f );
         }
     }
 
@@ -375,6 +403,9 @@ public class CSGSplineGenerator
         	// If given no control points, then assume we are working on a circular arc
             mArcRadius = in.readFloat( "radius", 1.0f );
             mArcRadians = ConstructiveSolidGeometry.readPiValue( in, "arc", FastMath.HALF_PI );
+            mArcFirstRadial = ConstructiveSolidGeometry.readPiValue( in, "firstRadial", 0.0f );
+            
+            mHelixHeight = in.readFloat( "helix", 0f );
         	
         } else if ( aType == SplineType.Linear ) {
         	// A spline is not needed for linear, all we want is the given set of points

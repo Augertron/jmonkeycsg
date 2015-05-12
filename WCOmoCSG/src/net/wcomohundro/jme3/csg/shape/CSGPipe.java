@@ -430,7 +430,8 @@ if ( true ) {
     		// based on the surface normal of the slice, which is determined by the
     		// current active point and the ones on either side
     		myContext.mSliceNormal = new Vector3f();
-    		myContext.mSliceSplineRotation = computeSliceNormal( myContext.mSliceNormal, myContext, pSurface );
+    		myContext.mSliceSplineRotation 
+    			= computeSliceNormal( myContext.mSliceNormal, myContext, pSurface, pUseVector );
     	}
     	// By default, just operate on the unit circle (even on the endcaps)
     	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
@@ -509,7 +510,8 @@ if ( true ) {
     	
     	// Figure out the adjustments needed for the end cap
 		myContext.mSliceNormal = new Vector3f();
-		myContext.mSliceSplineRotation = computeSliceNormal( myContext.mSliceNormal, myContext, pSurface );
+		myContext.mSliceSplineRotation 
+			= computeSliceNormal( myContext.mSliceNormal, myContext, pSurface, pUseVector );
 
 		// Start with the unit circle center
 		pUseVector.set( 0, 0, 0 );
@@ -575,6 +577,7 @@ if ( true ) {
         Vector3f			pSliceNormal
     ,	CSGPipeContext 		pContext
     ,	int					pSurface
+    ,	Vector3f			pTempVector
     ) {
     	int firstIndex = 0;
     	int lastIndex = pContext.mCenterList.size() -1;
@@ -584,7 +587,7 @@ if ( true ) {
     		lastIndex -= 1;
     	}
 		Vector3f thisCenter, priorCenter = null, nextCenter = null;
-		Quaternion sliceRotation = null;
+		Quaternion sliceRotation;
 		
 		int centerIndex;
     	if ( pSurface < 0 ) {
@@ -624,58 +627,50 @@ if ( true ) {
     			pSliceNormal.subtractLocal( otherNormal ).normalizeLocal();
     		}
     	}
-    	// Each slice is defined in the x/y plane.  See if it has stayed there
-    	if ( UNIT_NEGZ.equals( pSliceNormal ) ) {
-    		// 180deg rotation required
-    		sliceRotation = ROTATE_180;
-
-    	} else if ( !Vector3f.UNIT_Z.equals( pSliceNormal ) ) {
-    		// We must apply a rotation to the slice to match the spline
-if ( false ) {
-    	    float cos_theta = Vector3f.UNIT_Z.dot( pSliceNormal );
-    	    float angle = FastMath.acos( cos_theta );
-    		Vector3f anAxis = Vector3f.UNIT_Z.cross( pSliceNormal ).normalizeLocal();
-    		sliceRotation = new Quaternion();
-    		sliceRotation.fromAngleNormalAxis( angle, anAxis );
-}   	    
-/** FROM   http://lolengine.net/blog/2013/09/18/beautiful-maths-quaternion-from-vectors
-    float cos_theta = dot(normalize(u), normalize(v));
-    float angle = acos(cos_theta);
-    vec3 w = normalize(cross(u, v));
-    return quat::fromaxisangle(angle, w);
- */
-    	    
-if ( true ) {	// Looks like the following gets you the same results as above with fewer calculations
-				// BUT YOU MUST DEAL WITH THE 180 degree PROBLEM (which occurs on 3/4 circle)
-    		float real_part = 1.0f + Vector3f.UNIT_Z.dot( pSliceNormal );
-    		Vector3f aVector = Vector3f.UNIT_Z.cross( pSliceNormal );
-    		sliceRotation = new Quaternion( aVector.x, aVector.y, aVector.z, real_part );
-    		sliceRotation.normalizeLocal();
-}
-/** FROM   http://lolengine.net/blog/2014/02/24/quaternion-from-two-vectors-finalqa
- 	// If you know you are exclusively dealing with unit vectors, you can replace all 
- 	// occurrences of norm_u_norm_v with the value 1.0f in order to avoid a useless square root.
-    float norm_u_norm_v = sqrt(dot(u, u) * dot(v, v));
-    float real_part = norm_u_norm_v + dot(u, v);
-    vec3 w;
-
-    if (real_part < 1.e-6f * norm_u_norm_v)
-    {
-        // If u and v are exactly opposite, rotate 180 degrees
-        // around an arbitrary orthogonal axis. Axis normalisation
-        // can happen later, when we normalise the quaternion.
-        real_part = 0.0f;
-        w = abs(u.x) > abs(u.z) ? vec3(-u.y, u.x, 0.f)
-                                : vec3(0.f, -u.z, u.y);
-    }
-    else
-    {
-        // Otherwise, build quaternion the standard way.
-        w = cross(u, v);
-    }
-    return normalize(quat(real_part, w.x, w.y, w.z));
-**/
+    	// The generating radials are built in the x/y plane with z at zero, which
+    	// means that the slice normal of the radial shape is by defintion the UNIT_Z axis.
+    	// The tilt of the actual slice normal controls how the x/y slice must be rotated to match.
+    	// So a change in z is reflected as a rotation around the y axis.
+    	// A change in center height (y), is reflected as a rotation around the x axis.
+    	// Since we build the radials in the x/y plane, then no rotation in z is ever needed.
+    	float[] axisAngles = new float[3];
+    	if ( pSliceNormal.z == 1.0f ) {
+    		// The slice is perpendicular to z, so no rotation is needed around y
+    		//sliceRotation = null;
+    		axisAngles[1] = 0;
+    	} else if ( pSliceNormal.z == -1.0f ) {
+    		// The slice is perpendicular to z, but 180deg around y
+    		//sliceRotation = ROTATE_180.clone();
+    		axisAngles[1] = FastMath.PI;
+    	} else {
+    		// z represents the cosine of desired angle around y (after we flatten it out)
+    		pTempVector.set( pSliceNormal.x, 0, pSliceNormal.z ).normalizeLocal();
+    		axisAngles[1] = FastMath.acos( pTempVector.z );
+    		if ( pSliceNormal.x < 0 ) {
+    			// Negative x means we are 180deg off
+    			axisAngles[1] = FastMath.TWO_PI - axisAngles[1];
+    		}
+    		//sliceRotation = new Quaternion();
+    		//sliceRotation.fromAngleNormalAxis( axisAngles[1], Vector3f.UNIT_Y );
     	}
+    	if ( pSliceNormal.y != 0 ) {
+    		// Any change of y represents a rotation around x
+    		//pTempVector.set( 0, pSliceNormal.y, 0 ).normalizeLocal();
+    		//xAngle = FastMath.asin( -pTempVector.y );
+    		axisAngles[0] = FastMath.asin( -pSliceNormal.y );
+    		//Quaternion heightRotation = new Quaternion();
+    		//heightRotation.fromAngleNormalAxis( axisAngles[0], Vector3f.UNIT_X );
+    		
+    		//if ( sliceRotation == null ) {
+    		//	sliceRotation = heightRotation;
+    		//} else {
+    		//	sliceRotation.multLocal( heightRotation );
+    		//}
+    	} else {
+    		axisAngles[0] = 0;
+    	}
+		sliceRotation = new Quaternion( axisAngles );
+
     	if ( mSmoothSurface ) {
     		// If we plan on smoothing the resultant surface, we need to keep track of
     		// the 'plane' that defines every slice

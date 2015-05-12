@@ -104,8 +104,42 @@
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='PI/2'/>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box7a'
+        		materialName='Textures/Debug/Normals.xml' debugMesh='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-4.0' y='0.0' z='-8.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='21' radialSamples='4' firstRadial='PI/4' pipeEnds='CROPPED' 
+            		smoothSurface='false' closed='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+            			arc='7PI/4' firstRadial='0PI/4' helix='0'/>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box7b'
+        		materialName='Textures/Debug/Normals.xml' debugMesh='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-4.0' y='0.0' z='-12.0'/>
+                <!-- translation class='com.jme3.math.Vector3f' x='0.0' y='3.0' z='-8.0'/-->
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='21' radialSamples='4' firstRadial='PI/4' pipeEnds='CROPPED' 
+            		smoothSurface='false' closed='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+            			arc='7PI/4' firstRadial='0PI/4' helix='0.75' />
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
 ?>
+
 		<!-- Various pipes to watch the twists and turns -->
+<?ignore
         <com.jme3.scene.Geometry name='Box1'
         		materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
@@ -254,20 +288,87 @@
             	</scaleFaces>
             </mesh>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box7a'
-        		materialName='Textures/Debug/Wireframe.xml'>
+?>
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box7a'
+        		materialName='Textures/Debug/Wireframe.xml' debugMesh='false'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='20.0' y='0.0' z='-8.0'/>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-8.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-            		axisSamples='45' radialSamples='4' firstRadial='PI/4' pipeEnds='PERPENDICULAR' 
-            		smoothSurface='false' closed='false'>
-            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='2PI' />
+            		axisSamples='21' radialSamples='4' firstRadial='PI/4' pipeEnds='CROPPED' 
+            		smoothSurface='false' closed='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+            			arc='7PI/4' firstRadial='1PI/4' helix='0'/>
                 <scaleFaces>
                 	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
             	</scaleFaces>
             </mesh>
-        </com.jme3.scene.Geometry>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box7b'
+        		materialName='Textures/Debug/Wireframe.xml' debugMesh='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-12.0'/>
+                <!-- translation class='com.jme3.math.Vector3f' x='0.0' y='3.0' z='-8.0'/-->
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='21' radialSamples='4' firstRadial='PI/4' pipeEnds='CROPPED' 
+            		smoothSurface='false' closed='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+            			arc='7PI/4' firstRadial='1PI/4' helix='0.75' />
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box7c'
+        		materialName='Textures/Debug/Wireframe.xml' debugMesh='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-16.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='45' radialSamples='4' firstRadial='PI/4' pipeEnds='STANDARD' 
+            		smoothSurface='false' closed='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+            		arc='2PI' firstRadial='1PI/4' helix='2' />
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+        
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box7d'
+        		materialName='Textures/Debug/Wireframe.xml' debugMesh='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-20.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='90' radialSamples='4' firstRadial='PI/4' pipeEnds='STANDARD' 
+            		smoothSurface='false' closed='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+            		arc='4PI' firstRadial='1PI/4' helix='3' />
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box7de'
+        		materialName='Textures/Debug/Wireframe.xml' debugMesh='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-24.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='90' radialSamples='24' firstRadial='PI/4' pipeEnds='STANDARD' 
+            		radius='0.5' smoothSurface='false' closed='false'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+            		arc='-4PI' firstRadial='1PI/4' helix='4' />
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
 
         <com.jme3.scene.Geometry name='Box10'
         		materialName='Textures/Debug/Wireframe.xml'>
@@ -400,6 +501,35 @@
             	</scaleFaces>
              </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
+        <com.jme3.scene.Geometry name='Box102a'
+        		materialName='Textures/Debug/Wireframe.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-12.0' y='0.0' z='-12.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe'
+            		axisSamples='30' pipeEnds='CROPPED' smoothSurface='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='-1.5' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.35' z='0.75'/>
+	                    
+	                    <com.jme3.math.Vector3f x='0.0' y='0.35' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.25' z='0.0'/>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.5' z='-0.75'/>
+	                    
+	                    
+	                    <com.jme3.math.Vector3f x='0.0' y='0.35' z='-1.75'/>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.5' z='-2.0'/>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.5' z='-2.75'/>
 
-    </children>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.5' z='-2.75'/>
+	                    <com.jme3.math.Vector3f x='0.0' y='2.0' z='-4.0'/>
+	                </controlPoints>
+	            </slicePath>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+             </mesh>
+        </com.jme3.scene.Geometry>
+   </children>
 </com.jme3.scene.Node>
