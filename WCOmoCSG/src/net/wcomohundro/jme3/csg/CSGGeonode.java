@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
-import java.util.logging.Level;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetNotFoundException;

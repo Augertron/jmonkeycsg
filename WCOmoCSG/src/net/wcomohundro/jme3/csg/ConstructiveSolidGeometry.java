@@ -31,7 +31,9 @@
 package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
+import com.jme3.asset.AssetManager;
 import com.jme3.export.InputCapsule;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -121,6 +123,21 @@ import com.jme3.math.Vector3f;
 */
 public interface ConstructiveSolidGeometry 
 {
+	/** Define a 'tolerance' for when two points are so close, they are effectively the same 
+	 	NOTE
+	 		This is a very, very, very critical value.  If too large, then shapes will get
+	 		rather blocky and lose their fine-grain appearance.  But if too small, then
+	 		polygons may be produced where floating point overflow corrupts the shape.
+	 		For example, when EPSILON was set to 1e-5f, a helix subtracted from a cube 
+	 		caused holes in the resultant shape.
+	 */
+	public static final float EPSILON = 1e-4f;
+	public static final float EPSILON_SQUARED = EPSILON * EPSILON;
+	
+	/** Define a 'tolerance' for when two points are so far apart, it is ridiculous to consider it */
+	public static final float EPSILON_MAX = 1e+3f;
+	public static final float EPSILON_MAX_SQUARED = EPSILON_MAX * EPSILON_MAX;
+	
 	/** Supported actions applied to the CSGShapes */
 	public static enum CSGOperator
 	{
@@ -130,6 +147,32 @@ public interface ConstructiveSolidGeometry
 	,	SKIP
 	}
 	
+	/** Logger available to any CSG services that desire it */
+    public static final Logger sLogger = Logger.getLogger( ConstructiveSolidGeometry.class.getName() );
+
+    /** Service routine to check two vectors and see if they are the same, within a given 
+     	tolerance.
+     */
+    public static boolean equalVector3f(
+    	Vector3f 	pVector1
+    ,	Vector3f	pVector2
+    ) {
+    	if ( pVector1 != pVector2 ) {
+	    	float deltaX = pVector1.x - pVector2.x;
+	    	if ( (deltaX < -EPSILON) || (deltaX > EPSILON) ) {
+	    		return false;
+	    	}
+	    	float deltaY = pVector1.y - pVector2.y;
+	    	if ( (deltaY < -EPSILON) || (deltaY > EPSILON) ) {
+	    		return false;
+	    	}
+	    	float deltaZ = pVector1.z - pVector2.z;
+	    	if ( (deltaZ < -EPSILON) || (deltaZ > EPSILON) ) {
+	    		return false;
+	    	}
+    	}
+    	return( true );
+    }
     /** Service routine to interpret a Savable.read() float value that can take the form
 			xxxPI/yyy
 		that supports fractional values of PI

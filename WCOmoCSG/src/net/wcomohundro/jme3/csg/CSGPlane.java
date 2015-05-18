@@ -33,6 +33,7 @@ package net.wcomohundro.jme3.csg;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -64,7 +65,7 @@ import com.jme3.math.Vector2f;
 	behind the plane.
 	
 	NOTE
-		that a plane is expected to be immutable with no inernally moving parts.  Once created, you
+		that a plane is expected to be immutable with no internally moving parts.  Once created, you
 		cannot alter its normal or dot.  Therefore, a clone of a plane is just the plane itself.
  */
 public class CSGPlane 
@@ -74,9 +75,6 @@ public class CSGPlane
 	public static final String sCSGPlaneRevision="$Rev$";
 	public static final String sCSGPlaneDate="$Date$";
 
-	/** Define a 'tolerance' for when two planes are so close, they are effectively the same */
-	public static final double EPSILON = 1e-5;
-	
 	/** Factory method to produce a plane from a minimal set of points */
 	public static CSGPlane fromPoints(
 		Vector3f	pA
@@ -115,7 +113,10 @@ public class CSGPlane
 	/** Standard null constructor */
 	public CSGPlane(
 	) {
-		this( Vector3f.ZERO, Vector3f.ZERO, 0f, -1 );
+		mNormal = Vector3f.ZERO;
+		mPointOnPlane = Vector3f.ZERO;
+		mDot = 0f;
+		mMark = -1;
 	}
 	/** Constructor based on a given normal and point on the plane */
 	public CSGPlane(
@@ -131,11 +132,28 @@ public class CSGPlane
 	,	float		pDot
 	,	int			pMarkValue
 	) {
+		// Think about this as an Assert....
+		if ( true ) {
+			// Remember that NaN always returns false for any comparison, so structure the logic accordingly
+			float dotAbsolute = Math.abs( pDot );
+			float normalLength = pNormal.length();
+			if ( !(
+			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
+			&& (normalLength < 1.0f + EPSILON) && (normalLength > 1.0f - EPSILON)
+			&& (dotAbsolute > EPSILON) && (dotAbsolute < EPSILON_MAX)
+			) ) {
+				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
+				pDot = 0.0f;
+			}
+		}
 		mNormal = pNormal;
 		mPointOnPlane = pPointOnPlane;
 		mDot = pDot;
 		mMark = pMarkValue;
 	}
+	
+	/** Ensure we have something valid */
+	public boolean isValid() { return( mDot != 0.0f ); }
 	
 	/** Return a copy */
 	public CSGPlane clone(
@@ -163,7 +181,7 @@ public class CSGPlane
 	public int pointPosition(
 		Vector3f	pPoint
 	) {
-		// How far away is the givne point
+		// How far away is the given point
 		float distanceToPlane = mNormal.dot( pPoint ) - mDot;
 		
 		// If within a given tolerance, it is the same plane
@@ -207,6 +225,7 @@ public class CSGPlane
 	private static final int SPANNING = 3;
 	public void splitPolygon(
 		CSGPolygon 			pPolygon
+	,	float				pTolerance
 	, 	List<CSGPolygon> 	pCoplanarFront
 	, 	List<CSGPolygon> 	pCoplanarBack
 	, 	List<CSGPolygon> 	pFront
@@ -214,6 +233,10 @@ public class CSGPlane
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
 	) {
+		if ( !pPolygon.isValid() ) {
+			// This polygon is not playing the game properly, ignore it
+			return;
+		}
 		// A note from the web about what "dot" means in 3D graphics
 		// 		When deciding if a polygon is facing the camera, you need only calculate the dot product 
 		// 		of the normal vector of that polygon, with a vector from the camera to one of the polygon's 
@@ -223,22 +246,32 @@ public class CSGPlane
 		int vertexCount = polygonVertices.size();
 		
 		int polygonType = 0;
-		int[] polygonTypes = new int[ vertexCount ];
+		int[] polygonTypes = null;
+		float[] vertexDot = null;
 		
-		for( int i = 0; i < vertexCount; i += 1 ) {
-			// How far away from this plane is the vertex?
-			Vector3f aVertex = polygonVertices.get( i ).getPosition();
-			float distanceToPlane = mNormal.dot( aVertex ) - mDot;
-			
-			// If within a given tolerance, it is the same plane
-			int type = (distanceToPlane < -EPSILON) ? BACK : (distanceToPlane > EPSILON) ? FRONT : COPLANAR;
-			polygonType |= type;
-			polygonTypes[i] = type;
+		// NOTE that CSGPlane.equals() checks for near-misses
+		if ( pPolygon.getPlane().equals( this ) ) {
+			// By definition, we are in the plane
+			polygonType = COPLANAR;
+		} else {
+			// Check every vertex against the plane
+			polygonTypes = new int[ vertexCount ];
+			vertexDot = new float[ vertexCount ];
+			for( int i = 0; i < vertexCount; i += 1 ) {
+				// How far away from this plane is the vertex?
+				Vector3f aVertexPosition = polygonVertices.get( i ).getPosition();
+				float distanceToPlane = vertexDot[i] = mNormal.dot( aVertexPosition );
+				distanceToPlane -= mDot;
+				
+				// If within a given tolerance, it is the same plane
+				int type = (distanceToPlane < -pTolerance) ? BACK : (distanceToPlane > pTolerance) ? FRONT : COPLANAR;
+				polygonType |= type;
+				polygonTypes[i] = type;
+			}
 		}
 		switch( polygonType ) {
 		case COPLANAR:
-			// The given polygon lies in this same plane, which way is it facing?
-			(mNormal.dot( pPolygon.getPlane().mNormal ) > 0 ? pCoplanarFront : pCoplanarBack).add( pPolygon );
+			// The given polygon lies in this same plane which is handled below
 			break;
 			
 		case FRONT:
@@ -265,32 +298,51 @@ public class CSGPlane
 				CSGVertex jVertex = polygonVertices.get(j);
 				
 				if ( iType != BACK ) {
-					// If not in back, then must be in front
+					// If not in back, then must be in front (or COPLANAR)
 					beforeVertices.add( iVertex );
 				}
 				if ( iType != FRONT ) {
-					// If not in front, then must be behind 
+					// If not in front, then must be behind (or COPLANAR)
 					// NOTE that we need a new clone if it was already added to 'before'
-					behindVertices.add( (iType != BACK) ? iVertex.clone(false) : iVertex );
+					behindVertices.add( (iType != BACK) ? iVertex.clone( false ) : iVertex );
 				}
 				if ((iType | jType) == SPANNING ) {
-					// If we cross the plane, then interpolate a new vertex on this plane
+					// If we cross the plane between these two vertices, then interpolate 
+					// a new vertex on this plane itself, which is both before and behind.
 					pTemp3f.set( jVertex.getPosition() ).subtractLocal( iVertex.getPosition() );
-					float percent = (mDot - mNormal.dot( iVertex.getPosition() )) / mNormal.dot( pTemp3f );
+					float percent = (mDot - vertexDot[i]) / mNormal.dot( pTemp3f );
 					CSGVertex onPlane = iVertex.interpolate( jVertex, percent, pTemp3f, pTemp2f );
-					beforeVertices.add( onPlane );
-					behindVertices.add( onPlane.clone( false ) );
+					if ( onPlane != null ) {
+						beforeVertices.add( onPlane );
+						behindVertices.add( onPlane.clone( false ) );
+					}
 				}
 			}
-			if ( beforeVertices.size() >= 3 ) {
-				// We have a full shape in front of the plane
-				pFront.add( new CSGPolygon( beforeVertices, pPolygon.getMaterialIndex() ) );
+			// What comes in front of the given plane?
+			beforeVertices = CSGVertex.compressVertices( beforeVertices, 3 );
+			CSGPolygon beforePolygon = new CSGPolygon( beforeVertices, pPolygon.getMaterialIndex() );
+			if ( beforePolygon.isValid() ) {
+				pFront.add( beforePolygon  );
+			} else {
+				beforePolygon = null;
 			}
-			if ( behindVertices.size() >= 3 ) {
-				// We have a full shape behind the plane
-				pBack.add( new CSGPolygon( behindVertices, pPolygon.getMaterialIndex() ) );
+			// What comes behind the given plane?
+			behindVertices = CSGVertex.compressVertices( behindVertices, 3 );
+			CSGPolygon behindPolygon = new CSGPolygon( behindVertices, pPolygon.getMaterialIndex() );
+			if ( behindPolygon.isValid() ) {
+				pBack.add( behindPolygon );
+			} else {
+				behindPolygon = null;
+			}
+			if ( (beforePolygon == null) && (behindPolygon == null) ) {
+				// We did not split the polygon at all, treat it as COPLANAR
+				polygonType = COPLANAR;
 			}
 			break;
+		}
+		if ( polygonType == COPLANAR ) {
+			// The given polygon lies in this same plane, which way is it facing?
+			((mNormal.dot( pPolygon.getPlane().mNormal ) >= 0) ? pCoplanarFront : pCoplanarBack).add( pPolygon );
 		}
 	}
 
@@ -317,6 +369,23 @@ public class CSGPlane
 	public String toString(
 	) {
 		return( super.toString() + " - " + mNormal + "(" + mDot + ")" );
+	}
+	
+	/** OVERRIDE to treat two planes as equal if they happen to be close */
+	@Override
+	public boolean equals(
+		Object		pOther
+	) {
+		if ( pOther == this ) {
+			// By defintion, if the plane is the same
+			return true;
+		} else if ( pOther instanceof CSGPlane ) {
+			// Two planes that are close are equal
+			return( ConstructiveSolidGeometry.equalVector3f( this.mNormal, ((CSGPlane)pOther).mNormal ) );
+		} else {
+			// Let the super handle the error case
+			return( super.equals( pOther ) );
+		}
 	}
 	
 	/////// Implement ConstructiveSolidGeometry

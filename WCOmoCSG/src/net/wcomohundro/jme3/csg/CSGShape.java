@@ -293,7 +293,7 @@ public class CSGShape
 			b.invert();
 			b.clipTo( a, vars.vect1, vars.vect2d );
 			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, 0 );
+			a.buildHierarchy( b.allPolygons( null ), EPSILON, vars.vect1, vars.vect2d, 0 );
         } finally {
         	vars.release();
         }
@@ -317,7 +317,7 @@ public class CSGShape
 			b.invert();
 			b.clipTo( a, vars.vect1, vars.vect2d );
 			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, 0 );
+			a.buildHierarchy( b.allPolygons( null ), EPSILON, vars.vect1, vars.vect2d, 0 );
 			a.invert();
         } finally {
         	vars.release();
@@ -341,7 +341,7 @@ public class CSGShape
 		    b.invert();
 		    a.clipTo( b, vars.vect1, vars.vect2d );
 		    b.clipTo( a, vars.vect1, vars.vect2d);
-		    a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, 0 );
+		    a.buildHierarchy( b.allPolygons( null ), EPSILON, vars.vect1, vars.vect2d, 0 );
 		    a.invert();
         } finally {
         	vars.release();
@@ -401,9 +401,12 @@ public class CSGShape
 			aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform ) );
 			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform ) );
 			
-			// And build the appropriate polygon
-			CSGPolygon aPolygon = new CSGPolygon( aVertexList, this.mMaterialIndex );
-			polygons.add( aPolygon );
+			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
+			aVertexList = CSGVertex.compressVertices( aVertexList, 3 );
+			if ( aVertexList.size() >= 3 ) {
+				CSGPolygon aPolygon = new CSGPolygon( aVertexList, this.mMaterialIndex );
+				polygons.add( aPolygon );
+			}
 		}
 		return( polygons );
 	}
@@ -460,6 +463,7 @@ public class CSGShape
 			List<CSGVertex> aVertexList = aPolygon.getVertices();
 			int aVertexCount = aVertexList.size();
 			
+			// Include every vertex in this polygon
 			List<Number> vertexPointers = new ArrayList<Number>( aVertexCount );
 			for( CSGVertex aVertex : aVertexList ) {
 				pPositionList.add( aVertex.getPosition() );
@@ -468,6 +472,8 @@ public class CSGShape
 				
 				vertexPointers.add( indexPtr++ );
 			}
+			// Produce as many triangles (all starting from vertex 0) as needed to
+			// include all the vertices  (3 yields 1 triangle, 4 yields 2 triangles, etc)
 			for( int ptr = 2; ptr < aVertexCount; ptr += 1 ) {
 				pIndexList.add( vertexPointers.get(0) );
 				pIndexList.add( vertexPointers.get(ptr-1) );

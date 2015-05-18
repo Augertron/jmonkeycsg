@@ -31,6 +31,10 @@
 package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.logging.Level;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -58,6 +62,52 @@ public class CSGVertex
 	/** Version tracking support */
 	public static final String sCSGVertexRevision="$Rev$";
 	public static final String sCSGVertexDate="$Date$";
+	
+	/** Factory level service routine that squeezes out an Vertex from a list that is not
+	 	a 'significant' distance from other vertices in the list
+	 */
+	public static List<CSGVertex> compressVertices(
+		List<CSGVertex>		pVertices
+	,	int					pMinimumCount
+	) {
+		if ( pVertices.size() < pMinimumCount ) {
+			return( Collections.EMPTY_LIST );
+		}
+		List<CSGVertex> compressedList = new ArrayList( pVertices.size() );
+		float minDistance = Float.MAX_VALUE, maxDistance = 0.0f;
+		
+		// Check each in the list against all others
+		int lastIndex = pVertices.size() -1;
+		for( int i = 0; i < lastIndex; i += 1 ) {
+			CSGVertex aVertex = pVertices.get( i );
+			for( int k = i + 1, m = pVertices.size(); k < m; k += 1 ) {
+				CSGVertex otherVertex = pVertices.get( k );
+				float aDistance = aVertex.distanceSquared( otherVertex );
+				if ( (aDistance >= EPSILON_SQUARED) && (aDistance <= EPSILON_MAX_SQUARED) ) {
+					// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
+					// 		structure your bound checks accordingly
+					if ( aDistance < minDistance ) minDistance = aDistance;
+					if ( aDistance > maxDistance ) maxDistance = aDistance;
+				} else {
+					// The two vertices are too close (or super far apart) to be significant
+					aVertex = null;
+					break;
+				}
+			}
+			if ( aVertex != null ) {
+				compressedList.add( aVertex );
+			}
+		}
+		// Look for a shape totally out of bounds
+		float eccentricity = maxDistance / minDistance;
+		if ( eccentricity > 100000000.0f ) {
+			// Any shape corresponding to these vertices is totally stretched out of whack
+			return( Collections.EMPTY_LIST );
+		}
+		// By definition, the last vertex is always included
+		compressedList.add( pVertices.get( lastIndex ) );
+		return( compressedList );
+	}
 
 	/** Where is this vertex */
 	protected Vector3f	mPosition;
@@ -95,6 +145,31 @@ public class CSGVertex
 			mTextureCoordinate = pTextureCoordinate;
 		} else {
 			// Use what was given
+			// Think about using Assert for the following
+			if ( true ) {
+				if ( !(
+				   (Math.abs( pPosition.x ) < EPSILON_MAX) 
+				&& (Math.abs( pPosition.y ) < EPSILON_MAX) 
+				&& (Math.abs( pPosition.z ) < EPSILON_MAX)
+				) ) {
+					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
+				}
+				float normalLength = pNormal.length();
+				if ( !(
+				   (Math.abs( pNormal.x ) <= 1.0f) 
+				&& (Math.abs( pNormal.y ) <= 1.0f) 
+				&& (Math.abs( pNormal.z ) <= 1.0f) 
+				&& (normalLength <= 1.0f + EPSILON) && (normalLength > 1.0f - EPSILON)
+				) ) {
+					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
+				}
+				if ( !(
+				   (Math.abs( pTextureCoordinate.x ) <= EPSILON_MAX) 
+				&& (Math.abs( pTextureCoordinate.y ) <= EPSILON_MAX)
+				) ) {
+					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
+				}
+			}
 			mPosition = pPosition;
 			mNormal = pNormal;
 			mTextureCoordinate = pTextureCoordinate;
@@ -130,19 +205,51 @@ public class CSGVertex
 	,	Vector3f	pTemp3f
 	,	Vector2f	pTemp2f
 	) {
-		Vector3f newPosition 
-			= this.mPosition.add(
-				pTemp3f.set( pOther.getPosition() ).subtractLocal( this.mPosition ).multLocal( pPercentage ) );
-
-		Vector3f newNormal 
-			= this.mNormal.add( 
-				pTemp3f.set( pOther.getNormal() ).subtractLocal( this.mNormal ).multLocal( pPercentage ) );
-		
-		Vector2f newTextureCoordinate 
-			= this.mTextureCoordinate.add( 
-				pTemp2f.set( pOther.getTextureCoordinate() ).subtractLocal( this.mTextureCoordinate ).multLocal( pPercentage ) );
-		
-		return new CSGVertex( newPosition, newNormal, newTextureCoordinate );
+		// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
+		// 		structure your bound checks accordingly
+		if ( (pPercentage >= EPSILON) && (pPercentage <= (1.0f - EPSILON)) ) {
+			// Where is this new vertex?
+			Vector3f newPosition 
+				= this.mPosition.add(
+					pTemp3f.set( pOther.getPosition() )
+						.subtractLocal( this.mPosition ).multLocal( pPercentage ) );
+			
+			// Confirm a reasonable distance
+			float aDistance = this.mPosition.distanceSquared( newPosition );
+			float bDistance = pOther.mPosition.distanceSquared( newPosition );
+			if ( (aDistance >= EPSILON_SQUARED) && (bDistance >= EPSILON_SQUARED) 
+			&& (aDistance <= EPSILON_MAX_SQUARED) && (bDistance <= EPSILON_MAX_SQUARED) ) {
+				// What is its normal?
+				Vector3f newNormal 
+					= this.mNormal.add( 
+						pTemp3f.set( pOther.getNormal() )
+							.subtractLocal( this.mNormal ).multLocal( pPercentage ) ).normalizeLocal();
+				
+				// What is its texture?
+				Vector2f newTextureCoordinate 
+					= this.mTextureCoordinate.add( 
+						pTemp2f.set( pOther.getTextureCoordinate() )
+							.subtractLocal( this.mTextureCoordinate ).multLocal( pPercentage ) );
+				
+				return new CSGVertex( newPosition, newNormal, newTextureCoordinate );
+			}
+		}
+		// Not a valid interpolation
+		return( null );
+	}
+	
+	/** Calculate the distance of this vertex to another */
+	public float distance(
+		CSGVertex	pOtherVertex
+	) {
+		float aDistance = this.mPosition.distance( pOtherVertex.mPosition );
+		return( aDistance );
+	}
+	public float distanceSquared(
+		CSGVertex	pOtherVertex
+	) {
+		float aDistance = this.mPosition.distanceSquared( pOtherVertex.mPosition );
+		return( aDistance );
 	}
 
 	/** Make a Vertex savable */

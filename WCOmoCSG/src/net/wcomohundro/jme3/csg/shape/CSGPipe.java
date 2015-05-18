@@ -67,7 +67,7 @@ import net.wcomohundro.jme3.csg.CSGPlane;
  	Of course, if you twist the curve too tightly, then the slices can bunch up and 
  	give you an unpleasant shape.  But gentle curves with an appropriate number of 
  	slices can produce pipes of reasonable appearance. The smoothSurface option
- 	attempts to smooth out such crumples, but it can only do so much (as a significant
+ 	attempts to smooth out such crumples, but it can only do so much (at a significant
  	processing cost when generating the mesh)
  	
  	Configuration Settings:
@@ -91,13 +91,6 @@ public class CSGPipe
 	public static final String sCSGPipeRevision="$Rev$";
 	public static final String sCSGPipeDate="$Date$";
 
-	/** An exact 180deg rotation will occur with a slice normal of (0,0,-1) */
-	public static final Vector3f UNIT_NEGZ = new Vector3f( 0, 0, -1 );
-	public static final Quaternion ROTATE_180 = new Quaternion();
-	static {
-		ROTATE_180.fromAngleNormalAxis( FastMath.PI, Vector3f.UNIT_Y );
-	}
-	
 	/** Variations of how the pipe ends are treated */
 	public enum PipeEnds { 
 		STANDARD			// End slice is generated 'normally', perpendicular to the last point of the curve
@@ -148,7 +141,6 @@ public class CSGPipe
 			// Display the spline in debug mode
 			List<Vector3f> centerList = computeCenters();
 			Spline aLine = new Spline( SplineType.Linear, centerList, 0, false );
-			//Spline aLine = mSlicePath.getSpline();
 			Curve aCurve = new Curve( aLine, this.mAxisSamples / aLine.getSegmentsLength().size() );
 			return( aCurve );
 		} else {
@@ -361,7 +353,8 @@ if ( true ) {
 		// And even though the north/south poles are a single point, we need to 
 		// generate different textures and normals for the two EXTRA end slices if closed
     	
-    	// And remember the curve itself could require more AxisSamples than what was requested
+    	// And remember the curve itself could require more AxisSamples than what was requested.
+     	// As a side effect of .computeCenters(), the mAxisSamples count may be adjusted.
 		List<Vector3f> centerList = computeCenters();
     	CSGPipeContext aContext 
     		= new CSGPipeContext( mAxisSamples, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
@@ -380,7 +373,10 @@ if ( true ) {
     	return( super.getZAxisFraction( pContext, pSurface ) );
     }
     
-    /** OVERRIDE: where is the center of the given slice */
+    /** OVERRIDE: where is the center of the given slice
+     		mCenterList is expected to have been prebuilt as part of the construction 
+     		processing of CSGPipeContext.
+     */
     @Override
     protected Vector3f getSliceCenter(
     	Vector3f			pUseVector
@@ -389,10 +385,6 @@ if ( true ) {
     ) {
     	CSGPipeContext myContext = (CSGPipeContext)pContext;
     	
-    	if ( myContext.mCenterList == null ) {
-    		// Compute the centers on the curve
-    		myContext.mCenterList = computeCenters();
-    	}
     	// Return the center point as defined on the spline
     	// NOTE that mZOffset runs from back to front, but we computed the centers front to back
     	int firstIndex = 0;
@@ -545,7 +537,9 @@ if ( true ) {
     	return( pUseVector );
     }
 
-    /** Service routine that computes the center points based on the given spline */
+    /** Service routine that computes the center points based on the given spline 
+     	NOTE that as a side effect, the mAxisSamples count may be adjusted.
+     */
     protected List<Vector3f> computeCenters(
     ) {
     	// We need a center point for every sample taken along the zAxis
@@ -563,7 +557,7 @@ if ( true ) {
     	if ( centerList.size() > sampleCount ) {
 			mAxisSamples = centerList.size();
 			if ( this.mPipeEnds == PipeEnds.CROPPED ) {
-				// The CROPPED end caps do not count
+				// The CROPPED end caps do not get a sample
 				mAxisSamples -= 2;
 			}
 		}
@@ -628,44 +622,33 @@ if ( true ) {
     		}
     	}
     	// The generating radials are built in the x/y plane with z at zero, which
-    	// means that the slice normal of the radial shape is by defintion the UNIT_Z axis.
+    	// means that the slice normal of the radial shape is, by defintion, the UNIT_Z axis.
     	// The tilt of the actual slice normal controls how the x/y slice must be rotated to match.
     	// So a change in z is reflected as a rotation around the y axis.
     	// A change in center height (y), is reflected as a rotation around the x axis.
     	// Since we build the radials in the x/y plane, then no rotation in z is ever needed.
     	float[] axisAngles = new float[3];
-    	if ( pSliceNormal.z == 1.0f ) {
+
+		pTempVector.set( pSliceNormal.x, 0, pSliceNormal.z ).normalizeLocal();
+		if ( pTempVector.z == 1.0f ) {
     		// The slice is perpendicular to z, so no rotation is needed around y
-    		//sliceRotation = null;
     		axisAngles[1] = 0;
-    	} else if ( pSliceNormal.z == -1.0f ) {
+    		
+    	} else if ( pTempVector.z == -1.0f ) {
     		// The slice is perpendicular to z, but 180deg around y
-    		//sliceRotation = ROTATE_180.clone();
     		axisAngles[1] = FastMath.PI;
+    		
     	} else {
-    		// z represents the cosine of desired angle around y (after we flatten it out)
-    		pTempVector.set( pSliceNormal.x, 0, pSliceNormal.z ).normalizeLocal();
+    		// z represents the cosine of desired angle around y
     		axisAngles[1] = FastMath.acos( pTempVector.z );
     		if ( pSliceNormal.x < 0 ) {
     			// Negative x means we are 180deg off
     			axisAngles[1] = FastMath.TWO_PI - axisAngles[1];
     		}
-    		//sliceRotation = new Quaternion();
-    		//sliceRotation.fromAngleNormalAxis( axisAngles[1], Vector3f.UNIT_Y );
     	}
     	if ( pSliceNormal.y != 0 ) {
     		// Any change of y represents a rotation around x
-    		//pTempVector.set( 0, pSliceNormal.y, 0 ).normalizeLocal();
-    		//xAngle = FastMath.asin( -pTempVector.y );
     		axisAngles[0] = FastMath.asin( -pSliceNormal.y );
-    		//Quaternion heightRotation = new Quaternion();
-    		//heightRotation.fromAngleNormalAxis( axisAngles[0], Vector3f.UNIT_X );
-    		
-    		//if ( sliceRotation == null ) {
-    		//	sliceRotation = heightRotation;
-    		//} else {
-    		//	sliceRotation.multLocal( heightRotation );
-    		//}
     	} else {
     		axisAngles[0] = 0;
     	}

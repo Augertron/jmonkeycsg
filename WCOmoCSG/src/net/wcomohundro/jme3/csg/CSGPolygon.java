@@ -32,7 +32,9 @@ package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -58,6 +60,7 @@ public class CSGPolygon
 	/** Static empty list of vertices */
 	protected static final List<CSGVertex> sEmptyVertices = new ArrayList<CSGVertex>(0);
 	
+
 	/** The vertices that define this shape */
 	protected List<CSGVertex>	mVertices;
 	/** The plane that contains this shape */
@@ -68,7 +71,9 @@ public class CSGPolygon
 	/** Standard null constructor */
 	public CSGPolygon(
 	) {
-		this( sEmptyVertices, 0 );
+		mVertices = sEmptyVertices;
+		mPlane = null;
+		mMaterialIndex = 0;
 	}
 	
 	/** Constructor based on a set of Vertices (minimum 3 expected) */
@@ -86,9 +91,14 @@ public class CSGPolygon
 	,	int					pMaterialIndex
 	) {
 		mVertices = pVertices;
-		mPlane = pPlane;
+		if ( (pPlane != null) && pPlane.isValid() ) {
+			mPlane = pPlane;
+		}
 		mMaterialIndex = pMaterialIndex;
 	}
+	
+	/** Ensure we are working with something valid */
+	public boolean isValid() { return( mPlane != null ); }
 	
 	/** Make a copy */
 	public CSGPolygon clone(
@@ -99,10 +109,12 @@ public class CSGPolygon
 			List<CSGVertex> newVertices = new ArrayList<CSGVertex>( mVertices.size() );
 			for( CSGVertex aVertex : mVertices ) {
 				CSGVertex bVertex = aVertex.clone( pFlipIt );
-				
-				// Flip the order of the vertices as we go
-				newVertices.add( 0, bVertex );
+				newVertices.add( bVertex );
 			}
+			// Flip the order of the vertices as well
+			// NOTE that we are assuming that .reverse() is more efficient than repeatedly inserting
+			//		new items at the start of the list (which forces things to copy and slide)
+			Collections.reverse( newVertices );
 			return( new CSGPolygon( newVertices, mPlane.clone( pFlipIt ), mMaterialIndex ) );
 		} else {
 			// The polygon is immutable, so its clone is just itself
@@ -111,7 +123,7 @@ public class CSGPolygon
 	}
 	
 	/** Accessor to the vertices */
-	public List<CSGVertex> getVertices() { return mVertices; }
+	public List<CSGVertex> getVertices() { return( this.isValid() ? mVertices : Collections.EMPTY_LIST ); }
 	
 	/** Accessor to the plane */
 	public CSGPlane getPlane() { return mPlane; }

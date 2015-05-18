@@ -32,6 +32,8 @@ package net.wcomohundro.jme3.csg;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
@@ -89,7 +91,7 @@ public class CSGPartition
 	        // Avoid some object churn by using the thread-specific 'temp' variables
 	        TempVars vars = TempVars.get();
 	        try {
-	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, 0 );
+	        	buildHierarchy( pPolygons, EPSILON, vars.vect1, vars.vect2d, 0 );
 	        } finally {
 	        	vars.release();
 	        }
@@ -107,7 +109,7 @@ public class CSGPartition
 	        // Avoid some object churn by using the thread-specific 'temp' variables
 	        TempVars vars = TempVars.get();
 	        try {
-	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, 0 );
+	        	buildHierarchy( pPolygons, EPSILON, vars.vect1, vars.vect2d, 0 );
 	        } finally {
 	        	vars.release();
 	        }
@@ -151,7 +153,10 @@ public class CSGPartition
 		for ( CSGPolygon aPolygon : pPolygons ) {
 			// NOTE that coplannar polygons are retained in front/back, based on which
 			//		way they are facing
-			mPlane.splitPolygon( aPolygon, frontPolys, backPolys, frontPolys, backPolys, pTemp3f, pTemp2f );
+			mPlane.splitPolygon( aPolygon
+								, EPSILON
+								, frontPolys, backPolys, frontPolys, backPolys
+								, pTemp3f, pTemp2f );
 		}
 		if ( mFrontPartition != null ) {
 			// Include appropriate clipping from the front partition as well
@@ -202,6 +207,7 @@ public class CSGPartition
 	/** Build a hierarchy of nodes from a given set of polygons */
 	protected void buildHierarchy(
 		List<CSGPolygon>	pPolygons
+	,	float				pTolerance
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
 	,	int					pStackDepth
@@ -209,10 +215,10 @@ public class CSGPartition
 		if ( pPolygons.isEmpty() ) {
 			return;
 		}
-		if ( pStackDepth > 10000 ) {
-			// This is probably an error in the algorithm, but I have not yet
-			// found the true cause.
-			System.out.println( "Node.build - too deep" );
+		if ( pStackDepth > 1000 ) {
+			// This is probably an error in the algorithm, but I have not yet found the true cause.
+			ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+			, "CSGPartition.buildHierarchy - too deep" );
 			return;
 		}
 		// If no plane has been set for this node, use the plane of the first polygon
@@ -224,7 +230,10 @@ public class CSGPartition
 		List<CSGPolygon> back = new ArrayList<CSGPolygon>();
 		for( CSGPolygon aPolygon : pPolygons ) {
 			// NOTE that for coplannar, we do not care which direction the polygon faces
-			mPlane.splitPolygon( aPolygon, mPolygons, mPolygons, front, back, pTemp3f, pTemp2f );
+			mPlane.splitPolygon( aPolygon
+								, pTolerance
+								, mPolygons, mPolygons, front, back
+								, pTemp3f, pTemp2f );
 		}
 		if ( !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
@@ -235,7 +244,7 @@ public class CSGPartition
 				this.mFrontPartition.mPolygons.addAll( front );
 			} else {
 				// Assign whatever is in the front
-				this.mFrontPartition.buildHierarchy( front, pTemp3f, pTemp2f, pStackDepth + 1 );
+				this.mFrontPartition.buildHierarchy( front, pTolerance, pTemp3f, pTemp2f, pStackDepth + 1 );
 			}
 		}
 		if ( !back.isEmpty() ) {
@@ -244,10 +253,10 @@ public class CSGPartition
 			}
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
 				// Everything is in the back, it does not need to be processed deeper
-				mBackPartition.mPolygons.addAll( front );
+				mBackPartition.mPolygons.addAll( back );
 			} else {
 				// Assign whatever is in the back
-				mBackPartition.buildHierarchy( back, pTemp3f, pTemp2f, pStackDepth + 1 );
+				mBackPartition.buildHierarchy( back, pTolerance, pTemp3f, pTemp2f, pStackDepth + 1 );
 			}
 		}
 	}
