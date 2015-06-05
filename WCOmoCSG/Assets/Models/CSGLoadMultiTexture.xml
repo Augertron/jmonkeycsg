@@ -31,7 +31,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-
+?>
         <!-- A simple union -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestBlended'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
@@ -87,23 +87,23 @@
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
 
-                <net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'>
+                <net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'
+                		materialName='Textures/Rock/Rock2Rpt.xml'>
                 		<!-- materialName='Textures/Rock/Rock2.xml'> -->
-                		<!-- materialName='Textures/Rock/Rock1Rpt.xml'> -->
-                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.9' yExtent='0.5' zExtent='0.9'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.98' yExtent='0.98' zExtent='0.6'>
                     	<!--scaleFaces>
 	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='48'/>
 	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='10'/>
                     	</scaleFaces-->
                     </mesh>
                     <transform class='com.jme3.math.Transform'>
-                        <translation class='com.jme3.math.Vector3f' x='0' y='0.5' z='10'/>
+                        <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='10'/>
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
 
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-        
+<?ignore      
 		<!-- A pipe -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'>

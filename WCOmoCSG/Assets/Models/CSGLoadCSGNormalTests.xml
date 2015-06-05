@@ -1,5 +1,12 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <com.jme3.scene.Node format_version='2' name='CSGSamplesC'>
+    <lights class='com.jme3.light.LightList'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' z='0.0'/>
     </transform>

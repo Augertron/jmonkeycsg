@@ -148,7 +148,7 @@ public class CSGPlane
 	) {
 		mSurfaceNormal = Vector3f.ZERO;
 		mPointOnPlane = Vector3f.ZERO;
-		mDot = 0f;
+		mDot = Float.NaN;
 		mMark = -1;
 	}
 	/** Constructor based on a given normal and point on the plane */
@@ -167,17 +167,16 @@ public class CSGPlane
 	,	int			pMarkValue
 	) {
 		// Think about this as an Assert....
-		if ( false ) {
+		if ( true ) {
 			// Remember that NaN always returns false for any comparison, so structure the logic accordingly
-			float dotAbsolute = Math.abs( pDot );
 			float normalLength = pNormal.length();
 			if ( !(
 			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
 			&& (normalLength < 1.0f + EPSILON_NEAR_ZERO) && (normalLength > 1.0f - EPSILON_NEAR_ZERO)
-			&& (dotAbsolute > EPSILON_NEAR_ZERO)
+			&& Float.isFinite( pDot )
 			) ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
-				pDot = 0.0f;
+				pDot =  Float.NaN;
 			}
 		}
 		mSurfaceNormal = pNormal;
@@ -187,7 +186,7 @@ public class CSGPlane
 	}
 	
 	/** Ensure we have something valid */
-	public boolean isValid() { return( mDot != 0.0f ); }
+	public boolean isValid() { return( Float.isFinite( mDot ) ); }
 	
 	/** Return a copy */
 	public CSGPlane clone(
@@ -471,11 +470,13 @@ public class CSGPlane
 		Object		pOther
 	) {
 		if ( pOther == this ) {
-			// By defintion, if the plane is the same
+			// By definition, if the plane is the same
 			return true;
 		} else if ( pOther instanceof CSGPlane ) {
 			// Two planes that are close are equal
-			if ( ConstructiveSolidGeometry.equalVector3f( this.mSurfaceNormal
+			if ( this.mDot != ((CSGPlane)pOther).mDot ) {
+				return( false );
+			} else if ( ConstructiveSolidGeometry.equalVector3f( this.mSurfaceNormal
 														, ((CSGPlane)pOther).mSurfaceNormal
 														, EPSILON_ONPLANE ) ) {
 				return( true );
