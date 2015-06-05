@@ -49,6 +49,16 @@ import com.jme3.util.TempVars;
  	CSGPlane knows how to identify polygons in front of, behind, and in the same plane.  CSGPartition
  	uses this mechanism to build up the appropriate set of polygons that apply in its section 
  	of the hierarchy.
+ 	
+ 	After more research, it appears this is all related to the concept of BSP trees
+ 	(Binary Space Partitioning) which is a generic mechanism for producing a tree representation of 
+ 	a hierarchical set of shapes.  In 3D, each shape is a polygon.
+ 		@see ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
+ 	
+ 	You will notice that the structure of a CSGPartition closely mimics the C++ psuedo-code provided
+ 	in the paper above. The BSP construction code is closely followed by CSGPlane.splitPolygon() 
+ 	processing.  That being said, the BSP codes that all polygons are assumed to be convex.
+ 	I wonder if that is true in all cases for this code????
  */
 public class CSGPartition 
 	implements ConstructiveSolidGeometry
@@ -57,6 +67,8 @@ public class CSGPartition
 	public static final String sCSGPartitionRevision="$Rev$";
 	public static final String sCSGPartitionDate="$Date$";
 
+	/** The level in the BSP hierarchy */
+	protected int				mLevel;
 	/** The list of active polygons within this node */
 	protected List<CSGPolygon>	mPolygons;
 	/** The plane that defines this node */
@@ -71,19 +83,22 @@ public class CSGPartition
 	/** Simple null constructor */
 	public CSGPartition(
 	) {
-		this( null, 0 );
+		this( null, 0, 1 );
 	}
 	/** Standard constructor that builds a hierarchy of nodes based on a given set of polygons */
 	public CSGPartition(
 		List<CSGPolygon>	pPolygons
 	,	Number				pMaterialIndex
+	,	int					pLevel
 	) {
-		this( pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue() );
+		this( pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue(), pLevel );
 	}
 	public CSGPartition(
 		List<CSGPolygon>	pPolygons
 	,	int					pMaterialIndex
+	,	int					pLevel
 	) {
+		mLevel = pLevel;
 		mPolygons = new ArrayList<CSGPolygon>();
 		mMaterialIndex = pMaterialIndex;
 		
@@ -91,7 +106,7 @@ public class CSGPartition
 	        // Avoid some object churn by using the thread-specific 'temp' variables
 	        TempVars vars = TempVars.get();
 	        try {
-	        	buildHierarchy( pPolygons, EPSILON, vars.vect1, vars.vect2d, 0 );
+	        	buildHierarchy( pPolygons, EPSILON_ONPLANE, vars.vect1, vars.vect2d );
 	        } finally {
 	        	vars.release();
 	        }
@@ -100,6 +115,13 @@ public class CSGPartition
 	public CSGPartition(
 		List<CSGPolygon>	pPolygons
 	) {
+		this( pPolygons, 1 );
+	}
+	public CSGPartition(
+		List<CSGPolygon>	pPolygons
+	,	int					pLevel
+	) {
+		mLevel = pLevel;
 		mPolygons = new ArrayList<CSGPolygon>();
 		
 		if ( pPolygons != null ) {
@@ -109,12 +131,15 @@ public class CSGPartition
 	        // Avoid some object churn by using the thread-specific 'temp' variables
 	        TempVars vars = TempVars.get();
 	        try {
-	        	buildHierarchy( pPolygons, EPSILON, vars.vect1, vars.vect2d, 0 );
+	        	buildHierarchy( pPolygons, EPSILON_ONPLANE, vars.vect1, vars.vect2d );
 	        } finally {
 	        	vars.release();
 	        }
 		}
 	}
+	
+	/** Accessor to the hierarchy level */
+	public int getLevel() { return mLevel; }
 	
 	/** Accessor to the MaterialIndex */
 	public int getMaterialIndex() { return mMaterialIndex; }
@@ -154,7 +179,7 @@ public class CSGPartition
 			// NOTE that coplannar polygons are retained in front/back, based on which
 			//		way they are facing
 			mPlane.splitPolygon( aPolygon
-								, EPSILON
+								, EPSILON_ONPLANE
 								, frontPolys, backPolys, frontPolys, backPolys
 								, pTemp3f, pTemp2f );
 		}
@@ -210,53 +235,61 @@ public class CSGPartition
 	,	float				pTolerance
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
-	,	int					pStackDepth
 	) {
 		if ( pPolygons.isEmpty() ) {
 			return;
 		}
-		if ( pStackDepth > 1000 ) {
+		if ( mLevel > 200 ) {
 			// This is probably an error in the algorithm, but I have not yet found the true cause.
 			ConstructiveSolidGeometry.sLogger.log( Level.WARNING
-			, "CSGPartition.buildHierarchy - too deep" );
+													, "CSGPartition.buildHierarchy - too deep" );
+			mPolygons = CSGPolygon.compressPolygons( pPolygons );
 			return;
 		}
 		// If no plane has been set for this node, use the plane of the first polygon
 		if ( mPlane == null ) {
 			mPlane = pPolygons.get(0).getPlane();
 		}
+		// As we go deeper in the hierarchy, do NOT insist on the same level of tolerance
+		// Otherwise, you will be looking for such detail that the polygons are so small that
+		// you get very very odd results
+		float aTolerance = pTolerance * mLevel;
+		
 		// Split up the polygons according to front/back of the given plane
 		List<CSGPolygon> front = new ArrayList<CSGPolygon>();
 		List<CSGPolygon> back = new ArrayList<CSGPolygon>();
 		for( CSGPolygon aPolygon : pPolygons ) {
 			// NOTE that for coplannar, we do not care which direction the polygon faces
 			mPlane.splitPolygon( aPolygon
-								, pTolerance
+								, aTolerance
 								, mPolygons, mPolygons, front, back
 								, pTemp3f, pTemp2f );
 		}
+		mPolygons = CSGPolygon.compressPolygons( mPolygons );
 		if ( !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
-				this.mFrontPartition = new CSGPartition( null, this.mMaterialIndex );
+				this.mFrontPartition = new CSGPartition( null, this.mMaterialIndex, this.mLevel + 1 );
 			}
+			front = CSGPolygon.compressPolygons( front );
 			if ( this.mPolygons.isEmpty() && back.isEmpty() ) {
 				// Everything is in the front, it does not need to be processed deeper
 				this.mFrontPartition.mPolygons.addAll( front );
 			} else {
 				// Assign whatever is in the front
-				this.mFrontPartition.buildHierarchy( front, pTolerance, pTemp3f, pTemp2f, pStackDepth + 1 );
+				this.mFrontPartition.buildHierarchy( front, pTolerance, pTemp3f, pTemp2f );
 			}
 		}
 		if ( !back.isEmpty() ) {
 			if ( mBackPartition == null ) {
-				mBackPartition = new CSGPartition( null, this.mMaterialIndex );
+				mBackPartition = new CSGPartition( null, this.mMaterialIndex, this.mLevel + 1 );
 			}
+			back = CSGPolygon.compressPolygons( back );
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
 				// Everything is in the back, it does not need to be processed deeper
 				mBackPartition.mPolygons.addAll( back );
 			} else {
 				// Assign whatever is in the back
-				mBackPartition.buildHierarchy( back, pTolerance, pTemp3f, pTemp2f, pStackDepth + 1 );
+				mBackPartition.buildHierarchy( back, pTolerance, pTemp3f, pTemp2f );
 			}
 		}
 	}

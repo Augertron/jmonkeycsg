@@ -293,7 +293,7 @@ public class CSGShape
 			b.invert();
 			b.clipTo( a, vars.vect1, vars.vect2d );
 			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), EPSILON, vars.vect1, vars.vect2d, 0 );
+			a.buildHierarchy( b.allPolygons( null ), EPSILON_ONPLANE, vars.vect1, vars.vect2d );
         } finally {
         	vars.release();
         }
@@ -317,7 +317,7 @@ public class CSGShape
 			b.invert();
 			b.clipTo( a, vars.vect1, vars.vect2d );
 			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), EPSILON, vars.vect1, vars.vect2d, 0 );
+			a.buildHierarchy( b.allPolygons( null ), EPSILON_ONPLANE, vars.vect1, vars.vect2d );
 			a.invert();
         } finally {
         	vars.release();
@@ -341,7 +341,7 @@ public class CSGShape
 		    b.invert();
 		    a.clipTo( b, vars.vect1, vars.vect2d );
 		    b.clipTo( a, vars.vect1, vars.vect2d);
-		    a.buildHierarchy( b.allPolygons( null ), EPSILON, vars.vect1, vars.vect2d, 0 );
+		    a.buildHierarchy( b.allPolygons( null ), EPSILON_ONPLANE, vars.vect1, vars.vect2d );
 		    a.invert();
         } finally {
         	vars.release();
@@ -402,9 +402,8 @@ public class CSGShape
 			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform ) );
 			
 			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
-			aVertexList = CSGVertex.compressVertices( aVertexList, 3 );
-			if ( aVertexList.size() >= 3 ) {
-				CSGPolygon aPolygon = new CSGPolygon( aVertexList, this.mMaterialIndex );
+			CSGPolygon aPolygon = CSGPolygon.createPolygon( aVertexList, this.mMaterialIndex );
+			if ( aPolygon != null ) {
 				polygons.add( aPolygon );
 			}
 		}

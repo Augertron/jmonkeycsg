@@ -155,48 +155,66 @@ public class CSGGeonode
 	public void regenerate(
 	) {
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
+			// Prepare for custom materials
+			Map materialMap = null;
+			Integer materialIndex;
+			int materialCount = 0;
+			if ( !mForceSingleMaterial ) {
+				// Construct the map of all materials in use, in order of definition.
+				// NOTE that since operator has no effect, it is possible to define extra/special
+				//		material via the SKIP operator.
+				for( CSGShape aShape : mShapes ) {
+					Material aMaterial = aShape.getMaterial();
+					if ( aMaterial != null ) {
+						// Locate cached copy of the material
+						AssetKey materialKey = aMaterial.getKey();
+						
+						if ( materialMap == null ) {
+							// No other custom materials - this becomes the first
+							materialMap = new HashMap( 17 );
+							
+							materialIndex = new Integer( ++materialCount );
+							if ( materialKey != null ) materialMap.put( materialKey, materialIndex );
+							materialMap.put( materialIndex, aMaterial );
+							
+							// Include the 'generic' material as well as index zero
+							if ( this.mMaterial != null ) {
+								materialKey =  this.mMaterial.getKey();
+								if ( materialKey != null ) materialMap.put( materialKey, sGenericMaterialIndex );
+								materialMap.put( sGenericMaterialIndex, this.mMaterial );
+							}
+							
+						} else if ( (materialKey != null) && materialMap.containsKey( materialKey ) ) {
+							// Use the material already found
+							materialIndex = (Integer)materialMap.get( materialKey );
+							
+						} else {
+							// Add this custom material into the list
+							materialIndex = new Integer( ++materialCount );
+							if ( materialKey != null ) materialMap.put( materialKey,  materialIndex );
+							materialMap.put( materialIndex, aMaterial );
+						}
+					}
+				}
+			}
 			// Sort the shapes based on their operator
 			List<CSGShape> sortedShapes = new ArrayList<>( mShapes );
 			Collections.sort( sortedShapes );
-			
-			// Prepare for custom materials
-			Map materialMap = null;
-			int materialCount = 0;
 			
 			// Operate on each shape in turn, blending it into the common
 			CSGShape aProduct = null;
 			for( CSGShape aShape : sortedShapes ) {
 				// Any special Material?
-				Integer materialIndex;
 				Material aMaterial = (mForceSingleMaterial) ? null : aShape.getMaterial();
 				if ( aMaterial != null ) {
 					// Locate cached copy of the material
 					AssetKey materialKey = aMaterial.getKey();
-					
-					if ( materialMap == null ) {
-						// No other custom materials - this becomes the first
-						materialMap = new HashMap( 17 );
-						
-						materialIndex = new Integer( ++materialCount );
-						if ( materialKey != null ) materialMap.put( materialKey, materialIndex );
-						materialMap.put( materialIndex, aMaterial );
-						
-						// Include the 'generic' material as well as index zero
-						if ( this.mMaterial != null ) {
-							materialKey =  this.mMaterial.getKey();
-							if ( materialKey != null ) materialMap.put( materialKey, sGenericMaterialIndex );
-							materialMap.put( sGenericMaterialIndex, this.mMaterial );
-						}
-						
-					} else if ( (materialKey != null) && materialMap.containsKey( materialKey ) ) {
+					if ( materialMap.containsKey( materialKey ) ) {
 						// Use the material already found
 						materialIndex = (Integer)materialMap.get( materialKey );
-						
 					} else {
-						// Add this custom material into the list
-						materialIndex = new Integer( ++materialCount );
-						if ( materialKey != null ) materialMap.put( materialKey,  materialIndex );
-						materialMap.put( materialIndex, aMaterial );
+						// No special material
+						materialIndex = null;
 					}
 				} else {
 					// No custom material

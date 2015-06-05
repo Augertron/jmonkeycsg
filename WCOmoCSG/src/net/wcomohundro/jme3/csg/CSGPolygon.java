@@ -41,6 +41,7 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.math.Vector3f;
 
 /**  Constructive Solid Geometry (CSG)
 
@@ -59,6 +60,150 @@ public class CSGPolygon
 
 	/** Static empty list of vertices */
 	protected static final List<CSGVertex> sEmptyVertices = new ArrayList<CSGVertex>(0);
+	/** Quick access to a NULL in a list of Vertices */
+	protected static final List<CSGVertex> sNullVertexList = Collections.singletonList( null );
+
+	
+	/** Factory level service routine that squeezes out any Vertex from a list that is not
+	 	a 'significant' distance from other vertices in the list. The vertices are assumed
+	 	to be in order, so that 1::2, 2::3, ... N-1::N, N::1
+	 	
+	 	You can also force all the vertices to be explicitly 'projected' onto a given optional plane
+	 	
+	 	@return - the 'eccentricity' of the related vertices, which represents the ratio 
+	 			  of the longest distance between points and the shortest.  So a very large
+	 			  eccentricity represents a rather wrapped set of vertices.
+	 */
+	public static float compressVertices(
+		List<CSGVertex>		pVertices
+	,	CSGPlane			pPlane
+	,	float				pMinimalBetween
+	,	float				pMaximalBetween
+	) {
+		CSGVertex rejectedVertex = null;
+		float minDistance = Float.MAX_VALUE, maxDistance = 0.0f;
+		
+		// Check each in the list against its neighbor
+		int lastIndex = pVertices.size() -1;
+		if ( lastIndex <= 0 ) {
+			// Nothing interesting in the list
+			return( 0.0f );
+		}
+		for( int i = 0, j = 1; i <= lastIndex; i += 1 ) {
+			if ( j > lastIndex ) j = 0;
+			
+			CSGVertex aVertex = pVertices.get( i );
+			if ( aVertex != null ) {
+				CSGVertex otherVertex = pVertices.get( j );
+				float aDistance = aVertex.distance( otherVertex );
+				if ( (aDistance >= pMinimalBetween) && (aDistance <= pMaximalBetween) ) {
+					// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
+					// 		structure your bound checks accordingly
+					if ( aDistance < minDistance ) minDistance = aDistance;
+					if ( aDistance > maxDistance ) maxDistance = aDistance;
+					
+					if ( pPlane != null ) {
+						// Ensure the given point is actually on the plane
+						Vector3f aPoint = aVertex.getPosition();
+						aDistance = pPlane.pointDistance( aPoint );
+						if ( (aDistance < -EPSILON_NEAR_ZERO) || (aDistance > EPSILON_NEAR_ZERO) ) {
+							// Resolve back to the corresponding point on the given plane
+							Vector3f newPoint = pPlane.pointProjection( aPoint, null );
+							aVertex = new CSGVertex( newPoint, aVertex.getNormal(), aVertex.getTextureCoordinate() );
+							pVertices.set( i, aVertex );
+						}
+					}
+				} else {
+					// The two vertices are too close (or super far apart) to be significant
+					rejectedVertex = aVertex;
+					pVertices.set( j, null );
+					
+					// NOTE that we work with the same i again with the next j
+					i -= 1;
+				}
+				j += 1;
+			}
+		}
+		if ( rejectedVertex != null ) {
+			// We have punted something, so compress out all nulls
+			pVertices.removeAll( sNullVertexList );
+		}
+		// Look for a shape totally out of bounds
+		float eccentricity = maxDistance / minDistance;
+		return( eccentricity );
+	}
+	
+
+	/** Factory level service routine to create an appropriate polygon, compressing vertices
+	 	and deciding if the polygon is 'worth' constructing.
+	 	
+	 	NOTE
+	 		that the given list of vertices is 'compressed' as a side effect
+	 	
+	 	@return - a CSGPolygon or null if no polygon was constructed
+	 */
+	public static CSGPolygon createPolygon(
+		List<CSGVertex>		pVertices
+	,	int					pMaterialIndex
+	) {
+		CSGPlane aPlane = CSGPlane.fromVertices( pVertices );
+		return( createPolygon( pVertices, aPlane, pMaterialIndex ) );
+	}
+	public static CSGPolygon createPolygon(
+		List<CSGVertex>		pVertices
+	,	CSGPlane			pPlane
+	,	int					pMaterialIndex
+	) {
+		if ( (pPlane != null) && pPlane.isValid() ) {
+			// NOTE that compressVertices operates directly on the given list
+			//		and the current thinking is to preserve the original vertices, and NOT force them
+			//		onto the given plane.
+			float eccentricity 
+				= compressVertices( pVertices, null /*pPlane*/, EPSILON_BETWEEN_POINTS, EPSILON_BETWEEN_POINTS_MAX );
+			if ( pVertices.size() >= 3 ) {
+				// We have enough vertices for a shape
+				// NOTE when debugging, it can be useful to look for odd eccentricty values here....
+				CSGPolygon aPolygon = new CSGPolygon( pVertices, pMaterialIndex );
+				return( aPolygon );
+			}
+		} else {
+			throw new IllegalArgumentException( "Incomplete Polygon" );
+		}
+		// We did NOT build anything of value
+		return( null );
+	}
+	
+	/** Factory level service routine that combines polygons that happen to lie in the same plane
+	 	@todo - look into doing something real with this if possible
+	 */
+	public static List<CSGPolygon> compressPolygons(
+		List<CSGPolygon>	pPolygons
+	) {
+		if ( true ) { // pPolygons.size() < 2 ) {
+			// Nothing to compress
+			return( pPolygons );
+		}
+		List<CSGPolygon> compressedList = null;
+		
+		// Check each in the list against all others
+		int lastIndex = pPolygons.size() -1;
+		for( int i = 0; i < lastIndex; i += 1 ) {
+			CSGPolygon aPolygon = pPolygons.get( i );
+			CSGPlane aPlane = aPolygon.getPlane();
+			
+			for( int k = i + 1, m = pPolygons.size(); k < m; k += 1 ) {
+				CSGPolygon otherPolygon = pPolygons.get( k );
+				CSGPlane otherPlane = otherPolygon.getPlane();
+				
+				if ( aPlane.equals( otherPlane ) ) {
+					// Two polygons in the same plane, so look for similar vertices
+					compressedList = new ArrayList( pPolygons.size() );
+					compressedList.addAll( pPolygons );
+				}
+			}
+		}
+		return( (compressedList == null) ? pPolygons : compressedList );
+	}
 	
 
 	/** The vertices that define this shape */

@@ -70,6 +70,11 @@ import com.jme3.math.Vector3f;
  	by "andychase".  Everything seems to have been properly posted and annotated for fully open 
  	source.
  	
+	After more research, it appears this is all related to the concept of BSP trees
+ 	(Binary Space Partitioning) which is a generic mechanism for producing a tree representation of 
+ 	a hierarchical set of shapes.  In 3D, each shape is a polygon.
+ 		@see ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html 	
+ 		
  	While working with the "fabsterpal" code, I tripped over some bugs and encountered many spots
  	where I wished for a deeper level of comments.  My personal learning style is to work from an
  	operational example.  From there, I can make small, incremental changes to help we understand
@@ -123,20 +128,16 @@ import com.jme3.math.Vector3f;
 */
 public interface ConstructiveSolidGeometry 
 {
-	/** Define a 'tolerance' for when two points are so close, they are effectively the same 
-	 	NOTE
-	 		This is a very, very, very critical value.  If too large, then shapes will get
-	 		rather blocky and lose their fine-grain appearance.  But if too small, then
-	 		polygons may be produced where floating point overflow corrupts the shape.
-	 		For example, when EPSILON was set to 1e-5f, a helix subtracted from a cube 
-	 		caused holes in the resultant shape.
-	 */
-	public static final float EPSILON = 1e-4f;
-	public static final float EPSILON_SQUARED = EPSILON * EPSILON;
+	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
+	// Tolerance to decide if a given point in 'on' a plane
+	public static final float EPSILON_ONPLANE = 0.5e-4f;
+	// Tolerance to determine if two points are close enough to be considered the same point
+	public static final float EPSILON_BETWEEN_POINTS = 0.5e-4f;
+	// Tolerance if a given value is near enough to zero to be treated as zero
+	public static final float EPSILON_NEAR_ZERO = 1.0e-5f;
 	
 	/** Define a 'tolerance' for when two points are so far apart, it is ridiculous to consider it */
-	public static final float EPSILON_MAX = 1e+3f;
-	public static final float EPSILON_MAX_SQUARED = EPSILON_MAX * EPSILON_MAX;
+	public static final float EPSILON_BETWEEN_POINTS_MAX = 1e+3f;
 	
 	/** Supported actions applied to the CSGShapes */
 	public static enum CSGOperator
@@ -151,23 +152,24 @@ public interface ConstructiveSolidGeometry
     public static final Logger sLogger = Logger.getLogger( ConstructiveSolidGeometry.class.getName() );
 
     /** Service routine to check two vectors and see if they are the same, within a given 
-     	tolerance.
+     	tolerance. (Typically EPSILON_BETWEEN_POINTS, but not required)
      */
     public static boolean equalVector3f(
     	Vector3f 	pVector1
     ,	Vector3f	pVector2
+    ,	float		pTolerance
     ) {
     	if ( pVector1 != pVector2 ) {
 	    	float deltaX = pVector1.x - pVector2.x;
-	    	if ( (deltaX < -EPSILON) || (deltaX > EPSILON) ) {
+	    	if ( (deltaX < -pTolerance) || (deltaX > pTolerance) ) {
 	    		return false;
 	    	}
 	    	float deltaY = pVector1.y - pVector2.y;
-	    	if ( (deltaY < -EPSILON) || (deltaY > EPSILON) ) {
+	    	if ( (deltaY < -pTolerance) || (deltaY > pTolerance) ) {
 	    		return false;
 	    	}
 	    	float deltaZ = pVector1.z - pVector2.z;
-	    	if ( (deltaZ < -EPSILON) || (deltaZ > EPSILON) ) {
+	    	if ( (deltaZ < -pTolerance) || (deltaZ > pTolerance) ) {
 	    		return false;
 	    	}
     	}
@@ -216,7 +218,7 @@ public interface ConstructiveSolidGeometry
     /** Service routine to set a rotation based on two vectors 
 	 	
 	 	I am keeping this around strictly for historical documentation. It may be useful
-	 	agains sometime in the future.  In any case, watch out for 0 and 180 degree rotation
+	 	again sometime in the future.  In any case, watch out for 0 and 180 degree rotation
 	 */
 	public static Quaternion computeQuaternion(
 		Vector3f	pNormalU

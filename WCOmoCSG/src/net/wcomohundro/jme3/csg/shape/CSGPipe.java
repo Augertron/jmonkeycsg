@@ -311,7 +311,7 @@ if ( true ) {
     ,	int				pScanDirection
     ) {
     	// Where is this point in relationship to the plane of the base slice?
-    	int pointPlaneRelationship = pBasePlane.pointPosition( pPoint );
+    	int pointPlaneRelationship = pBasePlane.pointPosition( pPoint, EPSILON_ONPLANE );
 
     	if ( ((pointPlaneRelationship < 0) && (pScanDirection > 0))
     	|| ((pointPlaneRelationship > 0) && (pScanDirection < 0)) ) {

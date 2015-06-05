@@ -64,6 +64,39 @@ import com.jme3.math.Vector2f;
 	plane can be broken into two parts, the new polygon in front of the plane and the new polygon
 	behind the plane.
 	
+	From the BSP FAQ paper: @see ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
+-------------------------------------------------------------------------------------------------------
+HOW DO YOU PARTITION A POLYGON WITH A PLANE?
+
+Overview
+	Partitioning a polygon with a plane is a matter of determining which side of the plane the polygon 
+	is on. This is referred to as a front/back test, and is performed by testing each point in the 
+	polygon against the plane. If all of the points lie to one side of the plane, then the entire 
+	polygon is on that side and does not need to be split. If some points lie on both sides of the 
+	plane, then the polygon is split into two or more pieces.
+
+	The basic algorithm is to loop across all the edges of the polygon and find those for which one 
+	vertex is on each side of the partition plane. The intersection points of these edges and 
+	the plane are computed, and those points are used as new vertices for the resulting pieces.
+
+Implementation notes
+	Classifying a point with respect to a plane is done by passing the (x, y, z) values of the 
+	point into the plane equation, Ax + By + Cz + D = 0. The result of this operation is the 
+	distance from the plane to the point along the plane's normal vector. It will be positive 
+	if the point is on the side of the plane pointed to by the normal vector, negative otherwise. 
+	If the result is 0, the point is on the plane.
+
+	For those not familiar with the plane equation, The values A, B, and C are the coordinate 
+	values of the normal vector. D can be calculated by substituting a point known to be on 
+	the plane for x, y, and z.
+
+	Convex polygons are generally easier to deal with in BSP tree construction than concave 
+	ones, because splitting them with a plane always results in exactly two convex pieces. 
+	Furthermore, the algorithm for splitting convex polygons is straightforward and robust. 
+	Splitting of concave polygons, especially self intersecting ones, is a significant problem 
+	in its own right.
+------------------------------------------------------------------------------------------------------	
+	
 	NOTE
 		that a plane is expected to be immutable with no internally moving parts.  Once created, you
 		cannot alter its normal or dot.  Therefore, a clone of a plane is just the plane itself.
@@ -102,7 +135,7 @@ public class CSGPlane
 	}
 
 	/** A plane is defined by its 'normal' */
-	protected Vector3f	mNormal;
+	protected Vector3f	mSurfaceNormal;
 	/** Quick access to its DOT for comparison purposes */
 	protected float		mDot;
 	/** An arbitrary point on the plane */
@@ -113,7 +146,7 @@ public class CSGPlane
 	/** Standard null constructor */
 	public CSGPlane(
 	) {
-		mNormal = Vector3f.ZERO;
+		mSurfaceNormal = Vector3f.ZERO;
 		mPointOnPlane = Vector3f.ZERO;
 		mDot = 0f;
 		mMark = -1;
@@ -123,6 +156,7 @@ public class CSGPlane
 		Vector3f	pNormal
 	,	Vector3f	pPointOnPlane
 	) {
+		// From the BSP FAQ paper, the 'D' value is calculated from the normal and a point on the plane.
 		this( pNormal, pPointOnPlane, pNormal.dot( pPointOnPlane ), -1 );
 	}
 	/** Internal constructor for a given normal and dot */
@@ -133,20 +167,20 @@ public class CSGPlane
 	,	int			pMarkValue
 	) {
 		// Think about this as an Assert....
-		if ( true ) {
+		if ( false ) {
 			// Remember that NaN always returns false for any comparison, so structure the logic accordingly
 			float dotAbsolute = Math.abs( pDot );
 			float normalLength = pNormal.length();
 			if ( !(
 			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
-			&& (normalLength < 1.0f + EPSILON) && (normalLength > 1.0f - EPSILON)
-			&& (dotAbsolute > EPSILON) && (dotAbsolute < EPSILON_MAX)
+			&& (normalLength < 1.0f + EPSILON_NEAR_ZERO) && (normalLength > 1.0f - EPSILON_NEAR_ZERO)
+			&& (dotAbsolute > EPSILON_NEAR_ZERO)
 			) ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
 				pDot = 0.0f;
 			}
 		}
-		mNormal = pNormal;
+		mSurfaceNormal = pNormal;
 		mPointOnPlane = pPointOnPlane;
 		mDot = pDot;
 		mMark = pMarkValue;
@@ -161,7 +195,7 @@ public class CSGPlane
 	) {
 		if ( pFlipIt ) {
 			// Flipped copy
-			return( new CSGPlane( mNormal.negate(), mPointOnPlane, -mDot, -1 ) );
+			return( new CSGPlane( mSurfaceNormal.negate(), mPointOnPlane, -mDot, -1 ) );
 		} else {
 			// Standard use of this immutable copy
 			return( this );
@@ -172,6 +206,14 @@ public class CSGPlane
 	public int getMark() { return mMark; }
 	public void setMark( int pMarkValue ) { mMark = pMarkValue; }
 	
+	/** Check if a given point is in 'front' or 'behind' this plane  */
+	public float pointDistance(
+		Vector3f	pPoint
+	) {
+		// How far away is the given point
+		float distanceToPlane = mSurfaceNormal.dot( pPoint ) - mDot;
+		return( distanceToPlane );
+	}
 	
 	/** Check if a given point is in 'front' or 'behind' this plane.
 	 	@return -  -1 if behind
@@ -180,12 +222,13 @@ public class CSGPlane
 	 */
 	public int pointPosition(
 		Vector3f	pPoint
+	,	float		pTolerance
 	) {
 		// How far away is the given point
-		float distanceToPlane = mNormal.dot( pPoint ) - mDot;
+		float distanceToPlane = mSurfaceNormal.dot( pPoint ) - mDot;
 		
 		// If within a given tolerance, it is the same plane
-		int aPosition = (distanceToPlane < -EPSILON) ? -1 : (distanceToPlane > EPSILON) ? 1 : 0;
+		int aPosition = (distanceToPlane < -pTolerance) ? -1 : (distanceToPlane > pTolerance) ? 1 : 0;
 		return( aPosition );
 	}
 	
@@ -196,10 +239,14 @@ public class CSGPlane
 	) {
 		// Digging around the web, I found the following:
 		//		q_proj = q - dot(q - p, n) * n
-		float dot = pPointStore.set( pPoint ).subtractLocal( mPointOnPlane ).dot( mNormal );
-		pPointStore.set( pPoint ).subtractLocal( mNormal.mult( dot ) );
-		
-		//pPointStore.set( pPoint ).subtractLocal( dot, dot, dot ).multLocal( mNormal );
+		// And
+		//		a = point_x*normal_dx + point_y*normal_dy + point_z*normal_dz - c;
+		//		planar_x = point_x - a*normal_dx;
+		//		planar_y = point_y - a*normal_dy;
+		//		planar_z = point_z - a*normal_dz;
+		float aFactor = pPoint.dot( mSurfaceNormal ) - mDot;
+		pPointStore = mSurfaceNormal.mult( aFactor, pPointStore );
+		pPointStore.set( pPoint.x - pPointStore.x, pPoint.y - pPointStore.y, pPoint.z - pPointStore.z );
 		return( pPointStore );
 	}
 	
@@ -219,11 +266,12 @@ public class CSGPlane
 	 		SPANNING - 	the polygon is split into two new polygons, with piece in front going
 	 					into the front list, and the piece in back going into the back list
 	 */
+	private static final int SAMEPLANE = -1;
 	private static final int COPLANAR = 0;
 	private static final int FRONT = 1;
 	private static final int BACK = 2;
 	private static final int SPANNING = 3;
-	public void splitPolygon(
+	public boolean splitPolygon(
 		CSGPolygon 			pPolygon
 	,	float				pTolerance
 	, 	List<CSGPolygon> 	pCoplanarFront
@@ -235,7 +283,7 @@ public class CSGPlane
 	) {
 		if ( !pPolygon.isValid() ) {
 			// This polygon is not playing the game properly, ignore it
-			return;
+			return( false );
 		}
 		// A note from the web about what "dot" means in 3D graphics
 		// 		When deciding if a polygon is facing the camera, you need only calculate the dot product 
@@ -244,34 +292,43 @@ public class CSGPlane
 		// 		value is greater than zero, it is facing away from the camera. 
 		List<CSGVertex> polygonVertices = pPolygon.getVertices();
 		int vertexCount = polygonVertices.size();
+		CSGPlane polygonPlane = pPolygon.getPlane();
 		
-		int polygonType = 0;
+		int polygonType = COPLANAR;
 		int[] polygonTypes = null;
 		float[] vertexDot = null;
 		
 		// NOTE that CSGPlane.equals() checks for near-misses
-		if ( pPolygon.getPlane().equals( this ) ) {
+		if ( polygonPlane.equals( this ) ) {
 			// By definition, we are in the plane
-			polygonType = COPLANAR;
+			polygonType = SAMEPLANE;
 		} else {
 			// Check every vertex against the plane
 			polygonTypes = new int[ vertexCount ];
 			vertexDot = new float[ vertexCount ];
 			for( int i = 0; i < vertexCount; i += 1 ) {
-				// How far away from this plane is the vertex?
+				// Where is this vertex in relation to the plane?
+				// Compare the vertex dot to the inherent plane dot
 				Vector3f aVertexPosition = polygonVertices.get( i ).getPosition();
-				float distanceToPlane = vertexDot[i] = mNormal.dot( aVertexPosition );
-				distanceToPlane -= mDot;
+				float aVertexDot = vertexDot[i] = mSurfaceNormal.dot( aVertexPosition );
+				aVertexDot -= mDot;
 				
 				// If within a given tolerance, it is the same plane
-				int type = (distanceToPlane < -pTolerance) ? BACK : (distanceToPlane > pTolerance) ? FRONT : COPLANAR;
+				// See the discussion from the BSP FAQ paper about the distance of a point to the plane
+				int type = (aVertexDot < -pTolerance) ? BACK : (aVertexDot > pTolerance) ? FRONT : COPLANAR;
 				polygonType |= type;
 				polygonTypes[i] = type;
 			}
 		}
 		switch( polygonType ) {
+		case SAMEPLANE:
+			// The given polygon lies in this same plane
+			pCoplanarFront.add( pPolygon );
+			break;
+
 		case COPLANAR:
-			// The given polygon lies in this same plane which is handled below
+			// Which way is the polygon facing?
+			((mSurfaceNormal.dot( polygonPlane.mSurfaceNormal ) >= 0) ? pCoplanarFront : pCoplanarBack).add( pPolygon );
 			break;
 			
 		case FRONT:
@@ -310,7 +367,7 @@ public class CSGPlane
 					// If we cross the plane between these two vertices, then interpolate 
 					// a new vertex on this plane itself, which is both before and behind.
 					pTemp3f.set( jVertex.getPosition() ).subtractLocal( iVertex.getPosition() );
-					float percent = (mDot - vertexDot[i]) / mNormal.dot( pTemp3f );
+					float percent = (mDot - vertexDot[i]) / mSurfaceNormal.dot( pTemp3f );
 					CSGVertex onPlane = iVertex.interpolate( jVertex, percent, pTemp3f, pTemp2f );
 					if ( onPlane != null ) {
 						beforeVertices.add( onPlane );
@@ -319,31 +376,68 @@ public class CSGPlane
 				}
 			}
 			// What comes in front of the given plane?
-			beforeVertices = CSGVertex.compressVertices( beforeVertices, 3 );
-			CSGPolygon beforePolygon = new CSGPolygon( beforeVertices, pPolygon.getMaterialIndex() );
-			if ( beforePolygon.isValid() ) {
-				pFront.add( beforePolygon  );
-			} else {
+			CSGPolygon beforePolygon = CSGPolygon.createPolygon( beforeVertices, pPolygon.getMaterialIndex() );
+
+			// What comes behind the given plane?
+			CSGPolygon behindPolygon = CSGPolygon.createPolygon( behindVertices, pPolygon.getMaterialIndex() );
+			
+			if ( (beforePolygon == null) && !beforeVertices.isEmpty() ) {
+				// Not enough distinct vertices
+				ConstructiveSolidGeometry.sLogger.log( Level.FINE, "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
+				behindPolygon = null;
+			} else if ( (behindPolygon == null) && !behindVertices.isEmpty() ) {
+				// Not enough distinct vertices
+				ConstructiveSolidGeometry.sLogger.log( Level.FINE, "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
 				beforePolygon = null;
 			}
-			// What comes behind the given plane?
-			behindVertices = CSGVertex.compressVertices( behindVertices, 3 );
-			CSGPolygon behindPolygon = new CSGPolygon( behindVertices, pPolygon.getMaterialIndex() );
-			if ( behindPolygon.isValid() ) {
+			if ( beforePolygon != null ) {
+				pFront.add( beforePolygon  );
+			}
+			if ( behindPolygon != null ) {
 				pBack.add( behindPolygon );
-			} else {
-				behindPolygon = null;
+			} else if ( beforePolygon == null ) {
+				// The polygon did not split well, try again with more tolerance
+				splitPolygon(	pPolygon
+								,	pTolerance * 2.0f
+								, 	pCoplanarFront
+								, 	pCoplanarBack
+								, 	pFront
+								, 	pBack
+								,	pTemp3f
+								,	pTemp2f
+								);
 			}
-			if ( (beforePolygon == null) && (behindPolygon == null) ) {
-				// We did not split the polygon at all, treat it as COPLANAR
-				polygonType = COPLANAR;
+/*** an older attempt to account for missing vertices
+			if ( beforePolygon == null ) {
+				if ( behindPolygon == null ) {
+					// We did not split the polygon at all, treat it as COPLANAR
+					pPolygon = CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex() );
+					if ( pPolygon == null ) {
+						// I am not quite sure how I would get here
+						return( false );
+					} else {
+						pCoplanarFront.add( pPolygon );
+					}
+				} else if ( !beforeVertices.isEmpty() ) {
+					// There is some fragment before but not enough for an independent shape
+					// @todo - investigate further if we need to retain this polygon in front or just drop it
+					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
+					//polygonType = COPLANAR;		// Just adding the full poly to the plane does not work
+					ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
+					return( false );
+				}
+			} else if ( (behindPolygon == null) && !behindVertices.isEmpty() ) {
+				// There is some fragment behind, but not enough for an independent shape
+				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
+				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
+				//polygonType = COPLANAR;			// Just adding the full poly to the plane does not work
+				ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
+				return( false );
 			}
+***/
 			break;
 		}
-		if ( polygonType == COPLANAR ) {
-			// The given polygon lies in this same plane, which way is it facing?
-			((mNormal.dot( pPolygon.getPlane().mNormal ) >= 0) ? pCoplanarFront : pCoplanarBack).add( pPolygon );
-		}
+		return( true );
 	}
 
 	/** Make the Plane 'savable' */
@@ -352,7 +446,7 @@ public class CSGPlane
 		JmeExporter		pExporter
 	) throws IOException {
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
-		aCapsule.write( mNormal, "Normal", Vector3f.ZERO );
+		aCapsule.write( mSurfaceNormal, "Normal", Vector3f.ZERO );
 		aCapsule.write( mDot, "Dot", 0f );
 	}
 	@Override
@@ -361,14 +455,14 @@ public class CSGPlane
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mDot = aCapsule.readFloat( "Dot", 0f );
-		mNormal = (Vector3f)aCapsule.readSavable( "Normal", Vector3f.ZERO );
+		mSurfaceNormal = (Vector3f)aCapsule.readSavable( "Normal", Vector3f.ZERO );
 	}
 	
 	/** For DEBUG */
 	@Override
 	public String toString(
 	) {
-		return( super.toString() + " - " + mNormal + "(" + mDot + ")" );
+		return( super.toString() + " - " + mSurfaceNormal + "(" + mDot + ")" );
 	}
 	
 	/** OVERRIDE to treat two planes as equal if they happen to be close */
@@ -381,7 +475,13 @@ public class CSGPlane
 			return true;
 		} else if ( pOther instanceof CSGPlane ) {
 			// Two planes that are close are equal
-			return( ConstructiveSolidGeometry.equalVector3f( this.mNormal, ((CSGPlane)pOther).mNormal ) );
+			if ( ConstructiveSolidGeometry.equalVector3f( this.mSurfaceNormal
+														, ((CSGPlane)pOther).mSurfaceNormal
+														, EPSILON_ONPLANE ) ) {
+				return( true );
+			} else {
+				return( false );
+			}
 		} else {
 			// Let the super handle the error case
 			return( super.equals( pOther ) );
