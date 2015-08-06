@@ -100,8 +100,7 @@ public class CSGVertex
 			mTextureCoordinate = pTextureCoordinate;
 		} else {
 			// Use what was given
-			// Think about using Assert for the following
-			if ( false ) {
+			if ( DEBUG ) {
 				if ( !(
 				   (Math.abs( pPosition.x ) < EPSILON_BETWEEN_POINTS_MAX) 
 				&& (Math.abs( pPosition.y ) < EPSILON_BETWEEN_POINTS_MAX) 
@@ -157,9 +156,12 @@ public class CSGVertex
 	public CSGVertex interpolate(
 		CSGVertex 	pOther
 	, 	float		pPercentage
+	,	CSGPlane	pPlane
 	,	Vector3f	pTemp3f
 	,	Vector2f	pTemp2f
 	) {
+		CSGVertex aVertex = null;
+		
 		// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
 		// 		structure your bound checks accordingly
 		if ( (pPercentage < 0.0f) || (pPercentage > 1.0f) ) {
@@ -167,10 +169,12 @@ public class CSGVertex
 			
 		} else if ( pPercentage <= EPSILON_NEAR_ZERO ) {
 			// Zero percent means this vertex
-			return( this.clone( false ) );
+			aVertex = this.clone( false );
+			
 		} else if ( pPercentage >= 1.0f - EPSILON_NEAR_ZERO) {
 			// 100 percent means the other vertex
-			return( pOther.clone( false ) );
+			aVertex = pOther.clone( false );
+			
 		} else if ( Float.isFinite( pPercentage ) ){
 			// Where is this new vertex?
 			Vector3f newPosition 
@@ -190,11 +194,24 @@ public class CSGVertex
 					pTemp2f.set( pOther.getTextureCoordinate() )
 						.subtractLocal( this.mTextureCoordinate ).multLocal( pPercentage ) );
 			
-			return new CSGVertex( newPosition, newNormal, newTextureCoordinate );
+			aVertex = new CSGVertex( newPosition, newNormal, newTextureCoordinate );
 		}
-		// Not a percentage we can deal with
-		ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "unexpected percentage: " + pPercentage );
-		return( null );
+		if ( aVertex == null ) {
+			// Not a percentage we can deal with
+			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "unexpected percentage: " + pPercentage );
+		} else if ( pPlane != null ) {
+			// Force the position onto the plane
+			Vector3f aPosition = aVertex.getPosition();
+			float aDistance = pPlane.pointDistance( aPosition );
+			if ( aDistance != 0 ) {
+				aPosition = pPlane.pointProjection( aPosition, null );
+				if ( DEBUG ) {
+					aDistance = pPlane.pointDistance( aPosition );
+				}
+				aVertex = new CSGVertex( aPosition, aVertex.getNormal(), aVertex.getTextureCoordinate() );
+			}
+		}
+		return( aVertex );
 	}
 	
 	/** Calculate the distance of this vertex to another */

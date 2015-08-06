@@ -67,7 +67,12 @@ public class CSGPartition
 	public static final String sCSGPartitionRevision="$Rev$";
 	public static final String sCSGPartitionDate="$Date$";
 
-	/** The level in the BSP hierarchy */
+	/** Limit on processing depth when building the BSP hierarchy */
+	public static int sHierarchyLimit = 250;
+	
+	/** The 'shape' associated with this partition */
+	protected CSGShape			mShape;
+	/** The level in the BSP hierarchy (negative means level is 'corrupt') */
 	protected int				mLevel;
 	/** The list of active polygons within this node */
 	protected List<CSGPolygon>	mPolygons;
@@ -83,21 +88,24 @@ public class CSGPartition
 	/** Simple null constructor */
 	public CSGPartition(
 	) {
-		this( null, 0, 1 );
+		this( null, null, 0, 1 );
 	}
 	/** Standard constructor that builds a hierarchy of nodes based on a given set of polygons */
 	public CSGPartition(
-		List<CSGPolygon>	pPolygons
+		CSGShape			pShape
+	,	List<CSGPolygon>	pPolygons
 	,	Number				pMaterialIndex
 	,	int					pLevel
 	) {
-		this( pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue(), pLevel );
+		this( pShape, pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue(), pLevel );
 	}
 	public CSGPartition(
-		List<CSGPolygon>	pPolygons
+		CSGShape			pShape
+	,	List<CSGPolygon>	pPolygons
 	,	int					pMaterialIndex
 	,	int					pLevel
 	) {
+		mShape = pShape;
 		mLevel = pLevel;
 		mPolygons = new ArrayList<CSGPolygon>();
 		mMaterialIndex = pMaterialIndex;
@@ -113,14 +121,17 @@ public class CSGPartition
 		}
 	}
 	public CSGPartition(
-		List<CSGPolygon>	pPolygons
+		CSGShape			pShape
+	,	List<CSGPolygon>	pPolygons
 	) {
-		this( pPolygons, 1 );
+		this( pShape, pPolygons, 1 );
 	}
 	public CSGPartition(
-		List<CSGPolygon>	pPolygons
+		CSGShape			pShape
+	,	List<CSGPolygon>	pPolygons
 	,	int					pLevel
 	) {
+		mShape = pShape;
 		mLevel = pLevel;
 		mPolygons = new ArrayList<CSGPolygon>();
 		
@@ -140,6 +151,27 @@ public class CSGPartition
 	
 	/** Accessor to the hierarchy level */
 	public int getLevel() { return mLevel; }
+	public boolean isValid() { return( mLevel > 0); }
+	public int whereCorrupt(
+	) {
+		int corruptLevel = 0;
+		if ( mLevel < 0 ) {
+			corruptLevel = -mLevel;
+			if ( mFrontPartition != null ) {
+				int frontLevel = mFrontPartition.whereCorrupt();
+				if ( frontLevel > corruptLevel ) {
+					corruptLevel = frontLevel;
+				}
+			}
+			if ( mBackPartition != null ) {
+				int backLevel = mBackPartition.whereCorrupt();
+				if ( backLevel > corruptLevel ) {
+					corruptLevel = backLevel;
+				}
+			}
+		}
+		return( corruptLevel );
+	}
 	
 	/** Accessor to the MaterialIndex */
 	public int getMaterialIndex() { return mMaterialIndex; }
@@ -180,6 +212,7 @@ public class CSGPartition
 			//		way they are facing
 			mPlane.splitPolygon( aPolygon
 								, EPSILON_ONPLANE
+								, mLevel
 								, frontPolys, backPolys, frontPolys, backPolys
 								, pTemp3f, pTemp2f );
 		}
@@ -229,22 +262,27 @@ public class CSGPartition
 		mBackPartition = temp;
 	}
 	
-	/** Build a hierarchy of nodes from a given set of polygons */
-	protected void buildHierarchy(
+	/** Build a hierarchy of nodes from a given set of polygons
+	 	@return - true if any construction problems occur
+	 */
+	public boolean buildHierarchy(
 		List<CSGPolygon>	pPolygons
 	,	float				pTolerance
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
 	) {
+		boolean aCorruptHierarchy = false;
+		
 		if ( pPolygons.isEmpty() ) {
-			return;
+			return( aCorruptHierarchy );
 		}
-		if ( mLevel > 200 ) {
+		if ( mLevel > sHierarchyLimit ) {
 			// This is probably an error in the algorithm, but I have not yet found the true cause.
 			ConstructiveSolidGeometry.sLogger.log( Level.WARNING
 													, "CSGPartition.buildHierarchy - too deep" );
-			mPolygons = CSGPolygon.compressPolygons( pPolygons );
-			return;
+			//mPolygons = CSGPolygon.compressPolygons( pPolygons );
+			if ( mLevel > 0 ) mLevel = -mLevel;
+			return( true );
 		}
 		// If no plane has been set for this node, use the plane of the first polygon
 		if ( mPlane == null ) {
@@ -262,13 +300,14 @@ public class CSGPartition
 			// NOTE that for coplannar, we do not care which direction the polygon faces
 			mPlane.splitPolygon( aPolygon
 								, aTolerance
+								, mLevel
 								, mPolygons, mPolygons, front, back
 								, pTemp3f, pTemp2f );
 		}
 		mPolygons = CSGPolygon.compressPolygons( mPolygons );
 		if ( !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
-				this.mFrontPartition = new CSGPartition( null, this.mMaterialIndex, this.mLevel + 1 );
+				this.mFrontPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1 );
 			}
 			front = CSGPolygon.compressPolygons( front );
 			if ( this.mPolygons.isEmpty() && back.isEmpty() ) {
@@ -276,12 +315,13 @@ public class CSGPartition
 				this.mFrontPartition.mPolygons.addAll( front );
 			} else {
 				// Assign whatever is in the front
-				this.mFrontPartition.buildHierarchy( front, pTolerance, pTemp3f, pTemp2f );
+				aCorruptHierarchy 
+					|= this.mFrontPartition.buildHierarchy( front, pTolerance, pTemp3f, pTemp2f );
 			}
 		}
 		if ( !back.isEmpty() ) {
 			if ( mBackPartition == null ) {
-				mBackPartition = new CSGPartition( null, this.mMaterialIndex, this.mLevel + 1 );
+				mBackPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1 );
 			}
 			back = CSGPolygon.compressPolygons( back );
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
@@ -289,9 +329,12 @@ public class CSGPartition
 				mBackPartition.mPolygons.addAll( back );
 			} else {
 				// Assign whatever is in the back
-				mBackPartition.buildHierarchy( back, pTolerance, pTemp3f, pTemp2f );
+				aCorruptHierarchy 
+					|= mBackPartition.buildHierarchy( back, pTolerance, pTemp3f, pTemp2f );
 			}
 		}
+		if ( aCorruptHierarchy && (mLevel > 0) ) mLevel = -mLevel;
+		return( aCorruptHierarchy );
 	}
 
 	/////// Implement ConstructiveSolidGeometry

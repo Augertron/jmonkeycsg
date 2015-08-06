@@ -273,6 +273,7 @@ public class CSGPlane
 	public boolean splitPolygon(
 		CSGPolygon 			pPolygon
 	,	float				pTolerance
+	,	int					pHierarchyLevel
 	, 	List<CSGPolygon> 	pCoplanarFront
 	, 	List<CSGPolygon> 	pCoplanarBack
 	, 	List<CSGPolygon> 	pFront
@@ -311,12 +312,15 @@ public class CSGPlane
 				Vector3f aVertexPosition = polygonVertices.get( i ).getPosition();
 				float aVertexDot = vertexDot[i] = mSurfaceNormal.dot( aVertexPosition );
 				aVertexDot -= mDot;
-				
-				// If within a given tolerance, it is the same plane
-				// See the discussion from the BSP FAQ paper about the distance of a point to the plane
-				int type = (aVertexDot < -pTolerance) ? BACK : (aVertexDot > pTolerance) ? FRONT : COPLANAR;
-				polygonType |= type;
-				polygonTypes[i] = type;
+				if ( Float.isFinite( aVertexDot ) ) {
+					// If within a given tolerance, it is the same plane
+					// See the discussion from the BSP FAQ paper about the distance of a point to the plane
+					int type = (aVertexDot < -pTolerance) ? BACK : (aVertexDot > pTolerance) ? FRONT : COPLANAR;
+					polygonType |= type;
+					polygonTypes[i] = type;
+				} else {
+					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + aVertexPosition );					
+				}
 			}
 		}
 		switch( polygonType ) {
@@ -327,7 +331,17 @@ public class CSGPlane
 
 		case COPLANAR:
 			// Which way is the polygon facing?
-			((mSurfaceNormal.dot( polygonPlane.mSurfaceNormal ) >= 0) ? pCoplanarFront : pCoplanarBack).add( pPolygon );
+			List<CSGPolygon> coplaneList 
+				= (mSurfaceNormal.dot( polygonPlane.mSurfaceNormal ) > 0) ? pCoplanarFront : pCoplanarBack;
+			
+			// Force the polygon onto the plane
+			CSGPolygon aPolygon = CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex() );
+			if ( aPolygon != null ) {
+				coplaneList.add( aPolygon );
+			} else {
+				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+				, "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );				
+			}
 			break;
 			
 		case FRONT:
@@ -367,7 +381,7 @@ public class CSGPlane
 					// a new vertex on this plane itself, which is both before and behind.
 					pTemp3f.set( jVertex.getPosition() ).subtractLocal( iVertex.getPosition() );
 					float percent = (mDot - vertexDot[i]) / mSurfaceNormal.dot( pTemp3f );
-					CSGVertex onPlane = iVertex.interpolate( jVertex, percent, pTemp3f, pTemp2f );
+					CSGVertex onPlane = iVertex.interpolate( jVertex, percent, this, pTemp3f, pTemp2f );
 					if ( onPlane != null ) {
 						beforeVertices.add( onPlane );
 						behindVertices.add( onPlane.clone( false ) );
@@ -382,11 +396,13 @@ public class CSGPlane
 			
 			if ( (beforePolygon == null) && !beforeVertices.isEmpty() ) {
 				// Not enough distinct vertices
-				ConstructiveSolidGeometry.sLogger.log( Level.FINE, "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
+				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+					, "Discarding front vertices[" + pHierarchyLevel + "] " + beforeVertices.size() + "/" + vertexCount );
 				behindPolygon = null;
 			} else if ( (behindPolygon == null) && !behindVertices.isEmpty() ) {
 				// Not enough distinct vertices
-				ConstructiveSolidGeometry.sLogger.log( Level.FINE, "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
+				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+					, "Discarding back vertices[" + pHierarchyLevel + "] "+ behindVertices.size() + "/" + vertexCount );
 				beforePolygon = null;
 			}
 			if ( beforePolygon != null ) {
@@ -398,6 +414,7 @@ public class CSGPlane
 				// The polygon did not split well, try again with more tolerance
 				splitPolygon(	pPolygon
 								,	pTolerance * 2.0f
+								,   pHierarchyLevel + 1
 								, 	pCoplanarFront
 								, 	pCoplanarBack
 								, 	pFront
@@ -405,6 +422,7 @@ public class CSGPlane
 								,	pTemp3f
 								,	pTemp2f
 								);
+				return( false );
 			}
 /*** an older attempt to account for missing vertices
 			if ( beforePolygon == null ) {

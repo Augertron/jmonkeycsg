@@ -158,7 +158,8 @@ public class CSGShape
         return aBuffer;
     }
 
-	
+	/** BSP hierarchy level where the partitioning became corrupt */
+    protected int						mCorruptLevel;
 	/** The list of polygons that make up this shape */
 	protected List<CSGPolygon>			mPolygons;
 	/** The operator applied to this shape as it is added into the geometry */
@@ -200,6 +201,20 @@ public class CSGShape
 		mPolygons = pPolygons;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
+	}
+	
+	/** The shape is 'valid' so long as its BSP hierarchy is not corrupt */
+	public boolean isValid() { return( mCorruptLevel == 0 ); }
+	public int whereCorrupt() { return( mCorruptLevel ); }
+	public void setCorrupt(
+		CSGPartition	pPartitionA
+	,	CSGPartition	pPartitionB
+	) {
+		int whereCorrupt;
+		whereCorrupt = pPartitionA.whereCorrupt();
+		if ( whereCorrupt > mCorruptLevel ) mCorruptLevel = whereCorrupt;
+		whereCorrupt = pPartitionB.whereCorrupt();
+		if ( whereCorrupt > mCorruptLevel ) mCorruptLevel = whereCorrupt;
 	}
 		
 	/** Make a copy of this shape */
@@ -282,8 +297,8 @@ public class CSGShape
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex, 0 ) );
-		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex, 0 ) );
+		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0 ) );
+		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0 ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -297,7 +312,9 @@ public class CSGShape
         } finally {
         	vars.release();
         }
-		return( new CSGShape( a.allPolygons( null ), this.getOrder() ));
+		CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
+		aShape.setCorrupt( a, b );
+		return( aShape );
 	}
 	
 	/** Subtract a shape from this one */
@@ -305,8 +322,8 @@ public class CSGShape
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex, 0 ) );
-		CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex, 0 ) );
+		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0 ) );
+		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0 ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -322,7 +339,9 @@ public class CSGShape
         } finally {
         	vars.release();
         }
-		return( new CSGShape( a.allPolygons( null ), this.getOrder() ) );
+        CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
+		aShape.setCorrupt( a, b );
+        return( aShape );
 	}
 
 	/** Find the intersection with another shape */
@@ -330,8 +349,8 @@ public class CSGShape
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
 	) {
-		CSGPartition a = new CSGPartition( getPolygons( this.mMaterialIndex, 0 ) );
-	    CSGPartition b = new CSGPartition( pOther.getPolygons( pOtherMaterialIndex, 0 ) );
+		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0 ) );
+	    CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0 ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -346,7 +365,9 @@ public class CSGShape
         } finally {
         	vars.release();
         }
-		return( new CSGShape( a.allPolygons( null ), this.getOrder() ) );
+        CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
+		aShape.setCorrupt( a, b );
+        return( aShape );
 	}
 
 	/** Produce the set of polygons that correspond to a given mesh */

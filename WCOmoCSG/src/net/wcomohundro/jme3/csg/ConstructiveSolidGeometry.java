@@ -99,7 +99,7 @@ import com.jme3.math.Vector3f;
   
   -- The structure/packaging of this code --
   	I am attempting to keep this CSG code as an independent plugin with minimal changes within the
-  	core JME as possible.  All CSG code is therefore in net.wcomo packages.
+  	core JME as possible.  All CSG code is therefore in net.wcomohundro packages.
   	
   	Where simple changes in the core eliminated a lot of hoop-jumping, I have duplicated the
   	core JME code into the appropriate com.jme3 package within the CSG SVN repository. The changes are
@@ -120,19 +120,70 @@ import com.jme3.math.Vector3f;
   	than what is offered by Box, Cylinder, etc.  I therefore have created CSG variants of the
   	primitive shapes, based in the package net.wcomo.jme3.csg.shape.  While the class structure/
   	inheritance tree is independent of the the core jme shapes, I shamelessly stole as much code
-  	as I needed.  @see net.wcomo.jme3.csg.shape.CSGMesh   --   Oh the joys of open source.
+  	as I needed.  @see net.wcomohundro.jme3.csg.shape.CSGMesh   --   Oh the joys of open source.
   	
   	So you have two options -- leverage the jme core shapes and attach them to an instance of
   	CSGShape, or feel free to use any of the CSG defined primitives.
   	
+ -- A Bit of Debugging History --
+ 	My initial cut worked quite nicely, and rather quickly allowed me to duplicate the 
+ 	functionality of the original "fabsterpal" code while correcting some bugs.
+ 	
+ 	But as I worked with more/complex test cases, I started seeing some odd triangular 'drop outs'
+ 	At a certain point in a complex shape, bits of the polygons went missing, or were strangely 
+ 	warped.  
+ 	
+ 	Since simple shapes work just fine, I am lead to believe the core logic is proper.  So I 
+ 	started going after rounding/overflow types of problems.  My thought was that a triangle went 
+ 	crazy due to a corrupted vertex.  For this reason, you will run across various ASSERT style 
+ 	checks that are looking for absurd constructs.  In particular, I have tried to be very careful
+ 	with boolean and comparison checks on vertex values, trying to remain sensitive to any 
+ 	possible NaN or Infinity condition. 
+ 	** Please note the Java language specification **
+ 		Floating-point operators produce no exceptions. An operation that overflows 
+ 		produces a signed infinity, an operation that underflows produces a denormalized value 
+ 		or a signed zero, and an operation that has no mathematically definite result produces 
+ 		NaN. All numeric operations with NaN as an operand produce NaN as a result. As has already 
+ 		been described, NaN is unordered, so a numeric comparison operation involving one or two 
+ 		NaNs returns false and any != comparison involving NaN returns true, including x!=x when 
+ 		x is NaN.
+ 		
+ 	Unfortunately, I never detected an overflow/NaN condition when generating a vertex.
+ 		
+ 	While testing, I noticed I could get better results with fewer 'dropouts' if I carefully 
+ 	adjusted the tolerance of when a point was on-plane or not.  That explains the various
+ 	EPSILON values defined below.  I needed to set different tolerances for different 
+ 	conditions.  So a larger EPSILON_ONPLANE value gave me better looking results.  But it
+ 	did not fix all cases.
+ 	
+ 	So now I am trying to understand why changing the ONPLANE tolerance affects the system as
+ 	it does.  I am trying to adapt what the system does when it encounters a triangle that 
+ 	spans a plane.  After all, a larger EPSILON_ONPLANE will minimize the number of triangles that
+ 	must be split.  So there seems to be a connection here????
+ 	
+ 	I am also wondering if I could possibly be accidentally generating a concave polygon in some
+ 	these dropout cases.  Everything I have read so far says the BSP processing only works with 
+ 	proper convex polygons.  An approach I am considering is to force CSGPolygon to solely 
+ 	operate as a 3 pointed triangle.  By definition, it would then always be convex.  The 
+ 	polygon splitter will have to be enhanced to produce multiple triangles, not a single polygon with
+ 	more than three vertices.
+ 	
+ 	I have also experimented with the idea of 'forcing' a vertex onto a given plane when we
+ 	detect a point within the EPSION_ONPLANE tolerance BUT which is not zero distance away.
+ 	This would mean we are always working points that truly coincide with a given plane.  BUT
+ 	I wonder it moving such a point means we have actually created a 'gap' in the underlying surface.
+ 	More testing will be required here.
 */
 public interface ConstructiveSolidGeometry 
 {
+	/** ASSERT style debugging flag */
+	public static final boolean DEBUG = true;
+	
 	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
 	// Tolerance to decide if a given point in 'on' a plane
 	public static final float EPSILON_ONPLANE = 0.5e-4f;
 	// Tolerance to determine if two points are close enough to be considered the same point
-	public static final float EPSILON_BETWEEN_POINTS = 0.5e-4f;
+	public static final float EPSILON_BETWEEN_POINTS = 0.5e-5f;
 	// Tolerance if a given value is near enough to zero to be treated as zero
 	public static final float EPSILON_NEAR_ZERO = 1.0e-5f;
 	

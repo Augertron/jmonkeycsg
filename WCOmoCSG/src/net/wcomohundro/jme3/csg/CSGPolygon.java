@@ -77,6 +77,7 @@ public class CSGPolygon
 	public static float compressVertices(
 		List<CSGVertex>		pVertices
 	,	CSGPlane			pPlane
+	,	boolean				pForceToPlane
 	,	float				pMinimalBetween
 	,	float				pMaximalBetween
 	) {
@@ -107,10 +108,19 @@ public class CSGPolygon
 						Vector3f aPoint = aVertex.getPosition();
 						aDistance = pPlane.pointDistance( aPoint );
 						if ( (aDistance < -EPSILON_NEAR_ZERO) || (aDistance > EPSILON_NEAR_ZERO) ) {
-							// Resolve back to the corresponding point on the given plane
-							Vector3f newPoint = pPlane.pointProjection( aPoint, null );
-							aVertex = new CSGVertex( newPoint, aVertex.getNormal(), aVertex.getTextureCoordinate() );
-							pVertices.set( i, aVertex );
+							if ( pForceToPlane ) {
+								// Resolve back to the corresponding point on the given plane
+								Vector3f newPoint = pPlane.pointProjection( aPoint, null );
+								if ( DEBUG ) {
+									// Debug check to ensure the new point is really on the plane
+									aDistance = pPlane.pointDistance( newPoint );
+								}
+								aVertex = new CSGVertex( newPoint, aVertex.getNormal(), aVertex.getTextureCoordinate() );
+								pVertices.set( i, aVertex );
+							} else {
+								// This point not really on the plane.  Keep it, but track it for debug
+								rejectedVertex = aVertex;
+							}
 						}
 					}
 				} else {
@@ -156,10 +166,8 @@ public class CSGPolygon
 	) {
 		if ( (pPlane != null) && pPlane.isValid() ) {
 			// NOTE that compressVertices operates directly on the given list
-			//		and the current thinking is to preserve the original vertices, and NOT force them
-			//		onto the given plane.
 			float eccentricity 
-				= compressVertices( pVertices, null /*pPlane*/, EPSILON_BETWEEN_POINTS, EPSILON_BETWEEN_POINTS_MAX );
+				= compressVertices( pVertices, pPlane, false, EPSILON_BETWEEN_POINTS, EPSILON_BETWEEN_POINTS_MAX );
 			if ( pVertices.size() >= 3 ) {
 				// We have enough vertices for a shape
 				// NOTE when debugging, it can be useful to look for odd eccentricty values here....
