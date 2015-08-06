@@ -47,7 +47,6 @@ import com.jme3.shader.ShaderGenerator;
 import com.jme3.shader.ShaderKey;
 import com.jme3.system.JmeSystem;
 import com.jme3.texture.Texture;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -313,13 +312,12 @@ public class DesktopAssetManager implements AssetManager {
     protected <T> T registerAndCloneSmartAsset(AssetKey<T> key, T obj, AssetProcessor proc, AssetCache cache) {
         // object obj is the original asset
         // create an instance for user
-        T clone = (T) obj;
         if (proc == null) {
             throw new IllegalStateException("Asset implements "
                     + "CloneableSmartAsset but doesn't "
                     + "have processor to handle cloning");
         } else {
-            clone = (T) proc.createClone(obj);
+            T clone = (T) proc.createClone(obj);
             if (cache != null && clone != obj) {
                 cache.registerAssetClone(key, clone);
             } else {
@@ -327,8 +325,8 @@ public class DesktopAssetManager implements AssetManager {
                         + "CloneableSmartAsset but doesn't have cache or "
                         + "was not cloned");
             }
+            return clone;
         }
-        return clone;
     }
     
     @Override
@@ -381,10 +379,7 @@ public class DesktopAssetManager implements AssetManager {
         T clone = (T) obj;
         
         if (obj instanceof CloneableSmartAsset) {
-        	// 28Feb2015 - wco - allow the key to suppress caching even on types that support it
-        	if ( cache != null ) {
-        		clone = registerAndCloneSmartAsset(key, clone, proc, cache);
-        	}
+            clone = registerAndCloneSmartAsset(key, clone, proc, cache);
         }
         
         return clone;
