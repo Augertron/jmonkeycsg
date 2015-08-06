@@ -274,11 +274,9 @@ public class TangentBinormalGenerator {
                 triData.setIndex(index);
                 triData.triangleOffset = i * 3 ;
             }
-            if (triData != null) {
-                vertices.get(index[0]).triangles.add(triData);
-                vertices.get(index[1]).triangles.add(triData);
-                vertices.get(index[2]).triangles.add(triData);
-            }
+            vertices.get(index[0]).triangles.add(triData);
+            vertices.get(index[1]).triangles.add(triData);
+            vertices.get(index[2]).triangles.add(triData);
         }
         
         return vertices;
@@ -483,7 +481,7 @@ public class TangentBinormalGenerator {
             boolean isDegenerate = isDegenerateTriangle(v[0], v[1], v[2]);
             TriangleData triData = processTriangle(index, v, t);
             
-            if (triData != null && !isDegenerate) {
+            if (!isDegenerate) {
                 vertices.get(index[0]).triangles.add(triData);
                 vertices.get(index[1]).triangles.add(triData);
                 vertices.get(index[2]).triangles.add(triData);
@@ -529,11 +527,9 @@ public class TangentBinormalGenerator {
             populateFromBuffer(t[2], textureBuffer, index[2]);
             
             TriangleData triData = processTriangle(index, v, t);
-            if (triData != null) {
-                vertices.get(index[0]).triangles.add(triData);
-                vertices.get(index[1]).triangles.add(triData);
-                vertices.get(index[2]).triangles.add(triData);
-            }
+            vertices.get(index[0]).triangles.add(triData);
+            vertices.get(index[1]).triangles.add(triData);
+            vertices.get(index[2]).triangles.add(triData);
             
             Vector3f vTemp = v[1];
             v[1] = v[2];
@@ -616,9 +612,9 @@ public class TangentBinormalGenerator {
             normal.normalizeLocal();
             
             return new TriangleData(
-                    tangent,
-                    binormal,
-                    normal);
+                    tangent.clone(),
+                    binormal.clone(),
+                    normal.clone());
         } finally {
             tmp.release();
         }
@@ -792,15 +788,16 @@ public class TangentBinormalGenerator {
             } else {
                 tangent.divideLocal(triangleCount);
             }
-            boolean bogusTangent = false;
+
             tangentUnit.set(tangent);
             tangentUnit.normalizeLocal();
             if (Math.abs(Math.abs(tangentUnit.dot(givenNormal)) - 1)
                     < ZERO_TOLERANCE) {
                 log.log(Level.WARNING,
                         "Normal and tangent are parallel for vertex {0}.", blameVertex);
-                bogusTangent = true;
             }
+
+
             if (!approxTangent) {
                 if (binormal.length() < ZERO_TOLERANCE) {
                     log.log(Level.WARNING,
@@ -823,7 +820,6 @@ public class TangentBinormalGenerator {
                         < ZERO_TOLERANCE) {
                     log.log(Level.WARNING,
                             "Normal and binormal are parallel for vertex {0}.", blameVertex);
-                    bogusTangent = true;
                 }
 
                 if (Math.abs(Math.abs(binormalUnit.dot(tangentUnit)) - 1)
@@ -838,14 +834,7 @@ public class TangentBinormalGenerator {
             for (int i : vertexInfo.indices) {
                 if (approxTangent) {
                     // Gram-Schmidt orthogonalize
-// wco - 30Mar2015 - if bogus tangent, use something other than zero
-                	float aMultiplier = givenNormal.dot(tangent);
-                	tmp.set(givenNormal).multLocal( aMultiplier );
-                	if ( bogusTangent ) {
-                		finalTangent.set(tangent);
-                	} else {
-                		finalTangent.set(tangent).subtractLocal( tmp );
-                	}
+                    finalTangent.set(tangent).subtractLocal(tmp.set(givenNormal).multLocal(givenNormal.dot(tangent)));
                     finalTangent.normalizeLocal();
 
                     wCoord = tmp.set(givenNormal).crossLocal(tangent).dot(binormal) < 0f ? -1f : 1f;
