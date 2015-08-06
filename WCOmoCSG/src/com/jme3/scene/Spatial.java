@@ -1,4 +1,3 @@
-package com.jme3.scene;
 /*
  * Copyright (c) 2009-2013 jMonkeyEngine
  * All rights reserved.
@@ -30,7 +29,7 @@ package com.jme3.scene;
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+package com.jme3.scene;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.CloneableSmartAsset;
