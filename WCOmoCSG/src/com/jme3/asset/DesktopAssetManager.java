@@ -379,7 +379,10 @@ public class DesktopAssetManager implements AssetManager {
         T clone = (T) obj;
         
         if (obj instanceof CloneableSmartAsset) {
-            clone = registerAndCloneSmartAsset(key, clone, proc, cache);
+        	// 28Feb2015 - wco - allow the key to suppress caching even on types that support it
+        	if ( cache != null ) {
+            	clone = registerAndCloneSmartAsset(key, clone, proc, cache);
+        	}
         }
         
         return clone;
