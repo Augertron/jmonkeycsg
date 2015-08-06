@@ -58,7 +58,7 @@ import java.util.logging.Logger;
  * @author Gregg Patton
  * @author Joshua Slack
  */
-public class Node extends Spatial implements Savable {
+public class Node extends Spatial {
 
     private static final Logger logger = Logger.getLogger(Node.class.getName());
 
@@ -683,9 +683,9 @@ public class Node extends Spatial implements Savable {
         // XXX: Load children before loading itself!!
         // This prevents empty children list if controls query
         // it in Control.setSpatial().
-// wco - 18Mar2015 - protect against missing children
-    	ArrayList childList = e.getCapsule(this).readSavableArrayList("children", new ArrayList() );
-        children = new SafeArrayList( Spatial.class, childList );
+        
+        children = new SafeArrayList( Spatial.class, 
+                                      e.getCapsule(this).readSavableArrayList("children", null) );
 
         // go through children and set parent to this node
         if (children != null) {
