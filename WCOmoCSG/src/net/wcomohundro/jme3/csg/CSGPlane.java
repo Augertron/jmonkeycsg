@@ -116,7 +116,13 @@ public class CSGPlane
 	) {
 		// Compute the normal vector
 		Vector3f aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
-		return new CSGPlane( aNormal, pA, aNormal.dot( pA ), -1 );
+		float normalDot = aNormal.dot( pA );
+		if ( normalDot != 0.0f ) {
+			return new CSGPlane( aNormal, pA, aNormal.dot( pA ), -1 );
+		} else {
+			// A normal dot of zero indicates that two of the points overlap, so no plane can be defined
+			return( null );
+		}
 	}
 	/** Factory method to produce a plane from a set of vertices */
 	public static CSGPlane fromVertices(

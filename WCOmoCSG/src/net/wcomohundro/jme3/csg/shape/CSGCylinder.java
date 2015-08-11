@@ -61,7 +61,15 @@ public class CSGCylinder
 	/** Standard null constructor */
 	public CSGCylinder(
 	) {
-		this( 32, 32, 1, 1, 1, true, false, TextureMode.FLAT );
+		this( 32, 32, 1, 1, 1, true, false, TextureMode.FLAT, false );
+	}
+    public CSGCylinder(
+    	int 		pAxisSamples
+    , 	int 		pRadialSamples
+    ,	float 		pRadiusFront
+    , 	float 		pZExtent
+    ) {
+		this( pAxisSamples, pRadialSamples, pRadiusFront, pRadiusFront, pZExtent, true, false, TextureMode.FLAT, true );
 	}
 	
     public CSGCylinder(
@@ -73,8 +81,13 @@ public class CSGCylinder
     , 	boolean 	pClosed
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
+    ,	boolean		pReadyGeometry
     ) {
     	super( pAxisSamples, pRadialSamples, pRadiusFront, pRadiusBack, pZExtent, pClosed, pInverted, pTextureMode );
+
+    	if ( pReadyGeometry ) {
+    		this.updateGeometry();
+        }
     }
 
     /** Rebuilds the cylinder based on the current set of configuration parameters */

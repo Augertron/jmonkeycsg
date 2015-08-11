@@ -87,8 +87,8 @@
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
 
-                <net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'
-                		materialName='Textures/Rock/Rock2Rpt.xml'>
+                <net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'>
+                		<!-- materialName='Textures/Rock/Rock2Rpt.xml'> -->
                 		<!-- materialName='Textures/Rock/Rock2.xml'> -->
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.98' yExtent='0.98' zExtent='0.6'>
                     	<!--scaleFaces>
@@ -97,7 +97,7 @@
                     	</scaleFaces-->
                     </mesh>
                     <transform class='com.jme3.math.Transform'>
-                        <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='10'/>
+                        <translation class='com.jme3.math.Vector3f' x='0.0' y='0.3' z='10'/>
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
 
@@ -182,7 +182,7 @@
 		            		axisSamples='30' radialSamples='24' firstRadial='PI/4' pipeEnds='CROPPED' 
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
-		            		arc='6PI/4' firstRadial='1PI/4' helix='0.2' />
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
 		                <scaleFaces>
 		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
 		            	</scaleFaces>
@@ -220,7 +220,47 @@
 		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
 		            </transform>
 		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
-		            		axisSamples='30' radialSamples='32' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		axisSamples='64' radialSamples='64' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		radius='0.5' smoothSurface='false' closed='true'>
+		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
+		                <scaleFaces>
+		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
+		            	</scaleFaces>
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>    
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGCompoundShape3'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='20' y='-5' z='8'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+                    </transform>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='2.0' yExtent='1.0' zExtent='1.0'>
+	                    <!-- scaleFaces>
+	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='48'/>
+	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='5'/>
+	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='10'/>
+	                    </scaleFaces -->
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
+		            </transform>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+		            		axisSamples='36' radialSamples='36' firstRadial='PI/4' pipeEnds='CROPPED' 
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />

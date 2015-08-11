@@ -111,7 +111,7 @@ public class CSGPipe
 	/** Standard null constructor */
 	public CSGPipe(
 	) {
-		this( 32, 32, 1, 1, null, true, false, TextureMode.FLAT );
+		this( 32, 32, 1, 1, null, true, false, TextureMode.FLAT, false );
 	}
 	
     public CSGPipe(
@@ -123,9 +123,14 @@ public class CSGPipe
     , 	boolean 	pClosed
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
+    ,	boolean		pReadyGeometry
     ) {
     	super( pAxisSamples, pRadialSamples, pRadiusFront, pRadiusBack, 0.0f, pClosed, pInverted, pTextureMode );
     	setSlicePath( pSlicePath );
+
+    	if ( pReadyGeometry ) {
+    		this.updateGeometry();
+        }
     }
     
     /** Accessor to the curve that provides the path of the slices */

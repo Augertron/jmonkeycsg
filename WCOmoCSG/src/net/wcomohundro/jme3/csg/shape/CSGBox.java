@@ -102,7 +102,7 @@ public class CSGBox
 	/** Standard null constructor */
 	public CSGBox(
 	) {
-		this( 1, 1, 1 );
+		this( 1, 1, 1, false );
 	}
 	/** Constructor based on the given extents */
 	public CSGBox(
@@ -110,9 +110,21 @@ public class CSGBox
 	,	float	pExtentY
 	,	float	pExtentZ
 	) {
+		this( pExtentX, pExtentY, pExtentZ, true );
+	}
+	public CSGBox(
+		float	pExtentX
+	,	float	pExtentY
+	,	float	pExtentZ
+	,	boolean	pReadyGeometry
+	) {
 		mExtentX = pExtentX;
 		mExtentY = pExtentY;
 		mExtentZ = pExtentZ;
+		
+        if ( pReadyGeometry ) {
+    		this.updateGeometry();
+        }
 	}
 	
 	/** Accessors to the extents */

@@ -32,6 +32,7 @@ import com.jme3.scene.shape.Sphere;
 
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.shape.*;
 
 /** Simple test of the CSG support 
  		Checks UNION / DIFFERENCE / INTERSECTION / SKIP for simple Cube/Sphere
@@ -133,7 +134,7 @@ public class CSGTestA
     	CSGShape aSphere = new CSGShape( "Sphere1", new Sphere( 32, 32, 1.3f ) );
     	aGeometry.addShape( aSphere, pOperator1 );
 
-    	CSGShape aCube = new CSGShape( "Box", new Box(1,1,1) );
+    	CSGShape aCube = new CSGShape( "Box", new Box( 1,1,1 ) );
     	aGeometry.addShape( aCube, pOperator2 );
 
     	aSphere = new CSGShape( "Sphere2", new Sphere( 32, 32, 1.3f ) );

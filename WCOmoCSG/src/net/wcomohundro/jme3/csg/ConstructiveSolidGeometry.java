@@ -179,13 +179,18 @@ public interface ConstructiveSolidGeometry
 	/** ASSERT style debugging flag */
 	public static final boolean DEBUG = true;
 	
+	/** Force points deemed to be on a plane to actually coincide with the plane */
+	public static final boolean FORCE_POINT_ON_PLANE = false;
+	/** Deepest split when processing BSP hierarchy */
+	public static final int BSP_HIERARCHY_LIMIT = 1024;
+	
 	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
 	// Tolerance to decide if a given point in 'on' a plane
-	public static final float EPSILON_ONPLANE = 0.5e-4f;
+	public static final float EPSILON_ONPLANE = 1.0e-5f;
 	// Tolerance to determine if two points are close enough to be considered the same point
 	public static final float EPSILON_BETWEEN_POINTS = 0.5e-5f;
 	// Tolerance if a given value is near enough to zero to be treated as zero
-	public static final float EPSILON_NEAR_ZERO = 1.0e-5f;
+	public static final float EPSILON_NEAR_ZERO = 0.5e-5f;
 	
 	/** Define a 'tolerance' for when two points are so far apart, it is ridiculous to consider it */
 	public static final float EPSILON_BETWEEN_POINTS_MAX = 1e+3f;

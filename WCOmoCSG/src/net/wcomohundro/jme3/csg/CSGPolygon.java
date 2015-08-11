@@ -157,7 +157,7 @@ public class CSGPolygon
 	,	int					pMaterialIndex
 	) {
 		CSGPlane aPlane = CSGPlane.fromVertices( pVertices );
-		return( createPolygon( pVertices, aPlane, pMaterialIndex ) );
+		return( (aPlane != null) ? createPolygon( pVertices, aPlane, pMaterialIndex ) : null );
 	}
 	public static CSGPolygon createPolygon(
 		List<CSGVertex>		pVertices
@@ -167,7 +167,11 @@ public class CSGPolygon
 		if ( (pPlane != null) && pPlane.isValid() ) {
 			// NOTE that compressVertices operates directly on the given list
 			float eccentricity 
-				= compressVertices( pVertices, pPlane, false, EPSILON_BETWEEN_POINTS, EPSILON_BETWEEN_POINTS_MAX );
+				= compressVertices( pVertices
+									, pPlane
+									, FORCE_POINT_ON_PLANE
+									, EPSILON_BETWEEN_POINTS
+									, EPSILON_BETWEEN_POINTS_MAX );
 			if ( pVertices.size() >= 3 ) {
 				// We have enough vertices for a shape
 				// NOTE when debugging, it can be useful to look for odd eccentricty values here....

@@ -67,8 +67,11 @@ public class CSGPartition
 	public static final String sCSGPartitionRevision="$Rev$";
 	public static final String sCSGPartitionDate="$Date$";
 
-	/** Limit on processing depth when building the BSP hierarchy */
-	public static int sHierarchyLimit = 250;
+	/** Limit on processing depth when building the BSP hierarchy
+	 		NOTE use of simple static here, based on the final static from ConstructiveSolidGeometry. 
+	 			 This allows us to simply alter this value dynamically for debug/testing.
+	 */
+	public static int sHierarchyLimit = BSP_HIERARCHY_LIMIT;
 	
 	/** The 'shape' associated with this partition */
 	protected CSGShape			mShape;

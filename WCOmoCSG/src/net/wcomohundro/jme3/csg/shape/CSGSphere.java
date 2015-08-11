@@ -100,9 +100,15 @@ public class CSGSphere
 	
 	public CSGSphere(
 	) {
-		this( 32, 32, 1, false, false, TextureMode.ZAXIS );
+		this( 32, 32, 1, false, false, TextureMode.ZAXIS, false );
 	}
-	
+    public CSGSphere(
+    	int 		pAxisSamples
+    , 	int 		pRadialSamples
+    ,	float 		pRadius
+    ) {
+		this( pAxisSamples, pRadialSamples, pRadius, false, false, TextureMode.ZAXIS, true );
+	}
     public CSGSphere(
     	int 		pAxisSamples
     , 	int 		pRadialSamples
@@ -110,10 +116,15 @@ public class CSGSphere
     , 	boolean 	pUseEvenSlices
     , 	boolean 	pInverted
     ,	TextureMode	pTextureMode
+    ,  	boolean		pReadyGeometry
     ) {
     	super( pAxisSamples, pRadialSamples, pRadius, true, pInverted, false );
         mEvenSlices = pUseEvenSlices;
         mTextureMode = pTextureMode;
+        
+        if ( pReadyGeometry ) {
+    		this.updateGeometry();
+        }
     }
 
     /** Configuration accessors */
