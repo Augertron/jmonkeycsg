@@ -115,7 +115,12 @@ public class CSGPolygon
 									// Debug check to ensure the new point is really on the plane
 									aDistance = pPlane.pointDistance( newPoint );
 								}
-								aVertex = new CSGVertex( newPoint, aVertex.getNormal(), aVertex.getTextureCoordinate() );
+								// Assume the normal from the original is close enough...
+								aVertex = new CSGVertex( newPoint
+														, aVertex.getNormal()
+														, aVertex.getTextureCoordinate()
+														, null
+														, false );
 								pVertices.set( i, aVertex );
 							} else {
 								// This point not really on the plane.  Keep it, but track it for debug

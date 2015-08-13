@@ -98,20 +98,33 @@ public class CSGGeonode
 	protected List<CSGShape>	mShapes;
 	/** Geometry has a variable for LOD level, but Spatial does not */
 	protected int				mLODLevel;
+	/** Control flag to apply validation to mesh/points */
+	protected boolean			mConfirm;
 
 	
 	/** Basic null constructor */
 	public CSGGeonode(
 	) {
-		this( "CSGGeoNode" );
+		this( "CSGGeoNode", DEBUG );
 	}
 	/** Constructor based on a given name */
 	public CSGGeonode(
 		String	pName
 	) {
+		this( pName, DEBUG );
+	}
+	public CSGGeonode(
+		String	pName
+	,	boolean	pConfirm
+	) {
 		super( pName );
+		mConfirm = pConfirm;
 	}
 	
+	/** Accessor to the debug confirmation control flag */
+	public boolean isConfirmm() { return mConfirm; }
+	public void setConfirm( boolean pFlag ) { mConfirm = pFlag; }
+
 	/** Add a shape to this geometry */
 	public void addShape(
 		CSGShape	pShape
@@ -228,7 +241,7 @@ public class CSGGeonode
 						aProduct = aShape.clone( materialIndex, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.union( aShape, materialIndex );
+						aProduct = aProduct.union( aShape, materialIndex, mConfirm );
 					}
 					break;
 					
@@ -237,7 +250,7 @@ public class CSGGeonode
 						// NO PLACE TO START
 					} else {
 						// Blend together
-						aProduct = aProduct.difference( aShape, materialIndex );
+						aProduct = aProduct.difference( aShape, materialIndex, mConfirm );
 					}
 					break;
 					
@@ -247,7 +260,7 @@ public class CSGGeonode
 						aProduct = aShape.clone( materialIndex, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.intersection( aShape, materialIndex );
+						aProduct = aProduct.intersection( aShape, materialIndex, mConfirm );
 					}
 					break;
 					
@@ -262,10 +275,10 @@ public class CSGGeonode
 				// Transform the list of meshes into children
 				// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
 				//  and the 'one' mesh is the one that corresponds to the generic material)
-				List<Mesh> meshList = aProduct.toMesh( (materialMap == null) ? 0 : materialCount );
+				List<Mesh> meshList = aProduct.toMesh( (materialMap == null) ? 0 : materialCount, mConfirm );
 				if ( !meshList.isEmpty() ) {
 					// Use the 'zero' mesh to describe the overall geometry
-					mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );
+					mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ), mConfirm );
 					mMasterGeometry.setMaterial( mMaterial.clone() );
 				}
 				if ( meshList.size() == 1 ) {

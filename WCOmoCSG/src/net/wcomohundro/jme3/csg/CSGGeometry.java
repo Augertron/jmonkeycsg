@@ -87,6 +87,8 @@ public class CSGGeometry
 
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
+	/** Control flag to apply validation to mesh/points */
+	protected boolean			mConfirm;
 	/** Control flag for the special 'debug' mode */
 	protected boolean			mDebugMesh;
 	
@@ -94,22 +96,41 @@ public class CSGGeometry
 	/** Basic null constructor */
 	public CSGGeometry(
 	) {
-		this( "CSGGeometry" );
+		this( "CSGGeometry", DEBUG );
 	}
 	/** Constructor based on a given name */
 	public CSGGeometry(
 		String	pName
 	) {
+		this( pName, DEBUG );
+	}
+	public CSGGeometry(
+		String	pName
+	,	boolean	pConfirm
+	) {
 		super( pName );
+		mConfirm = pConfirm;
 	}
 	/** Constructor on a name and given mesh */
 	public CSGGeometry(
 		String	pName
 	,	Mesh	pMesh
 	) {
-		super( pName, pMesh );
+		this( pName, pMesh, DEBUG );
 	}
-	
+	public CSGGeometry(
+		String	pName
+	,	Mesh	pMesh
+	,	boolean	pConfirm
+	) {
+		super( pName, pMesh );
+		mConfirm = pConfirm;
+	}
+
+	/** Accessor to the debug confirmation control flag */
+	public boolean isConfirmm() { return mConfirm; }
+	public void setConfirm( boolean pFlag ) { mConfirm = pFlag; }
+
 	/** Accessor to the debug mesh control flag */
 	public boolean isDebugMesh() { return mDebugMesh; }
 	public void setDebugMesh( boolean pFlag ) { mDebugMesh = pFlag; }
@@ -186,7 +207,7 @@ public class CSGGeometry
 						aProduct = aShape.clone( null, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.union( aShape, null );
+						aProduct = aProduct.union( aShape, null, mConfirm );
 					}
 					break;
 					
@@ -195,7 +216,7 @@ public class CSGGeometry
 						// NO PLACE TO START
 					} else {
 						// Blend together
-						aProduct = aProduct.difference( aShape, null );
+						aProduct = aProduct.difference( aShape, null, mConfirm );
 					}
 					break;
 					
@@ -205,7 +226,7 @@ public class CSGGeometry
 						aProduct = aShape.clone( null, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.intersection( aShape, null );
+						aProduct = aProduct.intersection( aShape, null, mConfirm );
 					}
 					break;
 					
@@ -215,7 +236,7 @@ public class CSGGeometry
 				}
 			}
 			if ( aProduct != null ) {
-				List<Mesh> meshList = aProduct.toMesh( 0 );
+				List<Mesh> meshList = aProduct.toMesh( 0, mConfirm );
 				if ( !meshList.isEmpty() ) {
 					// The overall, blended mesh represents this Geometry
 					this.setMesh( meshList.get( 0 ) );

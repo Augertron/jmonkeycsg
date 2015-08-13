@@ -74,7 +74,7 @@ public class CSGVertex
 	/** Standard null constructor */
 	public CSGVertex(
 	) {
-		this( Vector3f.ZERO, Vector3f.ZERO, Vector2f.ZERO );
+		this( Vector3f.ZERO, Vector3f.ZERO, Vector2f.ZERO, null, false );
 	}
 	
 	/** Constructor based on the given components */
@@ -83,51 +83,53 @@ public class CSGVertex
 	,	Vector3f		pNormal
 	,	Vector2f		pTextureCoordinate
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, null );
+		this( pPosition, pNormal, pTextureCoordinate, null, DEBUG );
 	}
 	public CSGVertex(
 		Vector3f		pPosition
 	,	Vector3f		pNormal
 	,	Vector2f		pTextureCoordinate
 	,	Transform		pTransform
+	,	boolean			pConfirm
 	) {
 		if ( pTransform != null ) {
 			// Adjust the position
-			mPosition = pTransform.transformVector( pPosition, pPosition );
+			pPosition = pTransform.transformVector( pPosition, pPosition );
 			// Only rotation affects the surface normal
-			mNormal = pTransform.getRotation().multLocal( pNormal );
+			pNormal = pTransform.getRotation().multLocal( pNormal );
 			// The texture does not budge
-			mTextureCoordinate = pTextureCoordinate;
-		} else {
-			// Use what was given
-			if ( DEBUG ) {
-				if ( !(
-				   (Math.abs( pPosition.x ) < EPSILON_BETWEEN_POINTS_MAX) 
-				&& (Math.abs( pPosition.y ) < EPSILON_BETWEEN_POINTS_MAX) 
-				&& (Math.abs( pPosition.z ) < EPSILON_BETWEEN_POINTS_MAX)
-				) ) {
-					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
-				}
-				float normalLength = pNormal.length();
-				if ( !(
-				   (Math.abs( pNormal.x ) <= 1.0f) 
-				&& (Math.abs( pNormal.y ) <= 1.0f) 
-				&& (Math.abs( pNormal.z ) <= 1.0f) 
-				&& (normalLength <= 1.0f + EPSILON_NEAR_ZERO) && (normalLength > 1.0f - EPSILON_NEAR_ZERO)
-				) ) {
-					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
-				}
-				if ( !(
-				   (Math.abs( pTextureCoordinate.x ) <= EPSILON_BETWEEN_POINTS_MAX) 
-				&& (Math.abs( pTextureCoordinate.y ) <= EPSILON_BETWEEN_POINTS_MAX)
-				) ) {
-					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
-				}
-			}
-			mPosition = pPosition;
-			mNormal = pNormal;
-			mTextureCoordinate = pTextureCoordinate;
+			pTextureCoordinate = pTextureCoordinate;
 		}
+		// Use what was given
+		if ( pConfirm ) {
+			// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
+			//		false comparisons
+			if ( !(
+			   (Math.abs( pPosition.x ) < EPSILON_BETWEEN_POINTS_MAX) 
+			&& (Math.abs( pPosition.y ) < EPSILON_BETWEEN_POINTS_MAX) 
+			&& (Math.abs( pPosition.z ) < EPSILON_BETWEEN_POINTS_MAX)
+			) ) {
+				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
+			}
+			float normalLength = pNormal.length();
+			if ( !(
+			   (Math.abs( pNormal.x ) <= 1.0f) 
+			&& (Math.abs( pNormal.y ) <= 1.0f) 
+			&& (Math.abs( pNormal.z ) <= 1.0f) 
+			&& (normalLength <= 1.0f + EPSILON_NEAR_ZERO) && (normalLength > 1.0f - EPSILON_NEAR_ZERO)
+			) ) {
+				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
+			}
+			if ( !(
+			   (Math.abs( pTextureCoordinate.x ) <= EPSILON_BETWEEN_POINTS_MAX) 
+			&& (Math.abs( pTextureCoordinate.y ) <= EPSILON_BETWEEN_POINTS_MAX)
+			) ) {
+				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
+			}
+		}
+		mPosition = pPosition;
+		mNormal = pNormal;
+		mTextureCoordinate = pTextureCoordinate;
 	}
 	
 	/** Make a copy */
@@ -136,9 +138,9 @@ public class CSGVertex
 	) {
 		if ( pFlipIt ) {
 			// Make a flipped copy (invert the normal)
-			return( new CSGVertex( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone() ));
+			return( new CSGVertex( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null, false ));
 		} else {
-			// Standard copy
+			// Standard copy, which is currently this same immutable instance
 			return( this ); // new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));
 		}
 	}

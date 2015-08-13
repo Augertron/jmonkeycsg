@@ -50,6 +50,7 @@ import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
+import com.jme3.scene.Mesh.Mode;
 import com.jme3.material.Material;
 import com.jme3.material.MatParamTexture;
 import com.jme3.texture.Texture;
@@ -248,11 +249,12 @@ public class CSGShape
 	protected List<CSGPolygon> getPolygons(
 		Number	pMaterialIndex
 	,	int		pLevelOfDetail
+	,	boolean	pConfirm
 	) { 
 		if ( mPolygons.isEmpty() && (this.mesh != null) ) {
 			// Generate the polygons
 			this.mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
-			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail );
+			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail, pConfirm );
 			
 		} else if ( !mPolygons.isEmpty() 
 				&& (pMaterialIndex != null)
@@ -296,9 +298,10 @@ public class CSGShape
 	public CSGShape union(
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
+	,	boolean		pConfirm	
 	) {
-		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0 ) );
-		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0 ) );
+		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0, pConfirm ) );
+		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0, pConfirm ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -321,9 +324,10 @@ public class CSGShape
 	public CSGShape difference(
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
+	,	boolean		pConfirm	
 	) {
-		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0 ) );
-		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0 ) );
+		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0, pConfirm ) );
+		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0, pConfirm ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -348,9 +352,10 @@ public class CSGShape
 	public CSGShape intersection(
 		CSGShape	pOther
 	,	Number		pOtherMaterialIndex
+	,	boolean		pConfirm	
 	) {
-		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0 ) );
-	    CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0 ) );
+		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0, pConfirm ) );
+	    CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0, pConfirm ) );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
@@ -375,6 +380,7 @@ public class CSGShape
 		Mesh		pMesh
 	,	Transform	pTransform
 	,	int			pLevelOfDetail
+	,	boolean		pConfirm
 	) {
 		// Convert the mesh in to appropriate polygons
 	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
@@ -390,10 +396,28 @@ public class CSGShape
 			// Use the 'standard'
 			idxBuffer = pMesh.getIndexBuffer();
 		}
-		FloatBuffer posBuffer = pMesh.getFloatBuffer(Type.Position);
-		FloatBuffer normBuffer = pMesh.getFloatBuffer(Type.Normal);
-		FloatBuffer texCoordBuffer = pMesh.getFloatBuffer(Type.TexCoord);
-		
+		Mode meshMode = pMesh.getMode();
+		FloatBuffer posBuffer = pMesh.getFloatBuffer( Type.Position );
+		FloatBuffer normBuffer = pMesh.getFloatBuffer( Type.Normal );
+		FloatBuffer texCoordBuffer = pMesh.getFloatBuffer( Type.TexCoord );
+		if ( pConfirm ) {
+			switch( meshMode ) {
+			case Triangles:
+				// This is the only one we can deal with at this time
+				break;
+			default:
+				throw new IllegalArgumentException( "Only Mode.Triangles type mesh is currently supported" );
+			}
+			if ( posBuffer == null ) {
+				throw new IllegalArgumentException( "Mesh lacking Type.Position buffer" );
+			}
+			if ( normBuffer == null ) {
+				throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
+			}
+			if ( texCoordBuffer == null ) {
+				throw new IllegalArgumentException( "Mesh lacking Type.TexCoord buffer" );
+			}
+		}
 		// Work from 3 points which define a triangle
 		List<CSGPolygon> polygons = new ArrayList<CSGPolygon>( idxBuffer.size() / 3 );
 		for (int i = 0; i < idxBuffer.size(); i += 3) {
@@ -401,26 +425,55 @@ public class CSGShape
 			int idx2 = idxBuffer.get(i + 1);
 			int idx3 = idxBuffer.get(i + 2);
 			
+			int idx1x3 = idx1 * 3;
+			int idx2x3 = idx2 * 3;
+			int idx3x3 = idx3 * 3;
+			
+			int idx1x2 = idx1 * 2;
+			int idx2x2 = idx2 * 2;
+			int idx3x2 = idx3 * 2;
+			
 			// Extract the positions
-			Vector3f pos1 = new Vector3f(posBuffer.get(idx1 * 3), posBuffer.get((idx1 * 3) + 1), posBuffer.get((idx1 * 3) + 2));
-			Vector3f pos2 = new Vector3f(posBuffer.get(idx2 * 3), posBuffer.get((idx2 * 3) + 1), posBuffer.get((idx2 * 3) + 2));
-			Vector3f pos3 = new Vector3f(posBuffer.get(idx3 * 3), posBuffer.get((idx3 * 3) + 1), posBuffer.get((idx3 * 3) + 2));
+			Vector3f pos1 = new Vector3f( posBuffer.get( idx1x3 )
+										, posBuffer.get( idx1x3 + 1)
+										, posBuffer.get( idx1x3 + 2) );
+			Vector3f pos2 = new Vector3f( posBuffer.get( idx2x3 )
+										, posBuffer.get( idx2x3 + 1)
+										, posBuffer.get( idx2x3 + 2) );
+			Vector3f pos3 = new Vector3f( posBuffer.get( idx3x3 )
+										, posBuffer.get( idx3x3 + 1)
+										, posBuffer.get( idx3x3 + 2) );
 
 			// Extract the normals
-			Vector3f norm1 = new Vector3f(normBuffer.get(idx1 * 3), normBuffer.get((idx1 * 3) + 1), normBuffer.get((idx1 * 3) + 2));
-			Vector3f norm2 = new Vector3f(normBuffer.get(idx2 * 3), normBuffer.get((idx2 * 3) + 1), normBuffer.get((idx2 * 3) + 2));
-			Vector3f norm3 = new Vector3f(normBuffer.get(idx3 * 3), normBuffer.get((idx3 * 3) + 1), normBuffer.get((idx3 * 3) + 2));
+			Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
+										, normBuffer.get( idx1x3 + 1)
+										, normBuffer.get( idx1x3 + 2) );
+			Vector3f norm2 = new Vector3f( normBuffer.get( idx2x3 )
+										, normBuffer.get( idx2x3 + 1)
+										, normBuffer.get( idx2x3 + 2) );
+			Vector3f norm3 = new Vector3f( normBuffer.get( idx3x3)
+										, normBuffer.get( idx3x3 + 1)
+										, normBuffer.get( idx3x3 + 2) );
 
 			// Extract the Texture Coordinates
-			Vector2f texCoord1 = new Vector2f(texCoordBuffer.get(idx1 * 2), texCoordBuffer.get((idx1 * 2) + 1));
-			Vector2f texCoord2 = new Vector2f(texCoordBuffer.get(idx2 * 2), texCoordBuffer.get((idx2 * 2) + 1));
-			Vector2f texCoord3 = new Vector2f(texCoordBuffer.get(idx3 * 2), texCoordBuffer.get((idx3 * 2) + 1));
-			
+			// Based on an interaction via the SourceForge Ticket system, another user has informed
+			// me that UV texture coordinates are optional.... so be it
+			Vector2f texCoord1, texCoord2, texCoord3;
+			if ( texCoordBuffer != null ) {
+				texCoord1 = new Vector2f( texCoordBuffer.get( idx1x2)
+											, texCoordBuffer.get( idx1x2 + 1) );
+				texCoord2 = new Vector2f( texCoordBuffer.get( idx2x2)
+											, texCoordBuffer.get( idx2x2 + 1) );
+				texCoord3 = new Vector2f( texCoordBuffer.get( idx3x2)
+											, texCoordBuffer.get( idx3x2 + 1) );
+			} else {
+				texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
+			}
 			// Construct the vertices that define the points of the triangle
 			List<CSGVertex> aVertexList = new ArrayList<CSGVertex>( 3 );
-			aVertexList.add( new CSGVertex( pos1, norm1, texCoord1, pTransform ) );
-			aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform ) );
-			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform ) );
+			aVertexList.add( new CSGVertex( pos1, norm1, texCoord1, pTransform, pConfirm ) );
+			aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform, pConfirm ) );
+			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform, pConfirm ) );
 			
 			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
 			CSGPolygon aPolygon = CSGPolygon.createPolygon( aVertexList, this.mMaterialIndex );
@@ -436,11 +489,12 @@ public class CSGShape
 	 	Every other mesh (if present) applies solely to a specific Material.
 	  */
 	public List<Mesh> toMesh(
-		int		pMaxMaterialIndex
+		int			pMaxMaterialIndex
+	,	boolean		pConfirm	
 	) {
 		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
 		
-		List<CSGPolygon> aPolyList = getPolygons( null, 0 );
+		List<CSGPolygon> aPolyList = getPolygons( null, 0, pConfirm );
 		int anEstimateVertexCount = aPolyList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );

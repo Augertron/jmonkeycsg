@@ -8,12 +8,12 @@
         </lights>
     </lights>
 	<children>
-<?ignore
+
 		<!--  These two do not touch -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestSeparate'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0'/>
+                <translation class='com.jme3.math.Vector3f' x='5.0'/>
             </transform>
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'
@@ -21,7 +21,7 @@
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 
-                <net.wcomohundro.jme3.csg.CSGShape name='Cylinder'>
+                <net.wcomohundro.jme3.csg.CSGShape name='Cylinder' operator='DIFFERENCE'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
                     	 axisSamples='32' closed='true' height='6.2831852' radialSamples='32' radius='1.0' textureMode='UNIFORM'/>
                     <scaleTexture class='com.jme3.math.Vector2f' x='4.0' y='4.0'/>
@@ -31,7 +31,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-?>
+
         <!-- A simple union -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestBlended'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
