@@ -179,10 +179,8 @@ import com.jme3.math.Vector3f;
 public interface ConstructiveSolidGeometry 
 {
 	/** ASSERT style debugging flag */
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	
-	/** Force points deemed to be on a plane to actually coincide with the plane */
-	public static final boolean FORCE_POINT_ON_PLANE = false;
 	/** Deepest split when processing BSP hierarchy */
 	public static final int BSP_HIERARCHY_LIMIT = 1024;
 	

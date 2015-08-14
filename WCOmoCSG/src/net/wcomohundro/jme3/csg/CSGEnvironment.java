@@ -31,6 +31,8 @@ package net.wcomohundro.jme3.csg;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
+
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -51,35 +53,63 @@ public class CSGEnvironment
 	/** Standard configuration */
 	public static final CSGEnvironment sStandardEnvironment = new CSGEnvironment();
 
-	
+	/** Shape this environment applies to */
+	public String		mShapeName;
 	/** Is structural debug on or off */
 	public boolean		mStructuralDebug;
-	/** Maximum depth allowed on BSP processing */
+	/** Maximum depth allowed on BSP recursion processing */
 	public int			mBSPLimit;
+	
+	/** EPSILON - near to zero */
+	public float		mEpsilonNearZero;
 	/** EPSILON - distance to plane */
 	public float		mEpsilonOnPlane;
 	/** EPSILON - meaningful minimal distance between points */
 	public float		mEpsilonBetweenPoints;
+	/** EPSILON - meaningful maximal distance between points */
+	public float		mEpsilonMaxBetweenPoints;
+	
+	/** How to process a polygon and its plane */
+	public CSGPolygon.CSGPolygonPlaneMode	mPolygonPlaneMode;
+	
 	
 	/** Null constructor produces the 'standards' */
 	public CSGEnvironment(
 	) {
+		mShapeName = "";
+		
 		mStructuralDebug = DEBUG;
 		mBSPLimit = BSP_HIERARCHY_LIMIT;
+		
+		mEpsilonNearZero = EPSILON_NEAR_ZERO;
 		mEpsilonOnPlane = EPSILON_ONPLANE;
 		mEpsilonBetweenPoints = EPSILON_BETWEEN_POINTS;
+		mEpsilonMaxBetweenPoints = EPSILON_BETWEEN_POINTS_MAX;
+		
+		mPolygonPlaneMode = CSGPolygonPlaneMode.USE_GIVEN;
 	}
 	/** Constructor based on final configuration */
 	public CSGEnvironment(
-		boolean			pStructuralDebug
-	,	int				pBSPLimit
-	,	float			pEpsilonOnPlane
-	,	float			pEpsilonBetweenPoints
+		String							pShapeName
+	,	boolean							pStructuralDebug
+	,	int								pBSPLimit
+	,	float							pEpsilonNearZero
+	,	float							pEpsilonOnPlane
+	,	float							pEpsilonBetweenPoints
+	,	float							pEpsilonMaxBetweenPoints
+	,	CSGPolygon.CSGPolygonPlaneMode	pPolygonPlaneMode
 	) {
+		mShapeName = pShapeName;
+		
 		mStructuralDebug = pStructuralDebug;
 		mBSPLimit = pBSPLimit;
+		
+		mEpsilonNearZero = pEpsilonNearZero;
 		mEpsilonOnPlane = pEpsilonOnPlane;		
 		mEpsilonBetweenPoints = pEpsilonBetweenPoints;
+		mEpsilonMaxBetweenPoints = pEpsilonMaxBetweenPoints;
+		
+		mPolygonPlaneMode = pPolygonPlaneMode;
 	}
 	
 	/** Support the persistence of this Environment */
@@ -91,8 +121,13 @@ public class CSGEnvironment
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mStructuralDebug, "structuralDebug", false );
 		aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_LIMIT );
+		
+		aCapsule.write( mEpsilonNearZero, "epsilonNearZero", EPSILON_NEAR_ZERO );
 		aCapsule.write( mEpsilonOnPlane, "epsilonOnPlane", EPSILON_ONPLANE );
 		aCapsule.write( mEpsilonBetweenPoints, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS );
+		aCapsule.write( mEpsilonMaxBetweenPoints, "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
+		
+		aCapsule.write( mPolygonPlaneMode, "polygonPlaneMode", CSGPolygonPlaneMode.USE_GIVEN );
 	}
 	
 	@Override
@@ -102,8 +137,14 @@ public class CSGEnvironment
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mStructuralDebug = aCapsule.readBoolean( "structuralDebug", false );
 		mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_LIMIT );
+		
+		mEpsilonNearZero = aCapsule.readFloat( "epsilonNearZero", EPSILON_NEAR_ZERO );
 		mEpsilonOnPlane = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE );
 		mEpsilonBetweenPoints = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS );
+		mEpsilonMaxBetweenPoints = aCapsule.readFloat( "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
+		
+		mPolygonPlaneMode = aCapsule.readEnum( "polygonPlaneMode", CSGPolygonPlaneMode.class, CSGPolygonPlaneMode.USE_GIVEN );
+
 	}
 
 	/////// Implement ConstructiveSolidGeometry

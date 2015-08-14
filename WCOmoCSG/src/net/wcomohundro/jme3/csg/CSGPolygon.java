@@ -54,6 +54,14 @@ import com.jme3.math.Vector3f;
 public class CSGPolygon 
 	implements Savable, ConstructiveSolidGeometry
 {
+	/** Supported actions applied to the CSGShapes */
+	public static enum CSGPolygonPlaneMode
+	{
+		USE_GIVEN			// Construct polygon to reference the given plane
+	,	FROM_VERTICES		// Compute plane from the given vertices
+	,	FORCE_TO_PLANE		// Force all vertices to intersect with the given plane
+	}
+
 	/** Version tracking support */
 	public static final String sCSGPolygonRevision="$Rev$";
 	public static final String sCSGPolygonDate="$Date$";
@@ -77,9 +85,7 @@ public class CSGPolygon
 	public static float compressVertices(
 		List<CSGVertex>		pVertices
 	,	CSGPlane			pPlane
-	,	boolean				pForceToPlane
-	,	float				pMinimalBetween
-	,	float				pMaximalBetween
+	,	CSGEnvironment		pEnvironment
 	) {
 		CSGVertex rejectedVertex = null;
 		float minDistance = Float.MAX_VALUE, maxDistance = 0.0f;
@@ -91,13 +97,14 @@ public class CSGPolygon
 			return( 0.0f );
 		}
 		for( int i = 0, j = 1; i <= lastIndex; i += 1 ) {
-			if ( j > lastIndex ) j = 0;
+			if ( j > lastIndex ) j = 0;		// Loop around to compare the last to the first
 			
 			CSGVertex aVertex = pVertices.get( i );
 			if ( aVertex != null ) {
 				CSGVertex otherVertex = pVertices.get( j );
 				float aDistance = aVertex.distance( otherVertex );
-				if ( (aDistance >= pMinimalBetween) && (aDistance <= pMaximalBetween) ) {
+				if ( (aDistance >= pEnvironment.mEpsilonBetweenPoints) 
+				&& (aDistance <= pEnvironment.mEpsilonMaxBetweenPoints) ) {
 					// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
 					// 		structure your bound checks accordingly
 					if ( aDistance < minDistance ) minDistance = aDistance;
@@ -107,8 +114,9 @@ public class CSGPolygon
 						// Ensure the given point is actually on the plane
 						Vector3f aPoint = aVertex.getPosition();
 						aDistance = pPlane.pointDistance( aPoint );
-						if ( (aDistance < -EPSILON_NEAR_ZERO) || (aDistance > EPSILON_NEAR_ZERO) ) {
-							if ( pForceToPlane ) {
+						if ( (aDistance < -pEnvironment.mEpsilonNearZero) 
+						|| (aDistance > pEnvironment.mEpsilonNearZero) ) {
+							if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE ) {
 								// Resolve back to the corresponding point on the given plane
 								Vector3f newPoint = pPlane.pointProjection( aPoint, null );
 								if ( DEBUG ) {
@@ -120,7 +128,7 @@ public class CSGPolygon
 														, aVertex.getNormal()
 														, aVertex.getTextureCoordinate()
 														, null
-														, false );
+														, null );
 								pVertices.set( i, aVertex );
 							} else {
 								// This point not really on the plane.  Keep it, but track it for debug
@@ -162,8 +170,14 @@ public class CSGPolygon
 	,	int					pMaterialIndex
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGPlane aPlane = CSGPlane.fromVertices( pVertices );
-		return( (aPlane != null) ? createPolygon( pVertices, aPlane, pMaterialIndex, pEnvironment ) : null );
+		CSGPlane aPlane = CSGPlane.fromVertices( pVertices, pEnvironment );
+		if ( (aPlane != null) && aPlane.isValid() ) {
+			// Polygon is based on computed plane, regardless of active mode
+			return( new CSGPolygon( pVertices, aPlane, pMaterialIndex ) );
+		} else {
+			// Nothing of interest
+			return( null );
+		}
 	}
 	public static CSGPolygon createPolygon(
 		List<CSGVertex>		pVertices
@@ -173,16 +187,15 @@ public class CSGPolygon
 	) {
 		if ( (pPlane != null) && pPlane.isValid() ) {
 			// NOTE that compressVertices operates directly on the given list
-			float eccentricity 
-				= compressVertices( pVertices
-									, pPlane
-									, FORCE_POINT_ON_PLANE
-									, pEnvironment.mEpsilonBetweenPoints
-									, EPSILON_BETWEEN_POINTS_MAX );
+			float eccentricity = compressVertices( pVertices, pPlane, pEnvironment );
 			if ( pVertices.size() >= 3 ) {
 				// We have enough vertices for a shape
 				// NOTE when debugging, it can be useful to look for odd eccentricty values here....
-				CSGPolygon aPolygon = new CSGPolygon( pVertices, pMaterialIndex );
+				if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
+					// Use the plane from the underlying vertices
+					pPlane = CSGPlane.fromVertices( pVertices, pEnvironment );
+				}
+				CSGPolygon aPolygon = new CSGPolygon( pVertices, pPlane, pMaterialIndex );
 				return( aPolygon );
 			}
 		} else {
@@ -238,14 +251,6 @@ public class CSGPolygon
 		mVertices = sEmptyVertices;
 		mPlane = null;
 		mMaterialIndex = 0;
-	}
-	
-	/** Constructor based on a set of Vertices (minimum 3 expected) */
-	public CSGPolygon(
-		List<CSGVertex>		pVertices
-	,	int					pMaterialIndex
-	) {
-		this( pVertices, CSGPlane.fromVertices( pVertices ), pMaterialIndex );
 	}
 	
 	/** Internal constructor based on given vertices and plane */

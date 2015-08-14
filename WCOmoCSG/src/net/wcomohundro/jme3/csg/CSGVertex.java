@@ -74,7 +74,7 @@ public class CSGVertex
 	/** Standard null constructor */
 	public CSGVertex(
 	) {
-		this( Vector3f.ZERO, Vector3f.ZERO, Vector2f.ZERO, null, false );
+		this( Vector3f.ZERO, Vector3f.ZERO, Vector2f.ZERO, null, null );
 	}
 	
 	/** Constructor based on the given components */
@@ -83,7 +83,7 @@ public class CSGVertex
 	,	Vector3f		pNormal
 	,	Vector2f		pTextureCoordinate
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, null, DEBUG );
+		this( pPosition, pNormal, pTextureCoordinate, null, CSGEnvironment.sStandardEnvironment );
 	}
 	public CSGVertex(
 		Vector3f		pPosition
@@ -91,15 +91,6 @@ public class CSGVertex
 	,	Vector2f		pTextureCoordinate
 	,	Transform		pTransform
 	,	CSGEnvironment	pEnvironment
-	) {
-		this( pPosition, pNormal, pTextureCoordinate, pTransform, pEnvironment.mStructuralDebug );
-	}
-	public CSGVertex(
-		Vector3f		pPosition
-	,	Vector3f		pNormal
-	,	Vector2f		pTextureCoordinate
-	,	Transform		pTransform
-	,	boolean			pConfirmStructure
 	) {
 		if ( pTransform != null ) {
 			// Adjust the position
@@ -110,28 +101,24 @@ public class CSGVertex
 			pTextureCoordinate = pTextureCoordinate;
 		}
 		// Use what was given
-		if ( pConfirmStructure ) {
+		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
 			// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
 			//		false comparisons
 			if ( !(
-			   (Math.abs( pPosition.x ) < EPSILON_BETWEEN_POINTS_MAX) 
-			&& (Math.abs( pPosition.y ) < EPSILON_BETWEEN_POINTS_MAX) 
-			&& (Math.abs( pPosition.z ) < EPSILON_BETWEEN_POINTS_MAX)
+			   (Math.abs( pPosition.x ) < pEnvironment.mEpsilonMaxBetweenPoints ) 
+			&& (Math.abs( pPosition.y ) < pEnvironment.mEpsilonMaxBetweenPoints ) 
+			&& (Math.abs( pPosition.z ) < pEnvironment.mEpsilonMaxBetweenPoints )
 			) ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
 			}
+			// Upon further research, I am not seeing a requirement for the normal to be a unit vector
 			float normalLength = pNormal.length();
-			if ( !(
-			   (Math.abs( pNormal.x ) <= 1.0f) 
-			&& (Math.abs( pNormal.y ) <= 1.0f) 
-			&& (Math.abs( pNormal.z ) <= 1.0f) 
-			&& (normalLength <= 1.0f + EPSILON_NEAR_ZERO) && (normalLength > 1.0f - EPSILON_NEAR_ZERO)
-			) ) {
+			if ( !(normalLength != 0.0f) ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
 			}
 			if ( !(
-			   (Math.abs( pTextureCoordinate.x ) <= EPSILON_BETWEEN_POINTS_MAX) 
-			&& (Math.abs( pTextureCoordinate.y ) <= EPSILON_BETWEEN_POINTS_MAX)
+			   (Math.abs( pTextureCoordinate.x ) <= pEnvironment.mEpsilonMaxBetweenPoints ) 
+			&& (Math.abs( pTextureCoordinate.y ) <= pEnvironment.mEpsilonMaxBetweenPoints )
 			) ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
 			}
@@ -147,7 +134,7 @@ public class CSGVertex
 	) {
 		if ( pFlipIt ) {
 			// Make a flipped copy (invert the normal)
-			return( new CSGVertex( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null, false ));
+			return( new CSGVertex( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null, null ));
 		} else {
 			// Standard copy, which is currently this same immutable instance
 			return( this ); // new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));
@@ -177,15 +164,10 @@ public class CSGVertex
 		// 		structure your bound checks accordingly
 		if ( (pPercentage < 0.0f) || (pPercentage > 1.0f) ) {
 			// Not sure what to make of this....
-			
-		} else if ( pPercentage <= EPSILON_NEAR_ZERO ) {
-			// Zero percent means this vertex
-			aVertex = this.clone( false );
-			
-		} else if ( pPercentage >= 1.0f - EPSILON_NEAR_ZERO) {
-			// 100 percent means the other vertex
-			aVertex = pOther.clone( false );
-			
+		
+		// Once upon a time, I had tolerance checks here to check for near zero and near
+		// one, then using the appropriate Vertex.  But that resulted in duplicate points
+		// which means we could not compute plane.  So punt that and always use the percentage.
 		} else if ( Float.isFinite( pPercentage ) ){
 			// Where is this new vertex?
 			Vector3f newPosition 

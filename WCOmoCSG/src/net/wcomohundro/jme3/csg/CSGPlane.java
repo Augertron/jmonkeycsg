@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
+
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -110,15 +112,16 @@ public class CSGPlane
 
 	/** Factory method to produce a plane from a minimal set of points */
 	public static CSGPlane fromPoints(
-		Vector3f	pA
-	, 	Vector3f 	pB
-	, 	Vector3f 	pC
+		Vector3f		pA
+	, 	Vector3f 		pB
+	, 	Vector3f 		pC
+	,	CSGEnvironment	pEnvironment
 	) {
 		// Compute the normal vector
 		Vector3f aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
 		float normalDot = aNormal.dot( pA );
 		if ( normalDot != 0.0f ) {
-			return new CSGPlane( aNormal, pA, aNormal.dot( pA ), -1 );
+			return new CSGPlane( aNormal, pA, aNormal.dot( pA ), -1, pEnvironment );
 		} else {
 			// A normal dot of zero indicates that two of the points overlap, so no plane can be defined
 			return( null );
@@ -127,13 +130,14 @@ public class CSGPlane
 	/** Factory method to produce a plane from a set of vertices */
 	public static CSGPlane fromVertices(
 		List<CSGVertex>		pVertices
+	,	CSGEnvironment		pEnvironment
 	) {
 		if ( pVertices.size() >= 3 ) {
 			// Use the position of the first 3 vertices to define the plane
 			Vector3f aVector = pVertices.get(0).getPosition();
 			Vector3f bVector = pVertices.get(1).getPosition();
 			Vector3f cVector = pVertices.get(2).getPosition();
-			return( fromPoints( aVector, bVector, cVector ) );
+			return( fromPoints( aVector, bVector, cVector, pEnvironment ) );
 		} else {
 			// Not enough info to define a plane
 			return( null );
@@ -163,25 +167,27 @@ public class CSGPlane
 	,	Vector3f	pPointOnPlane
 	) {
 		// From the BSP FAQ paper, the 'D' value is calculated from the normal and a point on the plane.
-		this( pNormal, pPointOnPlane, pNormal.dot( pPointOnPlane ), -1 );
+		this( pNormal, pPointOnPlane, pNormal.dot( pPointOnPlane ), -1, CSGEnvironment.sStandardEnvironment );
 	}
 	/** Internal constructor for a given normal and dot */
 	protected CSGPlane(
-		Vector3f	pNormal
-	,	Vector3f	pPointOnPlane
-	,	float		pDot
-	,	int			pMarkValue
+		Vector3f		pNormal
+	,	Vector3f		pPointOnPlane
+	,	float			pDot
+	,	int				pMarkValue
+	,	CSGEnvironment	pEnvironment
 	) {
-		// Think about this as an Assert....
-		if ( true ) {
+		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
 			// Remember that NaN always returns false for any comparison, so structure the logic accordingly
 			float normalLength = pNormal.length();
 			if ( !(
 			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
-			&& (normalLength < 1.0f + EPSILON_NEAR_ZERO) && (normalLength > 1.0f - EPSILON_NEAR_ZERO)
+			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZero) 
+			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZero)
 			&& Float.isFinite( pDot )
 			) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
+				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+				, pEnvironment.mShapeName + "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
 				pDot =  Float.NaN;
 			}
 		}
@@ -200,7 +206,7 @@ public class CSGPlane
 	) {
 		if ( pFlipIt ) {
 			// Flipped copy
-			return( new CSGPlane( mSurfaceNormal.negate(), mPointOnPlane, -mDot, -1 ) );
+			return( new CSGPlane( mSurfaceNormal.negate(), mPointOnPlane, -mDot, -1, null ) );
 		} else {
 			// Standard use of this immutable copy
 			return( this );
@@ -310,9 +316,11 @@ public class CSGPlane
 			= (mSurfaceNormal.dot( polygonPlane.mSurfaceNormal ) > 0) ? pCoplanarFront : pCoplanarBack;
 		
 		// NOTE that CSGPlane.equals() checks for near-misses
-		if ( polygonPlane.equals( this ) ) {
-			// By definition, we are in the plane
+		if ( polygonPlane == this ) {
 			polygonType = SAMEPLANE;
+		} else if ( polygonPlane.equals( this, pEnvironment.mEpsilonOnPlane ) ) {
+			// By definition, we are closed enough to be in the same plane
+			polygonType = COPLANAR;
 		} else {
 			// Check every vertex against the plane
 			polygonTypes = new int[ vertexCount ];
@@ -330,32 +338,27 @@ public class CSGPlane
 					polygonType |= type;
 					polygonTypes[i] = type;
 				} else {
-					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + aVertexPosition );					
+					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+					, pEnvironment.mShapeName + "Bogus Vertex: " + aVertexPosition );					
 				}
 			}
 		}
 		switch( polygonType ) {
 		case SAMEPLANE:
-			// The given polygon lies in this same plane
+			// The given polygon lies in this exact same plane
 			pCoplanarFront.add( pPolygon );
 			break;
 
 		case COPLANAR:
-			// Force the polygon onto the plane
-			CSGPolygon aPolygon = null;
-			if ( FORCE_POINT_ON_PLANE ) {
-				// Force the polygon to be truely on the plane
-				aPolygon
-					= CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex(), pEnvironment );
-			} else {
-				// Use it as is
-				aPolygon = pPolygon;
-			}
+			// Force the polygon onto the plane as needed
+			List<CSGVertex> polygonCopy = new ArrayList<CSGVertex>( polygonVertices );
+			CSGPolygon aPolygon
+				= CSGPolygon.createPolygon( polygonCopy, this, pPolygon.getMaterialIndex(), pEnvironment );
 			if ( aPolygon != null ) {
 				coplaneList.add( aPolygon );
 			} else {
 				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
-				, "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );				
+				, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );				
 			}
 			break;
 			
@@ -396,7 +399,12 @@ public class CSGPlane
 					// a new vertex on this plane itself, which is both before and behind.
 					pTemp3f.set( jVertex.getPosition() ).subtractLocal( iVertex.getPosition() );
 					float percent = (mDot - vertexDot[i]) / mSurfaceNormal.dot( pTemp3f );
-					CSGVertex onPlane = iVertex.interpolate( jVertex, percent, this, pTemp3f, pTemp2f );
+					CSGVertex onPlane 
+						= iVertex.interpolate( jVertex
+						, percent
+						, (pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE) ? this : null
+						, pTemp3f
+						, pTemp2f );
 					if ( onPlane != null ) {
 						beforeVertices.add( onPlane );
 						behindVertices.add( onPlane.clone( false ) );
@@ -454,29 +462,30 @@ public class CSGPlane
 			if ( beforePolygon == null ) {
 				if ( behindPolygon == null ) {
 					// We did not split the polygon at all, treat it as COPLANAR
-					//pPolygon = CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex(), pEnvironment );
-					//if ( pPolygon == null ) {
-						// I am not quite sure how I would get here
-						//return( false );
-					//} else {
+					polygonCopy = new ArrayList<CSGVertex>( polygonVertices );
+					pPolygon = CSGPolygon.createPolygon( polygonCopy, this, pPolygon.getMaterialIndex(), pEnvironment );
+					if ( pPolygon != null ) {
 						pCoplanarFront.add( pPolygon );
-						ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Coopting planar vertices: " + vertexCount );
+						ConstructiveSolidGeometry.sLogger.log( Level.INFO
+						, pEnvironment.mShapeName + "Coopting planar vertices: " + vertexCount );
 						return( false );
-					//}
+					}
 				} else if ( !beforeVertices.isEmpty() ) {
 					// There is some fragment before but not enough for an independent shape
 					// @todo - investigate further if we need to retain this polygon in front or just drop it
-					pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
+					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
 					//coplaneList.add( pPolygon );		// Just adding the full poly to the plane does not work
-					ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Coopting front vertices: " + beforeVertices.size() + "/" + vertexCount );
+					ConstructiveSolidGeometry.sLogger.log( Level.INFO
+					, pEnvironment.mShapeName + "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
 					return( false );
 				}
 			} else if ( (behindPolygon == null) && !behindVertices.isEmpty() ) {
 				// There is some fragment behind, but not enough for an independent shape
 				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
-				pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
+				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
 				//coplaneList.add( pPolygon );			// Just adding the full poly to the plane does not work
-				ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Coopting back vertices: "+ behindVertices.size() + "/" + vertexCount );
+				ConstructiveSolidGeometry.sLogger.log( Level.INFO
+				, pEnvironment.mShapeName + "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
 				return( false );
 			}
 			break;
@@ -509,10 +518,10 @@ public class CSGPlane
 		return( super.toString() + " - " + mSurfaceNormal + "(" + mDot + ")" );
 	}
 	
-	/** OVERRIDE to treat two planes as equal if they happen to be close */
-	@Override
+	/** Treat two planes as equal if they happen to be close */
 	public boolean equals(
 		Object		pOther
+	,	float		pTolerance
 	) {
 		if ( pOther == this ) {
 			// By definition, if the plane is the same
@@ -523,7 +532,7 @@ public class CSGPlane
 				return( false );
 			} else if ( ConstructiveSolidGeometry.equalVector3f( this.mSurfaceNormal
 														, ((CSGPlane)pOther).mSurfaceNormal
-														, EPSILON_ONPLANE ) ) {
+														, pTolerance ) ) {
 				return( true );
 			} else {
 				return( false );

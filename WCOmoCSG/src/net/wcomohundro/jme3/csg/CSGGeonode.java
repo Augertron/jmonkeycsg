@@ -449,6 +449,7 @@ public class CSGGeonode
 		}
         // Any custom environment?
         mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
+        if ( mEnvironment != null ) mEnvironment.mShapeName = this.getName() + ": ";
 
 		// Rebuild based on the shapes just loaded
 		mIsValid = regenerate();
