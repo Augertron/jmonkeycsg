@@ -247,14 +247,14 @@ public class CSGShape
 	
 	/** Accessor to the list of polygons */
 	protected List<CSGPolygon> getPolygons(
-		Number	pMaterialIndex
-	,	int		pLevelOfDetail
-	,	boolean	pConfirm
+		Number			pMaterialIndex
+	,	int				pLevelOfDetail
+	,	CSGEnvironment	pEnvironment
 	) { 
 		if ( mPolygons.isEmpty() && (this.mesh != null) ) {
 			// Generate the polygons
 			this.mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
-			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail, pConfirm );
+			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail, pEnvironment );
 			
 		} else if ( !mPolygons.isEmpty() 
 				&& (pMaterialIndex != null)
@@ -296,22 +296,26 @@ public class CSGShape
 
 	/** Add a shape into this one */
 	public CSGShape union(
-		CSGShape	pOther
-	,	Number		pOtherMaterialIndex
-	,	boolean		pConfirm	
+		CSGShape		pOther
+	,	Number			pOtherMaterialIndex
+	,	CSGEnvironment	pEnvironment
 	) {
-		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0, pConfirm ) );
-		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0, pConfirm ) );
+		CSGPartition a = new CSGPartition( this
+											, getPolygons( this.mMaterialIndex, 0, pEnvironment )
+											, pEnvironment );
+		CSGPartition b = new CSGPartition( pOther
+											, pOther.getPolygons( pOtherMaterialIndex, 0, pEnvironment )
+											, pEnvironment  );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
         try {
-			a.clipTo( b, vars.vect1, vars.vect2d );
-			b.clipTo( a, vars.vect1, vars.vect2d );
+			a.clipTo( b, vars.vect1, vars.vect2d, pEnvironment );
+			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
 			b.invert();
-			b.clipTo( a, vars.vect1, vars.vect2d );
+			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
 			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), EPSILON_ONPLANE, vars.vect1, vars.vect2d );
+			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, pEnvironment );
         } finally {
         	vars.release();
         }
@@ -322,23 +326,27 @@ public class CSGShape
 	
 	/** Subtract a shape from this one */
 	public CSGShape difference(
-		CSGShape	pOther
-	,	Number		pOtherMaterialIndex
-	,	boolean		pConfirm	
+		CSGShape		pOther
+	,	Number			pOtherMaterialIndex
+	,	CSGEnvironment	pEnvironment
 	) {
-		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0, pConfirm ) );
-		CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0, pConfirm ) );
+		CSGPartition a = new CSGPartition( this
+											, getPolygons( this.mMaterialIndex, 0, pEnvironment )
+											, pEnvironment  );
+		CSGPartition b = new CSGPartition( pOther
+											, pOther.getPolygons( pOtherMaterialIndex, 0, pEnvironment )
+											, pEnvironment  );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
         try {
 			a.invert();
-			a.clipTo( b, vars.vect1, vars.vect2d );
-			b.clipTo( a, vars.vect1, vars.vect2d );
+			a.clipTo( b, vars.vect1, vars.vect2d, pEnvironment );
+			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
 			b.invert();
-			b.clipTo( a, vars.vect1, vars.vect2d );
+			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
 			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), EPSILON_ONPLANE, vars.vect1, vars.vect2d );
+			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, pEnvironment );
 			a.invert();
         } finally {
         	vars.release();
@@ -350,22 +358,26 @@ public class CSGShape
 
 	/** Find the intersection with another shape */
 	public CSGShape intersection(
-		CSGShape	pOther
-	,	Number		pOtherMaterialIndex
-	,	boolean		pConfirm	
+		CSGShape		pOther
+	,	Number			pOtherMaterialIndex
+	,	CSGEnvironment	pEnvironment
 	) {
-		CSGPartition a = new CSGPartition( this, getPolygons( this.mMaterialIndex, 0, pConfirm ) );
-	    CSGPartition b = new CSGPartition( pOther, pOther.getPolygons( pOtherMaterialIndex, 0, pConfirm ) );
+		CSGPartition a = new CSGPartition( this
+											, getPolygons( this.mMaterialIndex, 0, pEnvironment )
+											, pEnvironment  );
+	    CSGPartition b = new CSGPartition( pOther
+	    									, pOther.getPolygons( pOtherMaterialIndex, 0, pEnvironment )
+											, pEnvironment  );
 		
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
         try {
 		    a.invert();
-		    b.clipTo( a, vars.vect1, vars.vect2d );
+		    b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
 		    b.invert();
-		    a.clipTo( b, vars.vect1, vars.vect2d );
-		    b.clipTo( a, vars.vect1, vars.vect2d);
-		    a.buildHierarchy( b.allPolygons( null ), EPSILON_ONPLANE, vars.vect1, vars.vect2d );
+		    a.clipTo( b, vars.vect1, vars.vect2d, pEnvironment );
+		    b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
+		    a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, pEnvironment );
 		    a.invert();
         } finally {
         	vars.release();
@@ -377,10 +389,10 @@ public class CSGShape
 
 	/** Produce the set of polygons that correspond to a given mesh */
 	protected List<CSGPolygon> fromMesh(
-		Mesh		pMesh
-	,	Transform	pTransform
-	,	int			pLevelOfDetail
-	,	boolean		pConfirm
+		Mesh			pMesh
+	,	Transform		pTransform
+	,	int				pLevelOfDetail
+	,	CSGEnvironment	pEnvironment
 	) {
 		// Convert the mesh in to appropriate polygons
 	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
@@ -400,7 +412,7 @@ public class CSGShape
 		FloatBuffer posBuffer = pMesh.getFloatBuffer( Type.Position );
 		FloatBuffer normBuffer = pMesh.getFloatBuffer( Type.Normal );
 		FloatBuffer texCoordBuffer = pMesh.getFloatBuffer( Type.TexCoord );
-		if ( pConfirm ) {
+		if ( pEnvironment.mStructuralDebug ) {
 			switch( meshMode ) {
 			case Triangles:
 				// This is the only one we can deal with at this time
@@ -413,9 +425,6 @@ public class CSGShape
 			}
 			if ( normBuffer == null ) {
 				throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
-			}
-			if ( texCoordBuffer == null ) {
-				throw new IllegalArgumentException( "Mesh lacking Type.TexCoord buffer" );
 			}
 		}
 		// Work from 3 points which define a triangle
@@ -471,12 +480,13 @@ public class CSGShape
 			}
 			// Construct the vertices that define the points of the triangle
 			List<CSGVertex> aVertexList = new ArrayList<CSGVertex>( 3 );
-			aVertexList.add( new CSGVertex( pos1, norm1, texCoord1, pTransform, pConfirm ) );
-			aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform, pConfirm ) );
-			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform, pConfirm ) );
+			aVertexList.add( new CSGVertex( pos1, norm1, texCoord1, pTransform, pEnvironment ) );
+			aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform, pEnvironment ) );
+			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform, pEnvironment ) );
 			
 			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
-			CSGPolygon aPolygon = CSGPolygon.createPolygon( aVertexList, this.mMaterialIndex );
+			CSGPolygon aPolygon 
+				= CSGPolygon.createPolygon( aVertexList, this.mMaterialIndex, pEnvironment );
 			if ( aPolygon != null ) {
 				polygons.add( aPolygon );
 			}
@@ -489,12 +499,12 @@ public class CSGShape
 	 	Every other mesh (if present) applies solely to a specific Material.
 	  */
 	public List<Mesh> toMesh(
-		int			pMaxMaterialIndex
-	,	boolean		pConfirm	
+		int				pMaxMaterialIndex
+	,	CSGEnvironment	pEnvironment
 	) {
 		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
 		
-		List<CSGPolygon> aPolyList = getPolygons( null, 0, pConfirm );
+		List<CSGPolygon> aPolyList = getPolygons( null, 0, pEnvironment );
 		int anEstimateVertexCount = aPolyList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );

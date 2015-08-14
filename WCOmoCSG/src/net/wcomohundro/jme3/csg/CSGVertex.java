@@ -90,7 +90,16 @@ public class CSGVertex
 	,	Vector3f		pNormal
 	,	Vector2f		pTextureCoordinate
 	,	Transform		pTransform
-	,	boolean			pConfirm
+	,	CSGEnvironment	pEnvironment
+	) {
+		this( pPosition, pNormal, pTextureCoordinate, pTransform, pEnvironment.mStructuralDebug );
+	}
+	public CSGVertex(
+		Vector3f		pPosition
+	,	Vector3f		pNormal
+	,	Vector2f		pTextureCoordinate
+	,	Transform		pTransform
+	,	boolean			pConfirmStructure
 	) {
 		if ( pTransform != null ) {
 			// Adjust the position
@@ -101,7 +110,7 @@ public class CSGVertex
 			pTextureCoordinate = pTextureCoordinate;
 		}
 		// Use what was given
-		if ( pConfirm ) {
+		if ( pConfirmStructure ) {
 			// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
 			//		false comparisons
 			if ( !(
@@ -202,7 +211,7 @@ public class CSGVertex
 			// Not a percentage we can deal with
 			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "unexpected percentage: " + pPercentage );
 		} else if ( pPlane != null ) {
-			// Force the position onto the plane
+			// Force the position onto the given plane
 			Vector3f aPosition = aVertex.getPosition();
 			float aDistance = pPlane.pointDistance( aPosition );
 			if ( aDistance != 0 ) {

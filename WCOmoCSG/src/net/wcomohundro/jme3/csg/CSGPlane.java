@@ -286,6 +286,7 @@ public class CSGPlane
 	, 	List<CSGPolygon> 	pBack
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
+	,	CSGEnvironment		pEnvironment
 	) {
 		if ( !pPolygon.isValid() ) {
 			// This polygon is not playing the game properly, ignore it
@@ -303,6 +304,10 @@ public class CSGPlane
 		int polygonType = COPLANAR;
 		int[] polygonTypes = null;
 		float[] vertexDot = null;
+		
+		// Which way is the polygon facing?
+		List<CSGPolygon> coplaneList 
+			= (mSurfaceNormal.dot( polygonPlane.mSurfaceNormal ) > 0) ? pCoplanarFront : pCoplanarBack;
 		
 		// NOTE that CSGPlane.equals() checks for near-misses
 		if ( polygonPlane.equals( this ) ) {
@@ -336,12 +341,16 @@ public class CSGPlane
 			break;
 
 		case COPLANAR:
-			// Which way is the polygon facing?
-			List<CSGPolygon> coplaneList 
-				= (mSurfaceNormal.dot( polygonPlane.mSurfaceNormal ) > 0) ? pCoplanarFront : pCoplanarBack;
-			
 			// Force the polygon onto the plane
-			CSGPolygon aPolygon = CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex() );
+			CSGPolygon aPolygon = null;
+			if ( FORCE_POINT_ON_PLANE ) {
+				// Force the polygon to be truely on the plane
+				aPolygon
+					= CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex(), pEnvironment );
+			} else {
+				// Use it as is
+				aPolygon = pPolygon;
+			}
 			if ( aPolygon != null ) {
 				coplaneList.add( aPolygon );
 			} else {
@@ -395,17 +404,21 @@ public class CSGPlane
 				}
 			}
 			// What comes in front of the given plane?
-			CSGPolygon beforePolygon = CSGPolygon.createPolygon( beforeVertices, pPolygon.getMaterialIndex() );
+			CSGPolygon beforePolygon 
+				= CSGPolygon.createPolygon( beforeVertices, pPolygon.getMaterialIndex(), pEnvironment );
 
 			// What comes behind the given plane?
-			CSGPolygon behindPolygon = CSGPolygon.createPolygon( behindVertices, pPolygon.getMaterialIndex() );
+			CSGPolygon behindPolygon 
+				= CSGPolygon.createPolygon( behindVertices, pPolygon.getMaterialIndex(), pEnvironment );
 			
+/** Retry the split with more forgiving tolerance
 			if ( (beforePolygon == null) && !beforeVertices.isEmpty() ) {
 				// Not enough distinct vertices
 				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
 					, "Discarding front vertices[" + pHierarchyLevel + "] " + beforeVertices.size() + "/" + vertexCount );
 				behindPolygon = null;
-			} else if ( (behindPolygon == null) && !behindVertices.isEmpty() ) {
+			}
+			if ( (behindPolygon == null) && !behindVertices.isEmpty() ) {
 				// Not enough distinct vertices
 				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
 					, "Discarding back vertices[" + pHierarchyLevel + "] "+ behindVertices.size() + "/" + vertexCount );
@@ -427,37 +440,45 @@ public class CSGPlane
 								, 	pBack
 								,	pTemp3f
 								,	pTemp2f
+								,	pEnvironment
 								);
 				return( false );
 			}
-/*** an older attempt to account for missing vertices
+**/
+			if ( beforePolygon != null ) {
+				pFront.add( beforePolygon  );
+			}
+			if ( behindPolygon != null ) {
+				pBack.add( behindPolygon );
+			}
 			if ( beforePolygon == null ) {
 				if ( behindPolygon == null ) {
 					// We did not split the polygon at all, treat it as COPLANAR
-					pPolygon = CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex() );
-					if ( pPolygon == null ) {
+					//pPolygon = CSGPolygon.createPolygon( polygonVertices, this, pPolygon.getMaterialIndex(), pEnvironment );
+					//if ( pPolygon == null ) {
 						// I am not quite sure how I would get here
-						return( false );
-					} else {
+						//return( false );
+					//} else {
 						pCoplanarFront.add( pPolygon );
-					}
+						ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Coopting planar vertices: " + vertexCount );
+						return( false );
+					//}
 				} else if ( !beforeVertices.isEmpty() ) {
 					// There is some fragment before but not enough for an independent shape
 					// @todo - investigate further if we need to retain this polygon in front or just drop it
-					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
-					//polygonType = COPLANAR;		// Just adding the full poly to the plane does not work
-					ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
+					pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
+					//coplaneList.add( pPolygon );		// Just adding the full poly to the plane does not work
+					ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Coopting front vertices: " + beforeVertices.size() + "/" + vertexCount );
 					return( false );
 				}
 			} else if ( (behindPolygon == null) && !behindVertices.isEmpty() ) {
 				// There is some fragment behind, but not enough for an independent shape
 				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
-				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
-				//polygonType = COPLANAR;			// Just adding the full poly to the plane does not work
-				ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
+				pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
+				//coplaneList.add( pPolygon );			// Just adding the full poly to the plane does not work
+				ConstructiveSolidGeometry.sLogger.log( Level.INFO, "Coopting back vertices: "+ behindVertices.size() + "/" + vertexCount );
 				return( false );
 			}
-***/
 			break;
 		}
 		return( true );

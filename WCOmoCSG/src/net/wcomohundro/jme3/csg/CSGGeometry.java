@@ -79,7 +79,7 @@ import net.wcomohundro.jme3.csg.shape.CSGMesh;
 */
 public class CSGGeometry
 	extends Geometry 
-	implements Savable, ConstructiveSolidGeometry
+	implements Savable, ConstructiveSolidGeometry, ConstructiveSolidGeometry.CSGSpatial
 {
 	/** Version tracking support */
 	public static final String sCSGGeometryRevision="$Rev$";
@@ -87,8 +87,10 @@ public class CSGGeometry
 
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
-	/** Control flag to apply validation to mesh/points */
-	protected boolean			mConfirm;
+	/** Processing environment to apply */
+	protected CSGEnvironment	mEnvironment;
+	/** Is this a valid geometry */
+	protected boolean			mIsValid;
 	/** Control flag for the special 'debug' mode */
 	protected boolean			mDebugMesh;
 	
@@ -96,47 +98,32 @@ public class CSGGeometry
 	/** Basic null constructor */
 	public CSGGeometry(
 	) {
-		this( "CSGGeometry", DEBUG );
+		this( "CSGGeometry" );
 	}
 	/** Constructor based on a given name */
 	public CSGGeometry(
 		String	pName
 	) {
-		this( pName, DEBUG );
-	}
-	public CSGGeometry(
-		String	pName
-	,	boolean	pConfirm
-	) {
 		super( pName );
-		mConfirm = pConfirm;
 	}
 	/** Constructor on a name and given mesh */
 	public CSGGeometry(
 		String	pName
 	,	Mesh	pMesh
 	) {
-		this( pName, pMesh, DEBUG );
-	}
-	public CSGGeometry(
-		String	pName
-	,	Mesh	pMesh
-	,	boolean	pConfirm
-	) {
 		super( pName, pMesh );
-		mConfirm = pConfirm;
 	}
-
-	/** Accessor to the debug confirmation control flag */
-	public boolean isConfirmm() { return mConfirm; }
-	public void setConfirm( boolean pFlag ) { mConfirm = pFlag; }
 
 	/** Accessor to the debug mesh control flag */
 	public boolean isDebugMesh() { return mDebugMesh; }
 	public void setDebugMesh( boolean pFlag ) { mDebugMesh = pFlag; }
 	
+	/** Is this a valid geometry */
+	@Override
+	public boolean isValid() { return mIsValid; }
 	
 	/** Add a shape to this geometry */
+	@Override
 	public void addShape(
 		CSGShape	pShape
 	,	CSGOperator	pOperator
@@ -149,6 +136,7 @@ public class CSGGeometry
 	}
 	
 	/** Remove a shape from this geometry */
+	@Override
 	public void removeShape(
 		CSGShape	pShape
 	) {
@@ -189,7 +177,14 @@ public class CSGGeometry
 	}
 	
 	/** Action to generate the mesh based on the given shapes */
-	public void regenerate(
+	@Override
+	public boolean regenerate(
+	) {
+		return( regenerate( (mEnvironment == null) ? CSGEnvironment.sStandardEnvironment : mEnvironment ) );
+	}
+	@Override
+	public boolean regenerate(
+		CSGEnvironment		pEnvironment
 	) {
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Sort the shapes based on their operator
@@ -207,7 +202,7 @@ public class CSGGeometry
 						aProduct = aShape.clone( null, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.union( aShape, null, mConfirm );
+						aProduct = aProduct.union( aShape, null, pEnvironment );
 					}
 					break;
 					
@@ -216,7 +211,7 @@ public class CSGGeometry
 						// NO PLACE TO START
 					} else {
 						// Blend together
-						aProduct = aProduct.difference( aShape, null, mConfirm );
+						aProduct = aProduct.difference( aShape, null, pEnvironment );
 					}
 					break;
 					
@@ -226,7 +221,7 @@ public class CSGGeometry
 						aProduct = aShape.clone( null, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.intersection( aShape, null, mConfirm );
+						aProduct = aProduct.intersection( aShape, null, pEnvironment );
 					}
 					break;
 					
@@ -236,15 +231,25 @@ public class CSGGeometry
 				}
 			}
 			if ( aProduct != null ) {
-				List<Mesh> meshList = aProduct.toMesh( 0, mConfirm );
+				List<Mesh> meshList = aProduct.toMesh( 0, pEnvironment );
 				if ( !meshList.isEmpty() ) {
 					// The overall, blended mesh represents this Geometry
 					this.setMesh( meshList.get( 0 ) );
 				}
+				// Return true if we have a valid product
+				return( mIsValid = aProduct.isValid() );
+			} else {
+				// Nothing interesting produced
+				return( false );
 			}
 		} else if ( this.mesh instanceof CSGMesh ) {
 			// If in 'debug' mode, look for a possible delegate
 			this.mesh = ((CSGMesh)this.mesh).resolveMesh( mDebugMesh );
+			return( true );
+			
+		} else {
+			// Nothing of interest
+			return( false );
 		}
 	}
 
@@ -267,6 +272,10 @@ public class CSGGeometry
 		//		but instead requires an ArrayList
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "shapes", null );
+		
+		if ( mEnvironment != null ) {
+			aCapsule.write( mEnvironment, "csgEnvironment", null );
+		}
 	}
 	
 	@Override
@@ -305,8 +314,11 @@ public class CSGGeometry
         		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
         	}
         }
+        // Any custom environment?
+        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
+        
 		// Rebuild based on the shapes just loaded
-		regenerate();
+		mIsValid = regenerate();
 		
         // TangentBinormalGenerator directive
         boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );

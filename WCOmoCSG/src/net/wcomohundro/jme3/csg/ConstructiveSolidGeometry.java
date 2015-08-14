@@ -31,10 +31,12 @@
 package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.export.InputCapsule;
+import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -202,6 +204,44 @@ public interface ConstructiveSolidGeometry
 	,	DIFFERENCE
 	,	INTERSECTION
 	,	SKIP
+	}
+	
+	/** Basic Spatial/Geometry interface:
+	 		Define the services common across CSGGeometry and CSGGeonode
+	 */
+	public interface CSGSpatial {
+		
+	    /** Accessor to the Material (ala Geometry) */
+	    public Material getMaterial();
+	    public void setMaterial(
+	    	Material 	pMaterial
+	    );
+	    
+	    /** Accessor to the LOD level (ala Geometry) */
+	    public int getLodLevel();
+	    public void setLodLevel(
+	    	int		pLODLevel
+	    );
+
+		/** Add a shape to this geometry */
+		public void addShape(
+			CSGShape	pShape
+		,	CSGOperator	pOperator
+		);
+		
+		/** Remove a shape from this geometry */
+		public void removeShape(
+			CSGShape	pShape
+		);
+		
+		/** Action to generate the mesh based on the given shapes */
+		public boolean regenerate();
+		public boolean regenerate(
+			CSGEnvironment		pEnvironment
+		);
+
+		/** Is this a valid geometry */
+		public boolean isValid();
 	}
 	
 	/** Logger available to any CSG services that desire it */

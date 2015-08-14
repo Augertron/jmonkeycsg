@@ -79,7 +79,7 @@ import com.jme3.util.TangentBinormalGenerator;
 */
 public class CSGGeonode
 	extends Node
-	implements Savable, ConstructiveSolidGeometry
+	implements Savable, ConstructiveSolidGeometry, ConstructiveSolidGeometry.CSGSpatial
 {
 	/** Version tracking support */
 	public static final String sCSGGeonodeRevision="$Rev$";
@@ -98,34 +98,30 @@ public class CSGGeonode
 	protected List<CSGShape>	mShapes;
 	/** Geometry has a variable for LOD level, but Spatial does not */
 	protected int				mLODLevel;
-	/** Control flag to apply validation to mesh/points */
-	protected boolean			mConfirm;
+	/** Is this a valid geometry */
+	protected boolean			mIsValid;
+	/** Processing environment to apply */
+	protected CSGEnvironment	mEnvironment;
 
 	
 	/** Basic null constructor */
 	public CSGGeonode(
 	) {
-		this( "CSGGeoNode", DEBUG );
+		this( "CSGGeoNode" );
 	}
 	/** Constructor based on a given name */
 	public CSGGeonode(
 		String	pName
 	) {
-		this( pName, DEBUG );
-	}
-	public CSGGeonode(
-		String	pName
-	,	boolean	pConfirm
-	) {
 		super( pName );
-		mConfirm = pConfirm;
 	}
 	
-	/** Accessor to the debug confirmation control flag */
-	public boolean isConfirmm() { return mConfirm; }
-	public void setConfirm( boolean pFlag ) { mConfirm = pFlag; }
-
+	/** Is this a valid geometry */
+	@Override
+	public boolean isValid() { return mIsValid; }
+	
 	/** Add a shape to this geometry */
+	@Override
 	public void addShape(
 		CSGShape	pShape
 	,	CSGOperator	pOperator
@@ -138,6 +134,7 @@ public class CSGGeonode
 	}
 	
 	/** Remove a shape from this geometry */
+	@Override
 	public void removeShape(
 		CSGShape	pShape
 	) {
@@ -147,6 +144,7 @@ public class CSGGeonode
 	}
 	
     /** Accessor to the Material (ala Geometry) */
+	@Override
     public Material getMaterial() { return mMaterial; }
     @Override
     public void setMaterial(
@@ -156,6 +154,7 @@ public class CSGGeonode
     }
     
     /** Accessor to the LOD level (ala Geometry) */
+    @Override
     public int getLodLevel() { return mLODLevel; }
     @Override
     public void setLodLevel(
@@ -165,7 +164,14 @@ public class CSGGeonode
     }
 
 	/** Action to generate the mesh based on the given shapes */
-	public void regenerate(
+    @Override
+	public boolean regenerate(
+	) {
+		return( regenerate( (mEnvironment == null) ? CSGEnvironment.sStandardEnvironment : mEnvironment ) );
+	}
+	@Override
+	public boolean regenerate(
+		CSGEnvironment		pEnvironment
 	) {
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Prepare for custom materials
@@ -241,7 +247,7 @@ public class CSGGeonode
 						aProduct = aShape.clone( materialIndex, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.union( aShape, materialIndex, mConfirm );
+						aProduct = aProduct.union( aShape, materialIndex, pEnvironment );
 					}
 					break;
 					
@@ -250,7 +256,7 @@ public class CSGGeonode
 						// NO PLACE TO START
 					} else {
 						// Blend together
-						aProduct = aProduct.difference( aShape, materialIndex, mConfirm );
+						aProduct = aProduct.difference( aShape, materialIndex, pEnvironment );
 					}
 					break;
 					
@@ -260,7 +266,7 @@ public class CSGGeonode
 						aProduct = aShape.clone( materialIndex, getLodLevel() );
 					} else {
 						// Blend together
-						aProduct = aProduct.intersection( aShape, materialIndex, mConfirm );
+						aProduct = aProduct.intersection( aShape, materialIndex, pEnvironment );
 					}
 					break;
 					
@@ -275,10 +281,10 @@ public class CSGGeonode
 				// Transform the list of meshes into children
 				// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
 				//  and the 'one' mesh is the one that corresponds to the generic material)
-				List<Mesh> meshList = aProduct.toMesh( (materialMap == null) ? 0 : materialCount, mConfirm );
+				List<Mesh> meshList = aProduct.toMesh( (materialMap == null) ? 0 : materialCount, pEnvironment );
 				if ( !meshList.isEmpty() ) {
 					// Use the 'zero' mesh to describe the overall geometry
-					mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ), mConfirm );
+					mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );
 					mMasterGeometry.setMaterial( mMaterial.clone() );
 				}
 				if ( meshList.size() == 1 ) {
@@ -296,7 +302,15 @@ public class CSGGeonode
 					}
 					// NOTE that we only attach the independent child meshes, not the master
 				}
+				// Return true if we have a valid product
+				return( mIsValid = aProduct.isValid() );
+			} else {
+				// Nothing produced
+				return( false );
 			}
+		} else {
+			// Nothing interesting
+			return( false );
 		}
 	}
 	
@@ -351,6 +365,7 @@ public class CSGGeonode
     /** Process a collision 
      	OVERRIDE to operate directly from the master
      */
+    @Override
     public int collideWith(
     	Collidable 			pOther
     , 	CollisionResults 	pResults
@@ -386,6 +401,10 @@ public class CSGGeonode
 		// NOTE a deficiency in the OutputCapsule API which should operate on a List,
 		//		but instead requires an ArrayList
 		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "shapes", null );
+		
+		if ( mEnvironment != null ) {
+			aCapsule.write( mEnvironment, "csgEnvironment", null );
+		}
 	}
 	
 	@Override
@@ -428,8 +447,11 @@ public class CSGGeonode
 				}
 			}
 		}
+        // Any custom environment?
+        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
+
 		// Rebuild based on the shapes just loaded
-		regenerate();
+		mIsValid = regenerate();
 		
         // TangentBinormalGenerator directive
         boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );

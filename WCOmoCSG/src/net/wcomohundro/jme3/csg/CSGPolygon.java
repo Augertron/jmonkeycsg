@@ -160,14 +160,16 @@ public class CSGPolygon
 	public static CSGPolygon createPolygon(
 		List<CSGVertex>		pVertices
 	,	int					pMaterialIndex
+	,	CSGEnvironment		pEnvironment
 	) {
 		CSGPlane aPlane = CSGPlane.fromVertices( pVertices );
-		return( (aPlane != null) ? createPolygon( pVertices, aPlane, pMaterialIndex ) : null );
+		return( (aPlane != null) ? createPolygon( pVertices, aPlane, pMaterialIndex, pEnvironment ) : null );
 	}
 	public static CSGPolygon createPolygon(
 		List<CSGVertex>		pVertices
 	,	CSGPlane			pPlane
 	,	int					pMaterialIndex
+	,	CSGEnvironment		pEnvironment
 	) {
 		if ( (pPlane != null) && pPlane.isValid() ) {
 			// NOTE that compressVertices operates directly on the given list
@@ -175,7 +177,7 @@ public class CSGPolygon
 				= compressVertices( pVertices
 									, pPlane
 									, FORCE_POINT_ON_PLANE
-									, EPSILON_BETWEEN_POINTS
+									, pEnvironment.mEpsilonBetweenPoints
 									, EPSILON_BETWEEN_POINTS_MAX );
 			if ( pVertices.size() >= 3 ) {
 				// We have enough vertices for a shape

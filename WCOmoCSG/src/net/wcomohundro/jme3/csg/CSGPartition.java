@@ -67,12 +67,6 @@ public class CSGPartition
 	public static final String sCSGPartitionRevision="$Rev$";
 	public static final String sCSGPartitionDate="$Date$";
 
-	/** Limit on processing depth when building the BSP hierarchy
-	 		NOTE use of simple static here, based on the final static from ConstructiveSolidGeometry. 
-	 			 This allows us to simply alter this value dynamically for debug/testing.
-	 */
-	public static int sHierarchyLimit = BSP_HIERARCHY_LIMIT;
-	
 	/** The 'shape' associated with this partition */
 	protected CSGShape			mShape;
 	/** The level in the BSP hierarchy (negative means level is 'corrupt') */
@@ -91,7 +85,7 @@ public class CSGPartition
 	/** Simple null constructor */
 	public CSGPartition(
 	) {
-		this( null, null, 0, 1 );
+		this( null, null, 0, 1, CSGEnvironment.sStandardEnvironment );
 	}
 	/** Standard constructor that builds a hierarchy of nodes based on a given set of polygons */
 	public CSGPartition(
@@ -99,14 +93,16 @@ public class CSGPartition
 	,	List<CSGPolygon>	pPolygons
 	,	Number				pMaterialIndex
 	,	int					pLevel
+	,	CSGEnvironment		pEnvironment
 	) {
-		this( pShape, pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue(), pLevel );
+		this( pShape, pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue(), pLevel, pEnvironment );
 	}
 	public CSGPartition(
 		CSGShape			pShape
 	,	List<CSGPolygon>	pPolygons
 	,	int					pMaterialIndex
 	,	int					pLevel
+	,	CSGEnvironment		pEnvironment
 	) {
 		mShape = pShape;
 		mLevel = pLevel;
@@ -117,7 +113,7 @@ public class CSGPartition
 	        // Avoid some object churn by using the thread-specific 'temp' variables
 	        TempVars vars = TempVars.get();
 	        try {
-	        	buildHierarchy( pPolygons, EPSILON_ONPLANE, vars.vect1, vars.vect2d );
+	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, pEnvironment );
 	        } finally {
 	        	vars.release();
 	        }
@@ -126,13 +122,15 @@ public class CSGPartition
 	public CSGPartition(
 		CSGShape			pShape
 	,	List<CSGPolygon>	pPolygons
+	,	CSGEnvironment		pEnvironment
 	) {
-		this( pShape, pPolygons, 1 );
+		this( pShape, pPolygons, 1, pEnvironment );
 	}
 	public CSGPartition(
 		CSGShape			pShape
 	,	List<CSGPolygon>	pPolygons
 	,	int					pLevel
+	,	CSGEnvironment		pEnvironment
 	) {
 		mShape = pShape;
 		mLevel = pLevel;
@@ -145,7 +143,7 @@ public class CSGPartition
 	        // Avoid some object churn by using the thread-specific 'temp' variables
 	        TempVars vars = TempVars.get();
 	        try {
-	        	buildHierarchy( pPolygons, EPSILON_ONPLANE, vars.vect1, vars.vect2d );
+	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, pEnvironment );
 	        } finally {
 	        	vars.release();
 	        }
@@ -202,6 +200,7 @@ public class CSGPartition
 		List<CSGPolygon>	pPolygons
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
+	,	CSGEnvironment		pEnvironment
 	) {
 		if ( mPlane == null ) {
 			// If we have no effective plane, then everything is retained
@@ -214,18 +213,19 @@ public class CSGPartition
 			// NOTE that coplannar polygons are retained in front/back, based on which
 			//		way they are facing
 			mPlane.splitPolygon( aPolygon
-								, EPSILON_ONPLANE
+								, pEnvironment.mEpsilonOnPlane
 								, mLevel
 								, frontPolys, backPolys, frontPolys, backPolys
-								, pTemp3f, pTemp2f );
+								, pTemp3f, pTemp2f
+								, pEnvironment );
 		}
 		if ( mFrontPartition != null ) {
 			// Include appropriate clipping from the front partition as well
-			frontPolys = mFrontPartition.clipPolygons( frontPolys, pTemp3f, pTemp2f );
+			frontPolys = mFrontPartition.clipPolygons( frontPolys, pTemp3f, pTemp2f, pEnvironment );
 		}
 		if ( mBackPartition != null ) {
 			// Include appropriate clipping from the back partition as well
-			backPolys = mBackPartition.clipPolygons( backPolys, pTemp3f, pTemp2f );
+			backPolys = mBackPartition.clipPolygons( backPolys, pTemp3f, pTemp2f, pEnvironment );
 			
 			// Keep it blended into the total list
 			frontPolys.addAll( backPolys );
@@ -240,11 +240,12 @@ public class CSGPartition
 		CSGPartition		pOther
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
+	,	CSGEnvironment		pEnvironment
 	) {
 		// Reset the list of polygons that apply based on clipping from the other partition
-		mPolygons = pOther.clipPolygons( mPolygons, pTemp3f, pTemp2f );
-		if ( mFrontPartition != null ) mFrontPartition.clipTo( pOther, pTemp3f, pTemp2f );
-		if ( mBackPartition != null) mBackPartition.clipTo( pOther, pTemp3f, pTemp2f );
+		mPolygons = pOther.clipPolygons( mPolygons, pTemp3f, pTemp2f, pEnvironment );
+		if ( mFrontPartition != null ) mFrontPartition.clipTo( pOther, pTemp3f, pTemp2f, pEnvironment );
+		if ( mBackPartition != null) mBackPartition.clipTo( pOther, pTemp3f, pTemp2f, pEnvironment );
 	}
 		
 	/** Invert this node */
@@ -270,16 +271,16 @@ public class CSGPartition
 	 */
 	public boolean buildHierarchy(
 		List<CSGPolygon>	pPolygons
-	,	float				pTolerance
 	,	Vector3f			pTemp3f
 	,	Vector2f			pTemp2f
+	,	CSGEnvironment		pEnvironment
 	) {
 		boolean aCorruptHierarchy = false;
 		
 		if ( pPolygons.isEmpty() ) {
 			return( aCorruptHierarchy );
 		}
-		if ( mLevel > sHierarchyLimit ) {
+		if ( mLevel > pEnvironment.mBSPLimit ) {
 			// This is probably an error in the algorithm, but I have not yet found the true cause.
 			ConstructiveSolidGeometry.sLogger.log( Level.WARNING
 													, "CSGPartition.buildHierarchy - too deep" );
@@ -294,7 +295,7 @@ public class CSGPartition
 		// As we go deeper in the hierarchy, do NOT insist on the same level of tolerance
 		// Otherwise, you will be looking for such detail that the polygons are so small that
 		// you get very very odd results
-		float aTolerance = pTolerance * mLevel;
+		float aTolerance = pEnvironment.mEpsilonOnPlane * mLevel;
 		
 		// Split up the polygons according to front/back of the given plane
 		List<CSGPolygon> front = new ArrayList<CSGPolygon>();
@@ -305,12 +306,13 @@ public class CSGPartition
 								, aTolerance
 								, mLevel
 								, mPolygons, mPolygons, front, back
-								, pTemp3f, pTemp2f );
+								, pTemp3f, pTemp2f
+								, pEnvironment );
 		}
 		mPolygons = CSGPolygon.compressPolygons( mPolygons );
 		if ( !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
-				this.mFrontPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1 );
+				this.mFrontPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
 			}
 			front = CSGPolygon.compressPolygons( front );
 			if ( this.mPolygons.isEmpty() && back.isEmpty() ) {
@@ -319,12 +321,12 @@ public class CSGPartition
 			} else {
 				// Assign whatever is in the front
 				aCorruptHierarchy 
-					|= this.mFrontPartition.buildHierarchy( front, pTolerance, pTemp3f, pTemp2f );
+					|= this.mFrontPartition.buildHierarchy( front, pTemp3f, pTemp2f, pEnvironment );
 			}
 		}
 		if ( !back.isEmpty() ) {
 			if ( mBackPartition == null ) {
-				mBackPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1 );
+				mBackPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
 			}
 			back = CSGPolygon.compressPolygons( back );
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
@@ -333,7 +335,7 @@ public class CSGPartition
 			} else {
 				// Assign whatever is in the back
 				aCorruptHierarchy 
-					|= mBackPartition.buildHierarchy( back, pTolerance, pTemp3f, pTemp2f );
+					|= mBackPartition.buildHierarchy( back, pTemp3f, pTemp2f, pEnvironment );
 			}
 		}
 		if ( aCorruptHierarchy && (mLevel > 0) ) mLevel = -mLevel;

@@ -56,6 +56,7 @@ import com.jme3.font.BitmapText;
 
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 
 
@@ -129,9 +130,13 @@ public class CSGTestE
     		// For testing, suppress the cache
 	    	NonCachingKey aKey = new NonCachingKey( sceneName );
 	    	aNode = assetManager.loadAsset( aKey );
-
+	    	
+	    	if ( (aNode instanceof ConstructiveSolidGeometry.CSGSpatial)
+	    	&& !((ConstructiveSolidGeometry.CSGSpatial)aNode).isValid() ) {
+	    		sceneName += " ***Invalid shape";
+	    	}
     	} catch( Exception ex ) {
-    		System.out.println( "***Load Scene Failed: " + ex );
+    		sceneName += " ***Load Scene Failed: " + ex;
     	} else {
     		sceneName = "<ENTER> to cycle through the scenes, QWASDZ to move, <ESC> to exit";
     	}
