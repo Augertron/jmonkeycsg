@@ -153,8 +153,8 @@
                 <translation class='com.jme3.math.Vector3f' x='10' y='-10' z='0'/>
             </transform>
             <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' 
-            		bspLimit='4096' epsilonOnPlane='0.00000005' 
-            		epsilonBetweenPoints='0.00000005' epsilonNearZero='0.00000005'/>
+            		bspLimit='1024' epsilonOnPlane='0.00005' 
+            		epsilonBetweenPoints='0.000000005' epsilonNearZero='0.000000005'/>
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <transform class='com.jme3.math.Transform'>
@@ -196,6 +196,9 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='-10' z='10'/>
             </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' 
+            		bspLimit='1024' epsilonOnPlane='0.00005' 
+            		epsilonBetweenPoints='0.000000005' epsilonNearZero='0.000000005'/>
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <transform class='com.jme3.math.Transform'>
@@ -211,7 +214,7 @@
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 
-                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='SKIP'
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
                 		materialName='Textures/Debug/Normals.xml'>
                 		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
 		            <transform class='com.jme3.math.Transform'>
