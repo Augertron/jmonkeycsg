@@ -152,11 +152,12 @@ public class CSGVertex
 	
 	/** Interpolate between this vertex and another */
 	public CSGVertex interpolate(
-		CSGVertex 	pOther
-	, 	float		pPercentage
-	,	CSGPlane	pPlane
-	,	Vector3f	pTemp3f
-	,	Vector2f	pTemp2f
+		CSGVertex 		pOther
+	, 	float			pPercentage
+	,	CSGPlane		pPlane
+	,	Vector3f		pTemp3f
+	,	Vector2f		pTemp2f
+	,	CSGEnvironment	pEnvironment
 	) {
 		CSGVertex aVertex = null;
 		
@@ -191,7 +192,8 @@ public class CSGVertex
 		}
 		if ( aVertex == null ) {
 			// Not a percentage we can deal with
-			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "unexpected percentage: " + pPercentage );
+			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+			, pEnvironment.mShapeName + "unexpected percentage: " + pPercentage );
 		} else if ( pPlane != null ) {
 			// Force the position onto the given plane
 			Vector3f aPosition = aVertex.getPosition();

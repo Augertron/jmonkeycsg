@@ -129,13 +129,17 @@ public class CSGPlane
 		Vector3f temp2 = pC.subtract( pA, pTempVars.vect6 );
 		Vector3f aNormal = temp1.cross( temp2 ).normalizeLocal();
 		//Vector3f aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
-		float normalDot = aNormal.dot( pA );
-		if ( normalDot != 0.0f ) {
-			return new CSGPlane( aNormal, pA, normalDot, -1, pEnvironment );
-		} else {
-			// A normal dot of zero indicates that two of the points overlap, so no plane can be defined
+		
+		// I am defintely NOT understanding something here...
+		// I had thought that a normalDot of zero was indicating congruent points.  But
+		// apparently, the pattern (x, y, 0) (-x, y, 0) (0, 0, z) produces a valid normal
+		// but with a normalDot of 0.  So check for a zero normal vector instead
+		if ( aNormal.equals( Vector3f.ZERO ) ) {
+			// Not a valid normal
 			return( null );
 		}
+		float normalDot = aNormal.dot( pA );
+		return new CSGPlane( aNormal, pA, normalDot, -1, pEnvironment );
 	}
 	/** Factory method to produce a plane from a set of vertices */
 	public static CSGPlane fromVertices(
@@ -424,7 +428,8 @@ public class CSGPlane
 						= iVertex.interpolate( jVertex
 						, percent
 						, (pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE) ? this : null
-						, pTempVars.vect2, pTempVars.vect2d );
+						, pTempVars.vect2, pTempVars.vect2d
+						, pEnvironment );
 					if ( onPlane != null ) {
 						beforeVertices.add( onPlane );
 						behindVertices.add( onPlane.clone( false ) );
