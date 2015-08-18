@@ -32,7 +32,10 @@ package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import net.wcomohundro.jme3.csg.shape.*;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.export.InputCapsule;
@@ -371,7 +374,6 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
 	}
 
 
-
 	/** Version tracking support 
 	 	(I plan to roll these numbers manually when something interesting happens) */
 	public static final int sCSGVersionMajor = 0;
@@ -382,6 +384,38 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
 	
 	/** Have all CSG components report on their current version */
 	public StringBuilder getVersion( StringBuilder pBuffer );
+	
+	/** Produce a report on what we know about the active environment */
+	public static void reportVersion(
+	) {
+		reportVersion( CSGEnvironment.sStandardEnvironment, sLogger );
+	}
+	public static void reportVersion(
+		CSGEnvironment	pEnvironment
+	,	Logger			pLogger
+	) {
+	    StringBuilder aBuffer = new StringBuilder( 1024 );
+	    
+	    getVersion( ConstructiveSolidGeometry.class, aBuffer );
+	    
+		(new CSGGeometry()).getVersion( aBuffer );
+		(new CSGGeonode()).getVersion( aBuffer );
+		(new CSGLinkNode()).getVersion( aBuffer );
+		(new CSGPartition()).getVersion( aBuffer );
+		(new CSGPlane()).getVersion( aBuffer );
+		(new CSGPolygon()).getVersion( aBuffer );
+		(new CSGVertex()).getVersion( aBuffer );
+		
+		(new CSGBox()).getVersion( aBuffer );
+		(new CSGCylinder()).getVersion( aBuffer );
+		(new CSGSphere()).getVersion( aBuffer );
+		(new CSGPipe()).getVersion( aBuffer );
+		(new CSGSplineGenerator()).getVersion( aBuffer );
+		
+		pEnvironment.getVersion( aBuffer );
+		
+		pLogger.log( Level.INFO, aBuffer.toString() );
+	}
 	
 	/** Service routine to report on the global CSG version */
 	public static StringBuilder getVersion(

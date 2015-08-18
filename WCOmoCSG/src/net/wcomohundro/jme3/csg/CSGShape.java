@@ -249,12 +249,13 @@ public class CSGShape
 	protected List<CSGPolygon> getPolygons(
 		Number			pMaterialIndex
 	,	int				pLevelOfDetail
+	,	TempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) { 
 		if ( mPolygons.isEmpty() && (this.mesh != null) ) {
 			// Generate the polygons
 			this.mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
-			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail, pEnvironment );
+			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail, pTempVars, pEnvironment );
 			
 		} else if ( !mPolygons.isEmpty() 
 				&& (pMaterialIndex != null)
@@ -298,27 +299,25 @@ public class CSGShape
 	public CSGShape union(
 		CSGShape		pOther
 	,	Number			pOtherMaterialIndex
+	,	TempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		CSGPartition a = new CSGPartition( this
-											, getPolygons( this.mMaterialIndex, 0, pEnvironment )
+											, getPolygons( this.mMaterialIndex, 0, pTempVars, pEnvironment )
+											, pTempVars
 											, pEnvironment );
 		CSGPartition b = new CSGPartition( pOther
-											, pOther.getPolygons( pOtherMaterialIndex, 0, pEnvironment )
+											, pOther.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
+											, pTempVars
 											, pEnvironment  );
 		
-        // Avoid some object churn by using the thread-specific 'temp' variables
-        TempVars vars = TempVars.get();
-        try {
-			a.clipTo( b, vars.vect1, vars.vect2d, pEnvironment );
-			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
-			b.invert();
-			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
-			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, pEnvironment );
-        } finally {
-        	vars.release();
-        }
+		a.clipTo( b, pTempVars, pEnvironment );
+		b.clipTo( a, pTempVars, pEnvironment );
+		b.invert();
+		b.clipTo( a, pTempVars, pEnvironment );
+		b.invert();
+		a.buildHierarchy( b.allPolygons( null ), pTempVars, pEnvironment );
+
 		CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
 		aShape.setCorrupt( a, b );
 		return( aShape );
@@ -328,29 +327,27 @@ public class CSGShape
 	public CSGShape difference(
 		CSGShape		pOther
 	,	Number			pOtherMaterialIndex
+	,	TempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		CSGPartition a = new CSGPartition( this
-											, getPolygons( this.mMaterialIndex, 0, pEnvironment )
+											, getPolygons( this.mMaterialIndex, 0, pTempVars, pEnvironment )
+											, pTempVars
 											, pEnvironment  );
 		CSGPartition b = new CSGPartition( pOther
-											, pOther.getPolygons( pOtherMaterialIndex, 0, pEnvironment )
+											, pOther.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
+											, pTempVars
 											, pEnvironment  );
 		
-        // Avoid some object churn by using the thread-specific 'temp' variables
-        TempVars vars = TempVars.get();
-        try {
-			a.invert();
-			a.clipTo( b, vars.vect1, vars.vect2d, pEnvironment );
-			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
-			b.invert();
-			b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
-			b.invert();
-			a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, pEnvironment );
-			a.invert();
-        } finally {
-        	vars.release();
-        }
+		a.invert();
+		a.clipTo( b, pTempVars, pEnvironment );
+		b.clipTo( a, pTempVars, pEnvironment );
+		b.invert();
+		b.clipTo( a, pTempVars, pEnvironment );
+		b.invert();
+		a.buildHierarchy( b.allPolygons( null ), pTempVars, pEnvironment );
+		a.invert();
+
         CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
 		aShape.setCorrupt( a, b );
         return( aShape );
@@ -360,28 +357,26 @@ public class CSGShape
 	public CSGShape intersection(
 		CSGShape		pOther
 	,	Number			pOtherMaterialIndex
+	,	TempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		CSGPartition a = new CSGPartition( this
-											, getPolygons( this.mMaterialIndex, 0, pEnvironment )
+											, getPolygons( this.mMaterialIndex, 0, pTempVars, pEnvironment )
+											, pTempVars
 											, pEnvironment  );
 	    CSGPartition b = new CSGPartition( pOther
-	    									, pOther.getPolygons( pOtherMaterialIndex, 0, pEnvironment )
+	    									, pOther.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
+											, pTempVars
 											, pEnvironment  );
 		
-        // Avoid some object churn by using the thread-specific 'temp' variables
-        TempVars vars = TempVars.get();
-        try {
-		    a.invert();
-		    b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
-		    b.invert();
-		    a.clipTo( b, vars.vect1, vars.vect2d, pEnvironment );
-		    b.clipTo( a, vars.vect1, vars.vect2d, pEnvironment );
-		    a.buildHierarchy( b.allPolygons( null ), vars.vect1, vars.vect2d, pEnvironment );
-		    a.invert();
-        } finally {
-        	vars.release();
-        }
+	    a.invert();
+	    b.clipTo( a, pTempVars, pEnvironment );
+	    b.invert();
+	    a.clipTo( b, pTempVars, pEnvironment );
+	    b.clipTo( a, pTempVars, pEnvironment );
+	    a.buildHierarchy( b.allPolygons( null ), pTempVars, pEnvironment );
+	    a.invert();
+
         CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
 		aShape.setCorrupt( a, b );
         return( aShape );
@@ -392,6 +387,7 @@ public class CSGShape
 		Mesh			pMesh
 	,	Transform		pTransform
 	,	int				pLevelOfDetail
+	,	TempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		// Convert the mesh in to appropriate polygons
@@ -427,70 +423,75 @@ public class CSGShape
 				throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
 			}
 		}
-		// Work from 3 points which define a triangle
+        TempVars vars = TempVars.get();
 		List<CSGPolygon> polygons = new ArrayList<CSGPolygon>( idxBuffer.size() / 3 );
-		for (int i = 0; i < idxBuffer.size(); i += 3) {
-			int idx1 = idxBuffer.get(i);
-			int idx2 = idxBuffer.get(i + 1);
-			int idx3 = idxBuffer.get(i + 2);
-			
-			int idx1x3 = idx1 * 3;
-			int idx2x3 = idx2 * 3;
-			int idx3x3 = idx3 * 3;
-			
-			int idx1x2 = idx1 * 2;
-			int idx2x2 = idx2 * 2;
-			int idx3x2 = idx3 * 2;
-			
-			// Extract the positions
-			Vector3f pos1 = new Vector3f( posBuffer.get( idx1x3 )
-										, posBuffer.get( idx1x3 + 1)
-										, posBuffer.get( idx1x3 + 2) );
-			Vector3f pos2 = new Vector3f( posBuffer.get( idx2x3 )
-										, posBuffer.get( idx2x3 + 1)
-										, posBuffer.get( idx2x3 + 2) );
-			Vector3f pos3 = new Vector3f( posBuffer.get( idx3x3 )
-										, posBuffer.get( idx3x3 + 1)
-										, posBuffer.get( idx3x3 + 2) );
-
-			// Extract the normals
-			Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
-										, normBuffer.get( idx1x3 + 1)
-										, normBuffer.get( idx1x3 + 2) );
-			Vector3f norm2 = new Vector3f( normBuffer.get( idx2x3 )
-										, normBuffer.get( idx2x3 + 1)
-										, normBuffer.get( idx2x3 + 2) );
-			Vector3f norm3 = new Vector3f( normBuffer.get( idx3x3)
-										, normBuffer.get( idx3x3 + 1)
-										, normBuffer.get( idx3x3 + 2) );
-
-			// Extract the Texture Coordinates
-			// Based on an interaction via the SourceForge Ticket system, another user has informed
-			// me that UV texture coordinates are optional.... so be it
-			Vector2f texCoord1, texCoord2, texCoord3;
-			if ( texCoordBuffer != null ) {
-				texCoord1 = new Vector2f( texCoordBuffer.get( idx1x2)
-											, texCoordBuffer.get( idx1x2 + 1) );
-				texCoord2 = new Vector2f( texCoordBuffer.get( idx2x2)
-											, texCoordBuffer.get( idx2x2 + 1) );
-				texCoord3 = new Vector2f( texCoordBuffer.get( idx3x2)
-											, texCoordBuffer.get( idx3x2 + 1) );
-			} else {
-				texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
+        try {
+			// Work from 3 points which define a triangle
+			for (int i = 0; i < idxBuffer.size(); i += 3) {
+				int idx1 = idxBuffer.get(i);
+				int idx2 = idxBuffer.get(i + 1);
+				int idx3 = idxBuffer.get(i + 2);
+				
+				int idx1x3 = idx1 * 3;
+				int idx2x3 = idx2 * 3;
+				int idx3x3 = idx3 * 3;
+				
+				int idx1x2 = idx1 * 2;
+				int idx2x2 = idx2 * 2;
+				int idx3x2 = idx3 * 2;
+				
+				// Extract the positions
+				Vector3f pos1 = new Vector3f( posBuffer.get( idx1x3 )
+											, posBuffer.get( idx1x3 + 1)
+											, posBuffer.get( idx1x3 + 2) );
+				Vector3f pos2 = new Vector3f( posBuffer.get( idx2x3 )
+											, posBuffer.get( idx2x3 + 1)
+											, posBuffer.get( idx2x3 + 2) );
+				Vector3f pos3 = new Vector3f( posBuffer.get( idx3x3 )
+											, posBuffer.get( idx3x3 + 1)
+											, posBuffer.get( idx3x3 + 2) );
+	
+				// Extract the normals
+				Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
+											, normBuffer.get( idx1x3 + 1)
+											, normBuffer.get( idx1x3 + 2) );
+				Vector3f norm2 = new Vector3f( normBuffer.get( idx2x3 )
+											, normBuffer.get( idx2x3 + 1)
+											, normBuffer.get( idx2x3 + 2) );
+				Vector3f norm3 = new Vector3f( normBuffer.get( idx3x3)
+											, normBuffer.get( idx3x3 + 1)
+											, normBuffer.get( idx3x3 + 2) );
+	
+				// Extract the Texture Coordinates
+				// Based on an interaction via the SourceForge Ticket system, another user has informed
+				// me that UV texture coordinates are optional.... so be it
+				Vector2f texCoord1, texCoord2, texCoord3;
+				if ( texCoordBuffer != null ) {
+					texCoord1 = new Vector2f( texCoordBuffer.get( idx1x2)
+												, texCoordBuffer.get( idx1x2 + 1) );
+					texCoord2 = new Vector2f( texCoordBuffer.get( idx2x2)
+												, texCoordBuffer.get( idx2x2 + 1) );
+					texCoord3 = new Vector2f( texCoordBuffer.get( idx3x2)
+												, texCoordBuffer.get( idx3x2 + 1) );
+				} else {
+					texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
+				}
+				// Construct the vertices that define the points of the triangle
+				List<CSGVertex> aVertexList = new ArrayList<CSGVertex>( 3 );
+				aVertexList.add( new CSGVertex( pos1, norm1, texCoord1, pTransform, pEnvironment ) );
+				aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform, pEnvironment ) );
+				aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform, pEnvironment ) );
+				
+				// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
+				CSGPolygon aPolygon 
+					= CSGPolygon.createPolygon( aVertexList, this.mMaterialIndex, pTempVars, pEnvironment );
+				if ( aPolygon != null ) {
+					polygons.add( aPolygon );
+				}
 			}
-			// Construct the vertices that define the points of the triangle
-			List<CSGVertex> aVertexList = new ArrayList<CSGVertex>( 3 );
-			aVertexList.add( new CSGVertex( pos1, norm1, texCoord1, pTransform, pEnvironment ) );
-			aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform, pEnvironment ) );
-			aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform, pEnvironment ) );
-			
-			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
-			CSGPolygon aPolygon 
-				= CSGPolygon.createPolygon( aVertexList, this.mMaterialIndex, pEnvironment );
-			if ( aPolygon != null ) {
-				polygons.add( aPolygon );
-			}
-		}
+        } finally {
+        	vars.release();
+        }
 		return( polygons );
 	}
 	
@@ -500,11 +501,12 @@ public class CSGShape
 	  */
 	public List<Mesh> toMesh(
 		int				pMaxMaterialIndex
+	,	TempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
 		
-		List<CSGPolygon> aPolyList = getPolygons( null, 0, pEnvironment );
+		List<CSGPolygon> aPolyList = getPolygons( null, 0, pTempVars, pEnvironment );
 		int anEstimateVertexCount = aPolyList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );

@@ -44,6 +44,7 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
+import com.jme3.util.TempVars;
 
 /**  Constructive Solid Geometry (CSG)
  
@@ -110,18 +111,27 @@ public class CSGPlane
 	public static final String sCSGPlaneRevision="$Rev$";
 	public static final String sCSGPlaneDate="$Date$";
 
-	/** Factory method to produce a plane from a minimal set of points */
+	/** Factory method to produce a plane from a minimal set of points 
+	 * 
+	 	TempVars Usage:
+	 		vect5
+	 		vect6
+	 */
 	public static CSGPlane fromPoints(
 		Vector3f		pA
 	, 	Vector3f 		pB
 	, 	Vector3f 		pC
+	,	TempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		// Compute the normal vector
-		Vector3f aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
+		Vector3f temp1 = pB.subtract( pA, pTempVars.vect5 );
+		Vector3f temp2 = pC.subtract( pA, pTempVars.vect6 );
+		Vector3f aNormal = temp1.cross( temp2 ).normalizeLocal();
+		//Vector3f aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
 		float normalDot = aNormal.dot( pA );
 		if ( normalDot != 0.0f ) {
-			return new CSGPlane( aNormal, pA, aNormal.dot( pA ), -1, pEnvironment );
+			return new CSGPlane( aNormal, pA, normalDot, -1, pEnvironment );
 		} else {
 			// A normal dot of zero indicates that two of the points overlap, so no plane can be defined
 			return( null );
@@ -130,6 +140,7 @@ public class CSGPlane
 	/** Factory method to produce a plane from a set of vertices */
 	public static CSGPlane fromVertices(
 		List<CSGVertex>		pVertices
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( pVertices.size() >= 3 ) {
@@ -137,7 +148,7 @@ public class CSGPlane
 			Vector3f aVector = pVertices.get(0).getPosition();
 			Vector3f bVector = pVertices.get(1).getPosition();
 			Vector3f cVector = pVertices.get(2).getPosition();
-			return( fromPoints( aVector, bVector, cVector, pEnvironment ) );
+			return( fromPoints( aVector, bVector, cVector, pTempVars, pEnvironment ) );
 		} else {
 			// Not enough info to define a plane
 			return( null );
@@ -276,6 +287,16 @@ public class CSGPlane
 	 		BACK -		back list
 	 		SPANNING - 	the polygon is split into two new polygons, with piece in front going
 	 					into the front list, and the piece in back going into the back list
+	 					
+	 	TempVars usage:
+	 		-- Span Processing --
+		 		vect1
+		 		vect2
+		 		vect2d
+		 	-- CSGPolygon.createPolygon -- 
+		 		vect5
+	 			vect6
+
 	 */
 	private static final int SAMEPLANE = -1;
 	private static final int COPLANAR = 0;
@@ -290,8 +311,7 @@ public class CSGPlane
 	, 	List<CSGPolygon> 	pCoplanarBack
 	, 	List<CSGPolygon> 	pFront
 	, 	List<CSGPolygon> 	pBack
-	,	Vector3f			pTemp3f
-	,	Vector2f			pTemp2f
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( !pPolygon.isValid() ) {
@@ -353,7 +373,7 @@ public class CSGPlane
 			// Force the polygon onto the plane as needed
 			List<CSGVertex> polygonCopy = new ArrayList<CSGVertex>( polygonVertices );
 			CSGPolygon aPolygon
-				= CSGPolygon.createPolygon( polygonCopy, this, pPolygon.getMaterialIndex(), pEnvironment );
+				= CSGPolygon.createPolygon( polygonCopy, this, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
 			if ( aPolygon != null ) {
 				coplaneList.add( aPolygon );
 			} else {
@@ -397,14 +417,14 @@ public class CSGPlane
 				if ((iType | jType) == SPANNING ) {
 					// If we cross the plane between these two vertices, then interpolate 
 					// a new vertex on this plane itself, which is both before and behind.
-					pTemp3f.set( jVertex.getPosition() ).subtractLocal( iVertex.getPosition() );
-					float percent = (mDot - vertexDot[i]) / mSurfaceNormal.dot( pTemp3f );
+					Vector3f temp1 =
+							pTempVars.vect1.set( jVertex.getPosition() ).subtractLocal( iVertex.getPosition() );
+					float percent = (mDot - vertexDot[i]) / mSurfaceNormal.dot( temp1 );
 					CSGVertex onPlane 
 						= iVertex.interpolate( jVertex
 						, percent
 						, (pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE) ? this : null
-						, pTemp3f
-						, pTemp2f );
+						, pTempVars.vect2, pTempVars.vect2d );
 					if ( onPlane != null ) {
 						beforeVertices.add( onPlane );
 						behindVertices.add( onPlane.clone( false ) );
@@ -413,11 +433,11 @@ public class CSGPlane
 			}
 			// What comes in front of the given plane?
 			CSGPolygon beforePolygon 
-				= CSGPolygon.createPolygon( beforeVertices, pPolygon.getMaterialIndex(), pEnvironment );
+				= CSGPolygon.createPolygon( beforeVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
 
 			// What comes behind the given plane?
 			CSGPolygon behindPolygon 
-				= CSGPolygon.createPolygon( behindVertices, pPolygon.getMaterialIndex(), pEnvironment );
+				= CSGPolygon.createPolygon( behindVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
 			
 /** Retry the split with more forgiving tolerance
 			if ( (beforePolygon == null) && !beforeVertices.isEmpty() ) {
@@ -463,7 +483,8 @@ public class CSGPlane
 				if ( behindPolygon == null ) {
 					// We did not split the polygon at all, treat it as COPLANAR
 					polygonCopy = new ArrayList<CSGVertex>( polygonVertices );
-					pPolygon = CSGPolygon.createPolygon( polygonCopy, this, pPolygon.getMaterialIndex(), pEnvironment );
+					pPolygon = CSGPolygon.createPolygon( polygonCopy, this, pPolygon.getMaterialIndex()
+														, pTempVars, pEnvironment );
 					if ( pPolygon != null ) {
 						pCoplanarFront.add( pPolygon );
 						ConstructiveSolidGeometry.sLogger.log( Level.INFO

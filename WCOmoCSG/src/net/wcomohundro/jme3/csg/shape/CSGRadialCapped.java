@@ -497,8 +497,7 @@ public abstract class CSGRadialCapped
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		if ( pBuffer.length() > 0 ) pBuffer.append( "\n" );
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( ConstructiveSolidGeometry.getVersion( CSGRadialCapped.class
 													, sCSGRadialCappedRevision
 													, sCSGRadialCappedDate
 													, pBuffer ) );

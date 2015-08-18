@@ -85,21 +85,22 @@ public class CSGPartition
 	/** Simple null constructor */
 	public CSGPartition(
 	) {
-		this( null, null, 0, 1, CSGEnvironment.sStandardEnvironment );
+		this( null, 0, 1, CSGEnvironment.sStandardEnvironment );
 	}
 	/** Standard constructor that builds a hierarchy of nodes based on a given set of polygons */
 	public CSGPartition(
 		CSGShape			pShape
-	,	List<CSGPolygon>	pPolygons
 	,	Number				pMaterialIndex
 	,	int					pLevel
 	,	CSGEnvironment		pEnvironment
 	) {
-		this( pShape, pPolygons, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue(), pLevel, pEnvironment );
+		this( pShape
+			, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue()
+			, pLevel
+			, pEnvironment );
 	}
 	public CSGPartition(
 		CSGShape			pShape
-	,	List<CSGPolygon>	pPolygons
 	,	int					pMaterialIndex
 	,	int					pLevel
 	,	CSGEnvironment		pEnvironment
@@ -108,28 +109,21 @@ public class CSGPartition
 		mLevel = pLevel;
 		mPolygons = new ArrayList<CSGPolygon>();
 		mMaterialIndex = pMaterialIndex;
-		
-		if ( pPolygons != null ) {
-	        // Avoid some object churn by using the thread-specific 'temp' variables
-	        TempVars vars = TempVars.get();
-	        try {
-	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, pEnvironment );
-	        } finally {
-	        	vars.release();
-	        }
-		}
 	}
+	
 	public CSGPartition(
 		CSGShape			pShape
 	,	List<CSGPolygon>	pPolygons
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		this( pShape, pPolygons, 1, pEnvironment );
+		this( pShape, pPolygons, 1, pTempVars, pEnvironment );
 	}
 	public CSGPartition(
 		CSGShape			pShape
 	,	List<CSGPolygon>	pPolygons
 	,	int					pLevel
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		mShape = pShape;
@@ -141,12 +135,7 @@ public class CSGPartition
 			mMaterialIndex = pPolygons.get(0).getMaterialIndex();
 			
 	        // Avoid some object churn by using the thread-specific 'temp' variables
-	        TempVars vars = TempVars.get();
-	        try {
-	        	buildHierarchy( pPolygons, vars.vect1, vars.vect2d, pEnvironment );
-	        } finally {
-	        	vars.release();
-	        }
+	        buildHierarchy( pPolygons, pTempVars, pEnvironment );
 		}
 	}
 	
@@ -198,8 +187,7 @@ public class CSGPartition
 	/** 'CLIP' all the given polygons that are in front of this node */
 	public List<CSGPolygon> clipPolygons(
 		List<CSGPolygon>	pPolygons
-	,	Vector3f			pTemp3f
-	,	Vector2f			pTemp2f
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( mPlane == null ) {
@@ -216,16 +204,16 @@ public class CSGPartition
 								, pEnvironment.mEpsilonOnPlane
 								, mLevel
 								, frontPolys, backPolys, frontPolys, backPolys
-								, pTemp3f, pTemp2f
+								, pTempVars
 								, pEnvironment );
 		}
 		if ( mFrontPartition != null ) {
 			// Include appropriate clipping from the front partition as well
-			frontPolys = mFrontPartition.clipPolygons( frontPolys, pTemp3f, pTemp2f, pEnvironment );
+			frontPolys = mFrontPartition.clipPolygons( frontPolys, pTempVars, pEnvironment );
 		}
 		if ( mBackPartition != null ) {
 			// Include appropriate clipping from the back partition as well
-			backPolys = mBackPartition.clipPolygons( backPolys, pTemp3f, pTemp2f, pEnvironment );
+			backPolys = mBackPartition.clipPolygons( backPolys, pTempVars, pEnvironment );
 			
 			// Keep it blended into the total list
 			frontPolys.addAll( backPolys );
@@ -238,14 +226,13 @@ public class CSGPartition
 	 */
 	public void clipTo(
 		CSGPartition		pOther
-	,	Vector3f			pTemp3f
-	,	Vector2f			pTemp2f
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		// Reset the list of polygons that apply based on clipping from the other partition
-		mPolygons = pOther.clipPolygons( mPolygons, pTemp3f, pTemp2f, pEnvironment );
-		if ( mFrontPartition != null ) mFrontPartition.clipTo( pOther, pTemp3f, pTemp2f, pEnvironment );
-		if ( mBackPartition != null) mBackPartition.clipTo( pOther, pTemp3f, pTemp2f, pEnvironment );
+		mPolygons = pOther.clipPolygons( mPolygons, pTempVars, pEnvironment );
+		if ( mFrontPartition != null ) mFrontPartition.clipTo( pOther, pTempVars, pEnvironment );
+		if ( mBackPartition != null) mBackPartition.clipTo( pOther, pTempVars, pEnvironment );
 	}
 		
 	/** Invert this node */
@@ -271,8 +258,7 @@ public class CSGPartition
 	 */
 	public boolean buildHierarchy(
 		List<CSGPolygon>	pPolygons
-	,	Vector3f			pTemp3f
-	,	Vector2f			pTemp2f
+	,	TempVars 			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		boolean aCorruptHierarchy = false;
@@ -306,13 +292,14 @@ public class CSGPartition
 								, aTolerance
 								, mLevel
 								, mPolygons, mPolygons, front, back
-								, pTemp3f, pTemp2f
+								, pTempVars
 								, pEnvironment );
 		}
 		mPolygons = CSGPolygon.compressPolygons( mPolygons );
 		if ( !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
-				this.mFrontPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
+				this.mFrontPartition 
+					= new CSGPartition( mShape, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
 			}
 			front = CSGPolygon.compressPolygons( front );
 			if ( this.mPolygons.isEmpty() && back.isEmpty() ) {
@@ -321,12 +308,13 @@ public class CSGPartition
 			} else {
 				// Assign whatever is in the front
 				aCorruptHierarchy 
-					|= this.mFrontPartition.buildHierarchy( front, pTemp3f, pTemp2f, pEnvironment );
+					|= this.mFrontPartition.buildHierarchy( front, pTempVars, pEnvironment );
 			}
 		}
 		if ( !back.isEmpty() ) {
 			if ( mBackPartition == null ) {
-				mBackPartition = new CSGPartition( mShape, null, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
+				mBackPartition 
+					= new CSGPartition( mShape, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
 			}
 			back = CSGPolygon.compressPolygons( back );
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
@@ -335,7 +323,7 @@ public class CSGPartition
 			} else {
 				// Assign whatever is in the back
 				aCorruptHierarchy 
-					|= mBackPartition.buildHierarchy( back, pTemp3f, pTemp2f, pEnvironment );
+					|= mBackPartition.buildHierarchy( back, pTempVars, pEnvironment );
 			}
 		}
 		if ( aCorruptHierarchy && (mLevel > 0) ) mLevel = -mLevel;

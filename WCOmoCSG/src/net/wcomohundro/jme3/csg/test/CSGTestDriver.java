@@ -37,11 +37,15 @@ import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.renderer.Camera;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+
 public class CSGTestDriver 
 {
 	public static void main(
 		String[] args
 	) {
+		ConstructiveSolidGeometry.reportVersion();
+		
 	    SimpleApplication app;
 	    
 	    //app = new CSGTestA();

@@ -42,6 +42,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
+import com.jme3.util.TempVars;
 
 /**  Constructive Solid Geometry (CSG)
 
@@ -164,13 +165,19 @@ public class CSGPolygon
 	 		that the given list of vertices is 'compressed' as a side effect
 	 	
 	 	@return - a CSGPolygon or null if no polygon was constructed
+	 	
+	 	TempVars Usage:
+	 		-- CSGPlane.fromVertices --
+	 				vect5
+	 				vect6
 	 */
 	public static CSGPolygon createPolygon(
 		List<CSGVertex>		pVertices
 	,	int					pMaterialIndex
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGPlane aPlane = CSGPlane.fromVertices( pVertices, pEnvironment );
+		CSGPlane aPlane = CSGPlane.fromVertices( pVertices, pTempVars, pEnvironment );
 		if ( (aPlane != null) && aPlane.isValid() ) {
 			// Polygon is based on computed plane, regardless of active mode
 			return( new CSGPolygon( pVertices, aPlane, pMaterialIndex ) );
@@ -183,6 +190,7 @@ public class CSGPolygon
 		List<CSGVertex>		pVertices
 	,	CSGPlane			pPlane
 	,	int					pMaterialIndex
+	,	TempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( (pPlane != null) && pPlane.isValid() ) {
@@ -193,7 +201,7 @@ public class CSGPolygon
 				// NOTE when debugging, it can be useful to look for odd eccentricty values here....
 				if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
 					// Use the plane from the underlying vertices
-					pPlane = CSGPlane.fromVertices( pVertices, pEnvironment );
+					pPlane = CSGPlane.fromVertices( pVertices, pTempVars, pEnvironment );
 				}
 				CSGPolygon aPolygon = new CSGPolygon( pVertices, pPlane, pMaterialIndex );
 				return( aPolygon );

@@ -232,7 +232,7 @@ public abstract class CSGMesh
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( ConstructiveSolidGeometry.getVersion( CSGMesh.class
 													, sCSGMeshRevision
 													, sCSGMeshDate
 													, pBuffer ) );

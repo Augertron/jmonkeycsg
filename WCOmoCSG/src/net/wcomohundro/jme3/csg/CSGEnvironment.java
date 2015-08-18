@@ -152,10 +152,17 @@ public class CSGEnvironment
 	public StringBuilder getVersion(
 		StringBuilder pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
-				, sCSGEnvironmentRevision
-				, sCSGEnvironmentDate
-				, pBuffer ) );
+		StringBuilder aBuffer = ConstructiveSolidGeometry.getVersion( this.getClass()
+																	, sCSGEnvironmentRevision
+																	, sCSGEnvironmentDate
+																	, pBuffer );
+		aBuffer.append( "\tStructural Debug: " ).append( this.mStructuralDebug ).append( "\n" );
+		aBuffer.append( "\tBSPLimit: " ).append( this.mBSPLimit ).append( "\n" );
+		aBuffer.append( "\tEpsilon Near Zero: " ).append( this.mEpsilonNearZero ).append( "\n" );
+		aBuffer.append( "\tEpsilon On Plane: " ).append( this.mEpsilonOnPlane ).append( "\n" );
+		aBuffer.append( "\tEpsilon Between Points: " ).append( this.mEpsilonBetweenPoints ).append( "\n" );
+		aBuffer.append( "\tPolygon Plane Mode: " ).append( this.mPolygonPlaneMode ).append( "\n" );
+		return( aBuffer );
 	}
 
 }

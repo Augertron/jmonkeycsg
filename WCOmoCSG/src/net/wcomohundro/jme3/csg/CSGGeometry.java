@@ -53,6 +53,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
+import com.jme3.util.TempVars;
 
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
 
@@ -191,56 +192,62 @@ public class CSGGeometry
 			List<CSGShape> sortedShapes = new ArrayList<>( mShapes );
 			Collections.sort( sortedShapes );
 				
-			// Operate on each shape in turn, blending it into the common
-			CSGShape aProduct = null;
-			for( CSGShape aShape : sortedShapes ) {
-				// Apply the operator
-				switch( aShape.getOperator() ) {
-				case UNION:
-					if ( aProduct == null ) {
-						// A place to start
-						aProduct = aShape.clone( null, getLodLevel() );
-					} else {
-						// Blend together
-						aProduct = aProduct.union( aShape, null, pEnvironment );
+			// Save on churn by leveraging temps
+			TempVars tempVars = TempVars.get();
+			try {
+				// Operate on each shape in turn, blending it into the common
+				CSGShape aProduct = null;
+				for( CSGShape aShape : sortedShapes ) {
+					// Apply the operator
+					switch( aShape.getOperator() ) {
+					case UNION:
+						if ( aProduct == null ) {
+							// A place to start
+							aProduct = aShape.clone( null, getLodLevel() );
+						} else {
+							// Blend together
+							aProduct = aProduct.union( aShape, null, tempVars, pEnvironment );
+						}
+						break;
+						
+					case DIFFERENCE:
+						if ( aProduct == null ) {
+							// NO PLACE TO START
+						} else {
+							// Blend together
+							aProduct = aProduct.difference( aShape, null, tempVars, pEnvironment );
+						}
+						break;
+						
+					case INTERSECTION:
+						if ( aProduct == null ) {
+							// A place to start
+							aProduct = aShape.clone( null, getLodLevel() );
+						} else {
+							// Blend together
+							aProduct = aProduct.intersection( aShape, null, tempVars, pEnvironment );
+						}
+						break;
+						
+					case SKIP:
+						// This shape is not taking part
+						break;
 					}
-					break;
-					
-				case DIFFERENCE:
-					if ( aProduct == null ) {
-						// NO PLACE TO START
-					} else {
-						// Blend together
-						aProduct = aProduct.difference( aShape, null, pEnvironment );
-					}
-					break;
-					
-				case INTERSECTION:
-					if ( aProduct == null ) {
-						// A place to start
-						aProduct = aShape.clone( null, getLodLevel() );
-					} else {
-						// Blend together
-						aProduct = aProduct.intersection( aShape, null, pEnvironment );
-					}
-					break;
-					
-				case SKIP:
-					// This shape is not taking part
-					break;
 				}
-			}
-			if ( aProduct != null ) {
-				List<Mesh> meshList = aProduct.toMesh( 0, pEnvironment );
-				if ( !meshList.isEmpty() ) {
-					// The overall, blended mesh represents this Geometry
-					this.setMesh( meshList.get( 0 ) );
+				if ( aProduct != null ) {
+					List<Mesh> meshList = aProduct.toMesh( 0, tempVars, pEnvironment );
+					if ( !meshList.isEmpty() ) {
+						// The overall, blended mesh represents this Geometry
+						this.setMesh( meshList.get( 0 ) );
+					}
+					// Return true if we have a valid product
+					return( mIsValid = aProduct.isValid() );
+				} else {
+					// Nothing interesting produced
+					return( false );
 				}
-				// Return true if we have a valid product
-				return( mIsValid = aProduct.isValid() );
-			} else {
-				// Nothing interesting produced
-				return( false );
+			} finally {
+				tempVars.release();
 			}
 		} else if ( this.mesh instanceof CSGMesh ) {
 			// If in 'debug' mode, look for a possible delegate

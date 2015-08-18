@@ -58,6 +58,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
 import com.jme3.util.TangentBinormalGenerator;
+import com.jme3.util.TempVars;
 
 /**  Constructive Solid Geometry (CSG)
 
@@ -220,93 +221,100 @@ public class CSGGeonode
 			List<CSGShape> sortedShapes = new ArrayList<>( mShapes );
 			Collections.sort( sortedShapes );
 			
-			// Operate on each shape in turn, blending it into the common
-			CSGShape aProduct = null;
-			for( CSGShape aShape : sortedShapes ) {
-				// Any special Material?
-				Material aMaterial = (mForceSingleMaterial) ? null : aShape.getMaterial();
-				if ( aMaterial != null ) {
-					// Locate cached copy of the material
-					AssetKey materialKey = aMaterial.getKey();
-					if ( materialMap.containsKey( materialKey ) ) {
-						// Use the material already found
-						materialIndex = (Integer)materialMap.get( materialKey );
+			// Save on churn by leveraging temps
+			TempVars tempVars = TempVars.get();
+			try {
+				// Operate on each shape in turn, blending it into the common
+				CSGShape aProduct = null;
+				for( CSGShape aShape : sortedShapes ) {
+					// Any special Material?
+					Material aMaterial = (mForceSingleMaterial) ? null : aShape.getMaterial();
+					if ( aMaterial != null ) {
+						// Locate cached copy of the material
+						AssetKey materialKey = aMaterial.getKey();
+						if ( materialMap.containsKey( materialKey ) ) {
+							// Use the material already found
+							materialIndex = (Integer)materialMap.get( materialKey );
+						} else {
+							// No special material
+							materialIndex = null;
+						}
 					} else {
-						// No special material
+						// No custom material
 						materialIndex = null;
 					}
+					// Apply the operator
+					switch( aShape.getOperator() ) {
+					case UNION:
+						if ( aProduct == null ) {
+							// A place to start
+							aProduct = aShape.clone( materialIndex, getLodLevel() );
+						} else {
+							// Blend together
+							aProduct = aProduct.union( aShape, materialIndex, tempVars, pEnvironment );
+						}
+						break;
+						
+					case DIFFERENCE:
+						if ( aProduct == null ) {
+							// NO PLACE TO START
+						} else {
+							// Blend together
+							aProduct = aProduct.difference( aShape, materialIndex, tempVars, pEnvironment );
+						}
+						break;
+						
+					case INTERSECTION:
+						if ( aProduct == null ) {
+							// A place to start
+							aProduct = aShape.clone( materialIndex, getLodLevel() );
+						} else {
+							// Blend together
+							aProduct = aProduct.intersection( aShape, materialIndex, tempVars, pEnvironment );
+						}
+						break;
+						
+					case SKIP:
+						// This shape is not taking part
+						break;
+					}
+				}
+				// Build up the mesh(es)
+				mMasterGeometry = null;
+				if ( aProduct != null ) {
+					// Transform the list of meshes into children
+					// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
+					//  and the 'one' mesh is the one that corresponds to the generic material)
+					List<Mesh> meshList 
+						= aProduct.toMesh( (materialMap == null) ? 0 : materialCount, tempVars, pEnvironment );
+					if ( !meshList.isEmpty() ) {
+						// Use the 'zero' mesh to describe the overall geometry
+						mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );
+						mMasterGeometry.setMaterial( mMaterial.clone() );
+					}
+					if ( meshList.size() == 1 ) {
+						// Singleton element, where the master becomes our only child
+						this.attachChild( mMasterGeometry );
+						
+					} else if ( meshList.size() > 1 ) {
+						// Multiple elements, with the first dedicated to the 'generic' material
+						// (which means the 'i' index is one greater than the material index)
+						for( int i = 1, j = meshList.size(); i < j; i += 1 ) {
+							Geometry aChild = new Geometry( this.getName() + i, meshList.get( i ) );
+							Material aMaterial = (Material)materialMap.get( new Integer( i - 1 ) );
+							aChild.setMaterial( aMaterial.clone() );
+							this.attachChild( aChild );
+						}
+						// NOTE that we only attach the independent child meshes, not the master
+					}
+					// Return true if we have a valid product
+					return( mIsValid = aProduct.isValid() );
 				} else {
-					// No custom material
-					materialIndex = null;
+					// Nothing produced
+					return( false );
 				}
-				// Apply the operator
-				switch( aShape.getOperator() ) {
-				case UNION:
-					if ( aProduct == null ) {
-						// A place to start
-						aProduct = aShape.clone( materialIndex, getLodLevel() );
-					} else {
-						// Blend together
-						aProduct = aProduct.union( aShape, materialIndex, pEnvironment );
-					}
-					break;
-					
-				case DIFFERENCE:
-					if ( aProduct == null ) {
-						// NO PLACE TO START
-					} else {
-						// Blend together
-						aProduct = aProduct.difference( aShape, materialIndex, pEnvironment );
-					}
-					break;
-					
-				case INTERSECTION:
-					if ( aProduct == null ) {
-						// A place to start
-						aProduct = aShape.clone( materialIndex, getLodLevel() );
-					} else {
-						// Blend together
-						aProduct = aProduct.intersection( aShape, materialIndex, pEnvironment );
-					}
-					break;
-					
-				case SKIP:
-					// This shape is not taking part
-					break;
-				}
-			}
-			// Build up the mesh(es)
-			mMasterGeometry = null;
-			if ( aProduct != null ) {
-				// Transform the list of meshes into children
-				// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
-				//  and the 'one' mesh is the one that corresponds to the generic material)
-				List<Mesh> meshList = aProduct.toMesh( (materialMap == null) ? 0 : materialCount, pEnvironment );
-				if ( !meshList.isEmpty() ) {
-					// Use the 'zero' mesh to describe the overall geometry
-					mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );
-					mMasterGeometry.setMaterial( mMaterial.clone() );
-				}
-				if ( meshList.size() == 1 ) {
-					// Singleton element, where the master becomes our only child
-					this.attachChild( mMasterGeometry );
-					
-				} else if ( meshList.size() > 1 ) {
-					// Multiple elements, with the first dedicated to the 'generic' material
-					// (which means the 'i' index is one greater than the material index)
-					for( int i = 1, j = meshList.size(); i < j; i += 1 ) {
-						Geometry aChild = new Geometry( this.getName() + i, meshList.get( i ) );
-						Material aMaterial = (Material)materialMap.get( new Integer( i - 1 ) );
-						aChild.setMaterial( aMaterial.clone() );
-						this.attachChild( aChild );
-					}
-					// NOTE that we only attach the independent child meshes, not the master
-				}
-				// Return true if we have a valid product
-				return( mIsValid = aProduct.isValid() );
-			} else {
-				// Nothing produced
-				return( false );
+			} finally {
+				tempVars.release();
 			}
 		} else {
 			// Nothing interesting
