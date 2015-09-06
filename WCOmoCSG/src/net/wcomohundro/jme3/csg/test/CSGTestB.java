@@ -47,6 +47,7 @@ import com.jme3.texture.Texture;
 
 import net.wcomohundro.jme3.csg.CSGGeonode;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 
 /** Simple test of the CSG suport 
  		Blend together cubes and cylinders

@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
+import net.wcomohundro.jme3.math.Vector3d;
+
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -48,7 +50,12 @@ import com.jme3.math.Vector3f;
 
 /** Constructive Solid Geometry (CSG)
 	
-	A CSG Vertex is a point in space, know by its position, its normal, and its texture coordinate
+	A CSG Vertex is a point in space, know by its position, its normal, and its texture coordinate.
+	While the standard jme3 processing is all based on Vector3f and floats, I have extended the
+	internal processing to optionally work from underlying Vector3d and doubles.  This allows me
+	to persue some of the 'artifacts' issues with a finer level of detail.  The end resultant 
+	mesh, however, always renders via floats, not doubles.
+	@see CSGVertexFlt and CSGVertexDbl for float/double implementation.
 
 	NOTE
 		that a vertex is expected to be immutable with no internally moving parts.  Once created, you
@@ -56,42 +63,29 @@ import com.jme3.math.Vector3f;
 		THEREFORE, be careful with Vertex internal Vectors used in Mesh construction which could be 
 		adjusted/altered. .
   */
-public class CSGVertex 
+public abstract class CSGVertex<VectorT>
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
 	public static final String sCSGVertexRevision="$Rev$";
 	public static final String sCSGVertexDate="$Date$";
 	
+	/** Static empty list of vertices */
+	protected static final List<CSGVertex> sEmptyVertices = new ArrayList<CSGVertex>(0);
+	/** Quick access to a NULL in a list of Vertices */
+	protected static final List<CSGVertex> sNullVertexList = Collections.singletonList( null );
+
 	
-	/** Where is this vertex */
-	protected Vector3f	mPosition;
-	/** What is its normal */
-	protected Vector3f 	mNormal;
-	/** What is the texture coordinate */
-	protected Vector2f	mTextureCoordinate;
-	
-	/** Standard null constructor */
-	public CSGVertex(
-	) {
-		this( Vector3f.ZERO, Vector3f.ZERO, Vector2f.ZERO, null, null );
-	}
-	
-	/** Constructor based on the given components */
-	public CSGVertex(
-		Vector3f		pPosition
-	,	Vector3f		pNormal
-	,	Vector2f		pTextureCoordinate
-	) {
-		this( pPosition, pNormal, pTextureCoordinate, null, CSGEnvironment.sStandardEnvironment );
-	}
-	public CSGVertex(
+	/** Factory construction of appropriate vertex */
+	public static CSGVertex makeVertex(
 		Vector3f		pPosition
 	,	Vector3f		pNormal
 	,	Vector2f		pTextureCoordinate
 	,	Transform		pTransform
 	,	CSGEnvironment	pEnvironment
 	) {
+		CSGVertex aVertex;
+		
 		if ( pTransform != null ) {
 			// Adjust the position
 			pPosition = pTransform.transformVector( pPosition, pPosition );
@@ -100,128 +94,40 @@ public class CSGVertex
 			// The texture does not budge
 			pTextureCoordinate = pTextureCoordinate;
 		}
-		// Use what was given
-		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
-			//		false comparisons
-			if ( !(
-			   (Math.abs( pPosition.x ) < pEnvironment.mEpsilonMaxBetweenPoints ) 
-			&& (Math.abs( pPosition.y ) < pEnvironment.mEpsilonMaxBetweenPoints ) 
-			&& (Math.abs( pPosition.z ) < pEnvironment.mEpsilonMaxBetweenPoints )
-			) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
-			}
-			// Upon further research, I am not seeing a requirement for the normal to be a unit vector
-			float normalLength = pNormal.length();
-			if ( !(normalLength != 0.0f) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
-			}
-			if ( !(
-			   (Math.abs( pTextureCoordinate.x ) <= pEnvironment.mEpsilonMaxBetweenPoints ) 
-			&& (Math.abs( pTextureCoordinate.y ) <= pEnvironment.mEpsilonMaxBetweenPoints )
-			) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
-			}
+		if ( pEnvironment.mDoublePrecision ) {
+			Vector3d aPosition = new Vector3d( pPosition.x, pPosition.y, pPosition.z );
+			Vector3d aNormal = new Vector3d( pNormal.x, pNormal.y, pNormal.z );
+			aVertex = new CSGVertexDbl( aPosition, aNormal, pTextureCoordinate, pEnvironment );
+		} else {
+			aVertex = new CSGVertexFlt( pPosition, pNormal, pTextureCoordinate, pEnvironment );
 		}
-		mPosition = pPosition;
-		mNormal = pNormal;
-		mTextureCoordinate = pTextureCoordinate;
+		return( aVertex );
 	}
+
+	/** Where is this vertex */
+	protected VectorT	mPosition;
+	/** What is its normal */
+	protected VectorT 	mNormal;
+	/** What is the texture coordinate */
+	protected Vector2f	mTextureCoordinate;
+	
 	
 	/** Make a copy */
-	public CSGVertex clone(
+	public abstract CSGVertex<VectorT> clone(
 		boolean		pFlipIt
-	) {
-		if ( pFlipIt ) {
-			// Make a flipped copy (invert the normal)
-			return( new CSGVertex( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null, null ));
-		} else {
-			// Standard copy, which is currently this same immutable instance
-			return( this ); // new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));
-		}
-	}
+	);
 	
 	/** Accessor to the position */
-	public Vector3f getPosition() { return mPosition; }
+	public VectorT getPosition() { return mPosition; }
+	public abstract Vector3f getPositionFlt();
 	
 	/** Accessor to the normal */
-	public Vector3f getNormal() { return mNormal; }
+	public VectorT getNormal() { return mNormal; }
+	public abstract Vector3f getNormalFlt();
 	
 	/** Accessor to the texture coordinate */
 	public Vector2f getTextureCoordinate() { return mTextureCoordinate; }
 	
-	/** Interpolate between this vertex and another */
-	public CSGVertex interpolate(
-		CSGVertex 		pOther
-	, 	float			pPercentage
-	,	CSGPlane		pPlane
-	,	Vector3f		pTemp3f
-	,	Vector2f		pTemp2f
-	,	CSGEnvironment	pEnvironment
-	) {
-		CSGVertex aVertex = null;
-		
-		// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
-		// 		structure your bound checks accordingly
-		if ( (pPercentage < 0.0f) || (pPercentage > 1.0f) ) {
-			// Not sure what to make of this....
-		
-		// Once upon a time, I had tolerance checks here to check for near zero and near
-		// one, then using the appropriate Vertex.  But that resulted in duplicate points
-		// which means we could not compute plane.  So punt that and always use the percentage.
-		} else if ( Float.isFinite( pPercentage ) ){
-			// Where is this new vertex?
-			Vector3f newPosition 
-				= this.mPosition.add(
-					pTemp3f.set( pOther.getPosition() )
-						.subtractLocal( this.mPosition ).multLocal( pPercentage ) );
-			
-			// What is its normal?
-			Vector3f newNormal 
-				= this.mNormal.add( 
-					pTemp3f.set( pOther.getNormal() )
-						.subtractLocal( this.mNormal ).multLocal( pPercentage ) ).normalizeLocal();
-			
-			// What is its texture?
-			Vector2f newTextureCoordinate 
-				= this.mTextureCoordinate.add( 
-					pTemp2f.set( pOther.getTextureCoordinate() )
-						.subtractLocal( this.mTextureCoordinate ).multLocal( pPercentage ) );
-			
-			aVertex = new CSGVertex( newPosition, newNormal, newTextureCoordinate );
-		}
-		if ( aVertex == null ) {
-			// Not a percentage we can deal with
-			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
-			, pEnvironment.mShapeName + "unexpected percentage: " + pPercentage );
-		} else if ( pPlane != null ) {
-			// Force the position onto the given plane
-			Vector3f aPosition = aVertex.getPosition();
-			float aDistance = pPlane.pointDistance( aPosition );
-			if ( aDistance != 0 ) {
-				aPosition = pPlane.pointProjection( aPosition, null );
-				if ( DEBUG ) {
-					aDistance = pPlane.pointDistance( aPosition );
-				}
-				aVertex = new CSGVertex( aPosition, aVertex.getNormal(), aVertex.getTextureCoordinate() );
-			}
-		}
-		return( aVertex );
-	}
-	
-	/** Calculate the distance of this vertex to another */
-	public float distance(
-		CSGVertex	pOtherVertex
-	) {
-		float aDistance = this.mPosition.distance( pOtherVertex.mPosition );
-		return( aDistance );
-	}
-	public float distanceSquared(
-		CSGVertex	pOtherVertex
-	) {
-		float aDistance = this.mPosition.distanceSquared( pOtherVertex.mPosition );
-		return( aDistance );
-	}
 
 	/** Make a Vertex savable */
 	@Override
@@ -229,8 +135,6 @@ public class CSGVertex
 		JmeExporter		pExporter
 	) throws IOException {
 		OutputCapsule aCapsule = pExporter.getCapsule(this);
-		aCapsule.write( mPosition, "position", Vector3f.ZERO );
-		aCapsule.write( mNormal, "normal", Vector3f.ZERO );
 		aCapsule.write( mTextureCoordinate, "texCoord", Vector2f.ZERO );
 	}
 	@Override
@@ -238,8 +142,6 @@ public class CSGVertex
 		JmeImporter		pImporter
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule(this);
-		mPosition = (Vector3f)aCapsule.readSavable( "position", Vector3f.ZERO );
-		mNormal = (Vector3f)aCapsule.readSavable( "normal", Vector3f.ZERO );
 		mTextureCoordinate = (Vector2f)aCapsule.readSavable( "texCoord", Vector2f.ZERO );
 	}
 	
@@ -248,17 +150,6 @@ public class CSGVertex
 	public String toString(
 	) {
 		return( super.toString() + " - " + mPosition );
-	}
-	
-	/////// Implement ConstructiveSolidGeometry
-	@Override
-	public StringBuilder getVersion(
-		StringBuilder	pBuffer
-	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
-													, sCSGVertexRevision
-													, sCSGVertexDate
-													, pBuffer ) );
 	}
 
 }

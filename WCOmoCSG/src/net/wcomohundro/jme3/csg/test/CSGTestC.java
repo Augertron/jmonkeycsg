@@ -47,6 +47,7 @@ import com.jme3.texture.Texture;
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
+import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 
 /** Simple test of the CSG suport 
  		Check for support of a complex mesh, as provided by the 'teapot' shape

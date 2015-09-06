@@ -35,7 +35,9 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.shape.*;
+import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.export.InputCapsule;
@@ -144,6 +146,7 @@ import com.jme3.math.Vector3f;
  	checks that are looking for absurd constructs.  In particular, I have tried to be very careful
  	with boolean and comparison checks on vertex values, trying to remain sensitive to any 
  	possible NaN or Infinity condition. 
+ 	
  	** Please note the Java language specification **
  		Floating-point operators produce no exceptions. An operation that overflows 
  		produces a signed infinity, an operation that underflows produces a denormalized value 
@@ -166,7 +169,7 @@ import com.jme3.math.Vector3f;
  	spans a plane.  After all, a larger EPSILON_ONPLANE will minimize the number of triangles that
  	must be split.  So there seems to be a connection here????
  	
- 	I am also wondering if I could possibly be accidentally generating a concave polygon in some
+ 	I am wondering if I could possibly be accidentally generating a concave polygon in some
  	these dropout cases.  Everything I have read so far says the BSP processing only works with 
  	proper convex polygons.  An approach I am considering is to force CSGPolygon to solely 
  	operate as a 3 pointed triangle.  By definition, it would then always be convex.  The 
@@ -178,25 +181,77 @@ import com.jme3.math.Vector3f;
  	This would mean we are always working points that truly coincide with a given plane.  BUT
  	I wonder it moving such a point means we have actually created a 'gap' in the underlying surface.
  	More testing will be required here.
+ 	
+ 	Subsequent searching on the web discovered this paper:
+ 		https://www.andrew.cmu.edu/user/jackiey/resources/CSG/CSG_report.pdf
+ 		csegurar@andrew.cmu.edu, tstine@andrew.cmu.edu, jackiey@andrew.cmu.edu (all accounts now inactive)
+ 	in which the authors are discussing CSG and BSP.  In particular was this:
+ 	
+ 		the Boolean operation would yield results with minor geometry artifacts. The artifacts 
+ 		that appear in some of our results appear to manifest themselves when operations are 
+ 		performed on objects with low polygon count. We believe that this occurs due to the 
+ 		lower resolution of one model relative to the other, and thus when the BSP trees of 
+ 		both models are merged, we occasionally are left with extraneous triangles that must 
+ 		get pushed through the BSP tree more than once but end up getting catalogued incorrectly.
+ 		
+ 	A few other sources related to BSP (if not specifically CSG) indicate an inherent flaw
+ 	with the approach itself:
+ 	
+ 		An exact representation can be obtained using signed Euclidean distance from a given 
+ 		point to the polygonal mesh.  The main problem with this solution is that the Euclidean 
+ 		distance is not Cprime-continuous and has points with the derivatives discontinuity
+		(vanishing gradients) in its domain, which can cause appearance of unexpected artifacts 
+		in results of further operations on the object.
+		
+	And the following paper may be directly addressing the problem I am seeing, but the 
+	math is too deep for me.
+		http://www.pascucci.org/pdf-papers/progressive-bsp.pdf
+	In particular is the discussion of:
+		The case (2) above is numerically unstable. Three types of labels are used for vertex 
+		classification, labeling a vertex as v= when it is contained on the h hyperplane. No problems 
+		would arise in a computation with infinite precision. Unfortunately, real computers
+		are not infinitely precise, so that some vertex classification can be inexact. In order 
+		to recover from wrong vertex classifications and to consistently compute the split complex, 
+		further information concerning topological structure must be used.
+ 		
+ 	All of these statements lead me to believe there is a fundamental limitation in the underlying math.  
+ 	Somewhere deep inside the BSP, a polygon split is required and the limited precision can mean
+ 	that multiple, incorrect assignment of vertices can occur.  
+ 	Unfortunately, I still have no idea how to identify, capture, and fix such a condition.
 */
 public interface ConstructiveSolidGeometry 
 {
 	/** ASSERT style debugging flag */
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
+	
+	/** Force polygons to simple triangles only */
+	public static final boolean LIMIT_TO_TRIANGLES = false;
 	
 	/** Deepest split when processing BSP hierarchy */
 	public static final int BSP_HIERARCHY_LIMIT = 1024;
 	
+	/** When selecting the plane used to define a partition, use the Nth polygon */
+	public static final double PARTITION_SEED_PLANE = 0.5;
+	
 	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
 	// Tolerance to decide if a given point in 'on' a plane
-	public static final float EPSILON_ONPLANE = 1.0e-5f;
+	public static final double EPSILON_ONPLANE_FLT = 1.0e-5;
+	public static final double EPSILON_ONPLANE_DBL = 1.0e-8;
 	// Tolerance to determine if two points are close enough to be considered the same point
-	public static final float EPSILON_BETWEEN_POINTS = 0.5e-5f;
+	public static final double EPSILON_BETWEEN_POINTS_FLT = 5.0e-7;
+	public static final double EPSILON_BETWEEN_POINTS_DBL = 5.0e-10;
 	// Tolerance if a given value is near enough to zero to be treated as zero
-	public static final float EPSILON_NEAR_ZERO = 0.5e-5f;
+	public static final double EPSILON_NEAR_ZERO_FLT = 5.0e-7;
+	public static final double EPSILON_NEAR_ZERO_DBL = 5.0e-12;
+	
+	// NOTE that '5E-15' may cause points on a plane to report problems.  In other words,
+	//		when near_zero gets this small, the precision errors cause points on a plane to
+	//		NOT look like they are on the plane, even when those points were used to create the
+	//		plane.....
+	
 	
 	/** Define a 'tolerance' for when two points are so far apart, it is ridiculous to consider it */
-	public static final float EPSILON_BETWEEN_POINTS_MAX = 1e+3f;
+	public static final double EPSILON_BETWEEN_POINTS_MAX = 1e+3;
 	
 	/** Supported actions applied to the CSGShapes */
 	public static enum CSGOperator
@@ -254,7 +309,7 @@ public interface ConstructiveSolidGeometry
     public static boolean equalVector3f(
     	Vector3f 	pVector1
     ,	Vector3f	pVector2
-    ,	float		pTolerance
+    ,	double		pTolerance
     ) {
     	if ( pVector1 != pVector2 ) {
 	    	float deltaX = pVector1.x - pVector2.x;
@@ -272,6 +327,31 @@ public interface ConstructiveSolidGeometry
     	}
     	return( true );
     }
+    /** Service routine to check two vectors and see if they are the same, within a given 
+	 	tolerance. (Typically EPSILON_BETWEEN_POINTS, but not required)
+	 */
+	public static boolean equalVector3d(
+		Vector3d 	pVector1
+	,	Vector3d	pVector2
+	,	double		pTolerance
+	) {
+		if ( pVector1 != pVector2 ) {
+	    	double deltaX = pVector1.x - pVector2.x;
+	    	if ( (deltaX < -pTolerance) || (deltaX > pTolerance) ) {
+	    		return false;
+	    	}
+	    	double deltaY = pVector1.y - pVector2.y;
+	    	if ( (deltaY < -pTolerance) || (deltaY > pTolerance) ) {
+	    		return false;
+	    	}
+	    	double deltaZ = pVector1.z - pVector2.z;
+	    	if ( (deltaZ < -pTolerance) || (deltaZ > pTolerance) ) {
+	    		return false;
+	    	}
+		}
+		return( true );
+	}
+
     /** Service routine to interpret a Savable.read() float value that can take the form
 			xxxPI/yyy
 		that supports fractional values of PI
@@ -402,9 +482,9 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
 		(new CSGGeonode()).getVersion( aBuffer );
 		(new CSGLinkNode()).getVersion( aBuffer );
 		(new CSGPartition()).getVersion( aBuffer );
-		(new CSGPlane()).getVersion( aBuffer );
-		(new CSGPolygon()).getVersion( aBuffer );
-		(new CSGVertex()).getVersion( aBuffer );
+		(new CSGPlaneFlt()).getVersion( aBuffer );
+		(new CSGPolygonFlt()).getVersion( aBuffer );
+		(new CSGVertexFlt()).getVersion( aBuffer );
 		
 		(new CSGBox()).getVersion( aBuffer );
 		(new CSGCylinder()).getVersion( aBuffer );
@@ -414,7 +494,7 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
 		
 		pEnvironment.getVersion( aBuffer );
 		
-		pLogger.log( Level.INFO, aBuffer.toString() );
+		pLogger.log( Level.CONFIG, aBuffer.toString() );
 	}
 	
 	/** Service routine to report on the global CSG version */

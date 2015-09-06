@@ -37,6 +37,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
 /** Simple extension of Node that extends Savable.read() to accept a list of external references 
+ 	and provides for a custom environment.
  */
 public class CSGLinkNode 
 	extends Node
@@ -45,18 +46,23 @@ public class CSGLinkNode
 	/** Version tracking support */
 	public static final String sCSGLinkNodeRevision="$Rev$";
 	public static final String sCSGLinkNodeDate="$Date$";
+	
+	/** Common environment to supply for CSG processing */
+	protected CSGEnvironment mEnvironment;
 
 	@Override
     public void read(
     	JmeImporter 	pImporter
     ) throws IOException {
+        // Any custom environment?
+    	AssetManager aManager = pImporter.getAssetManager();
+        InputCapsule aCapsule = pImporter.getCapsule( this );
+        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
+
     	// Standard Node processing
         super.read( pImporter );
         
         // Look for list of external definitions
-    	AssetManager aManager = pImporter.getAssetManager();
-        InputCapsule aCapsule = pImporter.getCapsule( this );
-
 		List<AssetKey> assetLoaderKeys
         	= (List<AssetKey>)aCapsule.readSavableArrayList( "assetLoaderKeyList", null );
 		if ( assetLoaderKeys != null ) {

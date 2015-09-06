@@ -50,6 +50,7 @@ import java.util.ArrayList;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGPlane;
+import net.wcomohundro.jme3.csg.CSGPlaneFlt;
 
 
 /** A CSG Pipe is a 'capped' radial whose slices follow a given curve.
@@ -231,8 +232,8 @@ public class CSGPipe
     	Vector2f baseTexture = pTempVars.vect2d;
 
     	// We check all points against the Plane of the base
-    	CSGPlane basePlane = pContext.mSlicePlanes.get( pBaseIndex );
-    	CSGPlane thisPlane = pContext.mSlicePlanes.get( pBaseIndex + pScanDirection );
+    	CSGPlaneFlt basePlane = pContext.mSlicePlanes.get( pBaseIndex );
+    	CSGPlaneFlt thisPlane = pContext.mSlicePlanes.get( pBaseIndex + pScanDirection );
     	
     	// Locate each radial point in question
     	int floatIdx = (pBaseIndex + pScanDirection) * pOffset3f;
@@ -248,8 +249,8 @@ public class CSGPipe
 	    					,	pContext.mPosBuf.get( floatIdx2 ) );
 	    	
 	    	// Where is this point in relationship to the plane of the base slice?
-	    	// @todo - I think there is a problem with the 'planes' if the slices are rotated.....
-	    	CSGPlane overlappedPlane
+	    	// @todo - I think there may be a problem with the 'planes' if the slices are rotated.....
+	    	CSGPlaneFlt overlappedPlane
 	    		= checkPointOverlap( pContext, thisPlane, checkPosition, basePlane, pBaseIndex, pScanDirection );
 	    	if ( overlappedPlane != null ) {
 	    		// This given point is on the wrong side of the overlapped plane
@@ -307,16 +308,16 @@ if ( true ) {
      	@return - null if there is no overlap, otherwise return the plane that has
      			  the overlap (typically pBasePlane, but possibly something deeper)
      */
-    protected CSGPlane checkPointOverlap(
+    protected CSGPlaneFlt checkPointOverlap(
         CSGPipeContext 	pContext
-    ,	CSGPlane		pThisPlane
+    ,	CSGPlaneFlt		pThisPlane
     ,	Vector3f		pPoint
-    ,	CSGPlane		pBasePlane
+    ,	CSGPlaneFlt		pBasePlane
     ,	int				pBaseIndex
     ,	int				pScanDirection
     ) {
     	// Where is this point in relationship to the plane of the base slice?
-    	int pointPlaneRelationship = pBasePlane.pointPosition( pPoint, EPSILON_ONPLANE );
+    	int pointPlaneRelationship = pBasePlane.pointPosition( pPoint, EPSILON_ONPLANE_FLT );
 
     	if ( ((pointPlaneRelationship < 0) && (pScanDirection > 0))
     	|| ((pointPlaneRelationship > 0) && (pScanDirection < 0)) ) {
@@ -333,8 +334,8 @@ if ( true ) {
     	int priorPlaneIndex = pBasePlane.getMark();
     	while( priorPlaneIndex >= 0 ) {
     		// Confirm against the prior plane
-        	CSGPlane priorPlane = pContext.mSlicePlanes.get( priorPlaneIndex );
-        	CSGPlane overlappedPlane
+        	CSGPlaneFlt priorPlane = pContext.mSlicePlanes.get( priorPlaneIndex );
+        	CSGPlaneFlt overlappedPlane
         		= checkPointOverlap( pContext, pThisPlane, pPoint, priorPlane, priorPlaneIndex, pScanDirection );
         	if ( overlappedPlane != null ) {
         		// This given point is on the wrong side of some prior plane
@@ -663,7 +664,7 @@ if ( true ) {
     		// If we plan on smoothing the resultant surface, we need to keep track of
     		// the 'plane' that defines every slice
     		// NOTE that we use a null plane as a placeholder in the list for the endcaps
-    		CSGPlane slicePlane = (pSurface == 0) ? new CSGPlane( pSliceNormal, thisCenter ) : null;
+    		CSGPlaneFlt slicePlane = (pSurface == 0) ? new CSGPlaneFlt( pSliceNormal, thisCenter ) : null;
     		
     		if ( pContext.mSlicePlanes == null ) pContext.mSlicePlanes = new ArrayList( pContext.mSliceCount );
     		pContext.mSlicePlanes.add( slicePlane );
@@ -757,7 +758,7 @@ class CSGPipeContext
 	/** Surface normal to the current slice */
 	Vector3f			mSliceNormal;
 	/** Planes associated with every slice */
-	List<CSGPlane>		mSlicePlanes;
+	List<CSGPlaneFlt>	mSlicePlanes;
 	/** Rotation to apply to the slice to match the spline */
 	Quaternion			mSliceSplineRotation;
 	

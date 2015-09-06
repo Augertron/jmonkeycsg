@@ -53,6 +53,7 @@ import com.jme3.texture.Texture;
 
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 
 /** Test of import/export
  */

@@ -37,6 +37,9 @@ import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.wcomohundro.jme3.csg.bsp.CSGPartition;
+import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -75,94 +78,78 @@ import com.jme3.util.TempVars;
  	use at this level, but it would be interesting to think of per-shape based 
  	textures/materials.
  	
- 	----- From Evan Wallace -----
- 	All CSG operations are implemented in terms of two functions, clipTo() and invert(), 
- 	which remove parts of a BSP tree inside another BSP tree and swap solid and empty space, 
- 	respectively. 
+ 	The boolean processing is based on either:
+ 	1)	BinarySpacePartitioning - where the polygons of a shape are sorted into front/back
+ 			elements according to their position to a given plane.  Polygons that cross the
+ 			plane are 'split', and the front/back elements are recursively partitioned.
+ 	2)	FaceVertex processing - where a solid's faces are categorized in relationship to 
+ 			another shapes face.
  	
- 	To find the union of a and b, we want to remove everything in a inside b and everything 
- 	in b inside a, then combine polygons from a and b into one solid:
-
-		a.clipTo(b);
-		b.clipTo(a);
-		a.build(b.allPolygons());
-
-	The only tricky part is handling overlapping coplanar polygons in both trees. The code 
-	above keeps both copies, but we need to keep them in one tree and remove them in the other 
-	tree. To remove them from b we can clip the inverse of b against a. The code for union now 
-	looks like this:
-
-		a.clipTo(b);
-		b.clipTo(a);
-		b.invert();
-		b.clipTo(a);
-		b.invert();
-		a.build(b.allPolygons());
-
-	Subtraction and intersection naturally follow from set operations. If union is A | B, 
-	subtraction is A - B = ~(~A | B) and intersection is A & B = ~(~A | ~B) where ~ is 
-	the complement operator.
-	
  */
 public class CSGShape 
 	extends Geometry
-	implements Comparable<CSGShape>, Savable, ConstructiveSolidGeometry
+	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
 	public static final String sCSGShapeRevision="$Rev$";
 	public static final String sCSGShapeDate="$Date$";
-
-	/** Canned, immutable empty list of polygons */
-	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);
 	
-	/** Service to create a vector buffer for a given List */
-    public static FloatBuffer createVector3Buffer(
-    	List<Vector3f> 	pVectors
-    ) {
-        FloatBuffer aBuffer = BufferUtils.createVector3Buffer( pVectors.size() );
-        for( Vector3f aVector : pVectors ) {
-            if ( aVector != null ) {
-            	aBuffer.put( aVector.x ).put( aVector.y ).put( aVector.z );
-            } else {
-            	aBuffer.put(0).put(0).put(0);
-            }
-        }
-        aBuffer.flip();
-        return aBuffer;
-    }
-    public static FloatBuffer createVector2Buffer(
-    	List<Vector2f> 	pVectors
-    ) {
-        FloatBuffer aBuffer = BufferUtils.createVector2Buffer( pVectors.size() );
-        for( Vector2f aVector : pVectors ) {
-            if ( aVector != null ) {
-            	aBuffer.put( aVector.x ).put( aVector.y );
-            } else {
-            	aBuffer.put(0).put(0);
-            }
-        }
-        aBuffer.flip();
-        return aBuffer;
-    }
-    public static ShortBuffer createIndexBuffer(
-    	List<Number> 	pIndices
-    ) {
-    	ShortBuffer aBuffer = BufferUtils.createShortBuffer( pIndices.size() );
-        for( Number aValue : pIndices ) {
-            if ( aValue != null ) {
-            	aBuffer.put( aValue.shortValue() );
-            } else {
-            	aBuffer.put( (short)0 );
-            }
-        }
-        aBuffer.flip();
-        return aBuffer;
-    }
+	/** Handler interface */
+	public interface CSGShapeProcessor {
+		
+		/** Connect to a shape */
+		public CSGShapeProcessor setShape(
+			CSGShape		pForShape
+		);
+		/** Make a copy */
+		public CSGShapeProcessor clone(
+			CSGShape		pForShape
+		);
+		
+		/** Ready a list of shapes for processing */
+		public List<CSGShape> prepareShapeList(
+			List<CSGShape>	pShapeList
+		,	CSGEnvironment	pEnvironment
+		);	
+		
+		/** Add a shape into this one */
+		public CSGShape union(
+			CSGShape		pOtherShape
+		,	Number			pOtherMaterialIndex
+		,	CSGTempVars		pTempVars
+		,	CSGEnvironment	pEnvironment
+		);
+		
+		/** Subtract a shape from this one */
+		public CSGShape difference(
+			CSGShape		pOtherShape
+		,	Number			pOtherMaterialIndex
+		,	CSGTempVars		pTempVars
+		,	CSGEnvironment	pEnvironment
+		);
 
-	/** BSP hierarchy level where the partitioning became corrupt */
-    protected int						mCorruptLevel;
-	/** The list of polygons that make up this shape */
-	protected List<CSGPolygon>			mPolygons;
+		/** Find the intersection with another shape */
+		public CSGShape intersection(
+			CSGShape		pOtherShape
+		,	Number			pOtherMaterialIndex
+		,	CSGTempVars		pTempVars
+		,	CSGEnvironment	pEnvironment
+		);
+		
+		/** Produce the mesh(es) that corresponds to this shape
+		 	The zeroth mesh in the list is the total, composite mesh.
+		 	Every other mesh (if present) applies solely to a specific Material.
+		  */
+		public List<Mesh> toMesh(
+			int				pMaxMaterialIndex
+		,	CSGTempVars		pTempVars
+		,	CSGEnvironment	pEnvironment
+		);
+
+	}
+
+	/** The active handler that performs shape manipulation */
+	protected CSGShapeProcessor			mHandler;
 	/** The operator applied to this shape as it is added into the geometry */
 	protected CSGGeometry.CSGOperator	mOperator;
 	/** Arbitrary 'ordering' of operations within the geometry */
@@ -171,10 +158,9 @@ public class CSGShape
 	protected int						mMaterialIndex;
 
 	
-	/** Basic null constructor */
+	/** Generic constructor */
 	public CSGShape(
 	) {
-		this( sEmptyPolygons, 0 );
 	}
 	/** Constructor based on a mesh */
 	public CSGShape(
@@ -189,83 +175,76 @@ public class CSGShape
 	,	int		pOrder
 	) {
 		super( pShapeName, pMesh );
-		mPolygons = sEmptyPolygons;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
 	}
-	/** Constructor based on an explicit list of polygons, as determined by a blend of shapes */
-	protected CSGShape(
-		List<CSGPolygon>	pPolygons
+	public CSGShape(
+		String	pShapeName
+	,	int		pOrder
+	) {
+		super( pShapeName );	// no mess provided
+		mOrder = pOrder;
+		mOperator = CSGGeometry.CSGOperator.UNION;		
+	}
+	/** Constructor based on a given handler */
+	public CSGShape(
+		CSGShapeProcessor	pHandler
 	,	int					pOrder
 	) {
-		super( null );
-		mPolygons = pPolygons;
+		mHandler = pHandler.setShape( this );
 		mOrder = pOrder;
-		mOperator = CSGGeometry.CSGOperator.UNION;
-	}
-	
-	/** The shape is 'valid' so long as its BSP hierarchy is not corrupt */
-	public boolean isValid() { return( mCorruptLevel == 0 ); }
-	public int whereCorrupt() { return( mCorruptLevel ); }
-	public void setCorrupt(
-		CSGPartition	pPartitionA
-	,	CSGPartition	pPartitionB
-	) {
-		int whereCorrupt;
-		whereCorrupt = pPartitionA.whereCorrupt();
-		if ( whereCorrupt > mCorruptLevel ) mCorruptLevel = whereCorrupt;
-		whereCorrupt = pPartitionB.whereCorrupt();
-		if ( whereCorrupt > mCorruptLevel ) mCorruptLevel = whereCorrupt;
 	}
 		
 	/** Make a copy of this shape */
 	@Override
 	public CSGShape clone(
 	) {
-		return( clone( 0, this.getLodLevel() ) );
+		return( clone( 0, this.getLodLevel(), CSGEnvironment.sStandardEnvironment ) );
 	}
 	public CSGShape clone(
-		Number		pMaterialIndex
-	,	int			pLODLevel
+		Number			pMaterialIndex
+	,	int				pLODLevel
+	,	CSGEnvironment	pEnvironment
 	) {
 		CSGShape aClone;
 		
-		if ( this.mesh == null ) {
-			// NOTE that a shallow copy of the immutable polygons is acceptable
-			List<CSGPolygon> newPolyList = new ArrayList<CSGPolygon>( mPolygons );
-			aClone = new CSGShape( newPolyList, mOrder );
-		} else {
+		if ( this.mesh != null ) {
 			// Base it on the mesh (but do not clone the material)
 			aClone = (CSGShape)super.clone( false );
 			aClone.setOrder( mOrder );
+		} else {
+			// Empty with no mesh
+			aClone = new CSGShape( this.getName(), this.mOrder );
 		}
 		aClone.setOperator( mOperator );
 		aClone.setMaterialIndex( pMaterialIndex );
 //		aClone.setLodLevel( pLODLevel );
+		
+		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
 		return( aClone );
 	}
 	
-	/** Accessor to the list of polygons */
-	protected List<CSGPolygon> getPolygons(
-		Number			pMaterialIndex
-	,	int				pLevelOfDetail
-	,	TempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
-	) { 
-		if ( mPolygons.isEmpty() && (this.mesh != null) ) {
-			// Generate the polygons
-			this.mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
-			mPolygons = fromMesh( this.mesh, this.getLocalTransform(), pLevelOfDetail, pTempVars, pEnvironment );
-			
-		} else if ( !mPolygons.isEmpty() 
-				&& (pMaterialIndex != null)
-				&& (this.mMaterialIndex != pMaterialIndex.intValue()) ) {
-			// We have polygons, but a different custom material is desired
-			throw new IllegalArgumentException( "CSGShape invalid change-of-material" );
+	/** Mostly internal access to the handler */
+	public CSGShapeProcessor getHandler(
+		CSGEnvironment	pEnvironment
+	) {
+		if ( mHandler == null ) {
+			mHandler = pEnvironment.resolveShapeProcessor().setShape( this );
 		}
-		return mPolygons; 
+		return( mHandler );
 	}
 	
+	/** Ready a list of shapes for processing */
+	public List<CSGShape> prepareShapeList(
+		List<CSGShape>	pShapeList
+	,	CSGEnvironment	pEnvironment
+	) {
+		return( getHandler( pEnvironment ).prepareShapeList( pShapeList, pEnvironment ) );
+	}
+		
+	/** The shape knows if it is 'valid' or not */
+	public boolean isValid() { return true; }
+
 	/** Accessor to the operator */
 	public CSGGeometry.CSGOperator getOperator() { return mOperator; }
 	public void setOperator(
@@ -297,287 +276,46 @@ public class CSGShape
 
 	/** Add a shape into this one */
 	public CSGShape union(
-		CSGShape		pOther
+		CSGShape		pOtherShape
 	,	Number			pOtherMaterialIndex
-	,	TempVars		pTempVars
+	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		CSGPartition a = new CSGPartition( this
-											, getPolygons( this.mMaterialIndex, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment );
-		CSGPartition b = new CSGPartition( pOther
-											, pOther.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment  );
-		
-		a.clipTo( b, pTempVars, pEnvironment );
-		b.clipTo( a, pTempVars, pEnvironment );
-		b.invert();
-		b.clipTo( a, pTempVars, pEnvironment );
-		b.invert();
-		a.buildHierarchy( b.allPolygons( null ), pTempVars, pEnvironment );
-
-		CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
-		aShape.setCorrupt( a, b );
-		return( aShape );
+		return( getHandler( pEnvironment ).union( pOtherShape, pOtherMaterialIndex, pTempVars, pEnvironment ) );
 	}
 	
 	/** Subtract a shape from this one */
 	public CSGShape difference(
-		CSGShape		pOther
+		CSGShape		pOtherShape
 	,	Number			pOtherMaterialIndex
-	,	TempVars		pTempVars
+	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		CSGPartition a = new CSGPartition( this
-											, getPolygons( this.mMaterialIndex, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment  );
-		CSGPartition b = new CSGPartition( pOther
-											, pOther.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment  );
-		
-		a.invert();
-		a.clipTo( b, pTempVars, pEnvironment );
-		b.clipTo( a, pTempVars, pEnvironment );
-		b.invert();
-		b.clipTo( a, pTempVars, pEnvironment );
-		b.invert();
-		a.buildHierarchy( b.allPolygons( null ), pTempVars, pEnvironment );
-		a.invert();
-
-        CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
-		aShape.setCorrupt( a, b );
-        return( aShape );
+		return( getHandler( pEnvironment ).difference( pOtherShape, pOtherMaterialIndex, pTempVars, pEnvironment ) );
 	}
 
 	/** Find the intersection with another shape */
 	public CSGShape intersection(
-		CSGShape		pOther
+		CSGShape		pOtherShape
 	,	Number			pOtherMaterialIndex
-	,	TempVars		pTempVars
+	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		CSGPartition a = new CSGPartition( this
-											, getPolygons( this.mMaterialIndex, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment  );
-	    CSGPartition b = new CSGPartition( pOther
-	    									, pOther.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment  );
-		
-	    a.invert();
-	    b.clipTo( a, pTempVars, pEnvironment );
-	    b.invert();
-	    a.clipTo( b, pTempVars, pEnvironment );
-	    b.clipTo( a, pTempVars, pEnvironment );
-	    a.buildHierarchy( b.allPolygons( null ), pTempVars, pEnvironment );
-	    a.invert();
-
-        CSGShape aShape = new CSGShape( a.allPolygons( null ), this.getOrder() );
-		aShape.setCorrupt( a, b );
-        return( aShape );
+		return( getHandler( pEnvironment ).intersection( pOtherShape, pOtherMaterialIndex, pTempVars, pEnvironment ) );
 	}
 
-	/** Produce the set of polygons that correspond to a given mesh */
-	protected List<CSGPolygon> fromMesh(
-		Mesh			pMesh
-	,	Transform		pTransform
-	,	int				pLevelOfDetail
-	,	TempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
-	) {
-		// Convert the mesh in to appropriate polygons
-	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
-		IndexBuffer idxBuffer = null;
-		if ( (pLevelOfDetail > 0) && (pLevelOfDetail < pMesh.getNumLodLevels()) ) {
-			// Look for the given level of detail
-			VertexBuffer lodBuffer = pMesh.getLodLevel( pLevelOfDetail );
-			if ( lodBuffer != null ) {
-				idxBuffer = IndexBuffer.wrapIndexBuffer( lodBuffer.getData() );
-			}
-		}
-		if ( idxBuffer == null ) {
-			// Use the 'standard'
-			idxBuffer = pMesh.getIndexBuffer();
-		}
-		Mode meshMode = pMesh.getMode();
-		FloatBuffer posBuffer = pMesh.getFloatBuffer( Type.Position );
-		FloatBuffer normBuffer = pMesh.getFloatBuffer( Type.Normal );
-		FloatBuffer texCoordBuffer = pMesh.getFloatBuffer( Type.TexCoord );
-		if ( pEnvironment.mStructuralDebug ) {
-			switch( meshMode ) {
-			case Triangles:
-				// This is the only one we can deal with at this time
-				break;
-			default:
-				throw new IllegalArgumentException( "Only Mode.Triangles type mesh is currently supported" );
-			}
-			if ( posBuffer == null ) {
-				throw new IllegalArgumentException( "Mesh lacking Type.Position buffer" );
-			}
-			if ( normBuffer == null ) {
-				throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
-			}
-		}
-        TempVars vars = TempVars.get();
-		List<CSGPolygon> polygons = new ArrayList<CSGPolygon>( idxBuffer.size() / 3 );
-        try {
-			// Work from 3 points which define a triangle
-			for (int i = 0; i < idxBuffer.size(); i += 3) {
-				int idx1 = idxBuffer.get(i);
-				int idx2 = idxBuffer.get(i + 1);
-				int idx3 = idxBuffer.get(i + 2);
-				
-				int idx1x3 = idx1 * 3;
-				int idx2x3 = idx2 * 3;
-				int idx3x3 = idx3 * 3;
-				
-				int idx1x2 = idx1 * 2;
-				int idx2x2 = idx2 * 2;
-				int idx3x2 = idx3 * 2;
-				
-				// Extract the positions
-				Vector3f pos1 = new Vector3f( posBuffer.get( idx1x3 )
-											, posBuffer.get( idx1x3 + 1)
-											, posBuffer.get( idx1x3 + 2) );
-				Vector3f pos2 = new Vector3f( posBuffer.get( idx2x3 )
-											, posBuffer.get( idx2x3 + 1)
-											, posBuffer.get( idx2x3 + 2) );
-				Vector3f pos3 = new Vector3f( posBuffer.get( idx3x3 )
-											, posBuffer.get( idx3x3 + 1)
-											, posBuffer.get( idx3x3 + 2) );
-	
-				// Extract the normals
-				Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
-											, normBuffer.get( idx1x3 + 1)
-											, normBuffer.get( idx1x3 + 2) );
-				Vector3f norm2 = new Vector3f( normBuffer.get( idx2x3 )
-											, normBuffer.get( idx2x3 + 1)
-											, normBuffer.get( idx2x3 + 2) );
-				Vector3f norm3 = new Vector3f( normBuffer.get( idx3x3)
-											, normBuffer.get( idx3x3 + 1)
-											, normBuffer.get( idx3x3 + 2) );
-	
-				// Extract the Texture Coordinates
-				// Based on an interaction via the SourceForge Ticket system, another user has informed
-				// me that UV texture coordinates are optional.... so be it
-				Vector2f texCoord1, texCoord2, texCoord3;
-				if ( texCoordBuffer != null ) {
-					texCoord1 = new Vector2f( texCoordBuffer.get( idx1x2)
-												, texCoordBuffer.get( idx1x2 + 1) );
-					texCoord2 = new Vector2f( texCoordBuffer.get( idx2x2)
-												, texCoordBuffer.get( idx2x2 + 1) );
-					texCoord3 = new Vector2f( texCoordBuffer.get( idx3x2)
-												, texCoordBuffer.get( idx3x2 + 1) );
-				} else {
-					texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
-				}
-				// Construct the vertices that define the points of the triangle
-				List<CSGVertex> aVertexList = new ArrayList<CSGVertex>( 3 );
-				aVertexList.add( new CSGVertex( pos1, norm1, texCoord1, pTransform, pEnvironment ) );
-				aVertexList.add( new CSGVertex( pos2, norm2, texCoord2, pTransform, pEnvironment ) );
-				aVertexList.add( new CSGVertex( pos3, norm3, texCoord3, pTransform, pEnvironment ) );
-				
-				// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
-				CSGPolygon aPolygon 
-					= CSGPolygon.createPolygon( aVertexList, this.mMaterialIndex, pTempVars, pEnvironment );
-				if ( aPolygon != null ) {
-					polygons.add( aPolygon );
-				}
-			}
-        } finally {
-        	vars.release();
-        }
-		return( polygons );
-	}
-	
 	/** Produce the mesh(es) that corresponds to this shape
 	 	The zeroth mesh in the list is the total, composite mesh.
 	 	Every other mesh (if present) applies solely to a specific Material.
 	  */
 	public List<Mesh> toMesh(
 		int				pMaxMaterialIndex
-	,	TempVars		pTempVars
+	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
-		
-		List<CSGPolygon> aPolyList = getPolygons( null, 0, pTempVars, pEnvironment );
-		int anEstimateVertexCount = aPolyList.size() * 3;
-		
-		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );
-		List<Vector3f> aNormalList = new ArrayList<Vector3f>( anEstimateVertexCount );
-		List<Vector2f> aTexCoordList = new ArrayList<Vector2f>( anEstimateVertexCount  );
-		List<Number> anIndexList = new ArrayList<Number>( anEstimateVertexCount );
-		
-		// Include the master list of all elements
-		meshList.add( toMesh( -1, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList ) );
-		
-		// Include per-material meshes
-		for( int index = 0; (pMaxMaterialIndex > 0) && (index <= pMaxMaterialIndex); index += 1 ) {
-			// The zeroth index is the generic Material, all others are custom Materials
-			aPositionList.clear(); aNormalList.clear(); aTexCoordList.clear(); anIndexList.clear();
-			Mesh aMesh = toMesh( index, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList );
-			meshList.add( aMesh );
-		}
-		return( meshList );
+		return( getHandler( pEnvironment ).toMesh( pMaxMaterialIndex, pTempVars, pEnvironment ) );
 	}
 		
-	protected Mesh toMesh(
-		int					pMaterialIndex
-	,	List<CSGPolygon>	pPolyList
-	,	List<Vector3f> 		pPositionList
-	,	List<Vector3f> 		pNormalList
-	,	List<Vector2f> 		pTexCoordList
-	,	List<Number> 		pIndexList
-	) {
-		Mesh aMesh = new Mesh();
-		
-		// Walk the list of all polygons, collecting all appropriate vertices
-		int indexPtr = 0;
-		for( CSGPolygon aPolygon : pPolyList ) {
-			// Does this polygon have a custom material?
-			int materialIndex = aPolygon.getMaterialIndex();
-			if ( (pMaterialIndex >= 0) && (materialIndex != pMaterialIndex) ) {
-				// Only material-specific polygons are interesting
-				continue;
-			}
-			List<CSGVertex> aVertexList = aPolygon.getVertices();
-			int aVertexCount = aVertexList.size();
-			
-			// Include every vertex in this polygon
-			List<Number> vertexPointers = new ArrayList<Number>( aVertexCount );
-			for( CSGVertex aVertex : aVertexList ) {
-				pPositionList.add( aVertex.getPosition() );
-				pNormalList.add( aVertex.getNormal() );
-				pTexCoordList.add( aVertex.getTextureCoordinate() );
-				
-				vertexPointers.add( indexPtr++ );
-			}
-			// Produce as many triangles (all starting from vertex 0) as needed to
-			// include all the vertices  (3 yields 1 triangle, 4 yields 2 triangles, etc)
-			for( int ptr = 2; ptr < aVertexCount; ptr += 1 ) {
-				pIndexList.add( vertexPointers.get(0) );
-				pIndexList.add( vertexPointers.get(ptr-1) );
-				pIndexList.add( vertexPointers.get(ptr) );
-			}
-		}
-		// Use our own buffer setters to optimize access and cut down on object churn
-		aMesh.setBuffer( Type.Position, 3, createVector3Buffer( pPositionList ) );
-		aMesh.setBuffer( Type.Normal, 3, createVector3Buffer( pNormalList ) );
-		aMesh.setBuffer( Type.TexCoord, 2, createVector2Buffer( pTexCoordList ) );
-		aMesh.setBuffer( Type.Index, 3, createIndexBuffer( pIndexList ) );
-
-		aMesh.updateBound();
-		aMesh.updateCounts();
-		
-		return( aMesh );
-	}
-
 	
 	/** Make this shape 'savable' */
 	@Override
@@ -590,14 +328,6 @@ public class CSGShape
 		OutputCapsule capsule = pExporter.getCapsule( this );
 		capsule.write( mOrder, "order", 0 );
 		capsule.write( mOperator, "operator", CSGGeometry.CSGOperator.UNION );
-		if ( this.mesh == null ) {
-			// If not based on a Mesh, then preserve the given polygons
-			// NOTE a deficiency in the OutputCapsule API which should operate on a List,
-			//		but instead requires an ArrayList
-			capsule.writeSavableArrayList( (ArrayList<CSGPolygon>)mPolygons
-											, "Polygons"
-											, (ArrayList<CSGPolygon>)sEmptyPolygons );
-		}
 	}
 
 	@Override
@@ -610,11 +340,7 @@ public class CSGShape
 		InputCapsule aCapsule = pImporter.getCapsule(this);
 		mOrder = aCapsule.readInt( "order", 0 );
 		mOperator = aCapsule.readEnum( "operator", CSGGeometry.CSGOperator.class, CSGGeometry.CSGOperator.UNION );
-		if ( this.mesh == null ) {
-			// If not based on a mesh, then restore via the polygons
-			mPolygons = (List<CSGPolygon>)aCapsule.readSavableArrayList( "Polygons"
-																	, (ArrayList<CSGPolygon>)sEmptyPolygons );
-		} else {
+		if ( this.mesh != null ) {
 	        // Extended attributes
 	        Vector2f aScale = (Vector2f)aCapsule.readSavable( "scaleTexture", null );
 	        if ( aScale != null ) {
@@ -628,50 +354,6 @@ public class CSGShape
 	        	}
 	        }
 		}
-	}
-	
-	/** Implement Comparable to enforce an appropriate application of operations */
-	@Override
-	public int compareTo(
-		CSGShape	pOther
-	) {
-		int thisOrder = this.getOrder(), otherOrder = pOther.getOrder();
-		
-		if ( thisOrder == otherOrder ) {
-			// CSG should be applied inner-level as follows: Union -> Intersection -> Difference
-			switch( this.getOperator() ) {
-			case UNION:
-				switch( pOther.getOperator() ) {
-				case UNION: return( 0 );		// Same as other UNION
-				default: return( -1 );			// Before all others
-				}
-				
-			case INTERSECTION:
-				switch( pOther.getOperator() ) {
-				case UNION: return( 1 );		// After UNION
-				case INTERSECTION: return( 0 );	// Same as other INTERSECTION
-				default: return( -1 );			// Before all others
-				}
-				
-			case DIFFERENCE:
-				switch( pOther.getOperator() ) {
-				case UNION:
-				case INTERSECTION: 
-					return( 1 );				// After UNION/INTERSECTION
-				case DIFFERENCE: return( 0 );	// Same as other DIFFERENCE
-				default: return( -1 );			// Before all others
-				}
-				
-			case SKIP:
-				switch( pOther.getOperator() ) {
-				case SKIP: return( 0 );			// Same as other SKIP
-				default: return( 1 );			// After all others
-				}
-			}
-			// If we fall out the above, then we come before
-			return( -1 );
-		}
-		return( thisOrder - otherOrder );
 	}
 
 	/////// Implement ConstructiveSolidGeometry

@@ -32,6 +32,7 @@ import com.jme3.scene.shape.Sphere;
 
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 import net.wcomohundro.jme3.csg.shape.*;
 
 /** Simple test of the CSG support 

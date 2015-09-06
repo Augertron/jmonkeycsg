@@ -28,17 +28,24 @@
 	and http://hub.jmonkeyengine.org/users/fabsterpal, which apparently was taken from 
 	https://github.com/evanw/csg.js
 **/
-package net.wcomohundro.jme3.csg;
+package net.wcomohundro.jme3.csg.bsp;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGPlane;
+import net.wcomohundro.jme3.csg.CSGPolygon;
+import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
 import com.jme3.util.TempVars;
+import com.jme3.bounding.BoundingVolume;
 
 
 /** Constructive Solid Geometry (CSG)
@@ -67,17 +74,22 @@ public class CSGPartition
 	public static final String sCSGPartitionRevision="$Rev$";
 	public static final String sCSGPartitionDate="$Date$";
 
-	/** The 'shape' associated with this partition */
-	protected CSGShape			mShape;
-	/** The level in the BSP hierarchy (negative means level is 'corrupt') */
+	
+	/** The parent to this partition, either a CSGShape or another CSGPartition */
+	protected Object			mParent;
+	/** The level in the BSP hierarchy */
 	protected int				mLevel;
-	/** The list of active polygons within this node */
+	/** Marker if this level is corrupt */
+	protected boolean			mCorrupted;
+	/** Count of how many vertices were 'lost' while processing this partition */
+	protected int				mLostVertices;
+	/** The list of active polygons within this partition */
 	protected List<CSGPolygon>	mPolygons;
-	/** The plane that defines this node */
+	/** The plane that defines this partition  */
 	protected CSGPlane			mPlane;
-	/** Those nodes in front of this one */
+	/** Those partitions in front of this one */
 	protected CSGPartition		mFrontPartition;
-	/** Those nodes behind this one */
+	/** Those partitions behind this one */
 	protected CSGPartition		mBackPartition;
 	/** The custom Material index that applies to this Partition */
 	protected int				mMaterialIndex;
@@ -87,66 +99,47 @@ public class CSGPartition
 	) {
 		this( null, 0, 1, CSGEnvironment.sStandardEnvironment );
 	}
-	/** Standard constructor that builds a hierarchy of nodes based on a given set of polygons */
-	public CSGPartition(
-		CSGShape			pShape
-	,	Number				pMaterialIndex
-	,	int					pLevel
-	,	CSGEnvironment		pEnvironment
-	) {
-		this( pShape
-			, (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue()
-			, pLevel
-			, pEnvironment );
-	}
-	public CSGPartition(
-		CSGShape			pShape
+	/** Internal constructor that builds a hierarchy of nodes based on a set of polygons given later */
+	protected CSGPartition(
+		CSGPartition		pParentPartition
 	,	int					pMaterialIndex
 	,	int					pLevel
 	,	CSGEnvironment		pEnvironment
 	) {
-		mShape = pShape;
+		mParent = pParentPartition;
 		mLevel = pLevel;
 		mPolygons = new ArrayList<CSGPolygon>();
 		mMaterialIndex = pMaterialIndex;
 	}
 	
+	/** Public constructor to partition a given shape */
 	public CSGPartition(
-		CSGShape			pShape
+		CSGShapeBSP			pShape
 	,	List<CSGPolygon>	pPolygons
-	,	TempVars			pTempVars
+	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		this( pShape, pPolygons, 1, pTempVars, pEnvironment );
-	}
-	public CSGPartition(
-		CSGShape			pShape
-	,	List<CSGPolygon>	pPolygons
-	,	int					pLevel
-	,	TempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		mShape = pShape;
-		mLevel = pLevel;
+		mParent = pShape;
+		mLevel = 1;
 		mPolygons = new ArrayList<CSGPolygon>();
 		
 		if ( pPolygons != null ) {
 			// Use the material assigned to the first polygon
 			mMaterialIndex = pPolygons.get(0).getMaterialIndex();
 			
-	        // Avoid some object churn by using the thread-specific 'temp' variables
+	        // Avoid some object churn by using the 'temp' variables
 	        buildHierarchy( pPolygons, pTempVars, pEnvironment );
 		}
 	}
 	
 	/** Accessor to the hierarchy level */
 	public int getLevel() { return mLevel; }
-	public boolean isValid() { return( mLevel > 0); }
+	public boolean isValid() { return( !mCorrupted ); }
 	public int whereCorrupt(
 	) {
 		int corruptLevel = 0;
-		if ( mLevel < 0 ) {
-			corruptLevel = -mLevel;
+		if ( mCorrupted ) {
+			corruptLevel = mLevel;
 			if ( mFrontPartition != null ) {
 				int frontLevel = mFrontPartition.whereCorrupt();
 				if ( frontLevel > corruptLevel ) {
@@ -161,6 +154,18 @@ public class CSGPartition
 			}
 		}
 		return( corruptLevel );
+	}
+	
+	/** Accessor to the lost vertex tracker */
+	public int getLostVertexCount(
+		boolean		pTotalInHierarchy
+	) {
+		int aCount = mLostVertices;
+		if ( pTotalInHierarchy ) {
+			if ( mFrontPartition != null ) aCount += mFrontPartition.getLostVertexCount( true );
+			if ( mBackPartition != null ) aCount += mBackPartition.getLostVertexCount( true );
+		}
+		return( aCount );
 	}
 	
 	/** Accessor to the MaterialIndex */
@@ -187,11 +192,12 @@ public class CSGPartition
 	/** 'CLIP' all the given polygons that are in front of this node */
 	public List<CSGPolygon> clipPolygons(
 		List<CSGPolygon>	pPolygons
-	,	TempVars			pTempVars
+	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		if ( mPlane == null ) {
-			// If we have no effective plane, then everything is retained
+		if ( mCorrupted || (mPlane == null) ) {
+			// If corrupted or if we have no effective plane, then everything is retained
+			// with no deeper processing
 			return new ArrayList<CSGPolygon>( pPolygons );
 		}
 		// Accumulate the appropriate lists of where the given polygons fall
@@ -200,12 +206,12 @@ public class CSGPartition
 		for ( CSGPolygon aPolygon : pPolygons ) {
 			// NOTE that coplannar polygons are retained in front/back, based on which
 			//		way they are facing
-			mPlane.splitPolygon( aPolygon
-								, pEnvironment.mEpsilonOnPlane
-								, mLevel
-								, frontPolys, backPolys, frontPolys, backPolys
-								, pTempVars
-								, pEnvironment );
+			mLostVertices += mPlane.splitPolygon( aPolygon
+												, pEnvironment.mEpsilonOnPlane
+												, mLevel
+												, frontPolys, backPolys, frontPolys, backPolys
+												, pTempVars
+												, pEnvironment );
 		}
 		if ( mFrontPartition != null ) {
 			// Include appropriate clipping from the front partition as well
@@ -226,7 +232,7 @@ public class CSGPartition
 	 */
 	public void clipTo(
 		CSGPartition		pOther
-	,	TempVars			pTempVars
+	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		// Reset the list of polygons that apply based on clipping from the other partition
@@ -258,50 +264,48 @@ public class CSGPartition
 	 */
 	public boolean buildHierarchy(
 		List<CSGPolygon>	pPolygons
-	,	TempVars 			pTempVars
+	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		boolean aCorruptHierarchy = false;
+		boolean aCorruptHierarchy = mCorrupted;
 		
-		if ( pPolygons.isEmpty() ) {
+		if ( mCorrupted || pPolygons.isEmpty() ) {
 			return( aCorruptHierarchy );
 		}
 		if ( mLevel > pEnvironment.mBSPLimit ) {
 			// This is probably an error in the algorithm, but I have not yet found the true cause.
 			ConstructiveSolidGeometry.sLogger.log( Level.WARNING
-													, "CSGPartition.buildHierarchy - too deep" );
+			,   pEnvironment.mShapeName + "CSGPartition.buildHierarchy - too deep: " + mLevel );
 			//mPolygons = CSGPolygon.compressPolygons( pPolygons );
-			if ( mLevel > 0 ) mLevel = -mLevel;
-			return( true );
+			return( mCorrupted = true );
 		}
-		// If no plane has been set for this node, use the plane of the first polygon
+		// If no plane has been set for this partition, select a plane to use
 		if ( mPlane == null ) {
-			mPlane = pPolygons.get(0).getPlane();
+			int anIndex = (int)((pPolygons.size() -1) * pEnvironment.mPartitionSeedPlane);
+			mPlane = pPolygons.get( anIndex ).getPlane();
 		}
 		// As we go deeper in the hierarchy, do NOT insist on the same level of tolerance
 		// Otherwise, you will be looking for such detail that the polygons are so small that
 		// you get very very odd results
-		float aTolerance = pEnvironment.mEpsilonOnPlane * mLevel;
+		double aTolerance = pEnvironment.mEpsilonOnPlane; // * mLevel;
 		
 		// Split up the polygons according to front/back of the given plane
 		List<CSGPolygon> front = new ArrayList<CSGPolygon>();
 		List<CSGPolygon> back = new ArrayList<CSGPolygon>();
 		for( CSGPolygon aPolygon : pPolygons ) {
 			// NOTE that for coplannar, we do not care which direction the polygon faces
-			mPlane.splitPolygon( aPolygon
-								, aTolerance
-								, mLevel
-								, mPolygons, mPolygons, front, back
-								, pTempVars
-								, pEnvironment );
+			mLostVertices += mPlane.splitPolygon( aPolygon
+												, aTolerance
+												, mLevel
+												, mPolygons, mPolygons, front, back
+												, pTempVars
+												, pEnvironment );
 		}
-		mPolygons = CSGPolygon.compressPolygons( mPolygons );
-		if ( !front.isEmpty() ) {
+		if ( !aCorruptHierarchy && !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
 				this.mFrontPartition 
-					= new CSGPartition( mShape, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
+					= new CSGPartition( this, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
 			}
-			front = CSGPolygon.compressPolygons( front );
 			if ( this.mPolygons.isEmpty() && back.isEmpty() ) {
 				// Everything is in the front, it does not need to be processed deeper
 				this.mFrontPartition.mPolygons.addAll( front );
@@ -311,12 +315,11 @@ public class CSGPartition
 					|= this.mFrontPartition.buildHierarchy( front, pTempVars, pEnvironment );
 			}
 		}
-		if ( !back.isEmpty() ) {
+		if ( !aCorruptHierarchy && !back.isEmpty() ) {
 			if ( mBackPartition == null ) {
 				mBackPartition 
-					= new CSGPartition( mShape, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
+					= new CSGPartition( this, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
 			}
-			back = CSGPolygon.compressPolygons( back );
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
 				// Everything is in the back, it does not need to be processed deeper
 				mBackPartition.mPolygons.addAll( back );
@@ -326,7 +329,6 @@ public class CSGPartition
 					|= mBackPartition.buildHierarchy( back, pTempVars, pEnvironment );
 			}
 		}
-		if ( aCorruptHierarchy && (mLevel > 0) ) mLevel = -mLevel;
 		return( aCorruptHierarchy );
 	}
 

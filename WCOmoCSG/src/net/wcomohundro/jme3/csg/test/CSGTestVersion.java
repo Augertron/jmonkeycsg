@@ -65,20 +65,7 @@ public class CSGTestVersion
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 
 	    // Report on all the versions we know
-	    StringBuilder aBuffer = new StringBuilder( 512 );
-		(new CSGGeometry()).getVersion( aBuffer );
-		(new CSGGeonode()).getVersion( aBuffer );
-		(new CSGLinkNode()).getVersion( aBuffer );
-		(new CSGPartition()).getVersion( aBuffer );
-		(new CSGPlane()).getVersion( aBuffer );
-		(new CSGPolygon()).getVersion( aBuffer );
-		(new CSGVertex()).getVersion( aBuffer );
-		
-		(new CSGBox()).getVersion( aBuffer );
-		(new CSGCylinder()).getVersion( aBuffer );
-		(new CSGSphere()).getVersion( aBuffer );
-		
-		System.err.print( aBuffer.toString() );;
+		ConstructiveSolidGeometry.reportVersion();
 	}
 
 }

@@ -218,11 +218,10 @@ public class CSGGeonode
 				}
 			}
 			// Sort the shapes based on their operator
-			List<CSGShape> sortedShapes = new ArrayList<>( mShapes );
-			Collections.sort( sortedShapes );
+			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
 			
 			// Save on churn by leveraging temps
-			TempVars tempVars = TempVars.get();
+			CSGTempVars tempVars = CSGTempVars.get();
 			try {
 				// Operate on each shape in turn, blending it into the common
 				CSGShape aProduct = null;
@@ -248,7 +247,7 @@ public class CSGGeonode
 					case UNION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialIndex, getLodLevel() );
+							aProduct = aShape.clone( materialIndex, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
 							aProduct = aProduct.union( aShape, materialIndex, tempVars, pEnvironment );
@@ -267,7 +266,7 @@ public class CSGGeonode
 					case INTERSECTION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialIndex, getLodLevel() );
+							aProduct = aShape.clone( materialIndex, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
 							aProduct = aProduct.intersection( aShape, materialIndex, tempVars, pEnvironment );
