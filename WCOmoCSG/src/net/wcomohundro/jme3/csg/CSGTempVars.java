@@ -44,6 +44,11 @@ import net.wcomohundro.jme3.math.Vector3d;
  */
 public class CSGTempVars 
 {
+	/** Version tracking support */
+	public static final String sCSGTempVarsRevision="$Rev$";
+	public static final String sCSGTempVarsDate="$Date$";
+
+	
 	/** Simple static cache */
 	protected static Stack<CSGTempVars> sTempVars = new Stack<CSGTempVars>();
 	

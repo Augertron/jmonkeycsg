@@ -55,8 +55,8 @@ public class CSGEnvironment
 	implements ConstructiveSolidGeometry, Savable 
 {
 	/** Version tracking support */
-	public static final String sCSGEnvironmentRevision="$Rev: 66 $";
-	public static final String sCSGEnvironmentDate="$Date: 2015-08-12 20:18:21 -0500 (Wed, 12 Aug 2015) $";
+	public static final String sCSGEnvironmentRevision="$Rev$";
+	public static final String sCSGEnvironmentDate="$Date$";
 	
 	/** Standard configuration */
 	public static final CSGEnvironment sStandardEnvironment = new CSGEnvironment();

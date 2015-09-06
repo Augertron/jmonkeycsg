@@ -221,6 +221,11 @@ import com.jme3.math.Vector3f;
 */
 public interface ConstructiveSolidGeometry 
 {
+	/** Version tracking support */
+	public static final String sConstructiveSolidGeometryRevision="$Rev$";
+	public static final String sConstructiveSolidGeometryDate="$Date$";
+
+	
 	/** ASSERT style debugging flag */
 	public static final boolean DEBUG = true;
 	
