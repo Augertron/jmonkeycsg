@@ -64,8 +64,8 @@ public class CSGVertexFlt
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGVertexFltRevision="$Rev: 71 $";
-	public static final String sCSGVertexFltDate="$Date: 2015-08-18 12:48:56 -0500 (Tue, 18 Aug 2015) $";
+	public static final String sCSGVertexFltRevision="$Rev$";
+	public static final String sCSGVertexFltDate="$Date$";
 		
 	
 	/** Factory level service routine that squeezes out any Vertex from a list that is not

@@ -120,8 +120,8 @@ public class CSGShapeBSP
 	implements CSGShape.CSGShapeProcessor, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGShapeBSPRevision="$Rev: 69 $";
-	public static final String sCSGShapeBSPDate="$Date: 2015-08-17 21:09:28 -0500 (Mon, 17 Aug 2015) $";
+	public static final String sCSGShapeBSPRevision="$Rev$";
+	public static final String sCSGShapeBSPDate="$Date$";
 
 	/** Canned, immutable empty list of polygons */
 	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);

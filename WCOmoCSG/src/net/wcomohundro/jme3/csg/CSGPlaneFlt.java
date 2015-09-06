@@ -55,8 +55,8 @@ public class CSGPlaneFlt
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGPlaneFltRevision="$Rev: 71 $";
-	public static final String sCSGPlaneFltDate="$Date: 2015-08-18 12:48:56 -0500 (Tue, 18 Aug 2015) $";
+	public static final String sCSGPlaneFltRevision="$Rev$";
+	public static final String sCSGPlaneFltDate="$Date$";
 
 	/** Factory method to produce a plane from a minimal set of points 
 	 * 

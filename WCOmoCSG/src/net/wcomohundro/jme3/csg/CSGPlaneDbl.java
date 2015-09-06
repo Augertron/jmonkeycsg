@@ -57,8 +57,8 @@ public class CSGPlaneDbl
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGPlaneDblRevision="$Rev: 71 $";
-	public static final String sCSGPlaneDblDate="$Date: 2015-08-18 12:48:56 -0500 (Tue, 18 Aug 2015) $";
+	public static final String sCSGPlaneDblRevision="$Rev$";
+	public static final String sCSGPlaneDblDate="$Date$";
 
 	/** Factory method to produce a plane from a minimal set of points 
 	 * 

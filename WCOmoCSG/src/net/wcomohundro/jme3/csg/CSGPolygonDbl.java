@@ -54,8 +54,8 @@ public class CSGPolygonDbl
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGPolygonDblRevision="$Rev: 69 $";
-	public static final String sCSGPolygonDblDate="$Date: 2015-08-17 21:09:28 -0500 (Mon, 17 Aug 2015) $";
+	public static final String sCSGPolygonDblRevision="$Rev$";
+	public static final String sCSGPolygonDblDate="$Date$";
 
 	/** Factory level service routine to create appropriate polygon(s), compressing vertices
 	 	and deciding if the polygon is 'worth' constructing.
