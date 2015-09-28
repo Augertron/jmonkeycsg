@@ -200,6 +200,12 @@ public class CSGPartition
 			// with no deeper processing
 			return new ArrayList<CSGPolygon>( pPolygons );
 		}
+		double aTolerance;
+		if ( pEnvironment.mDoublePrecision ) {
+			aTolerance = pEnvironment.mEpsilonOnPlaneDbl;
+		} else {
+			aTolerance = pEnvironment.mEpsilonOnPlaneFlt;
+		}
 		// Accumulate the appropriate lists of where the given polygons fall
 		List<CSGPolygon> frontPolys = new ArrayList<CSGPolygon>();
 		List<CSGPolygon> backPolys = new ArrayList<CSGPolygon>();
@@ -207,7 +213,7 @@ public class CSGPartition
 			// NOTE that coplannar polygons are retained in front/back, based on which
 			//		way they are facing
 			mLostVertices += mPlane.splitPolygon( aPolygon
-												, pEnvironment.mEpsilonOnPlane
+												, aTolerance
 												, mLevel
 												, frontPolys, backPolys, frontPolys, backPolys
 												, pTempVars
@@ -287,8 +293,12 @@ public class CSGPartition
 		// As we go deeper in the hierarchy, do NOT insist on the same level of tolerance
 		// Otherwise, you will be looking for such detail that the polygons are so small that
 		// you get very very odd results
-		double aTolerance = pEnvironment.mEpsilonOnPlane; // * mLevel;
-		
+		double aTolerance;
+		if ( pEnvironment.mDoublePrecision ) {
+			aTolerance = pEnvironment.mEpsilonOnPlaneDbl * mLevel;
+		} else {
+			aTolerance = pEnvironment.mEpsilonOnPlaneFlt * mLevel;
+		}
 		// Split up the polygons according to front/back of the given plane
 		List<CSGPolygon> front = new ArrayList<CSGPolygon>();
 		List<CSGPolygon> back = new ArrayList<CSGPolygon>();

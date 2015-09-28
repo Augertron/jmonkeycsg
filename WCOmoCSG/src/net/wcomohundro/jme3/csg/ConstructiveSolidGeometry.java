@@ -252,14 +252,14 @@ public interface ConstructiveSolidGeometry
 	
 	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
 	// Tolerance to decide if a given point in 'on' a plane
-	public static final double EPSILON_ONPLANE_FLT = 1.0e-5;
+	public static final float EPSILON_ONPLANE_FLT = 1.0e-5f;
 	public static final double EPSILON_ONPLANE_DBL = 1.0e-8;
 	// Tolerance to determine if two points are close enough to be considered the same point
-	public static final double EPSILON_BETWEEN_POINTS_FLT = 5.0e-7;
-	public static final double EPSILON_BETWEEN_POINTS_DBL = 5.0e-10;
+	public static final float EPSILON_BETWEEN_POINTS_FLT = 5.0e-7f;
+	public static final double EPSILON_BETWEEN_POINTS_DBL = 1.0e-10;
 	// Tolerance if a given value is near enough to zero to be treated as zero
-	public static final double EPSILON_NEAR_ZERO_FLT = 5.0e-7;
-	public static final double EPSILON_NEAR_ZERO_DBL = 5.0e-12;
+	public static final float EPSILON_NEAR_ZERO_FLT = 5.0e-7f;
+	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-10;
 	
 	// NOTE that '5E-15' may cause points on a plane to report problems.  In other words,
 	//		when near_zero gets this small, the precision errors cause points on a plane to
@@ -343,7 +343,7 @@ public interface ConstructiveSolidGeometry
     public static boolean equalVector3f(
     	Vector3f 	pVector1
     ,	Vector3f	pVector2
-    ,	double		pTolerance
+    ,	float		pTolerance
     ) {
     	if ( pVector1 != pVector2 ) {
 	    	float deltaX = pVector1.x - pVector2.x;

@@ -54,6 +54,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 import com.jme3.font.BitmapText;
 
+import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -131,7 +132,12 @@ public class CSGTestE
 	    	NonCachingKey aKey = new NonCachingKey( sceneName );
 	    	aNode = assetManager.loadAsset( aKey );
 	    	
-	    	if ( (aNode instanceof ConstructiveSolidGeometry.CSGSpatial)
+	    	if ( aNode instanceof CSGEnvironment ) {
+	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
+	    		ConstructiveSolidGeometry.reportVersion();
+
+	    		aNode = null;
+	    	} else if ( (aNode instanceof ConstructiveSolidGeometry.CSGSpatial)
 	    	&& !((ConstructiveSolidGeometry.CSGSpatial)aNode).isValid() ) {
 	    		sceneName += " ***Invalid shape";
 	    	}

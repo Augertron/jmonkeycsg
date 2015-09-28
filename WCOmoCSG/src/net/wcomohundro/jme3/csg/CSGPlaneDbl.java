@@ -91,7 +91,7 @@ public class CSGPlaneDbl
 			double aDistance = aPlane.pointDistance( pA );
 			double bDistance = aPlane.pointDistance( pB );
 			double cDistance = aPlane.pointDistance( pC );
-			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonNearZero ) {
+			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonNearZeroDbl ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
 				, pEnvironment.mShapeName + "Points NOT on plane: " + aPlane );				
 			}
@@ -161,8 +161,8 @@ public class CSGPlaneDbl
 			double normalLength = pNormal.length();
 			if ( !(
 			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
-			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZero) 
-			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZero)
+			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZeroDbl) 
+			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroDbl)
 			&& Double.isFinite( pDot )
 			) ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
@@ -218,7 +218,7 @@ public class CSGPlaneDbl
 		CSGVertex		pVertex
 	,	CSGEnvironment	pEnvironment
 	) {
-		return( pointPosition( (Vector3d)pVertex.getPosition(), pEnvironment.mEpsilonOnPlane ) );
+		return( pointPosition( (Vector3d)pVertex.getPosition(), pEnvironment.mEpsilonOnPlaneDbl ) );
 	}
 	
 	/** Find the projection of a given point onto this plane */
@@ -320,10 +320,10 @@ public class CSGPlaneDbl
 					// See the discussion from the BSP FAQ paper about the distance of a point to the plane
 					//int type = (aVertexDot < -pTolerance) ? BACK : (aVertexDot > pTolerance) ? FRONT : COPLANAR;
 					int type;
-					if ( (aVertexDot < 0.0) && (aVertexDot < -pEnvironment.mEpsilonNearZero) ) {
+					if ( (aVertexDot < 0.0) && (aVertexDot < -pEnvironment.mEpsilonNearZeroDbl) ) {
 						// Somewhere in the back
 						type = (aVertexDot < -pTolerance) ? BACK : BACKISH;
-					} else if ( (aVertexDot > 0.0) && (aVertexDot > pEnvironment.mEpsilonNearZero) ) {
+					} else if ( (aVertexDot > 0.0) && (aVertexDot > pEnvironment.mEpsilonNearZeroDbl) ) {
 						// Somewhere in the front
 						type = (aVertexDot > pTolerance) ? FRONT : FRONTISH;
 					} else {
@@ -560,7 +560,7 @@ public class CSGPlaneDbl
 		
 		if ( pEnvironment.mStructuralDebug ) {
 			double confirmDistance = pointDistance( intersection );
-			if ( confirmDistance > pEnvironment.mEpsilonNearZero ) {
+			if ( confirmDistance > pEnvironment.mEpsilonNearZeroDbl ) {
 				// Try to force back onto the plane
 				Vector3d pointOnPlane = this.pointProjection( intersection, null );
 				intersection = pointOnPlane;

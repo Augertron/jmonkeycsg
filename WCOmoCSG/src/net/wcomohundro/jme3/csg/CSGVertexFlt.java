@@ -99,7 +99,7 @@ public class CSGVertexFlt
 			if ( aVertex != null ) {
 				CSGVertexFlt otherVertex = (CSGVertexFlt)pVertices.get( j );
 				float aDistance = aVertex.distance( otherVertex );
-				if ( (aDistance >= pEnvironment.mEpsilonBetweenPoints) 
+				if ( (aDistance >= pEnvironment.mEpsilonBetweenPointsFlt) 
 				&& (aDistance <= pEnvironment.mEpsilonMaxBetweenPoints) ) {
 					// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
 					// 		structure your bound checks accordingly
@@ -110,8 +110,8 @@ public class CSGVertexFlt
 						// Ensure the given point is actually on the plane
 						Vector3f aPoint = aVertex.getPosition();
 						aDistance = pPlane.pointDistance( aPoint );
-						if ( (aDistance < -pEnvironment.mEpsilonNearZero) 
-						|| (aDistance > pEnvironment.mEpsilonNearZero) ) {
+						if ( (aDistance < -pEnvironment.mEpsilonNearZeroFlt) 
+						|| (aDistance > pEnvironment.mEpsilonNearZeroFlt) ) {
 							if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE ) {
 								// Resolve back to the corresponding point on the given plane
 								Vector3f newPoint = pPlane.pointProjection( aPoint, null );
@@ -304,13 +304,13 @@ public class CSGVertexFlt
 			CSGVertexFlt other = (CSGVertexFlt)pOther;
 			if ( ConstructiveSolidGeometry.equalVector3f( this.getPosition()
 															, other.getPosition()
-															, pEnvironment.mEpsilonBetweenPoints ) ) {
+															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
 				if ( ConstructiveSolidGeometry.equalVector3f( this.getNormal()
 															, other.getNormal()
-															, pEnvironment.mEpsilonBetweenPoints ) ) {
+															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
 					if ( ConstructiveSolidGeometry.equalVector2f( this.getTextureCoordinate()
 															, pOther.getTextureCoordinate()
-															, pEnvironment.mEpsilonBetweenPoints ) ) {
+															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
 						return( true );
 					}
 				}

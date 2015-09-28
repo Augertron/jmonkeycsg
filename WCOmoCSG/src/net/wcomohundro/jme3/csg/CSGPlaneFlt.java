@@ -152,8 +152,8 @@ public class CSGPlaneFlt
 			float normalLength = pNormal.length();
 			if ( !(
 			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
-			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZero) 
-			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZero)
+			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZeroFlt) 
+			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroFlt)
 			&& Double.isFinite( pDot )
 			) ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
@@ -286,7 +286,7 @@ public class CSGPlaneFlt
 		// NOTE that CSGPlane.equals() checks for near-misses
 		if ( polygonPlane == this ) {
 			polygonType = SAMEPLANE;
-		} else if ( polygonPlane.equals( this, pTolerance ) ) { //pEnvironment.mEpsilonOnPlane ) ) {
+		} else if ( polygonPlane.equals( this, (float)pTolerance ) ) { //pEnvironment.mEpsilonOnPlane ) ) {
 			// By definition, we are close enough to be in the same plane
 			polygonType = COPLANAR;
 		} else {
@@ -530,7 +530,7 @@ public class CSGPlaneFlt
 		
 		if ( pEnvironment.mStructuralDebug ) {
 			float confirmDistance = pointDistance( intersection );
-			if ( confirmDistance > pEnvironment.mEpsilonNearZero ) {
+			if ( confirmDistance > pEnvironment.mEpsilonNearZeroFlt ) {
 				// Try to force back onto the plane
 				Vector3f pointOnPlane = this.pointProjection( intersection, null );
 				intersection = pointOnPlane;
@@ -563,7 +563,7 @@ public class CSGPlaneFlt
 	/** Treat two planes as equal if they happen to be close */
 	public boolean equals(
 		Object		pOther
-	,	double		pTolerance
+	,	float		pTolerance
 	) {
 		if ( pOther == this ) {
 			// By definition, if the plane is the same

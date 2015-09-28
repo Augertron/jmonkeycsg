@@ -5,6 +5,5 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/jMonkey"/>
 	<classpathentry kind="lib" path="C:/JMonkey/jme3_stable_2014-06-12/lib/jME3-testdata.jar"/>
 	<classpathentry kind="src" path="Assets"/>
-	<classpathentry kind="lib" path="deploy/vecmath-1-5-2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -10,11 +10,11 @@
         	</com.jme3.light.AmbientLight>
         </lights>
     </lights>
-    <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' id='CSGEnvironment'
+    <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' id='CSGEnvironment'
     		doublePrecision='true' bspLimit='8192' epsilonOnPlane='5E-4'
     		epsilonBetweenPoints='1E-5' epsilonNearZero='1E-10'
     		polygonPlaneMode='USE_GIVEN' partitionSeedPlane='0.5'
-    		shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB' />
+    		shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB' /-->
 	<children>
         <!-- A simple union that should be rather smooth with very fine detail-->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeHiRez'
@@ -22,7 +22,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
             </transform>
-            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' />
+            <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' /-->
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
@@ -40,8 +40,8 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-5.0'/>
             </transform>
-            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment'
-            		doublePrecision='false' bspLimit='1024' epsilonOnPlane='1e-5'/>
+            <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment'
+            		doublePrecision='false' bspLimit='1024' epsilonOnPlane='1e-5'/-->
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
@@ -62,7 +62,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='0' z='0'/>
             </transform>
-            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' />
+            <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' /-->
             <shapes>
 		        <net.wcomohundro.jme3.csg.CSGShape name='DebugColor' operator='SKIP'
 		        		materialName='Textures/Debug/Red.xml'>
@@ -113,11 +113,11 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='-5' z='0'/>
             </transform>
-            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment'  ref='CSGEnvironment'
+            <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment'  ref='CSGEnvironment'
             		doublePrecision='true' bspLimit='1024' epsilonOnPlane='5E-6'
             		epsilonBetweenPoints='5E-7' epsilonNearZero='5E-7'
             		polygonPlaneMode='USE_GIVEN'  partitionSeedPlane='0.5'
-            		shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB'/>
+            		shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB'/-->
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <transform class='com.jme3.math.Transform'>
@@ -159,11 +159,11 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='-10' z='0'/>
             </transform>
-            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment'  ref='CSGEnvironment'
+            <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment'  ref='CSGEnvironment'
             		doublePrecision='true' bspLimit='1024' epsilonOnPlane='5E-6'
             		epsilonBetweenPoints='5E-8' epsilonNearZero='5E-8'
             		polygonPlaneMode='USE_GIVEN' partitionSeedPlane='0.5'
-            		shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB' />
+            		shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB' /-->
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <transform class='com.jme3.math.Transform'>
@@ -200,7 +200,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10' y='0' z='0'/>
             </transform>
-            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' />
+            <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' /-->
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <transform class='com.jme3.math.Transform'>
@@ -236,7 +236,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10' y='-5' z='0'/>
             </transform>
-            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' />
+            <!-- csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironment' /-->
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
                     <transform class='com.jme3.math.Transform'>

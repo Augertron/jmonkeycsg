@@ -58,8 +58,12 @@ public class CSGEnvironment
 	public static final String sCSGEnvironmentRevision="$Rev$";
 	public static final String sCSGEnvironmentDate="$Date$";
 	
-	/** Standard configuration */
-	public static final CSGEnvironment sStandardEnvironment = new CSGEnvironment();
+	/** Standard configuration 
+	 	NOTE
+	 		we do NOT declare this global as 'final' so that the default can be dynamically
+	 		modified at run time
+	 */
+	public static CSGEnvironment sStandardEnvironment = new CSGEnvironment( true );
 
 	/** Shape this environment applies to */
 	public String		mShapeName;
@@ -71,11 +75,14 @@ public class CSGEnvironment
 	public Class		mShapeClass;
 	
 	/** EPSILON - near to zero */
-	public double		mEpsilonNearZero;
+	public double		mEpsilonNearZeroDbl;
+	public float		mEpsilonNearZeroFlt;
 	/** EPSILON - distance to plane */
-	public double		mEpsilonOnPlane;
+	public double		mEpsilonOnPlaneDbl;
+	public float		mEpsilonOnPlaneFlt;
 	/** EPSILON - meaningful minimal distance between points */
-	public double		mEpsilonBetweenPoints;
+	public double		mEpsilonBetweenPointsDbl;
+	public float		mEpsilonBetweenPointsFlt;
 	/** EPSILON - meaningful maximal distance between points */
 	public double		mEpsilonMaxBetweenPoints;
 	
@@ -94,22 +101,34 @@ public class CSGEnvironment
 	/** Null constructor produces the 'standards' */
 	public CSGEnvironment(
 	) {
+		this( true );
+	}
+	public CSGEnvironment(
+		boolean		pDoublePrecision
+	) {
 		mShapeName = "";
-		mDoublePrecision = true;
+		mDoublePrecision = pDoublePrecision;
 		try {
-			mShapeClass = Class.forName( "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" ); 
+			if ( mDoublePrecision ) {
+				mShapeClass = Class.forName( "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
+			} else {
+				mShapeClass = Class.forName( "net.wcomohundro.jme3.csg.bsp.CSGShapeBSP" );
+			}
 		} catch( ClassNotFoundException ex ) {
 			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "No Handler Class:" + ex, ex );
 		}
 		mStructuralDebug = DEBUG;
 		mBSPLimit = BSP_HIERARCHY_LIMIT;
 		
-		double nearZero = (mDoublePrecision) ? EPSILON_NEAR_ZERO_DBL : EPSILON_NEAR_ZERO_FLT;
-		double betweenPoints = (mDoublePrecision) ? EPSILON_BETWEEN_POINTS_DBL : EPSILON_BETWEEN_POINTS_FLT;
-		double onPlane = (mDoublePrecision) ? EPSILON_ONPLANE_DBL : EPSILON_ONPLANE_FLT;
-		mEpsilonNearZero = nearZero;
-		mEpsilonOnPlane = onPlane;
-		mEpsilonBetweenPoints = betweenPoints;
+		mEpsilonNearZeroDbl = EPSILON_NEAR_ZERO_DBL;
+		mEpsilonNearZeroFlt = EPSILON_NEAR_ZERO_FLT;
+		
+		mEpsilonBetweenPointsDbl = EPSILON_BETWEEN_POINTS_DBL;
+		mEpsilonBetweenPointsFlt = EPSILON_BETWEEN_POINTS_FLT;
+		
+		mEpsilonOnPlaneDbl = EPSILON_ONPLANE_DBL;
+		mEpsilonOnPlaneFlt = EPSILON_ONPLANE_FLT;
+		
 		mEpsilonMaxBetweenPoints = EPSILON_BETWEEN_POINTS_MAX;
 		
 		mPolygonTriangleOnly = LIMIT_TO_TRIANGLES;
@@ -125,10 +144,10 @@ public class CSGEnvironment
 	,	boolean							pDoublePrecision
 	,	Class							pShapeClass
 	,	int								pBSPLimit
-	,	float							pEpsilonNearZero
-	,	float							pEpsilonOnPlane
-	,	float							pEpsilonBetweenPoints
-	,	float							pEpsilonMaxBetweenPoints
+	,	double							pEpsilonNearZero
+	,	double							pEpsilonOnPlane
+	,	double							pEpsilonBetweenPoints
+	,	double							pEpsilonMaxBetweenPoints
 	,	boolean							pPolygonTriangleOnly
 	,	CSGPolygon.CSGPolygonPlaneMode	pPolygonPlaneMode
 	,	double							pPartitionSeedPlane
@@ -141,9 +160,15 @@ public class CSGEnvironment
 		
 		mBSPLimit = pBSPLimit;
 		
-		mEpsilonNearZero = pEpsilonNearZero;
-		mEpsilonOnPlane = pEpsilonOnPlane;		
-		mEpsilonBetweenPoints = pEpsilonBetweenPoints;
+		if ( mDoublePrecision ) {
+			mEpsilonNearZeroDbl = pEpsilonNearZero;
+			mEpsilonOnPlaneDbl = pEpsilonOnPlane;		
+			mEpsilonBetweenPointsDbl = pEpsilonBetweenPoints;
+		} else {
+			mEpsilonNearZeroFlt = (float)pEpsilonNearZero;
+			mEpsilonOnPlaneFlt = (float)pEpsilonOnPlane;		
+			mEpsilonBetweenPointsFlt = (float)pEpsilonBetweenPoints;
+		}
 		mEpsilonMaxBetweenPoints = pEpsilonMaxBetweenPoints;
 		
 		mPolygonTriangleOnly = pPolygonTriangleOnly;
@@ -173,16 +198,22 @@ public class CSGEnvironment
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mDoublePrecision, "doublePrecision", false );
 		aCapsule.write( mStructuralDebug, "structuralDebug", false );
-		aCapsule.write( mShapeClass.getName(), "shapeClass", "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
+		String shapeClassName = (mDoublePrecision)
+								?	"net.wcomohundro.jme3.csg.iob.CSGShapeIOB"
+								:	"net.wcomohundro.jme3.csg.bsp.CSGShapeBSP";
+		aCapsule.write( mShapeClass.getName(), "shapeClass", shapeClassName );
 		
 		aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_LIMIT );
-		
-		double nearZero = (mDoublePrecision) ? EPSILON_NEAR_ZERO_DBL : EPSILON_NEAR_ZERO_FLT;
-		double betweenPoints = (mDoublePrecision) ? EPSILON_BETWEEN_POINTS_DBL : EPSILON_BETWEEN_POINTS_FLT;
-		double onPlane = (mDoublePrecision) ? EPSILON_ONPLANE_DBL : EPSILON_ONPLANE_FLT;
-		aCapsule.write( mEpsilonNearZero, "epsilonNearZero", nearZero );
-		aCapsule.write( mEpsilonBetweenPoints, "epsilonBetweenPoints", betweenPoints );
-		aCapsule.write( mEpsilonOnPlane, "epsilonOnPlane", onPlane );
+
+		if ( mDoublePrecision ) {
+			aCapsule.write( mEpsilonNearZeroDbl, "epsilonNearZero", EPSILON_NEAR_ZERO_DBL );
+			aCapsule.write( mEpsilonBetweenPointsDbl, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_DBL );
+			aCapsule.write( mEpsilonOnPlaneDbl, "epsilonOnPlane", EPSILON_ONPLANE_DBL );
+		} else {
+			aCapsule.write( mEpsilonNearZeroFlt, "epsilonNearZero", EPSILON_NEAR_ZERO_FLT );
+			aCapsule.write( mEpsilonBetweenPointsFlt, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
+			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
+		}
 		aCapsule.write( mEpsilonMaxBetweenPoints, "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
 		
 		aCapsule.write( mPolygonTriangleOnly, "polygonTriangleOnly", LIMIT_TO_TRIANGLES );
@@ -196,9 +227,13 @@ public class CSGEnvironment
 		JmeImporter		pImporter
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
-		mDoublePrecision = aCapsule.readBoolean( "doublePrecision", false );
+		mDoublePrecision = aCapsule.readBoolean( "doublePrecision", true );
 		mStructuralDebug = aCapsule.readBoolean( "structuralDebug", DEBUG );
-		String shapeClassName = aCapsule.readString( "shapeClass", "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
+		
+		String shapeClassName = (mDoublePrecision)
+								?	"net.wcomohundro.jme3.csg.iob.CSGShapeIOB"
+								:	"net.wcomohundro.jme3.csg.bsp.CSGShapeBSP";
+		shapeClassName = aCapsule.readString( "shapeClass", shapeClassName );
 		try {
 			mShapeClass = Class.forName( shapeClassName );
 		} catch( ClassNotFoundException ex ) {
@@ -206,12 +241,15 @@ public class CSGEnvironment
 		}
 		mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_LIMIT );
 		
-		double nearZero = (mDoublePrecision) ? EPSILON_NEAR_ZERO_DBL : EPSILON_NEAR_ZERO_FLT;
-		double betweenPoints = (mDoublePrecision) ? EPSILON_BETWEEN_POINTS_DBL : EPSILON_BETWEEN_POINTS_FLT;
-		double onPlane = (mDoublePrecision) ? EPSILON_ONPLANE_DBL : EPSILON_ONPLANE_FLT;
-		mEpsilonNearZero = aCapsule.readDouble( "epsilonNearZero", nearZero );
-		mEpsilonBetweenPoints = aCapsule.readDouble( "epsilonBetweenPoints", betweenPoints );
-		mEpsilonOnPlane = aCapsule.readDouble( "epsilonOnPlane", onPlane );
+		if ( mDoublePrecision ) {
+			mEpsilonNearZeroDbl = aCapsule.readDouble( "epsilonNearZero", EPSILON_NEAR_ZERO_DBL );
+			mEpsilonBetweenPointsDbl = aCapsule.readDouble( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_DBL );
+			mEpsilonOnPlaneDbl = aCapsule.readDouble( "epsilonOnPlane", EPSILON_ONPLANE_DBL );
+		} else {
+			mEpsilonNearZeroFlt = aCapsule.readFloat( "epsilonNearZero", EPSILON_NEAR_ZERO_FLT );
+			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
+			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
+		}
 		mEpsilonMaxBetweenPoints = aCapsule.readDouble( "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
 		
 		mPolygonTriangleOnly = aCapsule.readBoolean( "polygonTriangleOnly", LIMIT_TO_TRIANGLES );
@@ -232,9 +270,15 @@ public class CSGEnvironment
 		aBuffer.append( "\tDouble Precision: " ).append( this.mDoublePrecision ).append( "\n" );
 		aBuffer.append( "\tStructural Debug: " ).append( this.mStructuralDebug ).append( "\n" );
 		aBuffer.append( "\tBSPLimit: " ).append( this.mBSPLimit ).append( "\n" );
-		aBuffer.append( "\tEpsilon Near Zero: " ).append( this.mEpsilonNearZero ).append( "\n" );
-		aBuffer.append( "\tEpsilon On Plane: " ).append( this.mEpsilonOnPlane ).append( "\n" );
-		aBuffer.append( "\tEpsilon Between Points: " ).append( this.mEpsilonBetweenPoints ).append( "\n" );
+		if ( this.mDoublePrecision ) {
+			aBuffer.append( "\tEpsilon Near Zero: " ).append( this.mEpsilonNearZeroDbl ).append( "\n" );
+			aBuffer.append( "\tEpsilon On Plane: " ).append( this.mEpsilonOnPlaneDbl ).append( "\n" );
+			aBuffer.append( "\tEpsilon Between Points: " ).append( this.mEpsilonBetweenPointsDbl ).append( "\n" );
+		} else {
+			aBuffer.append( "\tEpsilon Near Zero: " ).append( this.mEpsilonNearZeroFlt ).append( "\n" );
+			aBuffer.append( "\tEpsilon On Plane: " ).append( this.mEpsilonOnPlaneFlt ).append( "\n" );
+			aBuffer.append( "\tEpsilon Between Points: " ).append( this.mEpsilonBetweenPointsFlt ).append( "\n" );
+		}
 		aBuffer.append( "\tPolygon Plane Mode: " ).append( this.mPolygonPlaneMode ).append( "\n" );
 		return( aBuffer );
 	}
