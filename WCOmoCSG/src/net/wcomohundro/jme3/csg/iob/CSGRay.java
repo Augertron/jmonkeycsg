@@ -46,7 +46,7 @@ public class CSGRay
 	public static final String sCSGRay3dRevision="$Rev$";
 	public static final String sCSGRay3dDate="$Date$";
 	
-	private static final double TOL = 1e-10f;
+	//private static final double TOL = 1e-10f;
 
 	/** The origin */
 	protected Vector3d	mOrigin;
@@ -69,7 +69,7 @@ public class CSGRay
 	, 	CSGFace 		pFace2
 	,	CSGEnvironment	pEnvironment
 	) {
-		double tolerance = TOL; // pEnvironment.mEpsilonNearZero
+		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
 		Vector3d normalFace1 = pFace1.getNormal();
 		Vector3d normalFace2 = pFace2.getNormal();
 		
@@ -77,7 +77,7 @@ public class CSGRay
 		mDirection = normalFace1.cross( normalFace2 );
 				
 		// Check if direction length is not zero (the planes aren't parallel )...
-		if ( mDirection.length() > TOL ) {
+		if ( mDirection.length() > tolerance ) {
 			//getting a line point, zero is set to a coordinate whose direction 
 			//component isn't zero (line intersecting its origin plan)
 			Vector3d position1 = pFace1.v1().getPosition();
@@ -86,11 +86,11 @@ public class CSGRay
 			double d2 = -(normalFace2.x*position2.x + normalFace2.y*position2.y + normalFace2.z*position2.z);
 
 			mOrigin = new Vector3d();
-			if ( Math.abs(mDirection.x) > TOL ) {
+			if ( Math.abs(mDirection.x) > tolerance ) {
 				mOrigin.x = 0;
 				mOrigin.y = (d2*normalFace1.z - d1*normalFace2.z)/mDirection.x;
 				mOrigin.z = (d1*normalFace2.y - d2*normalFace1.y)/mDirection.x;
-			} else if ( Math.abs(mDirection.y) > TOL ) {
+			} else if ( Math.abs(mDirection.y) > tolerance ) {
 				mOrigin.x = (d1*normalFace2.z - d2*normalFace1.z)/mDirection.y;
 				mOrigin.y = 0;
 				mOrigin.z = (d2*normalFace1.x - d1*normalFace2.x)/mDirection.y;
@@ -149,7 +149,7 @@ public class CSGRay
 		//y = y1 + a2*t = y2 + b2*s
 		//z = z1 + a3*t = z2 + b3*s
 		
-		double tolerance = TOL; // pEnvironment.mEpsilonNearZero;
+		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
 		Vector3d lineOrigin = pOtherLine.getOrigin(); 
 		Vector3d lineDirection = pOtherLine.getDirection();
 				
@@ -204,7 +204,7 @@ public class CSGRay
 		//(x1 - x0) = dx, (y1 - y0) = dy, (z1 - z0) = dz
 		//t = -(A*x0 + B*y0 + C*z0 )/(A*dx + B*dy + C*dz)
 		
-		double tolerance = TOL; // pEnvironment.mEpsilonNearZero;
+		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
 		
 		double A = pPlaneNormal.x;
 		double B = pPlaneNormal.y;

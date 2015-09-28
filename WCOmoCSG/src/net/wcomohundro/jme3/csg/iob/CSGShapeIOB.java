@@ -69,6 +69,9 @@ public class CSGShapeIOB
 	/** Version tracking support */
 	public static final String sCSGShapeIOBRevision="$Rev$";
 	public static final String sCSGShapeIOBDate="$Date$";
+	
+	/** Default configuration that applies to IOB processing */
+	public static CSGEnvironment sDefaultEnvironment = new CSGEnvironment( true );
 
 	/** Canned, immutable empty list of faces */
 	protected static final List<CSGFace> sEmptyFaces = new ArrayList<CSGFace>(0);

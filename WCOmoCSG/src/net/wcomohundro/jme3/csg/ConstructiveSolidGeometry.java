@@ -246,6 +246,7 @@ public interface ConstructiveSolidGeometry
 	
 	/** Deepest split when processing BSP hierarchy */
 	public static final int BSP_HIERARCHY_LIMIT = 1024;
+	public static final int BSP_HIERARCHY_DEEP_LIMIT = 4096;
 	
 	/** When selecting the plane used to define a partition, use the Nth polygon */
 	public static final double PARTITION_SEED_PLANE = 0.5;

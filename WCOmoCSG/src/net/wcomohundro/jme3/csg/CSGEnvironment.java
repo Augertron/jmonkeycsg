@@ -118,7 +118,7 @@ public class CSGEnvironment
 			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "No Handler Class:" + ex, ex );
 		}
 		mStructuralDebug = DEBUG;
-		mBSPLimit = BSP_HIERARCHY_LIMIT;
+		mBSPLimit = (mDoublePrecision) ? BSP_HIERARCHY_DEEP_LIMIT : BSP_HIERARCHY_LIMIT;
 		
 		mEpsilonNearZeroDbl = EPSILON_NEAR_ZERO_DBL;
 		mEpsilonNearZeroFlt = EPSILON_NEAR_ZERO_FLT;
@@ -203,16 +203,19 @@ public class CSGEnvironment
 								:	"net.wcomohundro.jme3.csg.bsp.CSGShapeBSP";
 		aCapsule.write( mShapeClass.getName(), "shapeClass", shapeClassName );
 		
-		aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_LIMIT );
 
 		if ( mDoublePrecision ) {
 			aCapsule.write( mEpsilonNearZeroDbl, "epsilonNearZero", EPSILON_NEAR_ZERO_DBL );
 			aCapsule.write( mEpsilonBetweenPointsDbl, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_DBL );
 			aCapsule.write( mEpsilonOnPlaneDbl, "epsilonOnPlane", EPSILON_ONPLANE_DBL );
+			
+			aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_DEEP_LIMIT );
 		} else {
 			aCapsule.write( mEpsilonNearZeroFlt, "epsilonNearZero", EPSILON_NEAR_ZERO_FLT );
 			aCapsule.write( mEpsilonBetweenPointsFlt, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
+
+			aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_LIMIT );
 		}
 		aCapsule.write( mEpsilonMaxBetweenPoints, "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
 		
@@ -239,16 +242,19 @@ public class CSGEnvironment
 		} catch( ClassNotFoundException ex ) {
 			sLogger.log( Level.SEVERE, "Invalid ShapeHandler: " + ex, ex );
 		}
-		mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_LIMIT );
 		
 		if ( mDoublePrecision ) {
 			mEpsilonNearZeroDbl = aCapsule.readDouble( "epsilonNearZero", EPSILON_NEAR_ZERO_DBL );
 			mEpsilonBetweenPointsDbl = aCapsule.readDouble( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_DBL );
 			mEpsilonOnPlaneDbl = aCapsule.readDouble( "epsilonOnPlane", EPSILON_ONPLANE_DBL );
+			
+			mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_DEEP_LIMIT );
 		} else {
 			mEpsilonNearZeroFlt = aCapsule.readFloat( "epsilonNearZero", EPSILON_NEAR_ZERO_FLT );
 			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
+			
+			mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_LIMIT );
 		}
 		mEpsilonMaxBetweenPoints = aCapsule.readDouble( "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
 		

@@ -51,7 +51,7 @@ public class CSGVertexIOB
 	public static final String sCSGVertexIOBRevision="$Rev$";
 	public static final String sCSGVertexIOBDate="$Date$";
 	
-	private static final double TOL = 1e-5f;
+	//private static final double TOL = 1e-5f;
 
 	
 	/** Status of an individual vertex */
@@ -98,7 +98,7 @@ public class CSGVertexIOB
 	,	Vector2f		pTextureCoordinate
 	,	CSGVertexStatus	pStatus
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, pStatus, CSGEnvironment.sStandardEnvironment );
+		this( pPosition, pNormal, pTextureCoordinate, pStatus, CSGShapeIOB.sDefaultEnvironment );
 	}
 	public CSGVertexIOB(
 		Vector3d		pPosition
@@ -195,15 +195,17 @@ public class CSGVertexIOB
 			
 		} else if ( pOther instanceof CSGVertexIOB ) {
 			CSGVertexIOB aVertex = (CSGVertexIOB)pOther;
+			double tolerance = CSGShapeIOB.sDefaultEnvironment.mEpsilonBetweenPointsDbl;
+			
 			if ( ConstructiveSolidGeometry.equalVector3d( this.getPosition()
 														, aVertex.getPosition()
-														, TOL ) ) {
+														, tolerance ) ) {
 				if ( ConstructiveSolidGeometry.equalVector3d( this.getNormal()
 															, aVertex.getNormal()
-															, TOL ) ) {
+															, tolerance ) ) {
 					if ( ConstructiveSolidGeometry.equalVector2f( this.getTextureCoordinate()
 																, aVertex.getTextureCoordinate()
-																, TOL ) ) {
+																, tolerance ) ) {
 						return( true );
 					}
 				}

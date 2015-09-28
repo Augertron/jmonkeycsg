@@ -49,7 +49,7 @@ public class CSGSegment
 	public static final String sCSGSegmentRevision="$Rev$";
 	public static final String sCSGSegmentDate="$Date$";
 	
-	private static final double TOL = 1e-10f;
+	//private static final double TOL = 1e-10f;
 	
 	/** Type of a segment terminus */
 	public enum CSGSegmentType {
@@ -152,7 +152,7 @@ public class CSGSegment
 		CSGSegment		pOther
 	,	CSGEnvironment	pEnvironment
 	) {
-		double tolerance = TOL; // pEnvironment.mEpsilonNearZero;
+		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
 		if ( (this.mEndDist < pOther.mStartDist + tolerance )
 		||    (pOther.mEndDist < this.mStartDist + tolerance ) ) {
 			// No overlap

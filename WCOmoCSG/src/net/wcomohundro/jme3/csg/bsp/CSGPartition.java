@@ -97,7 +97,7 @@ public class CSGPartition
 	/** Simple null constructor */
 	public CSGPartition(
 	) {
-		this( null, 0, 1, CSGEnvironment.sStandardEnvironment );
+		this( null, 0, 1, CSGShapeBSP.sDefaultEnvironment );
 	}
 	/** Internal constructor that builds a hierarchy of nodes based on a set of polygons given later */
 	protected CSGPartition(
@@ -282,7 +282,7 @@ public class CSGPartition
 			// This is probably an error in the algorithm, but I have not yet found the true cause.
 			ConstructiveSolidGeometry.sLogger.log( Level.WARNING
 			,   pEnvironment.mShapeName + "CSGPartition.buildHierarchy - too deep: " + mLevel );
-			//mPolygons = CSGPolygon.compressPolygons( pPolygons );
+			mPolygons.addAll( pPolygons );
 			return( mCorrupted = true );
 		}
 		// If no plane has been set for this partition, select a plane to use

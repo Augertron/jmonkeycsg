@@ -136,6 +136,7 @@ public class CSGTestE
 	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
 	    		ConstructiveSolidGeometry.reportVersion();
 
+	    		sceneName += " *** Processing Environment Reset";
 	    		aNode = null;
 	    	} else if ( (aNode instanceof ConstructiveSolidGeometry.CSGSpatial)
 	    	&& !((ConstructiveSolidGeometry.CSGSpatial)aNode).isValid() ) {

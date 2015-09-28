@@ -1,0 +1,358 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- This set of constructs is used to test various EPSILON settings where we are
+     trying to produce smooth blended shapes without having triangle drop out.
+ -->
+<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+    <lights class='com.jme3.light.LightList'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
+	<children>
+		<!-- ********** IOB PROCESSING ********* -->
+        <!-- A simple union that should be rather smooth with very fine detail-->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeHiRez'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+            </transform>
+		    <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' id='CSGEnvironmentIOB'
+		    		doublePrecision='true' shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
+                    	 axisSamples='64' radialSamples='64' radius='1.2'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        <!-- A simple union that has less detail -->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeLowRez'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='-5.0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentIOB'/>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
+                    	 axisSamples='32' radialSamples='32' radius='1.2'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+ 		<!--  Helix carved out of a cube, fairly hi rez -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='Helix2Box'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='5' z='0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentIOB' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+                    </transform>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='2.0' yExtent='1.0' zExtent='1.0'>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
+		            </transform>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+		            		axisSamples='30' radialSamples='64' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		radius='0.5' smoothSurface='false' closed='true'>
+		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
+		                <scaleFaces>
+		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
+		            	</scaleFaces>
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>    
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+ 		<!--  Helix carved out of a spere, fairly hi rez -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='Helix2Sphere'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-10' z='0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentIOB' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+                    </transform>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+                    		radius='1.6' axisSamples='32' radialSamples='32'>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
+		            </transform>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+		            		axisSamples='30' radialSamples='64' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		radius='0.5' smoothSurface='false' closed='true'>
+		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
+		                <scaleFaces>
+		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
+		            	</scaleFaces>
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>    
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+		<!-- ********** BSP PROCESSING ********* -->
+        <!-- A simple union that should be rather smooth with very fine detail-->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeHiRez'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='8' y='0.0'/>
+            </transform>
+		    <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' id='CSGEnvironmentBSP'
+		    		doublePrecision='false' shapeClass='net.wcomohundro.jme3.csg.bsp.CSGShapeBSP' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
+                    	 axisSamples='64' radialSamples='64' radius='1.2'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        <!-- A simple union that has less detail -->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeLowRez'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='8' y='-5.0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentBSP'/>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
+                    	 axisSamples='32' radialSamples='32' radius='1.2'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+ 		<!--  Helix carved out of a cube, fairly hi rez -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='Helix2Box'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='8' y='5' z='0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentBSP' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+                    </transform>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='2.0' yExtent='1.0' zExtent='1.0'>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
+		            </transform>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+		            		axisSamples='30' radialSamples='64' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		radius='0.5' smoothSurface='false' closed='true'>
+		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
+		                <scaleFaces>
+		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
+		            	</scaleFaces>
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>    
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+ 		<!--  Helix carved out of a spere, fairly hi rez -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='Helix2Sphere'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='8' y='-10' z='0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentBSP' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+                    </transform>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+                    		radius='1.6' axisSamples='32' radialSamples='32'>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
+		            </transform>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+		            		axisSamples='30' radialSamples='64' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		radius='0.5' smoothSurface='false' closed='true'>
+		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
+		                <scaleFaces>
+		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
+		            	</scaleFaces>
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>    
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        
+        <!-- ********** BSP Deep/Double PROCESSING ********* -->
+        <!-- A simple union that should be rather smooth with very fine detail-->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeHiRez'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='16' y='0.0'/>
+            </transform>
+		    <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' id='CSGEnvironmentBSP2'
+		    		doublePrecision='true' shapeClass='net.wcomohundro.jme3.csg.bsp.CSGShapeBSP' 
+		    		epsilonNearZero='5.0e-6' epsilonBetweenPoints='5.0e-6' epsilonOnPlane='1.0e-5'/>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
+                    	 axisSamples='64' radialSamples='64' radius='1.2'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        <!-- A simple union that has less detail -->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeLowRez'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='16' y='-5.0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentBSP2'/>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
+                    	 axisSamples='32' radialSamples='32' radius='1.2'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+ 		<!--  Helix carved out of a cube, fairly hi rez -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='Helix2Box'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='16' y='5' z='0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentBSP2' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+                    </transform>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='2.0' yExtent='1.0' zExtent='1.0'>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
+		            </transform>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+		            		axisSamples='30' radialSamples='64' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		radius='0.5' smoothSurface='false' closed='true'>
+		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
+		                <scaleFaces>
+		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
+		            	</scaleFaces>
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>    
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+ 		<!--  Helix carved out of a spere, fairly hi rez -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='Helix2Sphere'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='16' y='-10' z='0'/>
+            </transform>
+            <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentBSP2' />
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Sphere'>
+                    <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+                    </transform>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+                    		radius='1.6' axisSamples='32' radialSamples='32'>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/Debug/Normals.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
+		            <transform class='com.jme3.math.Transform'>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.4'/>
+		            </transform>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+		            		axisSamples='30' radialSamples='64' firstRadial='PI/4' pipeEnds='CROPPED' 
+		            		radius='0.5' smoothSurface='false' closed='true'>
+		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
+		                <scaleFaces>
+		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
+		            	</scaleFaces>
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>    
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        
+	</children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

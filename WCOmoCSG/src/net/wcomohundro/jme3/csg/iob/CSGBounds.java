@@ -48,7 +48,7 @@ public class CSGBounds
 	public static final String sCSGBoundsRevision="$Rev$";
 	public static final String sCSGBoundsDate="$Date$";
 
-	private static final double TOL = 1e-10f;
+	//private static final double TOL = 1e-10f;
 
 	/** Extent of the bounding volume */
 	protected double	minX, maxX, minY, maxY, minZ, maxZ;
@@ -97,7 +97,7 @@ public class CSGBounds
 		CSGBounds		pOther
 	,	CSGEnvironment	pEnvironment
 	) {
-		double tolerance = TOL; // pEnvironment.mEpsilonNearZero
+		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;  
 		if ( (this.minX > pOther.maxX + tolerance)
 		|| (this.maxX < pOther.minX - tolerance)
 		|| (this.minY > pOther.maxY + tolerance)

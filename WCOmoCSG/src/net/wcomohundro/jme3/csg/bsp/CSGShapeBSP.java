@@ -123,6 +123,9 @@ public class CSGShapeBSP
 	public static final String sCSGShapeBSPRevision="$Rev$";
 	public static final String sCSGShapeBSPDate="$Date$";
 
+	/** Default configuration that applies to BSP processing */
+	public static CSGEnvironment sDefaultEnvironment = new CSGEnvironment( false );
+
 	/** Canned, immutable empty list of polygons */
 	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);
 	

@@ -60,7 +60,7 @@ public class CSGFace
 	public static final String sCSGFaceRevision="$Rev$";
 	public static final String sCSGFaceDate="$Date$";
 	
-	private static final double TOL = 1e-10f;
+	//private static final double TOL = 1e-10f;
 
 
 	/** Status of this face in relationship to a solid */
@@ -88,7 +88,7 @@ public class CSGFace
 	, 	Vector3d 		pPointLine2
 	,	CSGEnvironment	pEnvironment
 	) {
-		double tolerance = TOL; // pEnvironment.mEpsilonBetweenPoints;
+		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
 		
 		if ( (Math.abs( pPointLine1.y - pPointLine2.y ) > tolerance )
 		&& ( ((pPoint.y >= pPointLine1.y) && (pPoint.y <= pPointLine2.y))
@@ -115,7 +115,7 @@ public class CSGFace
 	, 	Vector3d 		pPointLine2
 	,	CSGEnvironment	pEnvironment
 	) {
-		double tolerance = TOL; // pEnvironment.mEpsilonBetweenPoints;
+		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
 
 		if ( (Math.abs( pPointLine1.x - pPointLine2.x ) > tolerance)
 		&& ( ((pPoint.x >= pPointLine1.x) && (pPoint.x <= pPointLine2.x))
@@ -142,7 +142,7 @@ public class CSGFace
 	, 	Vector3d 		pPointLine2
 	,	CSGEnvironment	pEnvironment
 	) {
-		double tolerance = TOL; // pEnvironment.mEpsilonBetweenPoints;
+		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
 
 		if ( (Math.abs( pPointLine1.x - pPointLine2.x ) > tolerance )
 		&& ( ((pPoint.x >= pPointLine1.x) && (pPoint.x <= pPointLine2.x))
@@ -422,6 +422,7 @@ public class CSGFace
 		Vector3d intersectionPoint;
 		CSGFace closestFace = null;
 		double closestDistance; 
+		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
 									
 		do {
 			// Assume something touches
@@ -443,14 +444,14 @@ public class CSGFace
 																, pEnvironment);
 					
 					// Check if the ray lies in plane...
-					if ( Math.abs(distance) < TOL && Math.abs( dotProduct ) < TOL ) {
+					if ( (Math.abs(distance) < tolerance) && (Math.abs( dotProduct ) < tolerance) ) {
 						// Disturb the ray in order to not lie into another plane 
 						ray.perturbDirection();
 						itersection = false;	// Try the test again
 						break;
 					}
 					// Check if the ray starts in plane...
-					if ( Math.abs( distance ) < TOL && Math.abs( dotProduct ) > TOL ) {
+					if ( (Math.abs( distance ) < tolerance) && (Math.abs( dotProduct ) > tolerance) ) {
 						// Check if the ray intersects the face...
 						if ( otherFace.hasPoint( intersectionPoint, pEnvironment ) ) {
 							// The faces do touch
@@ -458,7 +459,7 @@ public class CSGFace
 							closestDistance = 0;
 							break;
 						}
-					} else if( Math.abs( dotProduct ) > TOL && distance > TOL ) {
+					} else if ( (Math.abs( dotProduct ) > tolerance) && (distance > tolerance) ) {
 						// The ray intersects the plane
 						if( distance<closestDistance ) {
 							// Check if the ray intersects the face;
@@ -481,19 +482,19 @@ public class CSGFace
 			dotProduct = closestFace.getNormal().dot( ray.getDirection() );
 			
 			// If distance = 0: coplanar faces
-			if ( Math.abs( closestDistance ) < TOL ) {
-				if ( dotProduct>TOL ) {
+			if ( Math.abs( closestDistance ) < tolerance ) {
+				if ( dotProduct > tolerance ) {
 					mStatus = CSGFaceStatus.SAME;
-				} else if ( dotProduct<-TOL ) {
+				} else if ( dotProduct < -tolerance ) {
 					mStatus = CSGFaceStatus.OPPOSITE;
 				}
 			}
 			// If dot product > 0 (same direction): inside face
-			else if ( dotProduct > TOL ) {
+			else if ( dotProduct > tolerance ) {
 				mStatus = CSGFaceStatus.INSIDE;
 			}
 			// If dot product < 0 (opposite direction): outside face
-			else if ( dotProduct < -TOL ) {
+			else if ( dotProduct < -tolerance ) {
 				mStatus = CSGFaceStatus.OUTSIDE;
 			}
 		}
@@ -511,21 +512,21 @@ public class CSGFace
 		Vector3d 		pPoint
 	,	CSGEnvironment	pEnvironment
 	) {
-		double tolerance = TOL; // pEnvironment.mEpsilonCloseToPlane;
+		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
 		
 		CSGPointStatus result1, result2, result3;
 		boolean hasUp, hasDown, hasOn;
 		Vector3d normal = getNormal(); 
 	
 		// Check if x is constant...	
-		if ( Math.abs(normal.x) > TOL )  {
+		if ( Math.abs(normal.x) > tolerance )  {
 			// tests on the x plane
 			result1 = linePositionInX( pPoint, v1().getPosition(), v2().getPosition(), pEnvironment );
 			result2 = linePositionInX( pPoint, v2().getPosition(), v3().getPosition(), pEnvironment );
 			result3 = linePositionInX( pPoint, v3().getPosition(), v1().getPosition(), pEnvironment );
 		}
 		// Check if y is constant...
-		else if( Math.abs(normal.y) > TOL ) {
+		else if( Math.abs(normal.y) > tolerance ) {
 			// tests on the y plane
 			result1 = linePositionInY( pPoint, v1().getPosition(), v2().getPosition(), pEnvironment );
 			result2 = linePositionInY( pPoint, v2().getPosition(), v3().getPosition(), pEnvironment );

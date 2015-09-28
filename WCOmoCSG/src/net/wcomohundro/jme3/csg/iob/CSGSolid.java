@@ -58,7 +58,7 @@ public class CSGSolid
 	public static final String sCSGSolidRevision="$Rev$";
 	public static final String sCSGSolidDate="$Date$";
 
-	private static final double TOL = 1e-10f;
+	//private static final double TOL = 1e-10f;
 
 	
 	/** The list of faces that make up this solid */
@@ -160,7 +160,8 @@ public class CSGSolid
 		CSGSegment segment1, segment2;
 		double distFace1Vert1, distFace1Vert2, distFace1Vert3, distFace2Vert1, distFace2Vert2, distFace2Vert3;
 		int signFace1Vert1, signFace1Vert2, signFace1Vert3, signFace2Vert1, signFace2Vert2, signFace2Vert3;
-						
+		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
+		
 		// Check if the objects bounds overlap
 		CSGBounds thisBound = this.getBounds();
 		CSGBounds otherBound = pSolid.getBounds();
@@ -188,9 +189,15 @@ public class CSGSolid
 							distFace1Vert3 = face2.computeDistance( face1.v3() );
 							
 							//distances signs from the face1 vertices to the face2 plane 
-							signFace1Vert1 = (distFace1Vert1>TOL? 1 :(distFace1Vert1<-TOL? -1 : 0)); 
-							signFace1Vert2 = (distFace1Vert2>TOL? 1 :(distFace1Vert2<-TOL? -1 : 0));
-							signFace1Vert3 = (distFace1Vert3>TOL? 1 :(distFace1Vert3<-TOL? -1 : 0));
+							signFace1Vert1 = (distFace1Vert1 > tolerance)
+												? 1 
+												: (distFace1Vert1 < -tolerance) ? -1 : 0; 
+							signFace1Vert2 = (distFace1Vert2 > tolerance)
+												? 1 
+												: (distFace1Vert2 < -tolerance) ? -1 : 0;
+							signFace1Vert3 = (distFace1Vert3 > tolerance)
+												? 1 
+												: (distFace1Vert3 < -tolerance) ? -1 : 0;
 							
 							//if all the signs are zero, the planes are coplanar
 							//if all the signs are positive or negative, the planes do not intersect
@@ -203,10 +210,15 @@ public class CSGSolid
 								distFace2Vert3 = face1.computeDistance( face2.v3() );
 								
 								//distances signs from the face2 vertices to the face1 plane
-								signFace2Vert1 = (distFace2Vert1>TOL? 1 :(distFace2Vert1<-TOL? -1 : 0)); 
-								signFace2Vert2 = (distFace2Vert2>TOL? 1 :(distFace2Vert2<-TOL? -1 : 0));
-								signFace2Vert3 = (distFace2Vert3>TOL? 1 :(distFace2Vert3<-TOL? -1 : 0));
-							
+								signFace2Vert1 = (distFace2Vert1 > tolerance)
+													? 1 
+													: (distFace2Vert1 < -tolerance) ? -1 : 0; 
+								signFace2Vert2 = (distFace2Vert2 > tolerance)
+													? 1 
+													: (distFace2Vert2 < -tolerance) ? -1 : 0;
+								signFace2Vert3 = (distFace2Vert3 > tolerance)
+													? 1 
+													: (distFace2Vert3 < -tolerance) ? -1 : 0;
 								//if the signs are not equal...
 								if (!(signFace2Vert1==signFace2Vert2 && signFace2Vert2==signFace2Vert3))
 								{
@@ -221,7 +233,7 @@ public class CSGSolid
 									//if the two segments intersect...
 									if( segment1.intersect( segment2, pEnvironment ) ) {
 										//PART II - SUBDIVIDING NON-COPLANAR POLYGONS
-										this.splitFace( i, segment1, segment2 );
+										this.splitFace( i, segment1, segment2, pEnvironment );
 																			
 										//prevent from infinite loop (with a loss of mFaces...)
 										//if(numFacesStart*20<getNumFaces())
@@ -285,39 +297,34 @@ public class CSGSolid
 		int 		facePos
 	, 	CSGSegment segment1
 	, 	CSGSegment segment2
+	,	CSGEnvironment	pEnvironment
 	) {
 		CSGVertexIOB startPosVertex, endPosVertex;
 		Vector3d startPos, endPos;
 		CSGSegment.CSGSegmentType startType, endType, middleType;
 		double startDist, endDist;
+		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL
 		
 		CSGFace face = mFaces.get( facePos );
 		CSGVertexIOB startVertex = segment1.getStartVertex();
 		CSGVertexIOB endVertex = segment1.getEndVertex();
 		
-		//starting point: deeper starting point 		
-		if (segment2.getStartDistance() > segment1.getStartDistance()+TOL)
-		{
+		// Select the deeper starting point 		
+		if ( segment2.getStartDistance() > (segment1.getStartDistance() + tolerance)) {
 			startDist = segment2.getStartDistance();
 			startType = segment1.getIntermediateType();
 			startPos = segment2.getStartPosition();
-		}
-		else
-		{
+		} else {
 			startDist = segment1.getStartDistance();
 			startType = segment1.getStartType();
 			startPos = segment1.getStartPosition();
-		}
-		
-		//ending point: deepest ending point
-		if ( segment2.getEndDistance() < segment1.getEndDistance() - TOL)
-		{
+		}		
+		// Select the deeper ending point
+		if ( segment2.getEndDistance() < (segment1.getEndDistance() - tolerance)) {
 			endDist = segment2.getEndDistance();
 			endType = segment1.getIntermediateType();
 			endPos = segment2.getEndPosition();
-		}
-		else
-		{
+		} else {
 			endDist = segment1.getEndDistance();
 			endType = segment1.getEndType();
 			endPos = segment1.getEndPosition();
@@ -436,12 +443,12 @@ public class CSGSolid
 			Vector3d segmentVector = new Vector3d(startPos.x-endPos.x, startPos.y-endPos.y, startPos.z-endPos.z);
 						
 			//if the intersection segment is a point only...
-			if (Math.abs(segmentVector.x)<TOL && Math.abs(segmentVector.y)<TOL && Math.abs(segmentVector.z)<TOL)
-			{
+			if ( (Math.abs( segmentVector.x ) < tolerance)
+			&&   (Math.abs( segmentVector.y ) < tolerance)
+			&&   (Math.abs( segmentVector.z ) < tolerance) ) {
 				breakFaceInThree(facePos, startPos);
 				return;
 			}
-			
 			//gets the vertex more lined with the intersection segment
 			Vector3d position1 = face.v1().getPosition();
 			Vector3d position2 = face.v2().getPosition();
