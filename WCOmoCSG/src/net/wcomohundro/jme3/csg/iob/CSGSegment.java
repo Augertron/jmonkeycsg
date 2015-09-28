@@ -46,8 +46,8 @@ public class CSGSegment
 	implements ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGSegmentRevision="$Rev: 72 $";
-	public static final String sCSGSegmentDate="$Date: 2015-09-05 21:57:32 -0500 (Sat, 05 Sep 2015) $";
+	public static final String sCSGSegmentRevision="$Rev$";
+	public static final String sCSGSegmentDate="$Date$";
 	
 	private static final double TOL = 1e-10f;
 	

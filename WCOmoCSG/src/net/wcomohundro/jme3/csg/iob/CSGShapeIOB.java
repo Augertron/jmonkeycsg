@@ -67,8 +67,8 @@ public class CSGShapeIOB
 	implements CSGShape.CSGShapeProcessor, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGShapeIOBRevision="$Rev: 73 $";
-	public static final String sCSGShapeIOBDate="$Date: 2015-09-05 22:01:00 -0500 (Sat, 05 Sep 2015) $";
+	public static final String sCSGShapeIOBRevision="$Rev$";
+	public static final String sCSGShapeIOBDate="$Date$";
 
 	/** Canned, immutable empty list of faces */
 	protected static final List<CSGFace> sEmptyFaces = new ArrayList<CSGFace>(0);

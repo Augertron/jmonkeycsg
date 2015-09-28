@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  *
  * @author Mark Powell
  * @author Joshua Slack
- * @version $Revision: 4075 $, $Data$
+ * @version $Revision$, $Data$
  */
 public abstract class Spatial implements Savable, Cloneable, Collidable, CloneableSmartAsset {
 

@@ -55,8 +55,8 @@ public class CSGSolid
 	implements ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGSolidRevision="$Rev: 72 $";
-	public static final String sCSGSolidDate="$Date: 2015-09-05 21:57:32 -0500 (Sat, 05 Sep 2015) $";
+	public static final String sCSGSolidRevision="$Rev$";
+	public static final String sCSGSolidDate="$Date$";
 
 	private static final double TOL = 1e-10f;
 

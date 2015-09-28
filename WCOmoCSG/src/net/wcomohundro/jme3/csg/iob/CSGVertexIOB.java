@@ -48,8 +48,8 @@ public class CSGVertexIOB
 	implements ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGVertexIOBRevision="$Rev: 72 $";
-	public static final String sCSGVertexIOBDate="$Date: 2015-09-05 21:57:32 -0500 (Sat, 05 Sep 2015) $";
+	public static final String sCSGVertexIOBRevision="$Rev$";
+	public static final String sCSGVertexIOBDate="$Date$";
 	
 	private static final double TOL = 1e-5f;
 
