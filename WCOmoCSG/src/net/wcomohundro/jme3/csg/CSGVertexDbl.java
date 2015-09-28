@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
-import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -48,6 +47,7 @@ import com.jme3.export.Savable;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 
 
 /** Constructive Solid Geometry (CSG)
@@ -202,6 +202,7 @@ public class CSGVertexDbl
 	}
 	
 	/** Make a copy */
+	@Override
 	public CSGVertexDbl clone(
 		boolean		pFlipIt
 	) {
@@ -213,6 +214,14 @@ public class CSGVertexDbl
 			return( this ); // new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));
 		}
 	}
+	public CSGVertexDbl clone(
+		Vector3d		pPosition
+	,	Vector3d		pNormal
+	,	Vector2f		pTextureCoordinate
+	) {
+		return( new CSGVertexDbl( pPosition, pNormal, pTextureCoordinate, null ) );
+	}
+		
 	
 	/** Access as Floats */
 	@Override
@@ -238,7 +247,7 @@ public class CSGVertexDbl
 		
 		// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
 		// 		structure your bound checks accordingly
-		if ( (pPercentage < 0.0f) || (pPercentage > 1.0f) ) {
+		if ( (pPercentage < 0.0) || (pPercentage > 1.0) ) {
 			// Not sure what to make of this....
 		
 		// Once upon a time, I had tolerance checks here to check for near zero and near
@@ -257,7 +266,7 @@ public class CSGVertexDbl
 					pTempVars.vect2d.set( pOther.getTextureCoordinate() )
 						.subtractLocal( this.mTextureCoordinate ).multLocal( (float)pPercentage ) );
 			
-			aVertex = new CSGVertexDbl( pNewPosition, newNormal, newTextureCoordinate );
+			aVertex = this.clone( pNewPosition, newNormal, newTextureCoordinate );
 		}
 		if ( aVertex == null ) {
 			// Not a percentage we can deal with
@@ -301,6 +310,31 @@ public class CSGVertexDbl
 		super.read( pImporter );
 	}
 	
+	/** Enhanced equality check to see if within a tolerance */
+	@Override
+	public boolean equals(
+		CSGVertex		pOther
+	,	CSGEnvironment	pEnvironment
+	) {
+		if ( pOther instanceof CSGVertexDbl ) {
+			CSGVertexDbl other = (CSGVertexDbl)pOther;
+			if ( ConstructiveSolidGeometry.equalVector3d( this.getPosition()
+															, other.getPosition()
+															, pEnvironment.mEpsilonBetweenPoints ) ) {
+				if ( ConstructiveSolidGeometry.equalVector3d( this.getNormal()
+															, other.getNormal()
+															, pEnvironment.mEpsilonBetweenPoints ) ) {
+					if ( ConstructiveSolidGeometry.equalVector2f( this.getTextureCoordinate()
+															, pOther.getTextureCoordinate()
+															, pEnvironment.mEpsilonBetweenPoints ) ) {
+						return( true );
+					}
+				}
+			}
+		}
+		return( false );
+	}
+
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(

@@ -35,11 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
-
-
-
 import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
-import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -47,6 +43,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector2f;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /**  Constructive Solid Geometry (CSG)
  
@@ -216,6 +213,12 @@ public class CSGPlaneDbl
 		// If within a given tolerance, it is the same plane
 		int aPosition = (distanceToPlane < -pTolerance) ? -1 : (distanceToPlane > pTolerance) ? 1 : 0;
 		return( aPosition );
+	}
+	public int pointPosition(
+		CSGVertex		pVertex
+	,	CSGEnvironment	pEnvironment
+	) {
+		return( pointPosition( (Vector3d)pVertex.getPosition(), pEnvironment.mEpsilonOnPlane ) );
 	}
 	
 	/** Find the projection of a given point onto this plane */

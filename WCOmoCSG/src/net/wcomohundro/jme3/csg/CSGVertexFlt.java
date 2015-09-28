@@ -294,6 +294,32 @@ public class CSGVertexFlt
 		super.read( pImporter );
 	}
 	
+	/** Enhanced equality check to see if within a tolerance */
+	@Override
+	public boolean equals(
+		CSGVertex		pOther
+	,	CSGEnvironment	pEnvironment
+	) {
+		if ( pOther instanceof CSGVertexFlt ) {
+			CSGVertexFlt other = (CSGVertexFlt)pOther;
+			if ( ConstructiveSolidGeometry.equalVector3f( this.getPosition()
+															, other.getPosition()
+															, pEnvironment.mEpsilonBetweenPoints ) ) {
+				if ( ConstructiveSolidGeometry.equalVector3f( this.getNormal()
+															, other.getNormal()
+															, pEnvironment.mEpsilonBetweenPoints ) ) {
+					if ( ConstructiveSolidGeometry.equalVector2f( this.getTextureCoordinate()
+															, pOther.getTextureCoordinate()
+															, pEnvironment.mEpsilonBetweenPoints ) ) {
+						return( true );
+					}
+				}
+			}
+		}
+		return( false );
+	}
+
+
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(

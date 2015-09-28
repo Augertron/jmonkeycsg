@@ -30,9 +30,9 @@ package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
-import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -95,9 +95,12 @@ public class CSGEnvironment
 	public CSGEnvironment(
 	) {
 		mShapeName = "";
-		mDoublePrecision = false;
-		mShapeClass = CSGShapeBSP.class;
-		
+		mDoublePrecision = true;
+		try {
+			mShapeClass = Class.forName( "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" ); 
+		} catch( ClassNotFoundException ex ) {
+			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "No Handler Class:" + ex, ex );
+		}
 		mStructuralDebug = DEBUG;
 		mBSPLimit = BSP_HIERARCHY_LIMIT;
 		
@@ -152,7 +155,13 @@ public class CSGEnvironment
 	/** Build an appropriate shape processor */
 	public CSGShape.CSGShapeProcessor resolveShapeProcessor(
 	) {
-		return new CSGShapeBSP();
+		CSGShape.CSGShapeProcessor aHandler = null;
+		if ( mShapeClass != null ) try {
+			aHandler = (CSGShape.CSGShapeProcessor)mShapeClass.newInstance();
+		} catch( Exception ex ) {
+			sLogger.log( Level.SEVERE, "Failed to create handler: " + ex, ex );
+		}
+		return( aHandler );
 	}
 	
 	/** Support the persistence of this Environment */
@@ -164,7 +173,7 @@ public class CSGEnvironment
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mDoublePrecision, "doublePrecision", false );
 		aCapsule.write( mStructuralDebug, "structuralDebug", false );
-		aCapsule.write( mShapeClass.getName(), "shapeClass", CSGShapeBSP.class.getName() );
+		aCapsule.write( mShapeClass.getName(), "shapeClass", "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
 		
 		aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_LIMIT );
 		
@@ -189,13 +198,11 @@ public class CSGEnvironment
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mDoublePrecision = aCapsule.readBoolean( "doublePrecision", false );
 		mStructuralDebug = aCapsule.readBoolean( "structuralDebug", DEBUG );
-		String shapeClassName = aCapsule.readString( "shapeClass", null );
-		if ( shapeClassName == null ) {
-			mShapeClass = CSGShapeBSP.class;
-		} else try {
+		String shapeClassName = aCapsule.readString( "shapeClass", "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
+		try {
 			mShapeClass = Class.forName( shapeClassName );
 		} catch( ClassNotFoundException ex ) {
-			mShapeClass = CSGShapeBSP.class;
+			sLogger.log( Level.SEVERE, "Invalid ShapeHandler: " + ex, ex );
 		}
 		mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_LIMIT );
 		

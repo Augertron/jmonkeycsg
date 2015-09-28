@@ -37,14 +37,15 @@ import java.util.logging.Logger;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.shape.*;
-import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.export.InputCapsule;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Constructive solid geometry (CSG) (formerly called computational binary solid geometry) is a 
  	technique used in 3D solid modeling. Constructive solid geometry allows a modeler to create 
@@ -86,7 +87,7 @@ import com.jme3.math.Vector3f;
  	where I wished for a deeper level of comments.  My personal learning style is to work from an
  	operational example.  From there, I can make small, incremental changes to help we understand
  	the larger picture.  To that end, I reimplemented the Java code, following my own
- 	conventions and structures.  But the logic and algorithms are all based directly on what I found
+ 	conventions and structures.  But the logic and BSP algorithms are all based directly on what I found
  	in the original Javascript/Java code.
  	
   -- A Few Coding Conventions --
@@ -111,7 +112,7 @@ import com.jme3.math.Vector3f;
   	Where simple changes in the core eliminated a lot of hoop-jumping, I have duplicated the
   	core JME code into the appropriate com.jme3 package within the CSG SVN repository. The changes are
   	all related to making the XML importer more robust.  I have found the Savable interface with its
-  	XML support to be quite handy in my testing and development. The XML is very readible and easy
+  	XML support to be quite handy in my testing and development. The XML is very readable and easy
   	to manually edit to produce a wide range of test cases.  The core jme code changes
   	are related to allowing the Savable.read() process to accommodate more missing parameters, which
   	makes the .xml files more compact.
@@ -134,13 +135,13 @@ import com.jme3.math.Vector3f;
   	
  -- A Bit of Debugging History --
  	My initial cut worked quite nicely, and rather quickly allowed me to duplicate the 
- 	functionality of the original "fabsterpal" code while correcting some bugs.
+ 	functionality of the original "fabsterpal" BSP code while correcting some bugs.
  	
  	But as I worked with more/complex test cases, I started seeing some odd triangular 'drop outs'
  	At a certain point in a complex shape, bits of the polygons went missing, or were strangely 
  	warped.  
  	
- 	Since simple shapes work just fine, I am lead to believe the core logic is proper.  So I 
+ 	Since simple shapes work just fine, I originally believed the core logic is proper.  So I 
  	started going after rounding/overflow types of problems.  My thought was that a triangle went 
  	crazy due to a corrupted vertex.  For this reason, you will run across various ASSERT style 
  	checks that are looking for absurd constructs.  In particular, I have tried to be very careful
@@ -206,6 +207,7 @@ import com.jme3.math.Vector3f;
 	And the following paper may be directly addressing the problem I am seeing, but the 
 	math is too deep for me.
 		http://www.pascucci.org/pdf-papers/progressive-bsp.pdf
+		
 	In particular is the discussion of:
 		The case (2) above is numerically unstable. Three types of labels are used for vertex 
 		classification, labeling a vertex as v= when it is contained on the h hyperplane. No problems 
@@ -214,10 +216,20 @@ import com.jme3.math.Vector3f;
 		to recover from wrong vertex classifications and to consistently compute the split complex, 
 		further information concerning topological structure must be used.
  		
- 	All of these statements lead me to believe there is a fundamental limitation in the underlying math.  
- 	Somewhere deep inside the BSP, a polygon split is required and the limited precision can mean
- 	that multiple, incorrect assignment of vertices can occur.  
+ 	IN CONCLUSTION --- All of these statements lead me to believe there is a fundamental limitation 
+ 	in the underlying algorithm. Somewhere deep inside the BSP, a polygon split is required and 
+ 	the limited precision can mean that multiple, incorrect assignment of vertices can occur.  
  	Unfortunately, I still have no idea how to identify, capture, and fix such a condition.
+ 	
+  -- CSG Environment --
+	To more readily address and experiment with the various configurations that affect the
+	'artifact' problem, I have enabled custom environmental settings for every CSG processing
+	object.  Via this environment, you can adjust the various tolerances, select float versus
+	double precision processing, control how polygons are split across planes, and even select
+	the underlying Shape processor.
+	
+	This makes if very easy to generate the exact same shape, displayed in the same view, but
+	using different configurations to see what impact the various options have on the final display.
 */
 public interface ConstructiveSolidGeometry 
 {
@@ -311,6 +323,23 @@ public interface ConstructiveSolidGeometry
     /** Service routine to check two vectors and see if they are the same, within a given 
      	tolerance. (Typically EPSILON_BETWEEN_POINTS, but not required)
      */
+    public static boolean equalVector2f(
+    	Vector2f 	pVector1
+    ,	Vector2f	pVector2
+    ,	double		pTolerance
+    ) {
+    	if ( pVector1 != pVector2 ) {
+	    	float deltaX = pVector1.x - pVector2.x;
+	    	if ( (deltaX < -pTolerance) || (deltaX > pTolerance) ) {
+	    		return false;
+	    	}
+	    	float deltaY = pVector1.y - pVector2.y;
+	    	if ( (deltaY < -pTolerance) || (deltaY > pTolerance) ) {
+	    		return false;
+	    	}
+    	}
+    	return( true );
+    }
     public static boolean equalVector3f(
     	Vector3f 	pVector1
     ,	Vector3f	pVector2

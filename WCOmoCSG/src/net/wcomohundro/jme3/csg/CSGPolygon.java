@@ -65,6 +65,11 @@ import com.jme3.util.TempVars;
 public abstract class CSGPolygon<VertexT extends CSGVertex, PlaneT extends CSGPlane>
 	implements Savable, ConstructiveSolidGeometry
 {
+	/** Version tracking support */
+	public static final String sCSGPolygonRevision="$Rev$";
+	public static final String sCSGPolygonDate="$Date$";
+
+	
 	/** Supported actions applied to the CSGShapes */
 	public static enum CSGPolygonPlaneMode
 	{
@@ -72,10 +77,6 @@ public abstract class CSGPolygon<VertexT extends CSGVertex, PlaneT extends CSGPl
 	,	FROM_VERTICES		// Compute plane from the given vertices
 	,	FORCE_TO_PLANE		// Force all vertices to intersect with the given plane
 	}
-
-	/** Version tracking support */
-	public static final String sCSGPolygonRevision="$Rev$";
-	public static final String sCSGPolygonDate="$Date$";
 
 	/** Factory level service routine to construct appropriate polygons */
 	public static int addPolygon(

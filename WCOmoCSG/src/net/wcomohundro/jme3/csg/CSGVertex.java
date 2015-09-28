@@ -37,8 +37,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
-import net.wcomohundro.jme3.math.Vector3d;
-
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -47,6 +45,7 @@ import com.jme3.export.Savable;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Constructive Solid Geometry (CSG)
 	
@@ -144,6 +143,12 @@ public abstract class CSGVertex<VectorT>
 		InputCapsule aCapsule = pImporter.getCapsule(this);
 		mTextureCoordinate = (Vector2f)aCapsule.readSavable( "texCoord", Vector2f.ZERO );
 	}
+	
+	/** Enhanced equality check for within a tolerance */
+	public abstract boolean equals(
+		CSGVertex		pOther
+	,	CSGEnvironment	pEnvironment
+	);
 	
 	/** For Debug */
 	@Override

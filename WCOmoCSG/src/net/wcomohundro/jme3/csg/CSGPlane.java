@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
-import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -45,7 +44,8 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
-import com.jme3.util.TempVars;
+import com.jme3.scene.plugins.blender.math.Vector3d;
+
 
 /**  Constructive Solid Geometry (CSG)
  
@@ -151,6 +151,9 @@ public abstract class CSGPlane<VectorT,VertexT>
 	public abstract CSGPlane clone(
 		boolean		pFlipIt
 	);
+	
+	/** Accessor to the normal */
+	public VectorT getNormal() { return mSurfaceNormal; }
 	
 	/** Accessor to the mark value */
 	public int getMark() { return mMark; }

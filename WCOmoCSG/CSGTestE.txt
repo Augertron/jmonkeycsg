@@ -1,0 +1,14 @@
+// List of scenes to load for TestE
+
+Models/CSGLoadCSGNormalTests.xml
+
+Models/CSGLoadEpsilon.xml
+
+Models/CSGLoadMultiTexture.xml
+//Models/CSGLoadNonMultiTexture.xml
+
+//Models/CSGLoadSmoothedPipes.xml
+
+//Models/CSGLoadSimpleUnit.xml
+//Models/CSGLoadSimple.xml
+

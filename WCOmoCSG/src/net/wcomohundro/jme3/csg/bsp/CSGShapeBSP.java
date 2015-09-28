@@ -126,49 +126,6 @@ public class CSGShapeBSP
 	/** Canned, immutable empty list of polygons */
 	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);
 	
-	/** Service to create a vector buffer for a given List */
-    public static FloatBuffer createVector3Buffer(
-    	List<Vector3f> 	pVectors
-    ) {
-        FloatBuffer aBuffer = BufferUtils.createVector3Buffer( pVectors.size() );
-        for( Vector3f aVector : pVectors ) {
-            if ( aVector != null ) {
-            	aBuffer.put( aVector.x ).put( aVector.y ).put( aVector.z );
-            } else {
-            	aBuffer.put(0).put(0).put(0);
-            }
-        }
-        aBuffer.flip();
-        return aBuffer;
-    }
-    public static FloatBuffer createVector2Buffer(
-    	List<Vector2f> 	pVectors
-    ) {
-        FloatBuffer aBuffer = BufferUtils.createVector2Buffer( pVectors.size() );
-        for( Vector2f aVector : pVectors ) {
-            if ( aVector != null ) {
-            	aBuffer.put( aVector.x ).put( aVector.y );
-            } else {
-            	aBuffer.put(0).put(0);
-            }
-        }
-        aBuffer.flip();
-        return aBuffer;
-    }
-    public static ShortBuffer createIndexBuffer(
-    	List<Number> 	pIndices
-    ) {
-    	ShortBuffer aBuffer = BufferUtils.createShortBuffer( pIndices.size() );
-        for( Number aValue : pIndices ) {
-            if ( aValue != null ) {
-            	aBuffer.put( aValue.shortValue() );
-            } else {
-            	aBuffer.put( (short)0 );
-            }
-        }
-        aBuffer.flip();
-        return aBuffer;
-    }
 
     /** The underlying shape we operate on */
     protected CSGShape					mShape;
@@ -439,72 +396,67 @@ public class CSGShapeBSP
 				throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
 			}
 		}
-        TempVars vars = TempVars.get();
+		// Work from 3 points which define a triangle
 		List<CSGPolygon> polygons = new ArrayList<CSGPolygon>( idxBuffer.size() / 3 );
-        try {
-			// Work from 3 points which define a triangle
-			for (int i = 0; i < idxBuffer.size(); i += 3) {
-				int idx1 = idxBuffer.get(i);
-				int idx2 = idxBuffer.get(i + 1);
-				int idx3 = idxBuffer.get(i + 2);
-				
-				int idx1x3 = idx1 * 3;
-				int idx2x3 = idx2 * 3;
-				int idx3x3 = idx3 * 3;
-				
-				int idx1x2 = idx1 * 2;
-				int idx2x2 = idx2 * 2;
-				int idx3x2 = idx3 * 2;
-				
-				// Extract the positions
-				Vector3f pos1 = new Vector3f( posBuffer.get( idx1x3 )
-											, posBuffer.get( idx1x3 + 1)
-											, posBuffer.get( idx1x3 + 2) );
-				Vector3f pos2 = new Vector3f( posBuffer.get( idx2x3 )
-											, posBuffer.get( idx2x3 + 1)
-											, posBuffer.get( idx2x3 + 2) );
-				Vector3f pos3 = new Vector3f( posBuffer.get( idx3x3 )
-											, posBuffer.get( idx3x3 + 1)
-											, posBuffer.get( idx3x3 + 2) );
-	
-				// Extract the normals
-				Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
-											, normBuffer.get( idx1x3 + 1)
-											, normBuffer.get( idx1x3 + 2) );
-				Vector3f norm2 = new Vector3f( normBuffer.get( idx2x3 )
-											, normBuffer.get( idx2x3 + 1)
-											, normBuffer.get( idx2x3 + 2) );
-				Vector3f norm3 = new Vector3f( normBuffer.get( idx3x3)
-											, normBuffer.get( idx3x3 + 1)
-											, normBuffer.get( idx3x3 + 2) );
-	
-				// Extract the Texture Coordinates
-				// Based on an interaction via the SourceForge Ticket system, another user has informed
-				// me that UV texture coordinates are optional.... so be it
-				Vector2f texCoord1, texCoord2, texCoord3;
-				if ( texCoordBuffer != null ) {
-					texCoord1 = new Vector2f( texCoordBuffer.get( idx1x2)
-												, texCoordBuffer.get( idx1x2 + 1) );
-					texCoord2 = new Vector2f( texCoordBuffer.get( idx2x2)
-												, texCoordBuffer.get( idx2x2 + 1) );
-					texCoord3 = new Vector2f( texCoordBuffer.get( idx3x2)
-												, texCoordBuffer.get( idx3x2 + 1) );
-				} else {
-					texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
-				}
-				// Construct the vertices that define the points of the triangle
-				CSGVertex[] aVertexList = new CSGVertex[ 3 ];
-				aVertexList[0] = CSGVertex.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment );
-				aVertexList[1] = CSGVertex.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment );
-				aVertexList[2] = CSGVertex.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment );
-				
-				// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
-				int polyCount
-					= CSGPolygon.addPolygon( polygons, aVertexList, mShape.getMaterialIndex(), pTempVars, pEnvironment );
+		for (int i = 0; i < idxBuffer.size(); i += 3) {
+			int idx1 = idxBuffer.get(i);
+			int idx2 = idxBuffer.get(i + 1);
+			int idx3 = idxBuffer.get(i + 2);
+			
+			int idx1x3 = idx1 * 3;
+			int idx2x3 = idx2 * 3;
+			int idx3x3 = idx3 * 3;
+			
+			int idx1x2 = idx1 * 2;
+			int idx2x2 = idx2 * 2;
+			int idx3x2 = idx3 * 2;
+			
+			// Extract the positions
+			Vector3f pos1 = new Vector3f( posBuffer.get( idx1x3 )
+										, posBuffer.get( idx1x3 + 1)
+										, posBuffer.get( idx1x3 + 2) );
+			Vector3f pos2 = new Vector3f( posBuffer.get( idx2x3 )
+										, posBuffer.get( idx2x3 + 1)
+										, posBuffer.get( idx2x3 + 2) );
+			Vector3f pos3 = new Vector3f( posBuffer.get( idx3x3 )
+										, posBuffer.get( idx3x3 + 1)
+										, posBuffer.get( idx3x3 + 2) );
+
+			// Extract the normals
+			Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
+										, normBuffer.get( idx1x3 + 1)
+										, normBuffer.get( idx1x3 + 2) );
+			Vector3f norm2 = new Vector3f( normBuffer.get( idx2x3 )
+										, normBuffer.get( idx2x3 + 1)
+										, normBuffer.get( idx2x3 + 2) );
+			Vector3f norm3 = new Vector3f( normBuffer.get( idx3x3)
+										, normBuffer.get( idx3x3 + 1)
+										, normBuffer.get( idx3x3 + 2) );
+
+			// Extract the Texture Coordinates
+			// Based on an interaction via the SourceForge Ticket system, another user has informed
+			// me that UV texture coordinates are optional.... so be it
+			Vector2f texCoord1, texCoord2, texCoord3;
+			if ( texCoordBuffer != null ) {
+				texCoord1 = new Vector2f( texCoordBuffer.get( idx1x2)
+											, texCoordBuffer.get( idx1x2 + 1) );
+				texCoord2 = new Vector2f( texCoordBuffer.get( idx2x2)
+											, texCoordBuffer.get( idx2x2 + 1) );
+				texCoord3 = new Vector2f( texCoordBuffer.get( idx3x2)
+											, texCoordBuffer.get( idx3x2 + 1) );
+			} else {
+				texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
 			}
-        } finally {
-        	vars.release();
-        }
+			// Construct the vertices that define the points of the triangle
+			CSGVertex[] aVertexList = new CSGVertex[ 3 ];
+			aVertexList[0] = CSGVertex.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment );
+			aVertexList[1] = CSGVertex.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment );
+			aVertexList[2] = CSGVertex.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment );
+			
+			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
+			int polyCount
+				= CSGPolygon.addPolygon( polygons, aVertexList, mShape.getMaterialIndex(), pTempVars, pEnvironment );
+		}
 		return( polygons );
 	}
 	
@@ -581,10 +533,10 @@ public class CSGShapeBSP
 			}
 		}
 		// Use our own buffer setters to optimize access and cut down on object churn
-		aMesh.setBuffer( Type.Position, 3, createVector3Buffer( pPositionList ) );
-		aMesh.setBuffer( Type.Normal, 3, createVector3Buffer( pNormalList ) );
-		aMesh.setBuffer( Type.TexCoord, 2, createVector2Buffer( pTexCoordList ) );
-		aMesh.setBuffer( Type.Index, 3, createIndexBuffer( pIndexList ) );
+		aMesh.setBuffer( Type.Position, 3, CSGShape.createVector3Buffer( pPositionList ) );
+		aMesh.setBuffer( Type.Normal, 3, CSGShape.createVector3Buffer( pNormalList ) );
+		aMesh.setBuffer( Type.TexCoord, 2, CSGShape.createVector2Buffer( pTexCoordList ) );
+		aMesh.setBuffer( Type.Index, 3, CSGShape.createIndexBuffer( pIndexList ) );
 
 		aMesh.updateBound();
 		aMesh.updateCounts();

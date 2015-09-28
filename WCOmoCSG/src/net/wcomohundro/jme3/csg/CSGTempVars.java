@@ -33,10 +33,9 @@ package net.wcomohundro.jme3.csg;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import java.util.Stack;
-
-import net.wcomohundro.jme3.math.Vector3d;
 
 
 /** Variation of jme3 TempVars that includes Vector3d elements.
