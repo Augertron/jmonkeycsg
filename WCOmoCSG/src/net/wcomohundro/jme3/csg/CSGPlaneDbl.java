@@ -131,6 +131,9 @@ public class CSGPlaneDbl
 			return( null );
 		}
 	}
+	
+	/** Quick access to its DOT for comparison purposes */
+	protected double	mDot;
 
 	/** Standard null constructor */
 	public CSGPlaneDbl(
@@ -189,6 +192,13 @@ public class CSGPlaneDbl
 		}
 	}
 	
+	/** DOT value for this plane */
+	public double getDot() { return( mDot ); }
+	
+	/** Ensure we have something valid */
+	@Override
+	public boolean isValid() { return( Double.isFinite( mDot ) ); }
+	
 	/** Check if a given point is in 'front' or 'behind' this plane  */
 	public double pointDistance(
 		Vector3d	pPoint
@@ -239,309 +249,12 @@ public class CSGPlaneDbl
 		return( pPointStore );
 	}
 	
-	/** Provide a service that knows how to assign a given polygon to an appropriate 
-	 	positional list based on its relationship to this plane.
-	 	
-	 	The options are:
-	 		COPLANAR - the polygon is in the same plane as this one (within a given tolerance)
-	 		FRONT - the polygon is in front of this plane
-	 		BACK - the polygon is in back of this plane
-	 		SPANNING - the polygon crosses the plane
-	 		
-	 	The resultant position is:
-	 		COPLANER - 	same plane, but front/back based on which way it is facing
-	 		FRONT -		front list
-	 		BACK -		back list
-	 		SPANNING - 	the polygon is split into two new polygons, with piece in front going
-	 					into the front list, and the piece in back going into the back list
-	 					
-	 	TempVars usage:
-	 		-- Span Processing --
-		 		vect1
-		 		vect2
-		 		vect2d
-		 	-- CSGPolygon.createPolygon -- 
-		 		vect5
-	 			vect6
 
-	 */
-	@Override
-	public int splitPolygon(
-		CSGPolygon 			pPolygon
-	,	double				pTolerance
-	,	int					pHierarchyLevel
-	, 	List<CSGPolygon> 	pCoplanarFront
-	, 	List<CSGPolygon> 	pCoplanarBack
-	, 	List<CSGPolygon> 	pFront
-	, 	List<CSGPolygon> 	pBack
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		List<CSGVertexDbl> polygonVertices = pPolygon.getVertices();
-		int vertexCount = polygonVertices.size();
-		CSGPlaneDbl polygonPlane = (CSGPlaneDbl)pPolygon.getPlane();
-		
-		if ( !pPolygon.isValid() ) {
-			// This polygon is not playing the game properly, ignore it
-			return( vertexCount );
-		}
-		// A note from the web about what "dot" means in 3D graphics
-		// 		When deciding if a polygon is facing the camera, you need only calculate the dot product 
-		// 		of the normal vector of that polygon, with a vector from the camera to one of the polygon's 
-		// 		vertices. If the dot product is less than zero, the polygon is facing the camera. If the 
-		// 		value is greater than zero, it is facing away from the camera. 
-		int polygonType = COPLANAR;
-		int[] polygonTypes = null;
-		double[] vertexDot = null;
-		
-		// Which way is the polygon facing?
-		List<CSGPolygon> coplaneList 
-			= (mSurfaceNormal.dot( polygonPlane.mSurfaceNormal ) >= 0) ? pCoplanarFront : pCoplanarBack;
-		
-		// NOTE that CSGPlane.equals() checks for near-misses
-		//		I am going to try suppressing the check on the plane to account for those
-		//		polygons that may be 'using' a given plane without being exactly on it....
-		if ( false ) { //polygonPlane == this ) {
-			polygonType = SAMEPLANE;
-//		} else if ( polygonPlane.equals( this, 0 ) ) { // pTolerance ) ) { //pEnvironment.mEpsilonOnPlane ) ) {
-//			// By definition, we are close enough to be in the same plane
-//			polygonType = COPLANAR;
-		} else { 
-			// Check every vertex against the plane
-			polygonTypes = new int[ vertexCount ];
-			vertexDot = new double[ vertexCount ];
-			for( int i = 0; i < vertexCount; i += 1 ) {
-				// Where is this vertex in relation to the plane?
-				// Compare the vertex dot to the inherent plane dot
-				Vector3d aVertexPosition = polygonVertices.get( i ).getPosition();
-				double aVertexDot = vertexDot[i] = (mSurfaceNormal.dot( aVertexPosition ) - mDot);
-				if ( Double.isFinite( aVertexDot ) ) {
-					// If within a given tolerance, it is the same plane
-					// See the discussion from the BSP FAQ paper about the distance of a point to the plane
-					//int type = (aVertexDot < -pTolerance) ? BACK : (aVertexDot > pTolerance) ? FRONT : COPLANAR;
-					int type;
-					if ( (aVertexDot < 0.0) && (aVertexDot < -pEnvironment.mEpsilonNearZeroDbl) ) {
-						// Somewhere in the back
-						type = (aVertexDot < -pTolerance) ? BACK : BACKISH;
-					} else if ( (aVertexDot > 0.0) && (aVertexDot > pEnvironment.mEpsilonNearZeroDbl) ) {
-						// Somewhere in the front
-						type = (aVertexDot > pTolerance) ? FRONT : FRONTISH;
-					} else {
-						type = COPLANAR;
-					}
-					polygonType |= type;
-					polygonTypes[i] = type;
-				} else {
-					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
-					, pEnvironment.mShapeName + "Bogus Vertex: " + aVertexPosition );					
-				}
-			}
-			if ( pEnvironment.mStructuralDebug && (polygonPlane == this) && (polygonType != COPLANAR) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
-				, pEnvironment.mShapeName + "Bogus polygon plane[" + pHierarchyLevel + "] " + polygonType );				
-			}
-		}
-		switch( polygonType ) {
-		default:
-			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
-			, pEnvironment.mShapeName + "Bogus polygon split[" + pHierarchyLevel + "] " + polygonType );
-			return( vertexCount );
-
-		case SAMEPLANE:
-			// The given polygon lies in this exact same plane
-			coplaneList.add( pPolygon );
-			break;
-
-		case COPLANAR:
-		case FRONTISH:
-			// If coplanar, then we are for-sure on the plane.  But if strictly frontish, then we
-			// are very close, so treat it like being on the plane as well.  This should prevent us
-			// for subsequent split processing on the front.
-			int coplaneCount
-				= CSGPolygonDbl.addPolygon( coplaneList, pPolygon, pTempVars, pEnvironment );
-			if ( coplaneCount < 1 ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
-				, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
-				return( vertexCount );
-			}
-			break;
-			
-		case FRONT:
-		case FRONT | FRONTISH:
-			// The given polygon is in front of this plane
-			pFront.add( pPolygon );
-			break;
-			
-		case BACK:
-		case BACKISH:
-		case BACK | BACKISH:
-			// The given polygon is behind this plane
-			// (and if frontish, not far enough in front to make a difference)
-			pBack.add( pPolygon );
-			break;
-			
-		case FRONT | BACK:
-		case FRONT | BACK | FRONTISH:
-		case FRONT | BACK | BACKISH:
-		case FRONT | BACK | FRONTISH | BACKISH:
-			
-		case FRONT | BACKISH:
-		case FRONT | FRONTISH | BACKISH:
-			
-		case BACK | FRONTISH:
-		case BACK | BACKISH | FRONTISH:
-			
-		case FRONTISH | BACKISH:
-
-			// The given polygon crosses this plane
-			List<CSGVertex> beforeVertices = new ArrayList<CSGVertex>( vertexCount );
-			List<CSGVertex> behindVertices = new ArrayList<CSGVertex>( vertexCount );		
-			for( int i = 0; i < vertexCount; i += 1 ) {
-				// Compare to 'next' vertex (wrapping around at the end)
-				int j = (i + 1) % vertexCount;
-				
-				int iType = polygonTypes[i];
-				double iDot = vertexDot[i];
-				CSGVertexDbl iVertex = polygonVertices.get(i);
-				
-				int jType = polygonTypes[j];
-				double jDot = vertexDot[j];
-				CSGVertexDbl jVertex = polygonVertices.get(j);
-				
-				switch( iType ) {
-				case FRONT:
-					// This vertex strictly in front
-					beforeVertices.add( iVertex );
-					break;
-				case BACK:
-					// This vertex strictly behind
-					behindVertices.add( iVertex );
-					break;
-				case COPLANAR:
-					// This vertex will be included on both sides
-					beforeVertices.add( iVertex );
-					behindVertices.add( iVertex.clone( false ) );
-					break;
-				case FRONTISH:
-					// Sortof in front, but very close to the plane
-					switch( jType ) {
-					case FRONT:
-					case FRONTISH:
-						// Really in front
-						beforeVertices.add( iVertex );
-						break;
-					case COPLANAR:
-						// Treat as coplanar
-						beforeVertices.add( iVertex );
-						behindVertices.add( iVertex.clone( false ) );
-						break;
-					case BACK:
-						// I am only sortof in front, but the next is really in back
-						behindVertices.add( iVertex );
-						break;
-					case BACKISH:
-						// I am sortof in front, the next is sortof in back, but we are
-						// both really close to the plane ????
-						beforeVertices.add( iVertex );
-						behindVertices.add( iVertex.clone( false ) );
-						break;
-					}
-					break;
-				case BACKISH:
-					// Sortof in back
-					switch( jType ) {
-					case BACK:
-					case BACKISH:
-						// Really in back
-						behindVertices.add( iVertex );
-						break;
-					case COPLANAR:
-						// Treat as coplanar
-						beforeVertices.add( iVertex );
-						behindVertices.add( iVertex.clone( false ) );
-						break;
-					case FRONT:
-						// I am only sortof in back, the the next is really in front
-						beforeVertices.add( iVertex );
-						break;
-					case FRONTISH:
-						// I am sortof in back, the next is sortof in front, but we are
-						// both really close to the plane  ????
-						beforeVertices.add( iVertex );
-						behindVertices.add( iVertex.clone( false ) );
-						break;
-					}
-					break;
-				}
-				if ((iType | jType) == (FRONT | BACK) ) {
-					// If we cross the plane between these two vertices, then interpolate 
-					// a new vertex on this plane itself, which is both before and behind.
-					Vector3d pointA = iVertex.getPosition();
-					Vector3d pointB = jVertex.getPosition();
-					Vector3d intersectPoint 
-						= intersectLine( pointA, pointB, pTempVars, pEnvironment );
-					double percentage = intersectPoint.distance( pointA ) / pointB.distance( pointA );
-					
-					CSGVertexDbl onPlane 
-						= iVertex.interpolate( jVertex
-						, percentage
-						, intersectPoint
-						, pTempVars
-						, pEnvironment );
-					if ( onPlane != null ) {
-						beforeVertices.add( onPlane );
-						behindVertices.add( onPlane.clone( false ) );
-					}
-				}
-			}
-			// What comes in front of the plane?
-			int beforeCount
-				= CSGPolygonDbl.addPolygon( pFront, beforeVertices, pPolygon.getMaterialIndex()
-											, pTempVars, pEnvironment );
-
-			// What comes behind the given plane?
-			int behindCount 
-				= CSGPolygonDbl.addPolygon( pBack, behindVertices, pPolygon.getMaterialIndex()
-											, pTempVars, pEnvironment );
-
-			if ( beforeCount == 0 ) {
-				if ( behindCount == 0 ) {
-					// We did not split the polygon at all, treat it as COPLANAR
-					coplaneCount
-						= CSGPolygonDbl.addPolygon( coplaneList, pPolygon, pTempVars, pEnvironment );
-					if ( coplaneCount < 1 ) {
-						ConstructiveSolidGeometry.sLogger.log( Level.WARNING
-						, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
-						return( vertexCount );
-					}
-				} else if ( !beforeVertices.isEmpty() ) {
-					// There is some fragment before but not enough for an independent shape
-					// @todo - investigate further if we need to retain this polygon in front or just drop it
-					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
-					//coplaneList.add( pPolygon );		// Just adding the full poly to the plane does not work
-					ConstructiveSolidGeometry.sLogger.log( Level.INFO
-					, pEnvironment.mShapeName + "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
-					return( vertexCount - beforeVertices.size() );
-				}
-			} else if ( (behindCount == 0) && !behindVertices.isEmpty() ) {
-				// There is some fragment behind, but not enough for an independent shape
-				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
-				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
-				//coplaneList.add( pPolygon );			// Just adding the full poly to the plane does not work
-				ConstructiveSolidGeometry.sLogger.log( Level.INFO
-				, pEnvironment.mShapeName + "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
-				return( vertexCount - behindVertices.size() );
-			}
-			break;
-		}
-		return( 0 );
-	}
-	
 	/** Intersection of a line and this plane 
 	 	Based on code fragment from: 
 	 		http://math.stackexchange.com/questions/83990/line-and-plane-intersection-in-3d
 	 */
-	protected Vector3d intersectLine(
+	public Vector3d intersectLine(
 		Vector3d		pPointA
 	,	Vector3d		pPointB
 	,	CSGTempVars		pTempVars
@@ -579,7 +292,7 @@ public class CSGPlaneDbl
 	) throws IOException {
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mSurfaceNormal, "Normal", Vector3d.ZERO );
-		super.write( pExporter );
+		aCapsule.write( mDot, "Dot", 0 );
 	}
 	@Override
 	public void read(
@@ -587,7 +300,7 @@ public class CSGPlaneDbl
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mSurfaceNormal = (Vector3d)aCapsule.readSavable( "Normal", Vector3d.ZERO );
-		super.read( pImporter );
+		mDot = aCapsule.readDouble( "Dot", 0 );
 	}
 	
 	/** Treat two planes as equal if they happen to be close */
@@ -613,6 +326,13 @@ public class CSGPlaneDbl
 			// Let the super handle the error case
 			return( super.equals( pOther ) );
 		}
+	}
+	
+	/** For DEBUG */
+	@Override
+	public String toString(
+	) {
+		return( super.toString() + " - " + mSurfaceNormal + "(" + mDot + ")" );
 	}
 	
 	/////// Implement ConstructiveSolidGeometry

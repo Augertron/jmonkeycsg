@@ -137,15 +137,13 @@ public abstract class CSGPlane<VectorT,VertexT>
 
 	/** A plane is defined by its 'normal' */
 	protected VectorT	mSurfaceNormal;
-	/** Quick access to its DOT for comparison purposes */
-	protected double	mDot;
 	/** An arbitrary point on the plane */
 	protected VectorT	mPointOnPlane;
 	/** Arbitrary 'mark' value for external users of a given plane */
 	protected int		mMark;
 	
 	/** Ensure we have something valid */
-	public boolean isValid() { return( Double.isFinite( mDot ) ); }
+	public abstract boolean isValid();
 	
 	/** Return a copy */
 	public abstract CSGPlane clone(
@@ -159,66 +157,5 @@ public abstract class CSGPlane<VectorT,VertexT>
 	public int getMark() { return mMark; }
 	public void setMark( int pMarkValue ) { mMark = pMarkValue; }
 	
-	/** Provide a service that knows how to assign a given polygon to an appropriate 
-	 	positional list based on its relationship to this plane.
-	 	
-	 	The options are:
-	 		COPLANAR - the polygon is in the same plane as this one (within a given tolerance)
-	 		FRONT - the polygon is in front of this plane
-	 		BACK - the polygon is in back of this plane
-	 		SPANNING - the polygon crosses the plane
-	 		
-	 	The resultant position is:
-	 		COPLANER - 	same plane, but front/back based on which way it is facing
-	 		FRONT -		front list
-	 		BACK -		back list
-	 		SPANNING - 	the polygon is split into two new polygons, with piece in front going
-	 					into the front list, and the piece in back going into the back list
-	 */
-	protected static final int SAMEPLANE = -1;
-	protected static final int COPLANAR = 0;
-	
-	protected static final int FRONT = 1;
-	protected static final int FRONTISH = 2;
-	
-	protected static final int BACKISH = 4;
-	protected static final int BACK = 8;
-	
-	protected static final int SPANNING = 9;
-	
-	public abstract int splitPolygon(
-		CSGPolygon	 		pPolygon
-	,	double				pTolerance
-	,	int					pHierarchyLevel
-	, 	List<CSGPolygon> 	pCoplanarFront
-	, 	List<CSGPolygon> 	pCoplanarBack
-	, 	List<CSGPolygon> 	pFront
-	, 	List<CSGPolygon> 	pBack
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	);
-
-	/** Make the Plane 'savable' */
-	@Override
-	public void write(
-		JmeExporter		pExporter
-	) throws IOException {
-		OutputCapsule aCapsule = pExporter.getCapsule( this );
-		aCapsule.write( mDot, "Dot", 0 );
-	}
-	@Override
-	public void read(
-		JmeImporter		pImporter
-	) throws IOException {
-		InputCapsule aCapsule = pImporter.getCapsule( this );
-		mDot = aCapsule.readFloat( "Dot", 0 );
-	}
-	
-	/** For DEBUG */
-	@Override
-	public String toString(
-	) {
-		return( super.toString() + " - " + mSurfaceNormal + "(" + mDot + ")" );
-	}
 	
 }
