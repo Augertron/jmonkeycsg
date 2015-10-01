@@ -47,7 +47,7 @@ import com.jme3.util.TempVars;
 
 /**  Constructive Solid Geometry (CSG)
 
-  	ACSGPolygon represents a flat geometric shape defined by a set of vertices in a given plane.
+  	A CSGPolygon represents a flat geometric shape defined by a set of vertices in a given plane.
   	
  	A CSGPolygon is assumed to be immutable once created, which means that its internal
  	structure is never changed.  This means that a clone of a polygon just uses the
@@ -57,10 +57,6 @@ import com.jme3.util.TempVars;
  	as they were within the same plane. Obviously, three vertices is the minimum required, but
  	when splitting a polygon across a plane, a simple triangle can be transformed into four
  	points.
- 	
- 	But while searching for the problem of dropped and misplaces shapes, I became concerned that
- 	I was possibly creating a concave polygon in some fashion.  To eliminate that problem, 
- 	I have decided to support the option of restricting CSGPolygon to simple triangles.
  */
 public abstract class CSGPolygon<VertexT extends CSGVertex, PlaneT extends CSGPlane>
 	implements Savable, ConstructiveSolidGeometry

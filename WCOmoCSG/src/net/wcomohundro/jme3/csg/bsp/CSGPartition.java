@@ -54,7 +54,6 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 
-
 /** Constructive Solid Geometry (CSG)
 
     A CSGPartition is a hierarchical container class used to keep track of a set of Polygons, along with
@@ -70,9 +69,49 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  		@see ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
  	
  	You will notice that the structure of a CSGPartition closely mimics the C++ psuedo-code provided
- 	in the paper above. The BSP construction code is closely followed by CSGPlane.splitPolygon() 
- 	processing.  That being said, the BSP codes that all polygons are assumed to be convex.
- 	I wonder if that is true in all cases for this code????
+ 	in the paper above. The BSP construction code is closely followed splitPolygon() 
+ 	processing.  That being said, the BSP code assumes that all polygons are convex.
+ 	
+ 	An important aspect of a Partition is the ability to 'split' a given Polygon based on if the 
+	polygon is in front of, behind, crosses, or lies on the plane itself. The polygon can then be
+	included in an appropriate list of similar polygons.  In particular, a polygon that crosses the
+	plane can be broken into two parts, the new polygon in front of the plane and the new polygon
+	behind the plane.
+	
+	From the BSP FAQ paper: @see ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
+-------------------------------------------------------------------------------------------------------
+HOW DO YOU PARTITION A POLYGON WITH A PLANE?
+
+Overview
+	Partitioning a polygon with a plane is a matter of determining which side of the plane the polygon 
+	is on. This is referred to as a front/back test, and is performed by testing each point in the 
+	polygon against the plane. If all of the points lie to one side of the plane, then the entire 
+	polygon is on that side and does not need to be split. If some points lie on both sides of the 
+	plane, then the polygon is split into two or more pieces.
+
+	The basic algorithm is to loop across all the edges of the polygon and find those for which one 
+	vertex is on each side of the partition plane. The intersection points of these edges and 
+	the plane are computed, and those points are used as new vertices for the resulting pieces.
+
+Implementation notes
+	Classifying a point with respect to a plane is done by passing the (x, y, z) values of the 
+	point into the plane equation, Ax + By + Cz + D = 0. The result of this operation is the 
+	distance from the plane to the point along the plane's normal vector. It will be positive 
+	if the point is on the side of the plane pointed to by the normal vector, negative otherwise. 
+	If the result is 0, the point is on the plane.
+
+	For those not familiar with the plane equation, The values A, B, and C are the coordinate 
+	values of the normal vector. D can be calculated by substituting a point known to be on 
+	the plane for x, y, and z.
+
+	Convex polygons are generally easier to deal with in BSP tree construction than concave 
+	ones, because splitting them with a plane always results in exactly two convex pieces. 
+	Furthermore, the algorithm for splitting convex polygons is straightforward and robust. 
+	Splitting of concave polygons, especially self intersecting ones, is a significant problem 
+	in its own right.
+------------------------------------------------------------------------------------------------------	
+	
+
  */
 public class CSGPartition 
 	implements ConstructiveSolidGeometry

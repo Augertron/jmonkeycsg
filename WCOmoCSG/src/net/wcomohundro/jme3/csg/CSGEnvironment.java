@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
+import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -65,14 +66,13 @@ public class CSGEnvironment
 	 */
 	public static CSGEnvironment sStandardEnvironment = new CSGEnvironment( true );
 
+	
 	/** Shape this environment applies to */
 	public String		mShapeName;
 	/** Is structural debug on or off */
 	public boolean		mStructuralDebug;
 	/** Control flag to process in double precision */
 	public boolean 		mDoublePrecision;
-	/** Type of 'shape' to operate with */
-	public Class		mShapeClass;
 	
 	/** EPSILON - near to zero */
 	public double		mEpsilonNearZeroDbl;
@@ -85,7 +85,10 @@ public class CSGEnvironment
 	public float		mEpsilonBetweenPointsFlt;
 	/** EPSILON - meaningful maximal distance between points */
 	public double		mEpsilonMaxBetweenPoints;
-	
+
+	/** Type of 'shape processor' to operate with */
+	public Class		mShapeClass;
+
 	//////////////////////////////// BSP SPECIFIC PROCESSING ///////////////////////////////
 	/** Maximum depth allowed on BSP recursion processing */
 	public int			mBSPLimit;

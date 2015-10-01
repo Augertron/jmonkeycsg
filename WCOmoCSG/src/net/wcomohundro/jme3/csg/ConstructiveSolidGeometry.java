@@ -61,6 +61,7 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  	Difference - what is left when you remove one object from another
  	
  -- A Few Personal Notes on the History of this Code (2015)--
+ 
  	After retiring from the professional life of a software engineer for over four decades, I have the
  	opportunity to indulge in a few whims and can now investigate things like 3D graphics. Having 
  	experimented with Java since its initial release in 1995, and having been developing enterprise-level,
@@ -70,7 +71,7 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  	As an engineer, not a graphics designer, the idea of hand-tooling meshes and textures via various
  	UI oriented drawing tools has no appeal.  I am a build-it-up-programmatically kind of person. So
  	when I went looking for the concept of blending shapes together in jMonkey, I came across CSG and
- 	a sample implementation in Java for jMonkey.
+ 	a sample BSP (binary space partitioning) implementation in Java for jMonkey.
  	
  	As far as I can tell, Evan Wallace put together a Javascript library for CSG support within 
  	browsers that support WebGL.  @see http://evanw.github.io/csg.js  (it is really quite impressive)
@@ -78,68 +79,23 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  	by "andychase".  Everything seems to have been properly posted and annotated for fully open 
  	source.
  	
-	After more research, it appears this is all related to the concept of BSP trees
- 	(Binary Space Partitioning) which is a generic mechanism for producing a tree representation of 
- 	a hierarchical set of shapes.  In 3D, each shape is a polygon.
+ -- Binary Space Partitioning --
+    BSP is a generic mechanism for producing a tree representation of a hierarchical set of shapes.  
+    In 3D, each shape is a polygon.
  		@see ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html 	
  		
  	While working with the "fabsterpal" code, I tripped over some bugs and encountered many spots
  	where I wished for a deeper level of comments.  My personal learning style is to work from an
  	operational example.  From there, I can make small, incremental changes to help we understand
- 	the larger picture.  To that end, I reimplemented the Java code, following my own
- 	conventions and structures.  But the logic and BSP algorithms are all based directly on what I found
- 	in the original Javascript/Java code.
+ 	the larger picture.  To that end, I re-implemented the Java code, following my own
+ 	conventions and structures.  But the logic and BSP algorithms are all based directly on what I
+ 	found in the original Javascript/Java code.
  	
-  -- A Few Coding Conventions --
-  	From a software engineering, long term maintenance perspective, I have ended up following a 
-  	rather simple pattern of coding conventions across many projects.  In brief:
-  	
-  	1)	The code itself (with good names) tells you WHAT
-  		Comments tell you WHY (and may explain a bit of HOW if the code is very complex)
-  		
-  	2)	A simple naming standard provides huge returns:
-  		A)	As per standard Java, classes are capitalized, methods are not
-  		B)	All parameters in method calls are named "pXxxxx"
-  		C)	All instance variables are named "mXxxxxx"
-  		D)	All static variables are named "sXxxxxx"
-  		
-  	3)	For older eyes, whitespace increases legibility tremendously
-  
-  -- The structure/packaging of this code --
-  	I am attempting to keep this CSG code as an independent plugin with minimal changes within the
-  	core JME as possible.  All CSG code is therefore in net.wcomohundro packages.
-  	
-  	Where simple changes in the core eliminated a lot of hoop-jumping, I have duplicated the
-  	core JME code into the appropriate com.jme3 package within the CSG SVN repository. The changes are
-  	all related to making the XML importer more robust.  I have found the Savable interface with its
-  	XML support to be quite handy in my testing and development. The XML is very readable and easy
-  	to manually edit to produce a wide range of test cases.  The core jme code changes
-  	are related to allowing the Savable.read() process to accommodate more missing parameters, which
-  	makes the .xml files more compact.
-  	I have also created an XMLLoader option for the AssetManager which makes it easy to load 
-  	.xml based definitions. XMLLoader can be included in the core jme package whenever the powers
-  	that be see fit.  There is nothing about it related to CSG and can be used for any type of
-  	loaded asset.
-  	
-  	CSGShape is the key player in defining the elements blended by CSG boolean operators.  It 
-  	is connected to any arbitrary Mesh, created by any core jme process.
-  	It was my original intent to leverage all the com.jme3.scene.shape classes.  But as I worked
-  	through various tests, I found I wanted a more unified approach to the primitive shapes 
-  	than what is offered by Box, Cylinder, etc.  I therefore have created CSG variants of the
-  	primitive shapes, based in the package net.wcomo.jme3.csg.shape.  While the class structure/
-  	inheritance tree is independent of the the core jme shapes, I shamelessly stole as much code
-  	as I needed.  @see net.wcomohundro.jme3.csg.shape.CSGMesh   --   Oh the joys of open source.
-  	
-  	So you have two options -- leverage the jme core shapes and attach them to an instance of
-  	CSGShape, or feel free to use any of the CSG defined primitives.
-  	
- -- A Bit of Debugging History --
  	My initial cut worked quite nicely, and rather quickly allowed me to duplicate the 
  	functionality of the original "fabsterpal" BSP code while correcting some bugs.
- 	
  	But as I worked with more/complex test cases, I started seeing some odd triangular 'drop outs'
- 	At a certain point in a complex shape, bits of the polygons went missing, or were strangely 
- 	warped.  
+ 	and discrepancies.  At a certain point in a complex shape, bits of the polygons went missing, 
+ 	or were strangely warped.  Others have referred to these elements as 'artifacts'.
  	
  	Since simple shapes work just fine, I originally believed the core logic is proper.  So I 
  	started going after rounding/overflow types of problems.  My thought was that a triangle went 
@@ -157,33 +113,20 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  		NaNs returns false and any != comparison involving NaN returns true, including x!=x when 
  		x is NaN.
  		
- 	Unfortunately, I never detected an overflow/NaN condition when generating a vertex.
- 		
+ 	FYI, I never detected an overflow/NaN condition when generating a vertex.
+ 
  	While testing, I noticed I could get better results with fewer 'dropouts' if I carefully 
  	adjusted the tolerance of when a point was on-plane or not.  That explains the various
  	EPSILON values defined below.  I needed to set different tolerances for different 
  	conditions.  So a larger EPSILON_ONPLANE value gave me better looking results.  But it
  	did not fix all cases.
  	
- 	So now I am trying to understand why changing the ONPLANE tolerance affects the system as
- 	it does.  I am trying to adapt what the system does when it encounters a triangle that 
- 	spans a plane.  After all, a larger EPSILON_ONPLANE will minimize the number of triangles that
- 	must be split.  So there seems to be a connection here????
+ 	I have refactored the code to allow me to operate in either float or double precision. I have
+ 	added support for forcing points near to a plane to be recomputed onto the plane. And you
+ 	will find various other experiments and test conditions within the BSP code trying to 
+ 	address the 'artifact' problem.
  	
- 	I am wondering if I could possibly be accidentally generating a concave polygon in some
- 	these dropout cases.  Everything I have read so far says the BSP processing only works with 
- 	proper convex polygons.  An approach I am considering is to force CSGPolygon to solely 
- 	operate as a 3 pointed triangle.  By definition, it would then always be convex.  The 
- 	polygon splitter will have to be enhanced to produce multiple triangles, not a single polygon with
- 	more than three vertices.
- 	
- 	I have also experimented with the idea of 'forcing' a vertex onto a given plane when we
- 	detect a point within the EPSION_ONPLANE tolerance BUT which is not zero distance away.
- 	This would mean we are always working points that truly coincide with a given plane.  BUT
- 	I wonder it moving such a point means we have actually created a 'gap' in the underlying surface.
- 	More testing will be required here.
- 	
- 	Subsequent searching on the web discovered this paper:
+ 	 Subsequent searching on the web discovered this paper:
  		https://www.andrew.cmu.edu/user/jackiey/resources/CSG/CSG_report.pdf
  		csegurar@andrew.cmu.edu, tstine@andrew.cmu.edu, jackiey@andrew.cmu.edu (all accounts now inactive)
  	in which the authors are discussing CSG and BSP.  In particular was this:
@@ -217,19 +160,89 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
 		further information concerning topological structure must be used.
  		
  	IN CONCLUSTION --- All of these statements lead me to believe there is a fundamental limitation 
- 	in the underlying algorithm. Somewhere deep inside the BSP, a polygon split is required and 
+ 	in the underlying BSP algorithm. Somewhere deep inside the BSP, a polygon split is required and 
  	the limited precision can mean that multiple, incorrect assignment of vertices can occur.  
- 	Unfortunately, I still have no idea how to identify, capture, and fix such a condition.
- 	
-  -- CSG Environment --
-	To more readily address and experiment with the various configurations that affect the
-	'artifact' problem, I have enabled custom environmental settings for every CSG processing
-	object.  Via this environment, you can adjust the various tolerances, select float versus
-	double precision processing, control how polygons are split across planes, and even select
-	the underlying Shape processor.
+ 	Unfortunately, I still have no idea how to identify, detect, capture, and fix such a condition.
+
+ -- A Different Approach: Inside/Outside/Boundary --
+ 	While struggling with the BSP approach, I stumbled across a Java implementation of a non-BSP
+ 	algorithm based on the paper:
+ 		D. H. Laidlaw, W. B. Trumbore, and J. F. Hughes.  
+ 		"Constructive Solid Geometry for Polyhedral Objects" 
+ 		SIGGRAPH Proceedings, 1986, p.161. 
+
+	Their approach is to first analyze all the faces in two objects that are being combined.  Any
+	faces that intersect are broken into smaller pieces that do not intersect.  Every resultant face
+	is then categorized as being Inside, Outside, or on the Boundary of the other object. The
+	boolean operation is performed by selecting the appropriately categorized face from the two
+	objects.
 	
-	This makes if very easy to generate the exact same shape, displayed in the same view, but
-	using different configurations to see what impact the various options have on the final display.
+	Unlike BSP, the IOB approach is not recursive, but iterative.  However, it does involve 
+	matching every face in one solid with every face in a second solid, so you dealing with
+	M * N performance issues.
+	
+	A Java implementation of this algorithm was made open source by 
+		Danilo Balby Silva Castanheira (danbalby@yahoo.com)
+	It is based on the Java3D library, not jMonkey.  It has not been actively worked on for 
+	several years, and I was unable to get it operational.
+	
+	Like the fabsterpal BSP code, I have reimplemented this code to run within the jMonkey
+	environment.  Artifacts are no longer a problem, but the rendering differences between
+	Java3D and jMonkey means that I have not yet gotten textures to operate properly.  But the
+	shapes themselves look good in simple colors.
+ 	
+ -- A Few Coding Conventions --
+  	From a software engineering, long term maintenance perspective, I have ended up following a 
+  	rather simple pattern of coding conventions across many projects.  In brief:
+  	
+  	1)	The code itself (with good names) tells you WHAT
+  		Comments tell you WHY (and may explain a bit of HOW if the code is very complex)
+  		
+  	2)	A simple naming standard provides huge returns:
+  		A)	As per standard Java, classes are capitalized, methods are not
+  		B)	All parameters in method calls are named "pXxxxx"
+  		C)	All instance variables are named "mXxxxxx"
+  		D)	All static variables are named "sXxxxxx"
+  		
+  	3)	For older eyes, whitespace increases legibility tremendously
+  
+ -- The structure/packaging of this code --
+  	I am attempting to keep this CSG code as an independent plugin with minimal changes within the
+  	core JME as possible.  All CSG code is therefore in net.wcomohundro packages.
+  	
+  	Where simple changes in the core eliminated a lot of hoop-jumping, I have duplicated the
+  	core JME code into the appropriate com.jme3 package within the CSG SVN repository. The changes are
+  	all related to making the XML importer more robust.  I have found the Savable interface with its
+  	XML support to be quite handy in my testing and development. The XML is very readable and easy
+  	to manually edit to produce a wide range of test cases.  The core jme code changes
+  	are related to allowing the Savable.read() process to accommodate more missing parameters, which
+  	makes the .xml files more compact.
+  	I have also created an XMLLoader option for the AssetManager which makes it easy to load 
+  	.xml based definitions. XMLLoader can be included in the core jme package whenever the powers
+  	that be see fit.  There is nothing about it related to CSG and can be used for any type of
+  	loaded asset.
+  	
+  	CSGShape is the key player in defining the elements blended by CSG boolean operators.  It 
+  	is connected to any arbitrary Mesh, created by any core jme process.
+  	It was my original intent to leverage all the com.jme3.scene.shape classes.  But as I worked
+  	through various tests, I found I wanted a more unified approach to the primitive shapes 
+  	than what is offered by Box, Cylinder, etc.  I therefore have created CSG variants of the
+  	primitive shapes, based in the package net.wcomo.jme3.csg.shape.  While the class structure/
+  	inheritance tree is independent of the the core jme shapes, I shamelessly stole as much code
+  	as I needed.  @see net.wcomohundro.jme3.csg.shape.CSGMesh   --   Oh the joys of open source.
+  	
+  	So you have two options -- leverage the jme core shapes and attach them to an instance of
+  	CSGShape, or feel free to use any of the CSG defined primitives.
+  	
+  	Both the BSP and IOB algorithms are operational, and you can employ either process on 
+  	a shape-by-shape basis.  @see CSGEnvironment for selecting configuration options that
+  	control the processing.
+  	
+  	net.wcomohundro.jme3.csg - core/common CSG constructs and support
+  	net.wcomohundro.jme3.csg.bsp - the BSP algorithm support (float or double based on config option)
+  	net.wcomohundro.jme3.csg.iob - the IOB algorithm support (inherently double)
+  	
+  	net.wcomohundro.jme3.csg.shape - Box/Sphere/Pipe/Mesh support 
 */
 public interface ConstructiveSolidGeometry 
 {

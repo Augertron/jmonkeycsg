@@ -40,7 +40,7 @@ import net.wcomohundro.jme3.csg.CSGVertex;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 
-/** Simple 'volume' extent applied to a face or complete solid */
+/** Simple min/max extent applied to a face or complete solid */
 public class CSGBounds 
 	implements ConstructiveSolidGeometry
 {
