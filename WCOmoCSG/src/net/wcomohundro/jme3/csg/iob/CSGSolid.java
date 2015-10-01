@@ -114,6 +114,9 @@ public class CSGSolid
 	, 	CSGVertexIOB 	v2
 	, 	CSGVertexIOB 	v3
 	, 	int 			pMaterialIndex
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+
 	) {
 		Vector3d aPosition = v1.getPosition();
 		Vector3d bPosition = v2.getPosition();
@@ -122,7 +125,7 @@ public class CSGSolid
 		if ( (aPosition.distance( bPosition ) > 1e-7)
 		&&   (bPosition.distance( cPosition ) > 1e-7)
 		&&	 (cPosition.distance( aPosition ) > 1e-7) ) {
-			CSGFace aFace = new CSGFace( v1, v2, v3, pMaterialIndex );
+			CSGFace aFace = new CSGFace( v1, v2, v3, pMaterialIndex, pTempVars, pEnvironment );
 			mFaces.add( aFace );
 			return( aFace );
 		} else {
@@ -158,7 +161,6 @@ public class CSGSolid
 	) {
 		CSGRay line;
 		CSGSegment segment1, segment2;
-		double distFace1Vert1, distFace1Vert2, distFace1Vert3, distFace2Vert1, distFace2Vert2, distFace2Vert3;
 		int signFace1Vert1, signFace1Vert2, signFace1Vert3, signFace2Vert1, signFace2Vert2, signFace2Vert3;
 		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
 		
@@ -180,48 +182,26 @@ public class CSGSolid
 						//if object1 face bound and object2 face bound overlap...  
 						CSGBounds otherFaceBound = face2.getBound();
 						if ( thisFaceBound.overlap( otherFaceBound, pEnvironment ) ) {
-							//PART I - DO TWO POLIGONS INTERSECT?
+							//PART I - DO TWO POLYGONS INTERSECT?
 							//POSSIBLE RESULTS: INTERSECT, NOT_INTERSECT, COPLANAR
 							
-							//distance from the face1 vertices to the face2 plane
-							distFace1Vert1 = face2.computeDistance( face1.v1() );
-							distFace1Vert2 = face2.computeDistance( face1.v2() );
-							distFace1Vert3 = face2.computeDistance( face1.v3() );
-							
-							//distances signs from the face1 vertices to the face2 plane 
-							signFace1Vert1 = (distFace1Vert1 > tolerance)
-												? 1 
-												: (distFace1Vert1 < -tolerance) ? -1 : 0; 
-							signFace1Vert2 = (distFace1Vert2 > tolerance)
-												? 1 
-												: (distFace1Vert2 < -tolerance) ? -1 : 0;
-							signFace1Vert3 = (distFace1Vert3 > tolerance)
-												? 1 
-												: (distFace1Vert3 < -tolerance) ? -1 : 0;
-							
-							//if all the signs are zero, the planes are coplanar
-							//if all the signs are positive or negative, the planes do not intersect
-							//if the signs are not equal...
-							if (!(signFace1Vert1==signFace1Vert2 && signFace1Vert2==signFace1Vert3))
-							{
-								//distance from the face2 vertices to the face1 plane
-								distFace2Vert1 = face1.computeDistance( face2.v1() );
-								distFace2Vert2 = face1.computeDistance( face2.v2() );
-								distFace2Vert3 = face1.computeDistance( face2.v3() );
-								
-								//distances signs from the face2 vertices to the face1 plane
-								signFace2Vert1 = (distFace2Vert1 > tolerance)
-													? 1 
-													: (distFace2Vert1 < -tolerance) ? -1 : 0; 
-								signFace2Vert2 = (distFace2Vert2 > tolerance)
-													? 1 
-													: (distFace2Vert2 < -tolerance) ? -1 : 0;
-								signFace2Vert3 = (distFace2Vert3 > tolerance)
-													? 1 
-													: (distFace2Vert3 < -tolerance) ? -1 : 0;
-								//if the signs are not equal...
-								if (!(signFace2Vert1==signFace2Vert2 && signFace2Vert2==signFace2Vert3))
-								{
+							// Relative positions of the face1 vertices to the face2 plane
+							signFace1Vert1 = face2.computePosition( face1.v1(), tolerance );
+							signFace1Vert2 = face2.computePosition( face1.v2(), tolerance );
+							signFace1Vert3 = face2.computePosition( face1.v3(), tolerance );
+													
+							// If all the signs are zero, the planes are coplanar, so skip it
+							// If all the signs are positive or negative, the planes do not intersect, so skip it
+							// If the signs are not equal, then it looks like an intersection and we are 
+							// interested
+							if ( !(signFace1Vert1==signFace1Vert2 && signFace1Vert2==signFace1Vert3) ) {
+								// Relative positions of the face2 vertices to the face1 plane
+								signFace2Vert1 = face1.computePosition( face2.v1(), tolerance );
+								signFace2Vert2 = face1.computePosition( face2.v2(), tolerance );
+								signFace2Vert3 = face1.computePosition( face2.v3(), tolerance );
+
+								// If the signs are not equal...
+								if ( !(signFace2Vert1==signFace2Vert2 && signFace2Vert2==signFace2Vert3) ) {
 									line = new CSGRay( face1, face2, pEnvironment );
 							
 									//intersection of the face1 and the plane of face2
@@ -232,16 +212,9 @@ public class CSGSolid
 																
 									//if the two segments intersect...
 									if( segment1.intersect( segment2, pEnvironment ) ) {
-										//PART II - SUBDIVIDING NON-COPLANAR POLYGONS
-										this.splitFace( i, segment1, segment2, pEnvironment );
+										// PART II - SUBDIVIDING NON-COPLANAR POLYGONS
+										this.splitFace( i, segment1, segment2, pTempVars, pEnvironment );
 																			
-										//prevent from infinite loop (with a loss of mFaces...)
-										//if(numFacesStart*20<getNumFaces())
-										//{
-										//	System.out.println("possible infinite loop situation: terminating faces split");
-										//	return;
-										//}
-								
 										// if the face in the position isn't the same, there was a break 
 										if ( face1 != mFaces.get(i) ) {
 											// if the generated solid is equal the origin...
@@ -297,9 +270,9 @@ public class CSGSolid
 		int 		facePos
 	, 	CSGSegment segment1
 	, 	CSGSegment segment2
+	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		CSGVertexIOB startPosVertex, endPosVertex;
 		Vector3d startPos, endPos;
 		CSGSegment.CSGSegmentType startType, endType, middleType;
 		double startDist, endDist;
@@ -336,13 +309,11 @@ public class CSGSolid
 		{
 			startVertex.setStatus( CSGVertexStatus.BOUNDARY );
 		}
-				
 		//set vertex to BOUNDARY if it is end type
 		if (endType == CSGSegment.CSGSegmentType.VERTEX)
 		{
 			endVertex.setStatus( CSGVertexStatus.BOUNDARY );
 		}
-		
 		//VERTEX-_______-VERTEX 
 		if (startType == CSGSegment.CSGSegmentType.VERTEX && endType == CSGSegment.CSGSegmentType.VERTEX)
 		{
@@ -370,31 +341,31 @@ public class CSGSolid
 			//VERTEX-EDGE-EDGE
 			if (startType == CSGSegment.CSGSegmentType.VERTEX)
 			{
-				breakFaceInTwo(facePos, endPos, splitEdge);
+				breakFaceInTwo(facePos, endPos, splitEdge, pTempVars, pEnvironment );
 				return;
 			}
 			
 			//EDGE-EDGE-VERTEX
 			else if (endType == CSGSegment.CSGSegmentType.VERTEX)
 			{
-				breakFaceInTwo(facePos, startPos, splitEdge);
+				breakFaceInTwo(facePos, startPos, splitEdge, pTempVars, pEnvironment );
 				return;
 			}
         
 			// EDGE-EDGE-EDGE
 			else if (startDist == endDist)
 			{
-				breakFaceInTwo(facePos, endPos, splitEdge);
+				breakFaceInTwo(facePos, endPos, splitEdge, pTempVars, pEnvironment );
 			}
 			else
 			{
 				if((startVertex == face.v1() && endVertex == face.v2()) || (startVertex == face.v2() && endVertex == face.v3()) || (startVertex == face.v3() && endVertex == face.v1()))
 				{
-					breakFaceInThree(facePos, startPos, endPos, splitEdge);
+					breakFaceInThree(facePos, startPos, endPos, splitEdge, pTempVars, pEnvironment );
 				}
 				else
 				{
-					breakFaceInThree(facePos, endPos, startPos, splitEdge);
+					breakFaceInThree(facePos, endPos, startPos, splitEdge, pTempVars, pEnvironment );
 				}
 			}
 			return;
@@ -405,48 +376,48 @@ public class CSGSolid
 		//VERTEX-FACE-EDGE
 		else if (startType == CSGSegment.CSGSegmentType.VERTEX && endType == CSGSegment.CSGSegmentType.EDGE)
 		{
-			breakFaceInTwo(facePos, endPos, endVertex);
+			breakFaceInTwo(facePos, endPos, endVertex, pTempVars, pEnvironment );
 		}
 		//EDGE-FACE-VERTEX
 		else if (startType == CSGSegment.CSGSegmentType.EDGE && endType == CSGSegment.CSGSegmentType.VERTEX)
 		{
-			breakFaceInTwo(facePos, startPos, startVertex);
+			breakFaceInTwo(facePos, startPos, startVertex, pTempVars, pEnvironment );
 		}
 		//VERTEX-FACE-FACE
 		else if (startType == CSGSegment.CSGSegmentType.VERTEX && endType == CSGSegment.CSGSegmentType.FACE)
 		{
-			breakFaceInThree(facePos, endPos, startVertex);
+			breakFaceInThree(facePos, endPos, startVertex, pTempVars, pEnvironment );
 		}
 		//FACE-FACE-VERTEX
 		else if (startType == CSGSegment.CSGSegmentType.FACE && endType == CSGSegment.CSGSegmentType.VERTEX)
 		{
-			breakFaceInThree(facePos, startPos, endVertex);
+			breakFaceInThree(facePos, startPos, endVertex, pTempVars, pEnvironment );
 		}
 		//EDGE-FACE-EDGE
 		else if (startType == CSGSegment.CSGSegmentType.EDGE && endType == CSGSegment.CSGSegmentType.EDGE)
 		{
-			breakFaceInThree(facePos, startPos, endPos, startVertex, endVertex);
+			breakFaceInThree(facePos, startPos, endPos, startVertex, endVertex, pTempVars, pEnvironment );
 		}
 		//EDGE-FACE-FACE
 		else if (startType == CSGSegment.CSGSegmentType.EDGE && endType == CSGSegment.CSGSegmentType.FACE)
 		{
-			breakFaceInFour(facePos, startPos, endPos, startVertex);
+			breakFaceInFour(facePos, startPos, endPos, startVertex, pTempVars, pEnvironment );
 		}
 		//FACE-FACE-EDGE
 		else if (startType == CSGSegment.CSGSegmentType.FACE && endType == CSGSegment.CSGSegmentType.EDGE)
 		{
-			breakFaceInFour(facePos, endPos, startPos, endVertex);
+			breakFaceInFour(facePos, endPos, startPos, endVertex, pTempVars, pEnvironment );
 		}
 		//FACE-FACE-FACE
 		else if (startType == CSGSegment.CSGSegmentType.FACE && endType == CSGSegment.CSGSegmentType.FACE)
 		{
 			Vector3d segmentVector = new Vector3d(startPos.x-endPos.x, startPos.y-endPos.y, startPos.z-endPos.z);
 						
-			//if the intersection segment is a point only...
+			// Ff the intersection segment is a point only...
 			if ( (Math.abs( segmentVector.x ) < tolerance)
 			&&   (Math.abs( segmentVector.y ) < tolerance)
 			&&   (Math.abs( segmentVector.z ) < tolerance) ) {
-				breakFaceInThree(facePos, startPos);
+				breakFaceInThree(facePos, startPos, pTempVars, pEnvironment );
 				return;
 			}
 			//gets the vertex more lined with the intersection segment
@@ -484,11 +455,11 @@ public class CSGSolid
 			// Now find which of the intersection endpoints is nearest to that vertex.
 			if (linedVertexPos.distance(startPos) > linedVertexPos.distance(endPos))
 			{
-				breakFaceInFive(facePos, startPos, endPos, linedVertex);
+				breakFaceInFive(facePos, startPos, endPos, linedVertex, pTempVars, pEnvironment );
 			}
 			else
 			{
-				breakFaceInFive(facePos, endPos, startPos, linedVertex);
+				breakFaceInFive(facePos, endPos, startPos, linedVertex, pTempVars, pEnvironment );
 			}
 		}
 	}
@@ -500,8 +471,13 @@ public class CSGSolid
 	 * @param newPos new vertex position
 	 * @param edge that will be split 
 	 */		
-	private void breakFaceInTwo(int facePos, Vector3d newPos, int splitEdge)
-	{
+	private void breakFaceInTwo(
+		int facePos
+	, 	Vector3d newPos
+	, 	int splitEdge
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
@@ -509,18 +485,18 @@ public class CSGSolid
 						
 		if (splitEdge == 1)
 		{
-			addFace(face.v1(), vertex, face.v3(), face.getMaterialIndex());
-			addFace(vertex, face.v2(), face.v3(), face.getMaterialIndex());
+			addFace(face.v1(), vertex, face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex, face.v2(), face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (splitEdge == 2)
 		{
-			addFace(face.v2(), vertex, face.v1(), face.getMaterialIndex());
-			addFace(vertex, face.v3(), face.v1(), face.getMaterialIndex());
+			addFace(face.v2(), vertex, face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex, face.v3(), face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else
 		{
-			addFace(face.v3(), vertex, face.v2(), face.getMaterialIndex());
-			addFace(vertex, face.v1(), face.v2(), face.getMaterialIndex());
+			addFace(face.v3(), vertex, face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex, face.v1(), face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
 	
@@ -531,8 +507,13 @@ public class CSGSolid
 	 * @param newPos new vertex position
 	 * @param endVertex vertex used for splitting 
 	 */		
-	private void breakFaceInTwo(int facePos, Vector3d newPos, CSGVertexIOB endVertex)
-	{
+	private void breakFaceInTwo(
+		int facePos
+	, 	Vector3d newPos
+	, 	CSGVertexIOB endVertex
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
@@ -540,18 +521,18 @@ public class CSGSolid
 					
 		if (endVertex.equals(face.v1()))
 		{
-			addFace(face.v1(), vertex, face.v3(), face.getMaterialIndex());
-			addFace(vertex, face.v2(), face.v3(), face.getMaterialIndex());
+			addFace(face.v1(), vertex, face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex, face.v2(), face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (endVertex.equals(face.v2()))
 		{
-			addFace(face.v2(), vertex, face.v1(), face.getMaterialIndex());
-			addFace(vertex, face.v3(), face.v1(), face.getMaterialIndex());
+			addFace(face.v2(), vertex, face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex, face.v3(), face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else
 		{
-			addFace(face.v3(), vertex, face.v2(), face.getMaterialIndex());
-			addFace(vertex, face.v1(), face.v2(), face.getMaterialIndex());
+			addFace(face.v3(), vertex, face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex, face.v1(), face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
 	
@@ -563,8 +544,14 @@ public class CSGSolid
 	 * @param newPos2 new vertex position 
 	 * @param splitEdge edge that will be split
 	 */
-	private void breakFaceInThree(int facePos, Vector3d newPos1, Vector3d newPos2, int splitEdge)
-	{
+	private void breakFaceInThree(
+		int facePos
+	, 	Vector3d newPos1
+	, 	Vector3d newPos2
+	, 	int splitEdge
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
@@ -573,21 +560,21 @@ public class CSGSolid
 						
 		if (splitEdge == 1)
 		{
-			addFace(face.v1(), vertex1, face.v3(), face.getMaterialIndex());
-			addFace(vertex1, vertex2, face.v3(), face.getMaterialIndex());
-			addFace(vertex2, face.v2(), face.v3(), face.getMaterialIndex());
+			addFace(face.v1(), vertex1, face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, vertex2, face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex2, face.v2(), face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (splitEdge == 2)
 		{
-			addFace(face.v2(), vertex1, face.v1(), face.getMaterialIndex());
-			addFace(vertex1, vertex2, face.v1(), face.getMaterialIndex());
-			addFace(vertex2, face.v3(), face.v1(), face.getMaterialIndex());
+			addFace(face.v2(), vertex1, face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, vertex2, face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex2, face.v3(), face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else
 		{
-			addFace(face.v3(), vertex1, face.v2(), face.getMaterialIndex());
-			addFace(vertex1, vertex2, face.v2(), face.getMaterialIndex());
-			addFace(vertex2, face.v1(), face.v2(), face.getMaterialIndex());
+			addFace(face.v3(), vertex1, face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, vertex2, face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex2, face.v1(), face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
 		
@@ -598,8 +585,13 @@ public class CSGSolid
 	 * @param newPos new vertex position
 	 * @param endVertex vertex used for the split
 	 */
-	private void breakFaceInThree(int facePos, Vector3d newPos, CSGVertexIOB endVertex)
-	{
+	private void breakFaceInThree(
+		int facePos
+	, 	Vector3d newPos
+	, 	CSGVertexIOB endVertex
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
@@ -607,21 +599,21 @@ public class CSGSolid
 						
 		if (endVertex.equals(face.v1()))
 		{
-			addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex());
-			addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex());
-			addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex());
+			addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (endVertex.equals(face.v2()))
 		{
-			addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex());
-			addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex());
-			addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex());
+			addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else
 		{
-			addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex());
-			addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex());
-			addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex());
+			addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
 	
@@ -634,8 +626,15 @@ public class CSGSolid
 	 * @param startVertex vertex used the new faces creation
 	 * @param endVertex vertex used for the new faces creation
 	 */
-	private void breakFaceInThree(int facePos, Vector3d newPos1, Vector3d newPos2, CSGVertexIOB startVertex, CSGVertexIOB endVertex)
-	{
+	private void breakFaceInThree(
+		int facePos
+	, 	Vector3d newPos1
+	, 	Vector3d newPos2
+	, 	CSGVertexIOB startVertex
+	, 	CSGVertexIOB endVertex
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
@@ -644,39 +643,39 @@ public class CSGSolid
 						
 		if (startVertex.equals(face.v1()) && endVertex.equals(face.v2()))
 		{
-			addFace(face.v1(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(face.v1(), vertex2, face.v3(), face.getMaterialIndex());
-			addFace(vertex1, face.v2(), vertex2, face.getMaterialIndex());
+			addFace(face.v1(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), vertex2, face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, face.v2(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (startVertex.equals(face.v2()) && endVertex.equals(face.v1()))
 		{
-			addFace(face.v1(), vertex2, vertex1, face.getMaterialIndex());
-			addFace(face.v1(), vertex1, face.v3(), face.getMaterialIndex());
-			addFace(vertex2, face.v2(), vertex1, face.getMaterialIndex());
+			addFace(face.v1(), vertex2, vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), vertex1, face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex2, face.v2(), vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (startVertex.equals(face.v2()) && endVertex.equals(face.v3()))
 		{
-			addFace(face.v2(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(face.v2(), vertex2, face.v1(), face.getMaterialIndex());
-			addFace(vertex1, face.v3(), vertex2, face.getMaterialIndex());
+			addFace(face.v2(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), vertex2, face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, face.v3(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (startVertex.equals(face.v3()) && endVertex.equals(face.v2()))
 		{
-			addFace(face.v2(), vertex2, vertex1, face.getMaterialIndex());
-			addFace(face.v2(), vertex1, face.v1(), face.getMaterialIndex());
-			addFace(vertex2, face.v3(), vertex1, face.getMaterialIndex());
+			addFace(face.v2(), vertex2, vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), vertex1, face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex2, face.v3(), vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (startVertex.equals(face.v3()) && endVertex.equals(face.v1()))
 		{
-			addFace(face.v3(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(face.v3(), vertex2, face.v2(), face.getMaterialIndex());
-			addFace(vertex1, face.v1(), vertex2, face.getMaterialIndex());
+			addFace(face.v3(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), vertex2, face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, face.v1(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else
 		{
-			addFace(face.v3(), vertex2, vertex1, face.getMaterialIndex());
-			addFace(face.v3(), vertex1, face.v2(), face.getMaterialIndex());
-			addFace(vertex2, face.v1(), vertex1, face.getMaterialIndex());
+			addFace(face.v3(), vertex2, vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), vertex1, face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex2, face.v1(), vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
 		
@@ -686,16 +685,20 @@ public class CSGSolid
 	 * @param facePos face position on the faces array
 	 * @param newPos new vertex position
 	 */
-	private void breakFaceInThree(int facePos, Vector3d newPos)
-	{
+	private void breakFaceInThree(
+		int facePos
+	, 	Vector3d newPos
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
 		CSGVertexIOB vertex = addVertex( newPos, face );
 				
-		addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex());
-		addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex());
-		addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex());
+		addFace(face.v1(), face.v2(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+		addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
+		addFace(face.v3(), face.v1(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
 	}
 	
 	/**
@@ -706,8 +709,14 @@ public class CSGSolid
 	 * @param newPos2 new vertex position 
 	 * @param endVertex vertex used for the split
 	 */	
-	private void breakFaceInFour(int facePos, Vector3d newPos1, Vector3d newPos2, CSGVertexIOB endVertex)
-	{
+	private void breakFaceInFour(
+		int facePos
+	, Vector3d newPos1
+	, Vector3d newPos2
+	, CSGVertexIOB endVertex
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
@@ -716,24 +725,24 @@ public class CSGSolid
 		
 		if (endVertex.equals(face.v1()))
 		{
-			addFace(face.v1(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(vertex1, face.v2(), vertex2, face.getMaterialIndex());
-			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex());
-			addFace(face.v3(), face.v1(), vertex2, face.getMaterialIndex());
+			addFace(face.v1(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, face.v2(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), face.v1(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if (endVertex.equals(face.v2()))
 		{
-			addFace(face.v2(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(vertex1, face.v3(), vertex2, face.getMaterialIndex());
-			addFace(face.v3(), face.v1(), vertex2, face.getMaterialIndex());
-			addFace(face.v1(), face.v2(), vertex2, face.getMaterialIndex());
+			addFace(face.v2(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, face.v3(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), face.v1(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), face.v2(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else
 		{
-			addFace(face.v3(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(vertex1, face.v1(), vertex2, face.getMaterialIndex());
-			addFace(face.v1(), face.v2(), vertex2, face.getMaterialIndex());
-			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex());
+			addFace(face.v3(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(vertex1, face.v1(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), face.v2(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
 	
@@ -745,8 +754,14 @@ public class CSGSolid
 	 * @param newPos2 new vertex position 
 	 * @param linedVertex what vertex is more lined with the interersection found
 	 */		
-	private void breakFaceInFive(int facePos, Vector3d newPos1, Vector3d newPos2, int linedVertex)
-	{
+	private void breakFaceInFive(
+		int facePos
+	, Vector3d newPos1
+	, Vector3d newPos2
+	, int linedVertex
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace face = mFaces.get(facePos);
 		mFaces.remove(facePos);
 		
@@ -756,134 +771,29 @@ public class CSGSolid
 		double cont = 0;		
 		if (linedVertex == 1)
 		{
-			addFace(face.v2(), face.v3(), vertex1, face.getMaterialIndex());
-			addFace(face.v2(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(face.v3(), vertex2, vertex1, face.getMaterialIndex());
-			addFace(face.v2(), vertex2, face.v1(), face.getMaterialIndex());
-			addFace(face.v3(), face.v1(), vertex2, face.getMaterialIndex());
+			addFace(face.v2(), face.v3(), vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), vertex2, vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), vertex2, face.v1(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), face.v1(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else if(linedVertex == 2)
 		{
-			addFace(face.v3(), face.v1(), vertex1, face.getMaterialIndex());
-			addFace(face.v3(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(face.v1(), vertex2, vertex1, face.getMaterialIndex());
-			addFace(face.v3(), vertex2, face.v2(), face.getMaterialIndex());
-			addFace(face.v1(), face.v2(), vertex2, face.getMaterialIndex());
+			addFace(face.v3(), face.v1(), vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), vertex2, vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v3(), vertex2, face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), face.v2(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		else
 		{
-			addFace(face.v1(), face.v2(), vertex1, face.getMaterialIndex());
-			addFace(face.v1(), vertex1, vertex2, face.getMaterialIndex());
-			addFace(face.v2(), vertex2, vertex1, face.getMaterialIndex());
-			addFace(face.v1(), vertex2, face.v3(), face.getMaterialIndex());
-			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex());
+			addFace(face.v1(), face.v2(), vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), vertex1, vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), vertex2, vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v1(), vertex2, face.v3(), face.getMaterialIndex(), pTempVars, pEnvironment );
+			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
-
-	/** Operate on all faces within this solid, ensuring they do not overlap with the
-		faces of another solid
-	 */
-/*****
-	public void splitFaces(
-		CSGSolid		pOther
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
-	) {
-		mOriginalFaceCount = mFaces.size();
-		int faceLimit = mOriginalFaceCount * 10;
-		
-		// We split only if there is some broad overlap	
-		CSGBounds otherBounds = pOther.getBounds();
-		if ( this.getBounds().overlap( otherBounds, pEnvironment ) ) {
-			// Operate on each face in this solid.
-			// NOTE that we dynamically manipulate the for loop index counter to adapt
-			//		processing for the changing elements in the mFaces list.
-			for( int i = 0; i < mFaces.size(); i += 1 ) {
-				// Quick and Dirty limiter on indefinite action
-				if ( i > faceLimit ) {
-					return;
-				}
-				// Operate on this face only if it overlaps with the broad bounds of the other solid
-				CSGFace aFace = mFaces.get( i );
-				if ( aFace.getBound().overlap( otherBounds, pEnvironment ) ) {
-					// Match this face against every face in the other solid
-					for( CSGFace bFace : pOther.getFaces() ) {
-						// Action required only if the broad bounds of the faces overlap
-						if ( aFace.getBound().overlap( bFace.getBound(), pEnvironment ) ) {
-							// PART I - DO TWO POLYGONS INTERSECT?
-							// Match all vertices in this face against the other face
-							
-							//  if all the signs are zero, the planes are coplanar
-							//  if all the signs are positive or negative, the planes do not intersect
-							//  if the signs are not equal, then we have to deal with the intersection
-							int signFace1Vert1 = bFace.computePosition( aFace.getVertex( 0 ), pEnvironment );
-							int signFace1Vert2 = bFace.computePosition( aFace.getVertex( 1 ), pEnvironment );
-							int signFace1Vert3 = bFace.computePosition( aFace.getVertex( 2 ), pEnvironment );
-							
-							if ( !(signFace1Vert1==signFace1Vert2 && signFace1Vert2==signFace1Vert3) ) {
-								// Match all vertices in the other face against this face
-								int signFace2Vert1 = aFace.computePosition( bFace.getVertex( 0 ), pEnvironment );
-								int signFace2Vert2 = aFace.computePosition( bFace.getVertex( 1 ), pEnvironment );
-								int signFace2Vert3 = aFace.computePosition( bFace.getVertex( 2 ), pEnvironment );
-													
-								// Like above, there is only an overlap if signs are not equal
-								if ( !(signFace2Vert1==signFace2Vert2 && signFace2Vert2==signFace2Vert3) ) {
-									// Break this face apart along the intersection of the two active faces
-									CSGRay aLine = aFace.computeIntersect( bFace, pEnvironment );
-							
-									// Intersection of the face1 and the plane of face2
-									CSGSegment segment1 = new CSGSegment( aLine
-																		, aFace
-																		, signFace1Vert1
-																		, signFace1Vert2
-																		, signFace1Vert3
-																		, pTempVars
-																		, pEnvironment );
-																	
-									// Intersection of the face2 and the plane of face1
-									CSGSegment segment2 = new CSGSegment( aLine
-																		, bFace
-																		, signFace2Vert1
-																		, signFace2Vert2
-																		, signFace2Vert3
-																		, pTempVars
-																		, pEnvironment );
-																
-									// If the two segments intersect...
-									if ( segment1.intersect( segment2, pEnvironment ) ) {
-										//PART II - SUBDIVIDING NON-COPLANAR POLYGONS
-										this.splitFace( i, segment1, segment2, pTempVars, pEnvironment );
-	
-										// If the face in the current position isn't the same, there was a break 
-										if ( aFace != mFaces.get(i) ) {
-											// Check out the end slot
-											int j = mFaces.size() -1;
-											if ( aFace.equals( mFaces.get( j ) ) ) {
-												// The face has slid to the end of the list 
-												if ( i != j ) {
-													// Restore this face to its original position
-													mFaces.remove( j );
-													mFaces.add( i, aFace);
-												} else {
-													// Already at the end of the loop, just leave it
-													continue;
-												}
-											} else {
-												// Cycle again, accounting for the face removed
-												i--;
-												break;
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-*****/
 
 	/////// Implement ConstructiveSolidGeometry
 	@Override

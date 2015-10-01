@@ -38,6 +38,8 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGPlaneDbl;
+import net.wcomohundro.jme3.csg.CSGPolygonDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -53,7 +55,7 @@ import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
  	Since the status of a face can change, cloning will produce new instances.
  */
 public class CSGFace 
-//	extends CSGPolygonDbl
+	extends CSGPolygonDbl
 	implements ConstructiveSolidGeometry
 {
 	/** Version tracking support */
@@ -103,8 +105,7 @@ public class CSGFace
 			} else {
 				return CSGPointStatus.ON;
 			}
-		}
-		else {
+		} else {
 			return CSGPointStatus.NONE;
 		}
 	}
@@ -130,8 +131,7 @@ public class CSGFace
 			} else {
 				return CSGPointStatus.ON;
 			}
-		}
-		else {
+		} else {
 			return CSGPointStatus.NONE;
 		}
 	}
@@ -157,19 +157,11 @@ public class CSGFace
 			} else {
 				return CSGPointStatus.ON;
 			}
-		}
-		else {
+		} else {
 			return CSGPointStatus.NONE;
 		}
 	}
 
-
-	/** 3 vertices define the face */
-	protected List<CSGVertex>	mVertices;
-	/** The normal of the plane defined by this face */
-	protected Vector3d			mNormal;
-	/** Material index */
-	protected int				mMaterialIndex;
 	/** Bounds of this face */
 	protected CSGBounds			mBounds;
 	/** Status of this Face */
@@ -179,8 +171,7 @@ public class CSGFace
 	/** Standard null constructor */
 	public CSGFace(
 	) {
-		super();
-		mVertices = new ArrayList( 3 );
+		super( new ArrayList( 3 ), null, 0 );
 		mStatus = CSGFaceStatus.UNKNOWN;
 	}
 	/** Constructor based on a set of vertices */
@@ -189,13 +180,17 @@ public class CSGFace
 	, 	CSGVertexIOB 	pV2
 	, 	CSGVertexIOB 	pV3
 	, 	int 			pMaterialIndex 
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
 	) {
-		this();
+		super( new ArrayList( 3 ), null, pMaterialIndex );
 		mVertices.add( pV1 );
 		mVertices.add( pV2 );
 		mVertices.add( pV3 );
 		
-		this.mMaterialIndex = pMaterialIndex;
+		mStatus = CSGFaceStatus.UNKNOWN;
+		
+		mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
 	}
 	
 	/** Clones the face object */
@@ -211,12 +206,14 @@ public class CSGFace
 			aCopy.mVertices.add( v3().clone( pInvert ) );
 			aCopy.mVertices.add( v2().clone( pInvert ) );
 			aCopy.mVertices.add( v1().clone( pInvert ) );
+			
 		} else {
 			// Simple copy
 			aCopy.mVertices.add( v1().clone( pInvert ) );
 			aCopy.mVertices.add( v2().clone( pInvert ) );
 			aCopy.mVertices.add( v3().clone( pInvert ) );
 		}
+		aCopy.mPlane = this.mPlane.clone( pInvert );
 		return aCopy;
 	}
 	
@@ -254,8 +251,7 @@ public class CSGFace
 		}
 	}
 	
-	//-------------------------------------GETS-------------------------------------//
-	
+	/** Accessors */
 	public int getMaterialIndex() { return mMaterialIndex; }
 	
 	public CSGVertexIOB v1() { return (CSGVertexIOB)mVertices.get(0); }
@@ -278,21 +274,7 @@ public class CSGFace
 	}
 	
 	/** Gets the face normal */
-	public Vector3d getNormal(
-	) {
-		if ( mNormal == null ) {
-			Vector3d position1 = v1().getPosition();
-			Vector3d position2 = v2().getPosition();
-			Vector3d position3 = v3().getPosition();
-			
-			Vector3d xy = position2.subtract( position1 );
-			Vector3d xz = position3.subtract( position1 );
-			
-			mNormal = xy.cross( xz );
-			mNormal.normalizeLocal();
-		}
-		return( mNormal );
-	}
+	public Vector3d getNormal() { return mPlane.getNormal(); }
 	
 	/** Gets the face status */ 
 	public CSGFaceStatus getStatus() { return mStatus; }
@@ -358,13 +340,19 @@ public class CSGFace
 		CSGVertexIOB 		pVertex
 	) {
 		Vector3d vPosition = pVertex.getPosition();
-		Vector3d facePoint = this.v1().getPosition();
-		Vector3d normal = this.getNormal();
-		double a = normal.x;
-		double b = normal.y;
-		double c = normal.z;
-		double d = -(a*facePoint.x + b*facePoint.y + c*facePoint.z);
-		return a*vPosition.x + b*vPosition.y + c*vPosition.z + d;
+		return( vPosition.dot( this.getNormal() ) - mPlane.getDot() );
+	}
+	
+	/**  Computes the relative position of a vertex to this face */
+	public int computePosition(
+		CSGVertexIOB 		pVertex
+	,	double				pTolerance
+	) {
+		Vector3d vPosition = pVertex.getPosition();
+		double aDistance = vPosition.dot( this.getNormal() ) - mPlane.getDot();
+		if ( aDistance > pTolerance ) return 1;
+		else if ( aDistance < -pTolerance ) return -1;
+		else return 0;
 	}
 
 
@@ -433,7 +421,7 @@ public class CSGFace
 			for( CSGFace otherFace : pSolid.getFaces() ) {
 				dotProduct = otherFace.getNormal().dot( ray.getDirection() );
 				intersectionPoint = ray.computePlaneIntersection( otherFace.getNormal()
-																, otherFace.v1().getPosition()
+																, otherFace.getPlane().getDot()
 																, pTempVars
 																, pEnvironment );
 								
@@ -461,7 +449,7 @@ public class CSGFace
 						}
 					} else if ( (Math.abs( dotProduct ) > tolerance) && (distance > tolerance) ) {
 						// The ray intersects the plane
-						if( distance<closestDistance ) {
+						if( distance < closestDistance ) {
 							// Check if the ray intersects the face;
 							if ( otherFace.hasPoint( intersectionPoint, pEnvironment ) ) {
 								// This face is now the closest
@@ -475,7 +463,7 @@ public class CSGFace
 		} while( itersection == false );
 		
 		// If no face found: outside face
-		if ( closestFace==null ) {
+		if ( closestFace == null ) {
 			mStatus = CSGFaceStatus.OUTSIDE;
 		} else {
 			// If a face was found, then the DOT tells us which side
@@ -515,7 +503,6 @@ public class CSGFace
 		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
 		
 		CSGPointStatus result1, result2, result3;
-		boolean hasUp, hasDown, hasOn;
 		Vector3d normal = getNormal(); 
 	
 		// Check if x is constant...	

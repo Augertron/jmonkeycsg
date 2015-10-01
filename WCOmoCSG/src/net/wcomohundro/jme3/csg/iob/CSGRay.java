@@ -180,10 +180,8 @@ public class CSGRay
 			return null;
 		}
 		// Construct a new position based on what we know 
-		double x = mOrigin.x + mDirection.x*t;
-		double y = mOrigin.y + mDirection.y*t;
-		double z = mOrigin.z + mDirection.z*t;
-		Vector3d newPosition = new Vector3d( x, y, z );
+		Vector3d newPosition = mDirection.mult( t );
+		newPosition.addLocal( mOrigin );
 		return( newPosition );
 	}
 	
@@ -193,7 +191,7 @@ public class CSGRay
 	 */
 	public Vector3d computePlaneIntersection(
 		Vector3d		pPlaneNormal
-	, 	Vector3d		pPlanePoint
+	,	double			pPlaneDot
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -209,9 +207,7 @@ public class CSGRay
 		double A = pPlaneNormal.x;
 		double B = pPlaneNormal.y;
 		double C = pPlaneNormal.z;
-		double D = -(pPlaneNormal.x * pPlanePoint.x
-					 + pPlaneNormal.y * pPlanePoint.y
-					 + pPlaneNormal.z * pPlanePoint.z);
+		double D = -pPlaneDot;
 			
 		double numerator = A*mOrigin.x + B*mOrigin.y + C*mOrigin.z + D;
 		double denominator = A*mDirection.x + B*mDirection.y + C*mDirection.z;
@@ -228,11 +224,8 @@ public class CSGRay
 		} else {
 			// Line intersects the plane
 			double t = -numerator/denominator;
-			Vector3d resultPoint = new Vector3d();
-			resultPoint.x = mOrigin.x + t*mDirection.x; 
-			resultPoint.y = mOrigin.y + t*mDirection.y;
-			resultPoint.z = mOrigin.z + t*mDirection.z;
-			
+			Vector3d resultPoint = mDirection.mult( t );
+			resultPoint.addLocal( mOrigin );
 			return resultPoint;
 		}
 	}

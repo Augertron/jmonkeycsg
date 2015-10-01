@@ -323,7 +323,9 @@ public class CSGShapeIOB
 			faces.add( new CSGFace( CSGVertexIOB.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment )
-								, mShape.getMaterialIndex() ) );
+								, mShape.getMaterialIndex()
+								, pTempVars
+								, pEnvironment ) );
 		}
 		return( faces );
 	}

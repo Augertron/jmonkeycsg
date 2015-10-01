@@ -87,7 +87,7 @@ public class CSGPlaneDbl
 		}
 		double normalDot = aNormal.dot( pA );
 		CSGPlaneDbl aPlane = new CSGPlaneDbl( aNormal, pA, normalDot, -1, pEnvironment );
-		if ( pEnvironment.mStructuralDebug ) {
+		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
 			double aDistance = aPlane.pointDistance( pA );
 			double bDistance = aPlane.pointDistance( pB );
 			double cDistance = aPlane.pointDistance( pC );
