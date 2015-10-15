@@ -37,11 +37,26 @@ import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 
-/** Represent a line segment that results from the intersection of two faces */
+/** While a Ray represents the intersection of the two planes associated with two faces, 
+ 	the ray itself is not constrained by the bounds of the face.
+ 	
+ 	A Segment represents that portion of the line that fits within the constraints of the
+ 	face.  The options are:
+ 	1)	The line is totally outside the bounds of the face and does not intersect at all
+ 	2)	The line passes through a single vertex of the face
+ 	3)	The line passes through two vertices of the face
+ 	4)	The line passes through a single vertex and a single edge of the face
+ 	5)	The line passes through two edges of the face
+ 	
+ 	From the conditions above, you can see that only cases (4) and (5) represent a true
+ 	intersection of a face and a line.  Everything else misses entirely or intersects only
+ 	along an edge.
+  */
 public class CSGSegment 
 	implements ConstructiveSolidGeometry
 {
@@ -73,6 +88,11 @@ public class CSGSegment
 	/** ending point status relative to the face */
 	protected CSGSegmentType	mEndType;
 	
+	/** Start point collision status */
+	protected CSGFaceCollision	mStartCollision;
+	/** End point collision status */
+	protected CSGFaceCollision	mEndCollision;
+	
 	/** Nearest vertex from the starting point */
 	protected CSGVertexIOB 		mStartVertex;
 	/** Actual starting position, possibly interpolated from other vertices */
@@ -87,7 +107,11 @@ public class CSGSegment
 	public CSGSegment(
 	) {
 	}
-	/** Basic constructor based on a given face 
+	/** Basic constructor based on a given face
+	    The 'signs' of the 3 vertices represent their position relative to the OTHER face
+	    that produced the Ray.  Zero means the vertex lies on the plane of the other face,
+	    with +/- representing a given side.
+	    
 	 	NOTE
 	 		that any vertex tracked by this segment are == to the vertices taken from the face
 	  */
@@ -103,46 +127,57 @@ public class CSGSegment
 		mLine = pLine;
 		int anIndex = 0;
 		
-		// If VERTEX is an end
 		if ( pSign1 == 0 ) {
-			anIndex = setVertex( anIndex, pFace.v1(), pTempVars, pEnvironment );
+			// V1 lies on the other plane, so it is a VERTEX
+			anIndex = setVertex( anIndex, CSGFaceCollision.V1, pFace.v1(), pTempVars, pEnvironment );
 			
-			// If other vertices on the same side - VERTEX-VERTEX VERTEX
 			if ( pSign2 == pSign3 ) {
-				anIndex = setVertex( anIndex, pFace.v1(), pTempVars, pEnvironment );
+				// V2 and V3 are on the same side of the other plane, so this segment
+				// has no length
+				setVertex( -anIndex, CSGFaceCollision.NONE, null, pTempVars, pEnvironment );
+				return;
 			}
 		}
 		// If VERTEX is an end
 		if ( pSign2 == 0 ) {
-			anIndex = setVertex( anIndex, pFace.v2(), pTempVars, pEnvironment );
+			// V2 lies on the other plane, so it is a VERTEX
+			anIndex = setVertex( anIndex, CSGFaceCollision.V2, pFace.v2(), pTempVars, pEnvironment );
 			
-			// If other vertices on the same side - VERTEX-VERTEX VERTEX
 			if ( pSign1 == pSign3 ) {
-				anIndex = setVertex( anIndex, pFace.v2(), pTempVars, pEnvironment );
+				// V1 and V3 are on the same side of the other plane, so this segment
+				// has no length
+				setVertex( -anIndex, CSGFaceCollision.NONE, null, pTempVars, pEnvironment );
+				return;
 			}
 		}
 		// If VERTEX is an end
 		if ( pSign3 == 0 ) {
-			anIndex = setVertex( anIndex, pFace.v3(), pTempVars, pEnvironment );
+			// V3 lies on the other plane, so it is a VERTEX
+			anIndex = setVertex( anIndex, CSGFaceCollision.V3, pFace.v3(), pTempVars, pEnvironment );
 			
-			// If other vertices on the same side - VERTEX-VERTEX VERTEX
 			if ( pSign1 == pSign2 ) {
-				anIndex = setVertex( anIndex, pFace.v3(), pTempVars, pEnvironment );
+				// V1 and V2 are on the same side of the other plane, so this segment
+				// has no length
+				setVertex( -anIndex, CSGFaceCollision.NONE, null, pTempVars, pEnvironment );
+				return;
 			}
 		}
 		// If there are undefined ends, then one or more edges cut the plane intersection line
 		if ( anIndex < 2 ) {
-			// EDGE is an end
-			if ( (pSign1==1 && pSign2==-1) || (pSign1==-1 && pSign2==1) ) {
-				anIndex = setEdge( anIndex, pFace.v1(), pFace.v2(), pTempVars, pEnvironment );
+			if ( pSign1 * pSign2 < 0 ) { // (pSign1==1 && pSign2==-1) || (pSign1==-1 && pSign2==1) ) {
+				// V1 and V2 on opposite sides of the plane, so the EDGE12 is cut
+				anIndex = setEdge( anIndex, CSGFaceCollision.EDGE12, pFace.v1(), pFace.v2(), pTempVars, pEnvironment );
 			}
-			// EDGE is an end
-			if( (pSign2==1 && pSign3==-1) || (pSign2==-1 && pSign3==1) ) {
-				anIndex = setEdge( anIndex, pFace.v2(), pFace.v3(), pTempVars, pEnvironment );
+			if( pSign2 * pSign3 < 0 ) { // (pSign2==1 && pSign3==-1) || (pSign2==-1 && pSign3==1) ) {
+				// V2 and V3 on opposite sides of the plane, so the EDGE23 is cut
+				anIndex = setEdge( anIndex, CSGFaceCollision.EDGE23, pFace.v2(), pFace.v3(), pTempVars, pEnvironment );
 			}
-			// EDGE is an end
-			if ( (pSign3==1 && pSign1==-1) || (pSign3==-1 && pSign1==1) ) {
-				anIndex = setEdge( anIndex, pFace.v3(), pFace.v1(), pTempVars, pEnvironment );
+			if ( pSign3 * pSign1 < 0 ) { // (pSign3==1 && pSign1==-1) || (pSign3==-1 && pSign1==1) ) {
+				// V3 and V1 on opposite sides of the plane, so the EDGE31 is cut
+				anIndex = setEdge( anIndex, CSGFaceCollision.EDGE31, pFace.v3(), pFace.v1(), pTempVars, pEnvironment );
+			}
+			if ( anIndex < 2 ) {
+				throw new IllegalStateException( "Segment does not intersect with face" );
 			}
 		}
 	}
@@ -171,6 +206,16 @@ public class CSGSegment
 	public CSGSegmentType getIntermediateType() { return mMiddleType; }
 	public CSGSegmentType getEndType() { return mEndType; }
 	
+	public CSGFaceCollision getStartCollision() { return mStartCollision; }
+	public CSGFaceCollision getEndCollision() { return mEndCollision; }
+	public CSGFaceCollision getOtherCollision(
+	) {
+		// If the collision status is determined by an 'other' segment, then the
+		// only thing we can tell about this segment is if the segment runs
+		// along an edge.
+		return( mStartCollision.getEdge( mEndCollision ) );
+	}
+	
 	public CSGVertexIOB getStartVertex() { return mStartVertex; }
 	public CSGVertexIOB getEndVertex() { return mEndVertex; }
 	
@@ -182,10 +227,11 @@ public class CSGSegment
 	    @return false if all the ends were already defined, true otherwise
 	 */
 	protected int setVertex(
-		int				pIndex
-	,	CSGVertexIOB	pVertex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		int					pIndex
+	,	CSGFaceCollision	pCollision
+	,	CSGVertexIOB		pVertex
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		switch( pIndex ) {
 		case 0:
@@ -193,6 +239,7 @@ public class CSGSegment
 			mStartVertex = pVertex;
 			mStartPosition = pVertex.getPosition();
 		 	mStartType = CSGSegmentType.VERTEX;
+		 	mStartCollision = pCollision;
 		 	mStartDist = mLine.computePointToPointDistance( mStartVertex.getPosition(), pTempVars, pEnvironment );
 		 	return( 1 );
 		 	
@@ -201,8 +248,13 @@ public class CSGSegment
 			mEndVertex = pVertex;
 			mEndPosition = pVertex.getPosition();
 			mEndType = CSGSegmentType.VERTEX;
+			mEndCollision = pCollision;
 			mEndDist = mLine.computePointToPointDistance( mEndVertex.getPosition(), pTempVars, pEnvironment );
 					
+			// By definition, the end can only be set as a Vertex iff the start was a Vertex as well.
+			// Otherwise, setEdge() would have been called
+			mMiddleType =  CSGSegmentType.EDGE;
+/****
 			if ( mStartVertex.equals( mEndVertex ) ) {
 				//VERTEX-VERTEX-VERTEX
 				mMiddleType = CSGSegmentType.VERTEX;
@@ -210,15 +262,25 @@ public class CSGSegment
 				// VERTEX-EDGE-VERTEX
 				mMiddleType = CSGSegmentType.EDGE;
 			}
+***/
 			// The ending point distance should be smaller than  starting point distance 
 			if ( mStartDist > mEndDist ) {
 				swapEnds();
 			}
 			return( 2 );
 		
+		case -1:
+			// The starting point is the only point on the other plane, this segment has no length
+			mEndVertex = mStartVertex;
+			mEndPosition = mStartPosition;
+			mEndDist = mStartDist;
+			mEndType = mMiddleType = CSGSegmentType.VERTEX;
+			mEndCollision = pCollision;
+			return( 2 );
+			
 		default:
 			// Vertices already set....
-			return( pIndex );
+			throw new IllegalStateException( "Segment intersects with 3 vertices" );
 		}
 	}
 	
@@ -226,11 +288,12 @@ public class CSGSegment
 	    @return false if all ends were already defined, true otherwise
 	 */
 	protected int setEdge(
-		int				pIndex
-	,	CSGVertexIOB	pVertex1
-	, 	CSGVertexIOB	pVertex2
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		int					pIndex
+	,	CSGFaceCollision	pCollision
+	,	CSGVertexIOB		pVertex1
+	, 	CSGVertexIOB		pVertex2
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		Vector3d point1 = pVertex1.getPosition();
 		Vector3d point2 = pVertex2.getPosition();
@@ -242,6 +305,7 @@ public class CSGSegment
 		case 0:
 			// No other points have yet been defined
 			mStartType = CSGSegmentType.EDGE;
+			mStartCollision = pCollision;
 			mStartVertex = pVertex1;
 			mStartPosition = mLine.computeLineIntersection( edgeLine, pTempVars, pEnvironment );
 			mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment);
@@ -251,12 +315,13 @@ public class CSGSegment
 		case 1:
 			// Starting point already defined, define the ending point
 			mEndType = CSGSegmentType.EDGE;
+			mEndCollision = pCollision;
 			mEndVertex = pVertex1;
 			mEndPosition = mLine.computeLineIntersection( edgeLine, pTempVars, pEnvironment );
 			mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
 			mMiddleType = CSGSegmentType.FACE;
 			
-			// The ending point distance should be smaller than starting point distance 
+			// The ending point distance should be 'farther' than starting point distance 
 			if ( mStartDist > mEndDist ) {
 			  	swapEnds();
 			}
@@ -264,7 +329,7 @@ public class CSGSegment
 			
 		default:
 			// All points have already been defined
-			return( pIndex );
+			throw new IllegalStateException( "Segment intersects with 3 edges" );
 		}
 	}
 
@@ -279,6 +344,10 @@ public class CSGSegment
 		mStartType = mEndType;
 		mEndType = typeTemp;
 		
+		CSGFaceCollision collisionTemp = mStartCollision;
+		mStartCollision = mEndCollision;
+		mEndCollision = collisionTemp;
+		
 		CSGVertexIOB vertexTemp = mStartVertex;
 		mStartVertex = mEndVertex;
 		mEndVertex = vertexTemp;	
@@ -287,6 +356,15 @@ public class CSGSegment
 		mStartPosition = mEndPosition;
 		mEndPosition = positionTemp;
 	}
+
+	/** OVERRIDE for debug report */
+	@Override
+	public String toString(
+	) {
+		return( "Seg:\t" + mStartPosition + "/" + mStartVertex 
+				 + "\n\t" + mEndPosition + "/" + mEndVertex );
+	}
+
 
 	/////// Implement ConstructiveSolidGeometry
 	@Override

@@ -2,11 +2,11 @@
 Models/CSGLoadEnvironmentIOB.xml
 //Models/CSGLoadEnvironmentBSP.xml
 
+Models/CSGLoadMultiTexture.xml
 Models/CSGLoadCSGNormalTests.xml
 
 Models/CSGLoadEpsilon2.xml
 
-Models/CSGLoadMultiTexture.xml
 //Models/CSGLoadNonMultiTexture.xml
 
 //Models/CSGLoadSmoothedPipes.xml

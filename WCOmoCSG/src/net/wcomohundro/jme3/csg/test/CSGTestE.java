@@ -69,15 +69,15 @@ public class CSGTestE
 	protected static String[] sSceneList = new String[] {
 		null
 
-	,	"Models/CSGLoadSimpleUnit.xml"
-	,	"Models/CSGLoadSimple.xml"
+//	,	"Models/CSGLoadSimpleUnit.xml"
+//	,	"Models/CSGLoadSimple.xml"
 	,	"Models/CSGLoadMultiTexture.xml"
 	
-	,	"Models/CSGLoadTextureCylinders.xml"
-	,	"Models/CSGLoadLighted.xml"
+//	,	"Models/CSGLoadTextureCylinders.xml"
+//	,	"Models/CSGLoadLighted.xml"
 		
-	,	"Models/CSGLoadLOD.xml"
-	,	"Models/CSGLoadSmoothedPipes.xml"
+//	,	"Models/CSGLoadLOD.xml"
+//	,	"Models/CSGLoadSmoothedPipes.xml"
 
 	};
 	

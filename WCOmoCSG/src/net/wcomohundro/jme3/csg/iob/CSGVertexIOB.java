@@ -36,6 +36,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -110,6 +111,46 @@ public class CSGVertexIOB
 		super( pPosition, pNormal, pTextureCoordinate, pEnvironment );
 		mStatus = pStatus;
 	}
+	/** Constructor based on a new position along a line between two given vertices */
+	public CSGVertexIOB(
+		CSGVertexIOB	pVertexA
+	,	CSGVertexIOB	pVertexB
+	,	Vector3d		pNewPosition
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		mPosition = pNewPosition;
+		mNormal = new Vector3d();
+		mTextureCoordinate = new Vector2f();
+		mStatus = CSGVertexStatus.UNKNOWN;
+		
+		double d1 = pVertexA.getPosition().distance( pNewPosition );
+		double d2 = pVertexB.getPosition().distance( pNewPosition );
+		double percent = d1 / (d1 + d2);
+		
+		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
+			// Confirm what we were given
+			double d3 = pVertexA.getPosition().distance( pVertexB.getPosition() );
+			d3 -= (d1 + d2);
+			if ( d3 > pEnvironment.mEpsilonNearZeroDbl ) {
+				throw new IllegalArgumentException( "New Vertex not aligned with given points: " + d3 );
+			}
+		}
+		// What is its normal?
+		mNormal.set( pVertexA.getNormal() );
+		
+		Vector3d otherNormal = pTempVars.vectd1.set( pVertexB.getNormal() );
+		mNormal.addLocal( 
+			otherNormal.subtractLocal( pVertexA.getNormal() ).multLocal( percent ) ).normalizeLocal();
+		
+		// What is its texture?
+		mTextureCoordinate.set( pVertexA.getTextureCoordinate() );
+		
+		Vector2f otherTexCoord = pTempVars.vect2d.set( pVertexB.getTextureCoordinate() );
+		mTextureCoordinate.addLocal( 
+			otherTexCoord.subtractLocal( pVertexA.getTextureCoordinate() ).multLocal( (float)percent ) );
+	}
+	
 	
 	/** OVERRIDE: to always produce a copy, since the status is dynamically modified */
 	@Override

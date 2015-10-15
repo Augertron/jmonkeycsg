@@ -80,7 +80,7 @@ public class CSGTestF
 //	,	"Models/CSGLoadSimple.xml"
 //	,	"Models/CSGLoadCSGCubeCylinder.xml"
 //	,	"Models/CSGLoadCSGCubeCube.xml"
-	,	"Models/CSGLoadNonMultiTexture.xml"
+//	,	"Models/CSGLoadNonMultiTexture.xml"
 	,	"Models/CSGLoadMultiTexture.xml"
 
 	};

@@ -8,7 +8,65 @@
         </lights>
     </lights>
 	<children>
-
+    	<!--  ///////////// MIXED MATERIALS: brick/stone //////////////// -->
+        <!-- Add a shorter box to a longer box -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+                materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape name='OtherBox'
+                		materialName='Textures/BrickWall/BrickWall.xml'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.25' yExtent='0.25' zExtent='0.25'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='-0.5' y='-0.5' z='1.0'/>
+                    </transform>
+               </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        <!-- Add a shorter box to a longer box -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+                materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='5.0' y='0.0' z='0.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape name='OtherBox'
+                		materialName='Textures/BrickWall/BrickWall.xml'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.25' yExtent='0.25' zExtent='0.25'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='-0.75' y='-0.5' z='1.0'/>
+                    </transform>
+               </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+                materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-5.0' y='0.0' z='0.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape name='OtherBox'
+                		materialName='Textures/BrickWall/BrickWall.xml'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='-0.5' y='-0.5' z='1.0'/>
+                    </transform>
+               </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        
+<?ignore
 		<!--  These two do not touch -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestSeparate'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
@@ -103,7 +161,7 @@
 
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-<?ignore      
+     
 		<!-- A pipe -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'>
@@ -142,7 +200,7 @@
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-?>
+
         <net.wcomohundro.jme3.csg.CSGGeonode name='CSGCompoundShape'
         		materialName='Textures/Debug/Wireframe.xml' singleMaterial='false'>
        			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
@@ -271,8 +329,7 @@
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-
-<?ignore        
+      
         <net.wcomohundro.jme3.csg.CSGGeometry name='Box7d'
         		materialName='Textures/BrickWall/BrickWallRpt.xml' debugMesh='false'>
             <transform class='com.jme3.math.Transform'>

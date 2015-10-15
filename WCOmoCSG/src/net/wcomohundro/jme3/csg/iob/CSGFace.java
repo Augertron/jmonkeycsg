@@ -82,6 +82,67 @@ public class CSGFace
 	,	NONE			// Point status if none of the above
 	}
 	
+	/** Surface collision selector */
+	public static enum CSGFaceCollision {
+		NONE(0)			// Nothing collided
+		
+	,	V1(1)			// Intersection with vertex 1
+	,	V2(2)			// Intersection with vertex 2
+	,	V3(4)			// Intersection with vertex3
+	
+	,	EDGE12(8)		// Intersection with edge between V1 and V2
+	,	EDGE23(16)		// intersection with edge between V2 and V3
+	,	EDGE31(32)		// Intersection with edge between V3 and V1
+	
+	,	INTERIOR(64)	// Intersection not along an edge or vertex, somewhere in the center
+	;
+		private int		mValue;
+		private CSGFaceCollision( int pValue ) { mValue = pValue; }
+		
+		/** Check if a line defined by collision point and another collision point actually
+		 	crosses the underlying face.
+		 	Single and double vertices collisions are strictly along an edge and do not cross.
+		 	You must have a vertex and an edge, or two edges.
+		 */
+		public boolean crossesFace(
+			CSGFaceCollision		pOther
+		) {
+			return( (this.mValue + pOther.mValue) > EDGE12.mValue );
+		}
+		
+		/** Given an edge, return the vertex that joins to a second edge */
+		public CSGFaceCollision getVertex(
+			CSGFaceCollision	pOtherEdge
+		) {
+			switch( this.mValue + pOtherEdge.mValue ) {
+			case 24:	return( V2 );		// EDGE12 + EDGE23
+			case 48:	return( V3 );		// EDGE23 + EDGE31
+			case 40:	return( V1 );		// EDGE31 + EDGE12
+			default:	return( NONE );		// no other combination of edges
+			}
+		}
+		
+		/** Given a starting collision and ending collision status for a single line,
+		 	determine if we are forced to an edge.
+		 */
+		public CSGFaceCollision getEdge(
+			CSGFaceCollision	pOther
+		) {
+			switch( this.mValue + pOther.mValue ) {
+			case 3:		return( EDGE12 );	// V1 + V2
+			case 6:		return( EDGE23 );	// V2 + V3
+			case 5:		return( EDGE31 ); 	// V3 + V1
+			default:	return( INTERIOR );	// Anything else is not an edge
+			}
+		}
+		
+		/** Check for a collision with a vertex */
+		public boolean isVertex() { return( (this.mValue <= V3.mValue) && (this.mValue >= V1.mValue) ); }
+		
+		/** Check for a collision with an edge */
+		public boolean isEdge() { return( (this.mValue >= EDGE12.mValue) && (this.mValue <= EDGE31.mValue) ); }
+	}
+	
 
 	/** Gets the position of a point relative to a line in the x plane */
 	protected static CSGPointStatus linePositionInX(
@@ -221,7 +282,7 @@ public class CSGFace
 	@Override
 	public String toString(
 	) {
-		return( v1().toString() + ",\t" + v2().toString() + ",\t" + v3().toString() );
+		return( "Face:\t" + v1().toString() + "\n\t" + v2().toString() + "\n\t" + v3().toString() );
 	}
 	
 	/**
@@ -278,61 +339,58 @@ public class CSGFace
 	
 	/** Gets the face status */ 
 	public CSGFaceStatus getStatus() { return mStatus; }
+	public void resetStatus(
+	) {
+		if ( mStatus != CSGFaceStatus.UNKNOWN ) {
+			mStatus = CSGFaceStatus.UNKNOWN;
+			
+			// Reset the vertices as well
+			v1().setStatus( CSGVertexStatus.UNKNOWN );
+			v2().setStatus( CSGVertexStatus.UNKNOWN );
+			v3().setStatus( CSGVertexStatus.UNKNOWN );
+		}
+	}
 	
 
-    /** What normal should be used for a new point on this face */
-	public void extrapolate( 
-		Vector3d		pNewPosition
-	,	Vector3d		pNewNormal
-	,	Vector2f		pNewTexCoord
+    /** Produce a new Vertex for this face, based upon a given position and
+        'collision' status.
+    */
+	public CSGVertexIOB extrapolate( 
+		Vector3d			pNewPosition
+	,	CSGFaceCollision	pEdge
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
-		// For now, KISS
-		double percent;
-		double d1 = v1().getPosition().distance( pNewPosition );
-		double d2 = v2().getPosition().distance( pNewPosition );
-		double d3 = v3().getPosition().distance( pNewPosition );
+		CSGVertexIOB newVertex;
 		
-		CSGVertexIOB vA, vB;
-		if ( (d1 <= d2) && (d1 <= d3) ) {
-			vA = v1();
-			if (d2 <= d3) {
-				vB = v2();
-				percent = d1 / (d1 + d2);
-			} else {
-				vB = v3();
-				percent = d1 / (d1 + d3);
-			}
-		} else if ( (d2 <= d1) && (d2 <= d3) ) {
-			vA = v2();
-			if (d1 <= d3) {
-				vB = v1();
-				percent = d2 / (d2 + d1);
-			} else {
-				vB = v3();
-				percent = d2 / (d2 + d3);
-			}
-		} else {
-			vA = v3();
-			if (d1 <= d2) {
-				vB = v1();
-				percent = d3 / (d3 + d1);
-			} else {
-				vB = v2();
-				percent = d3 / (d3 + d2);
-			}
+		// If we are along an edge, the new vertex is a straight forward calculation based
+		// on a percentage of the distance the NewPosition is along the given edge.
+		switch( pEdge ) {
+		case EDGE12:
+			newVertex = new CSGVertexIOB( v1(), v2(), pNewPosition, pTempVars, pEnvironment );
+			break;
+		case EDGE23:
+			newVertex = new CSGVertexIOB( v2(), v3(), pNewPosition, pTempVars, pEnvironment );
+			break;
+		case EDGE31:
+			newVertex = new CSGVertexIOB( v3(), v1(), pNewPosition, pTempVars, pEnvironment );
+			break;
+		default:
+			// If not on an edge, then project a point onto an edge, and go from there.
+			// For now, intersect V1:V2 with newV:V3
+			Vector3d pointOnEdge 
+				= CSGRay.lineIntersection( v1().getPosition(), v2().getPosition()
+											, pNewPosition, v3().getPosition()
+											, pTempVars.vectd5
+											, pTempVars );
+			// Figure out the vertex on the edge
+			newVertex = new CSGVertexIOB( v1(), v2(), pointOnEdge, pTempVars, pEnvironment );
+			
+			// Figure out the vertex at the original point
+			newVertex = new CSGVertexIOB( newVertex, v3(), pNewPosition, pTempVars, pEnvironment );
+			break;
 		}
-		// What is its normal?
-		pNewNormal.set( vA.getNormal() );
-		Vector3d otherNormal = new Vector3d();
-		otherNormal.set( vB.getNormal() );
-		pNewNormal.add( 
-			otherNormal.subtractLocal( vA.getNormal() ).multLocal( percent ) ).normalizeLocal();
-		
-		// What is its texture?
-		pNewTexCoord.set( vA.getTextureCoordinate() );
-		Vector2f otherTexCoord = new Vector2f( vB.getTextureCoordinate() );
-		pNewTexCoord.add( 
-			otherTexCoord.subtractLocal( vA.getTextureCoordinate() ).multLocal( (float)percent ) );
+		return( newVertex );
 	}
 	
 	/**  Computes closest distance from a vertex to this face */

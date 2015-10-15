@@ -47,6 +47,46 @@ public class CSGRay
 	public static final String sCSGRay3dDate="$Date$";
 	
 	//private static final double TOL = 1e-10f;
+	
+	/** Intersection of two lines 
+	 	 	In general you can find the two points, A0 and B0, on the respective lines A1A2 and B1B2 which 
+	 	 	are closest together and determine if they coincide or else see how far apart they lie.
+
+  			The following is a specific formula using matlab for determining these closest points A0 and B0 
+  			in terms of vector cross products and dot products. Assume that all four points are represented 
+  			by three-element column vectors or by three-element row vectors. Do the following:
+
+ 			nA = dot(cross(B2-B1,A1-B1),cross(A2-A1,B2-B1));
+ 			nB = dot(cross(A2-A1,A1-B1),cross(A2-A1,B2-B1));
+ 			d = dot(cross(A2-A1,B2-B1),cross(A2-A1,B2-B1));
+ 			A0 = A1 + (nA/d)*(A2-A1);
+ 			B0 = B1 + (nB/d)*(B2-B1);
+ 			
+ 		****** TempVars used:  vectd1, vectd2, vectd3, vectd4
+	 */
+	public static Vector3d lineIntersection(
+		Vector3d		pLineAPoint1
+	,	Vector3d		pLineAPoint2
+	,	Vector3d		pLineBPoint1
+	,	Vector3d		pLineBPoint2
+	,	Vector3d		pResult
+	,	CSGTempVars		pTempVars
+	) {
+		Vector3d vA2minusA1 = pLineAPoint2.subtract( pLineAPoint1, pTempVars.vectd1 );
+		Vector3d vB2minusB1 = pLineBPoint2.subtract( pLineBPoint1, pTempVars.vectd2 );
+		Vector3d vA1minusB1 = pLineAPoint1.subtract( pLineBPoint1, pTempVars.vectd3 );
+		
+		Vector3d nCrossBA = vA1minusB1.crossLocal( vB2minusB1 );
+		Vector3d nCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd4 );
+		double nA = nCrossBA.dot( nCrossAB );
+		
+		Vector3d dCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd4 );
+		double d = dCrossAB.dot( dCrossAB );
+		
+		pResult = vA2minusA1.mult( nA / d, pResult );
+		pResult.addLocal( pLineAPoint1 );
+		return( pResult );
+	}
 
 	/** The origin */
 	protected Vector3d	mOrigin;
@@ -57,13 +97,22 @@ public class CSGRay
 	public CSGRay(
 		Vector3d 	pDirection
 	,	Vector3d	pOrigin
-	)
-	{
+	) {
 		this.mDirection = pDirection.normalize();;
 		this.mOrigin = (Vector3d)pOrigin.clone();
 	}
 	
-	/** Constructor based on the intersection of two faces */
+	/** Constructor based on the intersection of two faces 
+	 	My incredibly incomplete understanding of this is that the ray represents the 
+	 	infinite line that is the intersection of the infinite planes.  The actual bounds
+	 	imposed by a finite 'face' do not come into play at all.
+	 	
+	 	So while the ray is defined by the intersection of the two faces, it is
+	 	quite possible that the ray does not really fall within the constraints of 
+	 	either face.
+	 	
+	 	@see CSGSegment for a ray bound to the limits of a given face
+	 */
 	public CSGRay(
 		CSGFace 		pFace1
 	, 	CSGFace 		pFace2
@@ -99,6 +148,8 @@ public class CSGRay
 				mOrigin.y = (d1*normalFace2.x - d2*normalFace1.x)/mDirection.z;
 				mOrigin.z = 0;
 			}
+		} else {
+			throw new IllegalArgumentException( "Ray built from parallel faces" );
 		}
 		mDirection.normalizeLocal();
 	}
@@ -242,7 +293,7 @@ public class CSGRay
 	@Override
 	public String toString(
 	) {
-		return( "Direction: " + mDirection + ", Origiin: " + mOrigin );
+		return( "Ray: " + mDirection + ", Origin: " + mOrigin );
 	}
 
 	/////// Implement ConstructiveSolidGeometry
