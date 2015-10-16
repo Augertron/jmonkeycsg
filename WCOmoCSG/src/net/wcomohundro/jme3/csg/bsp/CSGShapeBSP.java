@@ -41,7 +41,11 @@ import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGGeometry;
+import net.wcomohundro.jme3.csg.CSGPlaneDbl;
+import net.wcomohundro.jme3.csg.CSGPlaneFlt;
 import net.wcomohundro.jme3.csg.CSGPolygon;
+import net.wcomohundro.jme3.csg.CSGPolygonDbl;
+import net.wcomohundro.jme3.csg.CSGPolygonFlt;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVertex;
@@ -110,11 +114,44 @@ public class CSGShapeBSP
 	public static final String sCSGShapeBSPDate="$Date$";
 
 	/** Default configuration that applies to BSP processing */
-	public static CSGEnvironment sDefaultEnvironment = new CSGEnvironment( false );
+	public static CSGEnvironment sDefaultEnvironment 
+		= new CSGEnvironment( false, "net.wcomohundro.jme3.csg.bsp.CSGShapeBSP" );
 
 	/** Canned, immutable empty list of polygons */
 	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);
 	
+	/** Factory level service routine to construct appropriate polygons */
+	public static int addPolygon(
+		List<CSGPolygon>	pPolyList
+	,	CSGVertex[]			pVertices
+	,	int					pMaterialIndex
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		// NOTE that aPlane comes back null if we lack vertices
+		if ( pEnvironment.mDoublePrecision ) {
+			// Work with doubles
+			CSGPlaneDbl aPlane = CSGPlaneDbl.fromVertices( pVertices, pTempVars, pEnvironment );
+			if ( (aPlane != null) && aPlane.isValid() ) {
+				// Polygon is based on computed plane, regardless of active mode
+				CSGPolygonDbl aPolygon = new CSGPolygonDbl( pVertices, aPlane, pMaterialIndex );
+				pPolyList.add( aPolygon );
+				return( 1 );
+			}
+		} else {
+			// Work with floats
+			CSGPlaneFlt aPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
+			if ( (aPlane != null) && aPlane.isValid() ) {
+				// Polygon is based on computed plane, regardless of active mode
+				CSGPolygonFlt aPolygon = new CSGPolygonFlt( pVertices, aPlane, pMaterialIndex );
+				pPolyList.add( aPolygon );
+				return( 1 );
+			}
+		}
+		// Nothing of interest
+		return( 0 );
+	}
+
 
     /** The underlying shape we operate on */
     protected CSGShape					mShape;
@@ -444,7 +481,7 @@ public class CSGShapeBSP
 			
 			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
 			int polyCount
-				= CSGPolygon.addPolygon( polygons, aVertexList, mShape.getMaterialIndex(), pTempVars, pEnvironment );
+				= addPolygon( polygons, aVertexList, mShape.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 		return( polygons );
 	}

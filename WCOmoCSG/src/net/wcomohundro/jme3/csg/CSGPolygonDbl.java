@@ -57,118 +57,6 @@ public class CSGPolygonDbl
 	public static final String sCSGPolygonDblRevision="$Rev$";
 	public static final String sCSGPolygonDblDate="$Date$";
 
-	/** Factory level service routine to create appropriate polygon(s), compressing vertices
-	 	and deciding if the polygon is 'worth' constructing.
-	 	
-	 	NOTE
-	 		that the given list of vertices is 'compressed' as a side effect
-	 	
-	 	@return - a count of polygons added to the given list
-	 	
-	 	TempVars Usage:
-	 		-- CSGPlane.fromVertices --
-	 				vect5
-	 				vect6
-	 */
-	public static int addPolygon(
-		List<CSGPolygon>	pPolyList
-	,	List<CSGVertex>		pVertices
-	,	int					pMaterialIndex
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		// Compress out any spurious vertices before we resolve the plane
-		double eccentricity = CSGVertexDbl.compressVertices( pVertices, null, pEnvironment );
-		
-		if ( pVertices.size() >= 3 ) {
-			// Polygon is based on computed plane, regardless of active mode
-			CSGPlaneDbl aPlane = CSGPlaneDbl.fromVertices( pVertices, pTempVars, pEnvironment );
-			return( addPolygons( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
-		} else {
-			// Nothing of interest
-			return( 0 );
-		}
-	}
-	public static int addPolygon(
-		List<CSGPolygon>	pPolyList
-	,	List<CSGVertex>		pVertices
-	,	CSGPlaneDbl			pPlane
-	,	int					pMaterialIndex
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		if ( (pPlane != null) && pPlane.isValid() ) {
-			// NOTE that compressVertices operates directly on the given list
-			// NOTE when debugging, it can be useful to look for odd eccentricty values here....
-			double eccentricity = CSGVertexDbl.compressVertices( pVertices, pPlane, pEnvironment );
-			if ( pVertices.size() >= 3 ) {
-				// We have enough vertices for a shape
-				if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
-					// Use the plane from the underlying vertices
-					pPlane = CSGPlaneDbl.fromVertices( pVertices, pTempVars, pEnvironment );
-				}
-				return( addPolygons( pPolyList, pVertices, pPlane, pMaterialIndex, pEnvironment ) );
-			}
-		} else {
-			throw new IllegalArgumentException( pEnvironment.mShapeName + "Incomplete Polygon" );
-		}
-		// We did NOT build anything of value
-		return( 0 );
-	}
-	public static int addPolygon(
-		List<CSGPolygon>	pPolyList
-	,	CSGPolygon			pPolygon
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		CSGPlaneDbl aPlane = (CSGPlaneDbl)pPolygon.getPlane();
-		List<CSGVertex> vertexList = pPolygon.getVertices();
-		
-		if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
-			// Force the use of the plane from the underlying vertices
-			aPlane = CSGPlaneDbl.fromVertices( vertexList, pTempVars, pEnvironment );
-			return( addPolygons( pPolyList, vertexList, aPlane, pPolygon.getMaterialIndex(), pEnvironment ) );
-		} else {
-			// Use the polygon as given
-			pPolyList.add( pPolygon );
-			return( 1 );
-		}
-	}
-	protected static int addPolygons(
-		List<CSGPolygon>	pPolyList
-	,	List<CSGVertex>		pVertices
-	,	CSGPlaneDbl			pPlane
-	,	int					pMaterialIndex
-	,	CSGEnvironment		pEnvironment
-	) {
-		int polyCount = 0;
-		
-		// A NULL plane could indicate all vertices in a straight line
-		if ( (pPlane != null) && pPlane.isValid() ) {
-			if ( pEnvironment.mPolygonTriangleOnly ) {
-				// Restrict our polygons to triangles
-				for( int j = 1, last = pVertices.size() -2; j <= last; j += 1 ) {
-					// Remember that CSGPolygon will hold onto the array, so a new instance is needed
-					// for every triangle
-					CSGVertexDbl[] vertices = new CSGVertexDbl[3];
-					vertices[0] = (CSGVertexDbl)pVertices.get( 0 );
-					vertices[1] = (CSGVertexDbl)pVertices.get( j );
-					vertices[2] = (CSGVertexDbl)pVertices.get( j + 1 );
-					
-					CSGPolygonDbl aPolygon = new CSGPolygonDbl( vertices, pPlane, pMaterialIndex );
-					pPolyList.add( aPolygon );
-					polyCount += 1;
-				}
-			} else {
-				// Multipoint polygon support
-				CSGPolygonDbl aPolygon = new CSGPolygonDbl( pVertices, pPlane, pMaterialIndex );
-				pPolyList.add( aPolygon );
-				polyCount += 1;
-			}
-		}
-		return( polyCount );
-	}
-	
 	/** Standard null constructor */
 	public CSGPolygonDbl(
 	) {
@@ -177,8 +65,8 @@ public class CSGPolygonDbl
 		mMaterialIndex = 0;
 	}
 	
-	/** Internal constructor based on given vertices and plane */
-	protected CSGPolygonDbl(
+	/** Constructor based on given vertices and plane */
+	public CSGPolygonDbl(
 		List<CSGVertex>		pVertices
 	,	CSGPlaneDbl			pPlane
 	,	int					pMaterialIndex
@@ -190,7 +78,7 @@ public class CSGPolygonDbl
 		}
 		mMaterialIndex = pMaterialIndex;
 	}
-	protected CSGPolygonDbl(
+	public CSGPolygonDbl(
 		CSGVertex[]			pVertices
 	,	CSGPlaneDbl			pPlane
 	,	int					pMaterialIndex

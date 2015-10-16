@@ -95,7 +95,8 @@ public class CSGShapeIOB
 	public static final String sCSGShapeIOBDate="$Date$";
 	
 	/** Default configuration that applies to IOB processing */
-	public static CSGEnvironment sDefaultEnvironment = new CSGEnvironment( true );
+	public static CSGEnvironment sDefaultEnvironment 
+		= new CSGEnvironment( true, "net.wcomohundro.jme3.csg.iob.CSGShapeIOB");
 
 	/** Canned, immutable empty list of faces */
 	protected static final List<CSGFace> sEmptyFaces = new ArrayList<CSGFace>(0);

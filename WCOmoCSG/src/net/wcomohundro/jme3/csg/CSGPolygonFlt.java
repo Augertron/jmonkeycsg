@@ -57,98 +57,6 @@ public class CSGPolygonFlt
 	public static final String sCSGPolygonFltRevision="$Rev$";
 	public static final String sCSGPolygonFltDate="$Date$";
 
-	/** Factory level service routine to create appropriate polygon(s), compressing vertices
-	 	and deciding if the polygon is 'worth' constructing.
-	 	
-	 	NOTE
-	 		that the given list of vertices is 'compressed' as a side effect
-	 	
-	 	@return - a count of polygons added to the given list
-	 	
-	 	TempVars Usage:
-	 		-- CSGPlane.fromVertices --
-	 				vect4
-	 				vect5
-	 */
-	public static int addPolygon(
-		List<CSGPolygon>	pPolyList
-	,	List<CSGVertex>		pVertices
-	,	int					pMaterialIndex
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		// Compress out any spurious vertices before we resolve the plane
-		float eccentricity = CSGVertexFlt.compressVertices( pVertices, null, pEnvironment );
-		
-		if ( pVertices.size() >= 3 ) {
-			// Polygon is based on computed plane, regardless of active mode
-			CSGPlaneFlt aPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
-			return( addPolygons( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
-		} else {
-			// Nothing of interest
-			return( 0 );
-		}
-	}
-	public static int addPolygon(
-		List<CSGPolygon>	pPolyList
-	,	List<CSGVertex>		pVertices
-	,	CSGPlaneFlt			pPlane
-	,	int					pMaterialIndex
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		if ( (pPlane != null) && pPlane.isValid() ) {
-			// NOTE that compressVertices operates directly on the given list
-			float eccentricity = CSGVertexFlt.compressVertices( pVertices, pPlane, pEnvironment );
-			if ( pVertices.size() >= 3 ) {
-				// We have enough vertices for a shape
-				// NOTE when debugging, it can be useful to look for odd eccentricty values here....
-				if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
-					// Use the plane from the underlying vertices
-					pPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
-				}
-				return( addPolygons( pPolyList, pVertices, pPlane, pMaterialIndex, pEnvironment ) );
-			}
-		} else {
-			throw new IllegalArgumentException( pEnvironment.mShapeName + "Incomplete Polygon" );
-		}
-		// We did NOT build anything of value
-		return( 0 );
-	}
-	protected static int addPolygons(
-		List<CSGPolygon>	pPolyList
-	,	List<CSGVertex>		pVertices
-	,	CSGPlaneFlt			pPlane
-	,	int					pMaterialIndex
-	,	CSGEnvironment		pEnvironment
-	) {
-		int polyCount = 0;
-		
-		// A NULL plane could indicate all vertices in a straight line
-		if ( (pPlane != null) && pPlane.isValid() ) {
-			if ( pEnvironment.mPolygonTriangleOnly ) {
-				// Restrict our polygons to triangles
-				for( int j = 1, last = pVertices.size() -2; j <= last; j += 1 ) {
-					// Remember that CSGPolygon will hold onto the array, so a new instance is needed
-					// for every triangle
-					CSGVertexFlt[] vertices = new CSGVertexFlt[3];
-					vertices[0] = (CSGVertexFlt)pVertices.get( 0 );
-					vertices[1] = (CSGVertexFlt)pVertices.get( j );
-					vertices[2] = (CSGVertexFlt)pVertices.get( j + 1 );
-					
-					CSGPolygonFlt aPolygon = new CSGPolygonFlt( vertices, pPlane, pMaterialIndex );
-					pPolyList.add( aPolygon );
-					polyCount += 1;
-				}
-			} else {
-				// Multipoint polygon support
-				CSGPolygonFlt aPolygon = new CSGPolygonFlt( pVertices, pPlane, pMaterialIndex );
-				pPolyList.add( aPolygon );
-				polyCount += 1;
-			}
-		}
-		return( polyCount );
-	}
 	
 	/** Standard null constructor */
 	public CSGPolygonFlt(
@@ -158,8 +66,8 @@ public class CSGPolygonFlt
 		mMaterialIndex = 0;
 	}
 	
-	/** Internal constructor based on given vertices and plane */
-	protected CSGPolygonFlt(
+	/** Constructor based on given vertices and plane */
+	public CSGPolygonFlt(
 		List<CSGVertex>		pVertices
 	,	CSGPlaneFlt			pPlane
 	,	int					pMaterialIndex
@@ -171,7 +79,7 @@ public class CSGPolygonFlt
 		}
 		mMaterialIndex = pMaterialIndex;
 	}
-	protected CSGPolygonFlt(
+	public CSGPolygonFlt(
 		CSGVertex[]			pVertices
 	,	CSGPlaneFlt			pPlane
 	,	int					pMaterialIndex

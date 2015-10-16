@@ -74,38 +74,6 @@ public abstract class CSGPolygon<VertexT extends CSGVertex, PlaneT extends CSGPl
 	,	FORCE_TO_PLANE		// Force all vertices to intersect with the given plane
 	}
 
-	/** Factory level service routine to construct appropriate polygons */
-	public static int addPolygon(
-		List<CSGPolygon>	pPolyList
-	,	CSGVertex[]			pVertices
-	,	int					pMaterialIndex
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		// NOTE that aPlane comes back null if we lack vertices
-		if ( pEnvironment.mDoublePrecision ) {
-			// Work with doubles
-			CSGPlaneDbl aPlane = CSGPlaneDbl.fromVertices( pVertices, pTempVars, pEnvironment );
-			if ( (aPlane != null) && aPlane.isValid() ) {
-				// Polygon is based on computed plane, regardless of active mode
-				CSGPolygonDbl aPolygon = new CSGPolygonDbl( pVertices, aPlane, pMaterialIndex );
-				pPolyList.add( aPolygon );
-				return( 1 );
-			}
-		} else {
-			// Work with floats
-			CSGPlaneFlt aPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
-			if ( (aPlane != null) && aPlane.isValid() ) {
-				// Polygon is based on computed plane, regardless of active mode
-				CSGPolygonFlt aPolygon = new CSGPolygonFlt( pVertices, aPlane, pMaterialIndex );
-				pPolyList.add( aPolygon );
-				return( 1 );
-			}
-		}
-		// Nothing of interest
-		return( 0 );
-	}
-
 	/** The vertices that define this shape */
 	protected List<CSGVertex>	mVertices;
 	/** The plane that contains this shape */

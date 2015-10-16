@@ -64,7 +64,7 @@ public class CSGEnvironment
 	 		we do NOT declare this global as 'final' so that the default can be dynamically
 	 		modified at run time
 	 */
-	public static CSGEnvironment sStandardEnvironment = new CSGEnvironment( true );
+	public static CSGEnvironment sStandardEnvironment = new CSGEnvironment();
 
 	
 	/** Shape this environment applies to */
@@ -104,19 +104,16 @@ public class CSGEnvironment
 	/** Null constructor produces the 'standards' */
 	public CSGEnvironment(
 	) {
-		this( true );
+		this( true, "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
 	}
 	public CSGEnvironment(
 		boolean		pDoublePrecision
+	,	String		pHandlerClassName
 	) {
 		mShapeName = "";
 		mDoublePrecision = pDoublePrecision;
 		try {
-			if ( mDoublePrecision ) {
-				mShapeClass = Class.forName( "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
-			} else {
-				mShapeClass = Class.forName( "net.wcomohundro.jme3.csg.bsp.CSGShapeBSP" );
-			}
+			mShapeClass = Class.forName( pHandlerClassName );
 		} catch( ClassNotFoundException ex ) {
 			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "No Handler Class:" + ex, ex );
 		}

@@ -47,6 +47,7 @@ import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.CSGVertexFlt;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
 
 import com.jme3.export.Savable;
 import com.jme3.math.Vector3f;
@@ -119,6 +120,185 @@ public class CSGPartition
 	/** Version tracking support */
 	public static final String sCSGPartitionRevision="$Rev$";
 	public static final String sCSGPartitionDate="$Date$";
+
+	/** Factory level service routine to create appropriate polygon(s), compressing vertices
+	 	and deciding if the polygon is 'worth' constructing.
+	 	
+	 	NOTE
+	 		that the given list of vertices is 'compressed' as a side effect
+	 	
+	 	@return - a count of polygons added to the given list
+	 	
+	 	TempVars Usage:
+	 		-- CSGPlane.fromVertices --
+	 				vect5
+	 				vect6
+	 */
+	public static int addPolygonDbl(
+		List<CSGPolygon>	pPolyList
+	,	List<CSGVertex>		pVertices
+	,	int					pMaterialIndex
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		// Compress out any spurious vertices before we resolve the plane
+		double eccentricity = CSGVertexDbl.compressVertices( pVertices, null, pEnvironment );
+		
+		if ( pVertices.size() >= 3 ) {
+			// Polygon is based on computed plane, regardless of active mode
+			CSGPlaneDbl aPlane = CSGPlaneDbl.fromVertices( pVertices, pTempVars, pEnvironment );
+			return( addPolygons( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
+		} else {
+			// Nothing of interest
+			return( 0 );
+		}
+	}
+	public static int addPolygonDbl(
+		List<CSGPolygon>	pPolyList
+	,	CSGPolygon			pPolygon
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		CSGPlaneDbl aPlane = (CSGPlaneDbl)pPolygon.getPlane();
+		List<CSGVertex> vertexList = pPolygon.getVertices();
+		
+		if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
+			// Force the use of the plane from the underlying vertices
+			aPlane = CSGPlaneDbl.fromVertices( vertexList, pTempVars, pEnvironment );
+			return( addPolygons( pPolyList, vertexList, aPlane, pPolygon.getMaterialIndex(), pEnvironment ) );
+		} else {
+			// Use the polygon as given
+			pPolyList.add( pPolygon );
+			return( 1 );
+		}
+	}
+	protected static int addPolygons(
+		List<CSGPolygon>	pPolyList
+	,	List<CSGVertex>		pVertices
+	,	CSGPlaneDbl			pPlane
+	,	int					pMaterialIndex
+	,	CSGEnvironment		pEnvironment
+	) {
+		int polyCount = 0;
+		
+		// A NULL plane could indicate all vertices in a straight line
+		if ( (pPlane != null) && pPlane.isValid() ) {
+			if ( pEnvironment.mPolygonTriangleOnly ) {
+				// Restrict our polygons to triangles
+				for( int j = 1, last = pVertices.size() -2; j <= last; j += 1 ) {
+					// Remember that CSGPolygon will hold onto the array, so a new instance is needed
+					// for every triangle
+					CSGVertexDbl[] vertices = new CSGVertexDbl[3];
+					vertices[0] = (CSGVertexDbl)pVertices.get( 0 );
+					vertices[1] = (CSGVertexDbl)pVertices.get( j );
+					vertices[2] = (CSGVertexDbl)pVertices.get( j + 1 );
+					
+					CSGPolygonDbl aPolygon = new CSGPolygonDbl( vertices, pPlane, pMaterialIndex );
+					pPolyList.add( aPolygon );
+					polyCount += 1;
+				}
+			} else {
+				// Multipoint polygon support
+				CSGPolygonDbl aPolygon = new CSGPolygonDbl( pVertices, pPlane, pMaterialIndex );
+				pPolyList.add( aPolygon );
+				polyCount += 1;
+			}
+		}
+		return( polyCount );
+	}
+	
+	/** Factory level service routine to create appropriate polygon(s), compressing vertices
+	 	and deciding if the polygon is 'worth' constructing.
+	 	
+	 	NOTE
+	 		that the given list of vertices is 'compressed' as a side effect
+	 	
+	 	@return - a count of polygons added to the given list
+	 	
+	 	TempVars Usage:
+	 		-- CSGPlane.fromVertices --
+	 				vect4
+	 				vect5
+	 */
+	public static int addPolygonFlt(
+		List<CSGPolygon>	pPolyList
+	,	List<CSGVertex>		pVertices
+	,	int					pMaterialIndex
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		// Compress out any spurious vertices before we resolve the plane
+		float eccentricity = CSGVertexFlt.compressVertices( pVertices, null, pEnvironment );
+		
+		if ( pVertices.size() >= 3 ) {
+			// Polygon is based on computed plane, regardless of active mode
+			CSGPlaneFlt aPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
+			return( addPolygons( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
+		} else {
+			// Nothing of interest
+			return( 0 );
+		}
+	}
+	public static int addPolygonFlt(
+		List<CSGPolygon>	pPolyList
+	,	List<CSGVertex>		pVertices
+	,	CSGPlaneFlt			pPlane
+	,	int					pMaterialIndex
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		if ( (pPlane != null) && pPlane.isValid() ) {
+			// NOTE that compressVertices operates directly on the given list
+			float eccentricity = CSGVertexFlt.compressVertices( pVertices, pPlane, pEnvironment );
+			if ( pVertices.size() >= 3 ) {
+				// We have enough vertices for a shape
+				// NOTE when debugging, it can be useful to look for odd eccentricty values here....
+				if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
+					// Use the plane from the underlying vertices
+					pPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
+				}
+				return( addPolygons( pPolyList, pVertices, pPlane, pMaterialIndex, pEnvironment ) );
+			}
+		} else {
+			throw new IllegalArgumentException( pEnvironment.mShapeName + "Incomplete Polygon" );
+		}
+		// We did NOT build anything of value
+		return( 0 );
+	}
+	protected static int addPolygons(
+		List<CSGPolygon>	pPolyList
+	,	List<CSGVertex>		pVertices
+	,	CSGPlaneFlt			pPlane
+	,	int					pMaterialIndex
+	,	CSGEnvironment		pEnvironment
+	) {
+		int polyCount = 0;
+		
+		// A NULL plane could indicate all vertices in a straight line
+		if ( (pPlane != null) && pPlane.isValid() ) {
+			if ( pEnvironment.mPolygonTriangleOnly ) {
+				// Restrict our polygons to triangles
+				for( int j = 1, last = pVertices.size() -2; j <= last; j += 1 ) {
+					// Remember that CSGPolygon will hold onto the array, so a new instance is needed
+					// for every triangle
+					CSGVertexFlt[] vertices = new CSGVertexFlt[3];
+					vertices[0] = (CSGVertexFlt)pVertices.get( 0 );
+					vertices[1] = (CSGVertexFlt)pVertices.get( j );
+					vertices[2] = (CSGVertexFlt)pVertices.get( j + 1 );
+					
+					CSGPolygonFlt aPolygon = new CSGPolygonFlt( vertices, pPlane, pMaterialIndex );
+					pPolyList.add( aPolygon );
+					polyCount += 1;
+				}
+			} else {
+				// Multipoint polygon support
+				CSGPolygonFlt aPolygon = new CSGPolygonFlt( pVertices, pPlane, pMaterialIndex );
+				pPolyList.add( aPolygon );
+				polyCount += 1;
+			}
+		}
+		return( polyCount );
+	}
 
 	/** Provide a service that knows how to assign a given polygon to an appropriate 
 	 	positional list based on its relationship to this plane.
@@ -566,7 +746,7 @@ public class CSGPartition
 			// are very close, so treat it like being on the plane as well.  This should prevent us
 			// for subsequent split processing on the front.
 			int coplaneCount
-				= CSGPolygonDbl.addPolygon( coplaneList, pPolygon, pTempVars, pEnvironment );
+				= addPolygonDbl( coplaneList, pPolygon, pTempVars, pEnvironment );
 			if ( coplaneCount < 1 ) {
 				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
 				, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
@@ -704,19 +884,19 @@ public class CSGPartition
 			}
 			// What comes in front of the plane?
 			int beforeCount
-				= CSGPolygonDbl.addPolygon( pFront, beforeVertices, pPolygon.getMaterialIndex()
+				= addPolygonDbl( pFront, beforeVertices, pPolygon.getMaterialIndex()
 											, pTempVars, pEnvironment );
 
 			// What comes behind the given plane?
 			int behindCount 
-				= CSGPolygonDbl.addPolygon( pBack, behindVertices, pPolygon.getMaterialIndex()
+				= addPolygonDbl( pBack, behindVertices, pPolygon.getMaterialIndex()
 											, pTempVars, pEnvironment );
 
 			if ( beforeCount == 0 ) {
 				if ( behindCount == 0 ) {
 					// We did not split the polygon at all, treat it as COPLANAR
 					coplaneCount
-						= CSGPolygonDbl.addPolygon( coplaneList, pPolygon, pTempVars, pEnvironment );
+						= addPolygonDbl( coplaneList, pPolygon, pTempVars, pEnvironment );
 					if ( coplaneCount < 1 ) {
 						ConstructiveSolidGeometry.sLogger.log( Level.WARNING
 						, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
@@ -819,7 +999,7 @@ public class CSGPartition
 			// Force the polygon onto the plane as needed (working from a mutable copy of the poly list)
 			List<CSGVertex> polygonCopy = new ArrayList<CSGVertex>( polygonVertices );
 			int coplaneCount
-				= CSGPolygonFlt.addPolygon( coplaneList
+				= addPolygonFlt( coplaneList
 											, polygonCopy
 											, (CSGPlaneFlt)mPlane
 											, pPolygon.getMaterialIndex()
@@ -967,17 +1147,17 @@ public class CSGPartition
 ****/
 /*** when operating on possibly triangular polygons ***/
 			int beforeCount
-				= CSGPolygonFlt.addPolygon( pFront, beforeVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
+				= addPolygonFlt( pFront, beforeVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
 
 			// What comes behind the given plane?
 			int behindCount 
-				= CSGPolygonFlt.addPolygon( pBack, behindVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
+				= addPolygonFlt( pBack, behindVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
 
 			if ( beforeCount == 0 ) {
 				if ( behindCount == 0 ) {
 					// We did not split the polygon at all, treat it as COPLANAR
 					polygonCopy = new ArrayList<CSGVertex>( polygonVertices );
-					coplaneCount = CSGPolygonFlt.addPolygon( pCoplanarFront
+					coplaneCount = addPolygonFlt( pCoplanarFront
 															, polygonCopy
 															, (CSGPlaneFlt)mPlane
 															, pPolygon.getMaterialIndex()
