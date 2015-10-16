@@ -38,6 +38,7 @@ import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
+import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
 
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
@@ -277,6 +278,8 @@ public class CSGSegment
 			mStartVertex = pVertex;
 			mStartPosition = pVertex.getPosition();
 		 	mStartType = CSGSegmentType.VERTEX;
+			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
+
 		 	mStartCollision = pCollision;
 		 	mStartDist = mLine.computePointToPointDistance( mStartVertex.getPosition(), pTempVars, pEnvironment );
 		 	return( 1 );
@@ -286,6 +289,8 @@ public class CSGSegment
 			mEndVertex = pVertex;
 			mEndPosition = pVertex.getPosition();
 			mEndType = CSGSegmentType.VERTEX;
+			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
+
 			mEndCollision = pCollision;
 			mEndDist = mLine.computePointToPointDistance( mEndVertex.getPosition(), pTempVars, pEnvironment );
 					
@@ -323,7 +328,10 @@ public class CSGSegment
 	}
 	
 	/** Sets an end as edge (starting point if none end were defined, ending point otherwise)
+	 
 	    @return false if all ends were already defined, true otherwise
+	    
+	    ****** TempVars used:  vectd6
 	 */
 	protected int setEdge(
 		int					pIndex
@@ -335,7 +343,7 @@ public class CSGSegment
 	) {
 		Vector3d point1 = pVertex1.getPosition();
 		Vector3d point2 = pVertex2.getPosition();
-		Vector3d edgeDirection = point2.subtract( point1, pTempVars.vectd4 );
+		Vector3d edgeDirection = point2.subtract( point1, pTempVars.vectd6 );
 		
 		CSGRay edgeLine = new CSGRay( edgeDirection, point1 );
 		
@@ -345,7 +353,7 @@ public class CSGSegment
 			mStartType = CSGSegmentType.EDGE;
 			mStartCollision = pCollision;
 			mStartVertex = pVertex1;
-			mStartPosition = mLine.computeLineIntersection( edgeLine, pTempVars, pEnvironment );
+			mStartPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
 			mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment);
 			mMiddleType = CSGSegmentType.FACE;
 			return( 1 );
@@ -355,7 +363,7 @@ public class CSGSegment
 			mEndType = CSGSegmentType.EDGE;
 			mEndCollision = pCollision;
 			mEndVertex = pVertex1;
-			mEndPosition = mLine.computeLineIntersection( edgeLine, pTempVars, pEnvironment );
+			mEndPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
 			mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
 			mMiddleType = CSGSegmentType.FACE;
 			

@@ -66,8 +66,6 @@ public class CSGSolid
 	protected List<CSGFace>		mFaces;
 	/** The overall volumetric 'bounds' of this solid */
 	protected CSGBounds			mBounds;
-	/** Statistics tracking how the faces of this solid are split */
-	protected int				mOriginalFaceCount;
 	
 	
 	/** Constructor based on a given list of faces */
@@ -103,30 +101,28 @@ public class CSGSolid
 		return( mBounds );
 	}
 	
-	/**
-	 * Method used to add a face properly for internal methods
-	 * 
-	 * @param v1 a face vertex
-	 * @param v2 a face vertex
-	 * @param v3 a face vertex
-	 */
+	/** Add a new face to this solid */
 	protected CSGFace addFace(
-		CSGVertexIOB 	v1
-	, 	CSGVertexIOB 	v2
-	, 	CSGVertexIOB 	v3
+		CSGVertexIOB 	pV1
+	, 	CSGVertexIOB 	pV2
+	, 	CSGVertexIOB 	pV3
 	, 	int 			pMaterialIndex
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		Vector3d aPosition = v1.getPosition();
-		Vector3d bPosition = v2.getPosition();
-		Vector3d cPosition = v3.getPosition();
-		
-		if ( (aPosition.distance( bPosition ) > 1e-7)
-		&&   (bPosition.distance( cPosition ) > 1e-7)
-		&&	 (cPosition.distance( aPosition ) > 1e-7) ) {
-			CSGFace aFace = new CSGFace( v1, v2, v3, pMaterialIndex, pTempVars, pEnvironment );
+		if ( ConstructiveSolidGeometry
+				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
+		|| ConstructiveSolidGeometry
+				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
+		|| ConstructiveSolidGeometry
+				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+			// The face is too small to be pertinent
+			return( null );
+		} else {
+			// Build the face
+			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pMaterialIndex, pTempVars, pEnvironment );
 			if ( aFace.isValid() ) {
+				// Retain the valid face
 				mFaces.add( aFace );
 				return( aFace );
 			} else {
@@ -134,21 +130,13 @@ public class CSGSolid
 				// vertices are in a line
 				throw new IllegalArgumentException( "Invalid new Face: " + aFace );
 			}
-		} else {
-			// The face is too small to be pertinent
-			return( null );
 		}
 	}
 	
-	/** Add an appropriate vertex */
-	protected CSGVertexIOB addVertex(
-		Vector3d			pNewPosition
-	, 	CSGFace				pFace
-	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
-	) {
-		return( addVertex( pNewPosition, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment ) );
-	}
+	/** Add an appropriate vertex 
+	 * 
+	  	****** TempVars used: vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
+	 */
 	protected CSGVertexIOB addVertex(
 		Vector3d			pNewPosition
 	, 	CSGFace				pFace
@@ -158,16 +146,20 @@ public class CSGSolid
 	) {
 		// NOTE that once upon a time, a list of unique vertices was kept and scanned
 		//		to only add a vertex that was not yet defined.
-		//		I could find no good reason for this, and the overhead of this separate
+		//		I could find no compelling reason for this, and the overhead of this separate
 		//		list was substantial, so it has been dropped.
 		CSGVertexIOB vertex = pFace.extrapolate( pNewPosition, pEdge, pTempVars, pEnvironment );
 		return( vertex );	
 	}
 
-	/**
-	 * Split faces so that none face is intercepted by a face of other object
-	 * 
-	 * @param pSolid the other object 3d used to make the split 
+	/** Split the faces of this solid so that no face crosses through any face of another object.
+	 	Any face so found will be split into subfaces that do not cross.  Newly generated faces
+	 	will be checked against the other object as well.
+	 	
+	 	The end result is a set of faces that can then be categorized as completely within
+	 	or completely ouside of another object.
+	 	
+	 	****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
 	 */
 	public void splitFaces(
 		CSGSolid 		pSolid
@@ -248,7 +240,10 @@ public class CSGSolid
 		}
 	}
 	
-	/** Classify faces as being inside, outside or on boundary of other object */
+	/** Classify faces as being inside, outside or on boundary of other object 
+	 
+ 		****** TempVars used:  vectd5, vectd6
+	 */
 	public void classifyFaces(
 		CSGSolid 		pOtherObject
 	,	CSGTempVars		pTempVars
@@ -270,7 +265,10 @@ public class CSGSolid
 	}
 
 	
-	/** Split an individual face  */	  
+	/** Split an individual face
+	 
+	 	****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
+    */	  
 	protected boolean splitFace(
 		int 			pFaceIndex
 	, 	CSGSegment 		pFaceSegment
@@ -278,10 +276,9 @@ public class CSGSolid
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		CSGSegment.CSGSegmentType startType, endType, middleType;
+//		CSGSegment.CSGSegmentType startType, endType, middleType;
 		CSGFace.CSGFaceCollision startCollision, endCollision;
 		
-//		double startDist, endDist;
 		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL
 		
 		// NOTE that pFaceSegment is based on the face at pFaceIndex, so the vertices
@@ -300,8 +297,7 @@ public class CSGSolid
 		// to that portion which actually is bounded by the current face	
 		if ( pOtherSegment.getStartDistance() > (pFaceSegment.getStartDistance() + tolerance)) {
 			// The 'other' segment start is deeper so it determines the start point
-//			startDist = segment2.getStartDistance();
-			startType = pFaceSegment.getIntermediateType();
+//			startType = pFaceSegment.getIntermediateType();
 			startPos = pOtherSegment.getStartPosition();
 			
 			// The other segment collision point is not pertinent.  The face segment can
@@ -309,15 +305,16 @@ public class CSGSolid
 			startCollision = pFaceSegment.getOtherCollision( startPos );
 		} else {
 			// This face segment start is deeper, so it determines the start point
-//			startDist = segment1.getStartDistance();
-			startType = pFaceSegment.getStartType();
+//			startType = pFaceSegment.getStartType();
+//			if ( startType == CSGSegment.CSGSegmentType.VERTEX ) {
+//				startVertex.setStatus( CSGVertexStatus.BOUNDARY );
+//			}
 			startPos = pFaceSegment.getStartPosition();
 			startCollision = pFaceSegment.getStartCollision();
 		}		
 		if ( pOtherSegment.getEndDistance() < (pFaceSegment.getEndDistance() - tolerance)) {
 			// The 'other' segment end is deeper, so it determines the end point
-//			endDist = segment2.getEndDistance();
-			endType = pFaceSegment.getIntermediateType();
+//			endType = pFaceSegment.getIntermediateType();
 			endPos = pOtherSegment.getEndPosition();
 			
 			// The other segment collision point is not pertinent.  The face segment can
@@ -325,24 +322,15 @@ public class CSGSolid
 			endCollision = pFaceSegment.getOtherCollision( endPos );
 		} else {
 			// This face segment end is deeper, to it determines the end point
-//			endDist = segment1.getEndDistance();
-			endType = pFaceSegment.getEndType();
+//			endType = pFaceSegment.getEndType();
+//			if ( endType == CSGSegment.CSGSegmentType.VERTEX ) {
+//				endVertex.setStatus( CSGVertexStatus.BOUNDARY );
+//			}
 			endPos = pFaceSegment.getEndPosition();
 			endCollision = pFaceSegment.getEndCollision();
 		}		
-		middleType = pFaceSegment.getIntermediateType();
+//		middleType = pFaceSegment.getIntermediateType();
 		
-		/*** NOTE 13Oct2015 - I am not sure about the following since the 'types' do NOT
-		 ***                  necessarily correspond to the vertices based on the segment....
-		 ***/
-		// Set vertex to BOUNDARY if it is start type		
-		if ( startType == CSGSegment.CSGSegmentType.VERTEX ) {
-			startVertex.setStatus( CSGVertexStatus.BOUNDARY );
-		}
-		// Set vertex to BOUNDARY if it is end type
-		if ( endType == CSGSegment.CSGSegmentType.VERTEX ) {
-			endVertex.setStatus( CSGVertexStatus.BOUNDARY );
-		}
 		// The collision points determine how we split
 		switch( startCollision ) {
 		case V1:
@@ -878,8 +866,6 @@ public class CSGSolid
 		}
 	}
 
-
-
 	/** Split into three pieces based on a single interior point */
 	protected void breakFaceInThree(
 		CSGFace				pFace
@@ -887,7 +873,7 @@ public class CSGSolid
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {	
-		CSGVertexIOB vertex = addVertex( pCenterPoint, pFace, pTempVars, pEnvironment );
+		CSGVertexIOB vertex = addVertex( pCenterPoint, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
 				
 		//               V2
 		//
@@ -911,7 +897,7 @@ public class CSGSolid
 	,	CSGEnvironment		pEnvironment
 	) {
 		CSGVertexIOB vtxEdge = addVertex( pPositionOnEdge, pFace, pEdgeCollision, pTempVars, pEnvironment );
-		CSGVertexIOB vtxCenter = addVertex( pPositionOnFace, pFace, pTempVars, pEnvironment );
+		CSGVertexIOB vtxCenter = addVertex( pPositionOnFace, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
 		
 		switch( pEdgeCollision ) {
 		case EDGE12:
@@ -967,8 +953,8 @@ public class CSGSolid
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGVertexIOB vertex1 = addVertex( pNewPosition1, pFace, pTempVars, pEnvironment );
-		CSGVertexIOB vertex2 = addVertex( pNewPosition2, pFace, pTempVars, pEnvironment );
+		CSGVertexIOB vertex1 = addVertex( pNewPosition1, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
+		CSGVertexIOB vertex2 = addVertex( pNewPosition2, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
 			
 		switch( pPickVertex ) {
 		case V1:
@@ -1004,6 +990,7 @@ public class CSGSolid
 	 * @param newPos new vertex position
 	 * @param endVertex vertex used for splitting 
 	 */		
+/***
 	private void breakFaceInTwo(
 		int facePos
 	, 	Vector3d newPos
@@ -1032,7 +1019,7 @@ public class CSGSolid
 			addFace(vertex, face.v1(), face.v2(), face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
-	
+***/
 	/**
 	 * Face breaker for EDGE-EDGE-EDGE
 	 * 
@@ -1041,6 +1028,7 @@ public class CSGSolid
 	 * @param newPos2 new vertex position 
 	 * @param splitEdge edge that will be split
 	 */
+/***
 	private void breakFaceInThree(
 		int		 facePos
 	, 	Vector3d newPos1
@@ -1073,7 +1061,7 @@ public class CSGSolid
 			break;
 		}
 	}
-		
+***/		
 	/**
 	 * Face breaker for VERTEX-FACE-FACE / FACE-FACE-VERTEX
 	 * 
@@ -1081,6 +1069,7 @@ public class CSGSolid
 	 * @param newPos new vertex position
 	 * @param endVertex vertex used for the split
 	 */
+/***
 	private void breakFaceInThree(
 		int facePos
 	, 	Vector3d newPos
@@ -1112,7 +1101,7 @@ public class CSGSolid
 			addFace(face.v2(), face.v3(), vertex, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
-	
+***/
 	/**
 	 * Face breaker for EDGE-FACE-EDGE
 	 * 
@@ -1122,6 +1111,7 @@ public class CSGSolid
 	 * @param startVertex vertex used the new faces creation
 	 * @param endVertex vertex used for the new faces creation
 	 */
+/***
 	private void breakFaceInThree(
 		int facePos
 	, 	Vector3d newPos1
@@ -1174,7 +1164,7 @@ public class CSGSolid
 			addFace(vertex2, face.v1(), vertex1, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
-		
+	
 	private void breakFaceInFour(
 		int facePos
 	, Vector3d newPos1
@@ -1211,7 +1201,7 @@ public class CSGSolid
 			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
-	
+***/
 	/**
 	 * Face breaker for FACE-FACE-FACE
 	 * 
@@ -1219,7 +1209,8 @@ public class CSGSolid
 	 * @param newPos1 new vertex position
 	 * @param newPos2 new vertex position 
 	 * @param linedVertex what vertex is more lined with the interersection found
-	 */		
+	 */	
+/***
 	private void breakFaceInFive(
 		int facePos
 	, Vector3d newPos1
@@ -1260,7 +1251,7 @@ public class CSGSolid
 			addFace(face.v2(), face.v3(), vertex2, face.getMaterialIndex(), pTempVars, pEnvironment );
 		}
 	}
-
+***/
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(

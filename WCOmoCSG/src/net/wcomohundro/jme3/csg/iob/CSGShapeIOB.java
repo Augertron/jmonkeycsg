@@ -62,6 +62,30 @@ import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 	state of: Inside/Outside/Boundary
 	
 	Once classified, the boolean operators select those appropriate faces for the final shape.
+	
+	The key design idea is that a given solid is composed of some set of 'faces', where each
+	face is defined by a triangle.  When operating on two solids, it is possible to compare
+	every face in one solid with every face in the other.  So long as there is no intersection,
+	then a face can be left alone.
+	
+	But should a face in solidA collide with a face in solidB, then we must split the face
+	to eliminate collisions.
+	
+	So how can two triangles collide?  No matter what, the collision can only be along a single
+	line.  So how can a line intersect with a face:
+	1)	The line is totally outside the bounds of the face and does not intersect at all
+ 	2)	The line passes through a single vertex of the face
+ 	3)	The line passes through an edge of the face
+ 	4)	The line passes through a single vertex and a single edge of the face
+ 	5)	The line passes through two edges of the face
+
+	Each of the cases above can be analysed and the face split into multiple parts accordingly.
+	Once we know we have no overlap, then each face can assessed to see if it is
+	1)	Inside the second solid
+	2)	Outside the second solid
+	3)	Touching the second solid at a boundary
+	
+	The boolean operation is the collection of the appropriate faces from the two solids.
 */
 public class CSGShapeIOB 
 	implements CSGShape.CSGShapeProcessor, ConstructiveSolidGeometry

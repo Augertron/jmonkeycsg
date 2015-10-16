@@ -111,6 +111,7 @@ public class CSGFace
 			case 24:	return( V2 );		// EDGE12 + EDGE23
 			case 48:	return( V3 );		// EDGE23 + EDGE31
 			case 40:	return( V1 );		// EDGE31 + EDGE12
+			
 			default:	return( NONE );		// no other combination of edges
 			}
 		}
@@ -143,6 +144,7 @@ public class CSGFace
 				return( (pEdge == EDGE12) || (pEdge == EDGE23) );
 			case V3:
 				return( (pEdge == EDGE23) || (pEdge == EDGE31) );
+				
 			default:
 				throw new IllegalArgumentException( "Not a Vertex: " + this );
 			}
@@ -366,6 +368,8 @@ public class CSGFace
 
     /** Produce a new Vertex for this face, based upon a given position and
         'collision' status.
+        
+        ****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
     */
 	public CSGVertexIOB extrapolate( 
 		Vector3d			pNewPosition
@@ -393,8 +397,8 @@ public class CSGFace
 			Vector3d pointOnEdge 
 				= CSGRay.lineIntersection( v1().getPosition(), v2().getPosition()
 											, pNewPosition, v3().getPosition()
-											, pTempVars.vectd5
-											, pTempVars );
+											, pTempVars.vectd6
+											, pTempVars, pEnvironment );
 			// Figure out the vertex on the edge
 			newVertex = new CSGVertexIOB( v1(), v2(), pointOnEdge, pTempVars, pEnvironment );
 			
@@ -428,10 +432,9 @@ public class CSGFace
 
 	//------------------------------------CLASSIFIERS-------------------------------//
 	
-	/**
-	 * Classifies the face if one of its vertices are classified as INSIDE or OUTSIDE
-	 * 
-	 * @return true if the face could be classified, false otherwise 
+	/** Classifies the face if one of its vertices are classified as INSIDE or OUTSIDE
+	 
+	 	@return true if the face could be classified, false otherwise 
 	 */
 	public boolean simpleClassify(
 	) {
@@ -454,10 +457,9 @@ public class CSGFace
 		}
 	}
 	
-	/**
-	 * Classifies the face based on the ray trace technique
-	 * 
-	 * @param pSolid object3d used to compute the face status 
+	/** Classifies the face based on the ray trace technique
+
+ 		****** TempVars used:  vectd4, vectd5, vectd6
 	 */
 	public void rayTraceClassify(
 		CSGSolid 		pSolid
@@ -469,7 +471,7 @@ public class CSGFace
 		Vector3d position2 = v2().getPosition();
 		Vector3d position3 = v3().getPosition();
 
-		Vector3d p0 = new Vector3d();
+		Vector3d p0 = pTempVars.vectd4;
 		p0.x = (position1.x + position2.x + position3.x) / 3.0;
 		p0.y = (position1.y + position2.y + position3.y) / 3.0;
 		p0.z = (position1.z + position2.z + position3.z) / 3.0;
@@ -492,6 +494,7 @@ public class CSGFace
 				dotProduct = otherFace.getNormal().dot( ray.getDirection() );
 				intersectionPoint = ray.computePlaneIntersection( otherFace.getNormal()
 																, otherFace.getPlane().getDot()
+																, pTempVars.vectd5
 																, pTempVars
 																, pEnvironment );
 								

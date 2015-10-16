@@ -62,7 +62,7 @@ public class CSGRay
  			A0 = A1 + (nA/d)*(A2-A1);
  			B0 = B1 + (nB/d)*(B2-B1);
  			
- 		****** TempVars used:  vectd1, vectd2, vectd3, vectd4
+ 		****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5
 	 */
 	public static Vector3d lineIntersection(
 		Vector3d		pLineAPoint1
@@ -71,20 +71,34 @@ public class CSGRay
 	,	Vector3d		pLineBPoint2
 	,	Vector3d		pResult
 	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
 	) {
 		Vector3d vA2minusA1 = pLineAPoint2.subtract( pLineAPoint1, pTempVars.vectd1 );
 		Vector3d vB2minusB1 = pLineBPoint2.subtract( pLineBPoint1, pTempVars.vectd2 );
 		Vector3d vA1minusB1 = pLineAPoint1.subtract( pLineBPoint1, pTempVars.vectd3 );
 		
-		Vector3d nCrossBA = vA1minusB1.crossLocal( vB2minusB1 );
 		Vector3d nCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd4 );
-		double nA = nCrossBA.dot( nCrossAB );
+		Vector3d nACrossBA = vB2minusB1.cross( vA1minusB1, pTempVars.vectd5 );
+		double nA = nACrossBA.dot( nCrossAB );
 		
-		Vector3d dCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd4 );
+		Vector3d dCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd5 );
 		double d = dCrossAB.dot( dCrossAB );
 		
 		pResult = vA2minusA1.mult( nA / d, pResult );
 		pResult.addLocal( pLineAPoint1 );
+		
+		if ( pEnvironment.mStructuralDebug ) {
+			// Confirm the intersection
+			Vector3d nBCrossBA = vA2minusA1.cross( vA1minusB1, pTempVars.vectd5 );
+			double nB = nBCrossBA.dot( nCrossAB );
+			
+			Vector3d bZero = vB2minusB1.multLocal( nB / d );
+			bZero.addLocal( pLineBPoint1 );
+			
+			if ( !ConstructiveSolidGeometry.equalVector3d( pResult, bZero, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+				throw new IllegalArgumentException( "Lines do not intersect" );
+			}
+		}
 		return( pResult );
 	}
 
@@ -127,8 +141,8 @@ public class CSGRay
 				
 		// Check if direction length is not zero (the planes aren't parallel )...
 		if ( mDirection.length() > tolerance ) {
-			//getting a line point, zero is set to a coordinate whose direction 
-			//component isn't zero (line intersecting its origin plan)
+			// Getting a line point, zero is set to a coordinate whose direction 
+			// component isn't zero (line intersecting its origin plan)
 			Vector3d position1 = pFace1.v1().getPosition();
 			Vector3d position2 = pFace2.v1().getPosition();
 			double d1 = -(normalFace1.x*position1.x + normalFace1.y*position1.y + normalFace1.z*position1.z);
@@ -164,10 +178,10 @@ public class CSGRay
 	
 	/** Computes the distance from this ray's origin to another point
 
-		@param otherPoint - the point to compute the distance from the origin. The point 
-	 						is supposed to be on the same line.
-	  	@return - the distance. If the point submitted is behind the direction, the 
-	 						distance is negative 
+	  	@return - the distance. If the point submitted is 'behind' the direction, then 
+	 		      the distance is negative 
+	 		      
+ 		****** TempVars used:  vectd6
 	 */
 	public double computePointToPointDistance(
 		Vector3d 		pOtherPoint
@@ -177,22 +191,19 @@ public class CSGRay
 		// Absolute distance
 		double distance = pOtherPoint.distance( mOrigin );
 		
-		Vector3d vec = pOtherPoint.subtract( mOrigin, pTempVars.vectd4 );
+		Vector3d vec = pOtherPoint.subtract( mOrigin, pTempVars.vectd6 );
 		vec.normalizeLocal();
-		if ( vec.dot( mDirection ) < 0) {
-			return -distance;			
+		if ( vec.dot( mDirection ) < 0 ) {
+			return( -distance );			
 		} else {
-			return distance;
+			return( distance );
 		}
 	}
 	
-	/** Computes the vertex resulting from the intersection with another line
-
-	   @param otherLine - the other line to apply the intersection. The lines are supposed
-   						  to intersect
-	 */
+	/** Computes the vertex resulting from the intersection with another line */
 	public Vector3d computeLineIntersection(
 		CSGRay			pOtherLine
+	,	Vector3d		pResult
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -231,18 +242,20 @@ public class CSGRay
 			return null;
 		}
 		// Construct a new position based on what we know 
-		Vector3d newPosition = mDirection.mult( t );
-		newPosition.addLocal( mOrigin );
-		return( newPosition );
+		pResult = mDirection.mult( t, pResult );
+		pResult.addLocal( mOrigin );
+		return( pResult );
 	}
 	
 
 	/** Compute the point resulting from the intersection of this ray with a plane
+	 
 	 	@return - intersection point. If they don't intersect, return null
 	 */
 	public Vector3d computePlaneIntersection(
 		Vector3d		pPlaneNormal
 	,	double			pPlaneDot
+	,	Vector3d		pResult
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -267,7 +280,11 @@ public class CSGRay
 			// Line is parallel to the plane
 			if( Math.abs( numerator ) < tolerance ) {
 				// Line contained within the plane
-				return( mOrigin.clone() );
+				if ( pResult == null ) {
+					return( mOrigin.clone() );
+				} else {
+					return( pResult.set( mOrigin ) );
+				}
 			} else {
 				// No intersection
 				return( null );
@@ -275,9 +292,9 @@ public class CSGRay
 		} else {
 			// Line intersects the plane
 			double t = -numerator/denominator;
-			Vector3d resultPoint = mDirection.mult( t );
-			resultPoint.addLocal( mOrigin );
-			return resultPoint;
+			pResult = mDirection.mult( t, pResult );
+			pResult.addLocal( mOrigin );
+			return pResult;
 		}
 	}
 

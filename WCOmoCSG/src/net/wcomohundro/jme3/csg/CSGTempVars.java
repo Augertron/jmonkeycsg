@@ -77,6 +77,7 @@ public class CSGTempVars
 	public Vector3d		vectd3 = new Vector3d();
 	public Vector3d		vectd4 = new Vector3d();
 	public Vector3d		vectd5 = new Vector3d();
+	public Vector3d		vectd6 = new Vector3d();
 	
 	/** Release for reuse */
 	public void release(
