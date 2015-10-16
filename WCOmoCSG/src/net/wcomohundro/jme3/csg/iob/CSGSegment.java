@@ -56,7 +56,8 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  	
  	From the conditions above, you can see that only cases (4) and (5) represent a true
  	intersection of a face and a line.  Everything else misses entirely or intersects only
- 	along an edge.
+ 	along an edge. Case (3) is still interesting in split processing if the intersection 
+ 	does not pass through both vertices of the edge.  The edge may still need to b split.
   */
 public class CSGSegment 
 	implements ConstructiveSolidGeometry
@@ -66,13 +67,6 @@ public class CSGSegment
 	public static final String sCSGSegmentDate="$Date$";
 	
 	//private static final double TOL = 1e-10f;
-	
-	/** Type of a segment terminus */
-	public enum CSGSegmentType {
-		VERTEX		// Terminus is on a vertex
-	,	FACE		// Terminus in on a face
-	,	EDGE		// Terminus is on an edge
-	}
 	
 	/** The face this segment applies to */
 	protected CSGFace			mFace;
@@ -84,25 +78,13 @@ public class CSGSegment
 	/** Distance from the segment ending point to the point defining the plane */
 	protected double 			mEndDist;
 	
-	/** starting point status relative to the face */
-	protected CSGSegmentType	mStartType;
-	/** intermediate status relative to the face */
-	protected CSGSegmentType	mMiddleType;
-	/** ending point status relative to the face */
-	protected CSGSegmentType	mEndType;
-	
 	/** Start point collision status */
 	protected CSGFaceCollision	mStartCollision;
 	/** End point collision status */
 	protected CSGFaceCollision	mEndCollision;
 	
-	/** Nearest vertex from the starting point */
-	protected CSGVertexIOB 		mStartVertex;
 	/** Actual starting position, possibly interpolated from other vertices */
 	protected Vector3d			mStartPosition;
-	
-	/** Nearest vertex from the ending point */
-	protected CSGVertexIOB 		mEndVertex; 
 	/** Actual ending position, possibly interpolated from other vertices */
 	protected Vector3d			mEndPosition;
 	
@@ -206,10 +188,6 @@ public class CSGSegment
 	public double getStartDistance() { return mStartDist; }
 	public double getEndDistance() { return	mEndDist; }
 	
-	public CSGSegmentType getStartType() { return mStartType; }
-	public CSGSegmentType getIntermediateType() { return mMiddleType; }
-	public CSGSegmentType getEndType() { return mEndType; }
-	
 	public CSGFaceCollision getStartCollision() { return mStartCollision; }
 	public CSGFaceCollision getEndCollision() { return mEndCollision; }
 	
@@ -255,9 +233,6 @@ public class CSGSegment
 		return( aCollision );
 	}
 	
-	public CSGVertexIOB getStartVertex() { return mStartVertex; }
-	public CSGVertexIOB getEndVertex() { return mEndVertex; }
-	
 	public Vector3d getStartPosition() { return mStartPosition; }
 	public Vector3d getEndPosition() { return mEndPosition; }
 	
@@ -274,38 +249,22 @@ public class CSGSegment
 	) {
 		switch( pIndex ) {
 		case 0:
-			// No end yet defined - define starting point as VERTEX
-			mStartVertex = pVertex;
+			// No end yet defined - define the starting point 
 			mStartPosition = pVertex.getPosition();
-		 	mStartType = CSGSegmentType.VERTEX;
 			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
 
 		 	mStartCollision = pCollision;
-		 	mStartDist = mLine.computePointToPointDistance( mStartVertex.getPosition(), pTempVars, pEnvironment );
+		 	mStartDist = mLine.computePointToPointDistance( pVertex.getPosition(), pTempVars, pEnvironment );
 		 	return( 1 );
 		 	
 		case 1:
 			// Starting point already defined - define ending point as VERTEX
-			mEndVertex = pVertex;
 			mEndPosition = pVertex.getPosition();
-			mEndType = CSGSegmentType.VERTEX;
 			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
 
 			mEndCollision = pCollision;
-			mEndDist = mLine.computePointToPointDistance( mEndVertex.getPosition(), pTempVars, pEnvironment );
+			mEndDist = mLine.computePointToPointDistance( pVertex.getPosition(), pTempVars, pEnvironment );
 					
-			// By definition, the end can only be set as a Vertex iff the start was a Vertex as well.
-			// Otherwise, setEdge() would have been called
-			mMiddleType =  CSGSegmentType.EDGE;
-/****
-			if ( mStartVertex.equals( mEndVertex ) ) {
-				//VERTEX-VERTEX-VERTEX
-				mMiddleType = CSGSegmentType.VERTEX;
-			} else if( mStartType == CSGSegmentType.VERTEX ) {
-				// VERTEX-EDGE-VERTEX
-				mMiddleType = CSGSegmentType.EDGE;
-			}
-***/
 			// The ending point distance should be smaller than  starting point distance 
 			if ( mStartDist > mEndDist ) {
 				swapEnds();
@@ -314,10 +273,8 @@ public class CSGSegment
 		
 		case -1:
 			// The starting point is the only point on the other plane, this segment has no length
-			mEndVertex = mStartVertex;
 			mEndPosition = mStartPosition;
 			mEndDist = mStartDist;
-			mEndType = mMiddleType = CSGSegmentType.VERTEX;
 			mEndCollision = pCollision;
 			return( 2 );
 			
@@ -350,22 +307,16 @@ public class CSGSegment
 		switch( pIndex ) {
 		case 0:
 			// No other points have yet been defined
-			mStartType = CSGSegmentType.EDGE;
 			mStartCollision = pCollision;
-			mStartVertex = pVertex1;
 			mStartPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
 			mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment);
-			mMiddleType = CSGSegmentType.FACE;
 			return( 1 );
 			
 		case 1:
 			// Starting point already defined, define the ending point
-			mEndType = CSGSegmentType.EDGE;
 			mEndCollision = pCollision;
-			mEndVertex = pVertex1;
 			mEndPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
 			mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
-			mMiddleType = CSGSegmentType.FACE;
 			
 			// The ending point distance should be 'farther' than starting point distance 
 			if ( mStartDist > mEndDist ) {
@@ -386,17 +337,9 @@ public class CSGSegment
 		mStartDist = mEndDist;
 		mEndDist = distTemp;
 		
-		CSGSegmentType typeTemp = mStartType;
-		mStartType = mEndType;
-		mEndType = typeTemp;
-		
 		CSGFaceCollision collisionTemp = mStartCollision;
 		mStartCollision = mEndCollision;
-		mEndCollision = collisionTemp;
-		
-		CSGVertexIOB vertexTemp = mStartVertex;
-		mStartVertex = mEndVertex;
-		mEndVertex = vertexTemp;	
+		mEndCollision = collisionTemp;	
 		
 		Vector3d positionTemp = mStartPosition;
 		mStartPosition = mEndPosition;
@@ -407,8 +350,8 @@ public class CSGSegment
 	@Override
 	public String toString(
 	) {
-		return( "Seg:\t" + mStartPosition + "/" + mStartVertex 
-				 + "\n\t" + mEndPosition + "/" + mEndVertex );
+		return( "Seg:\t" + mStartPosition + "/" + mStartCollision 
+				 + "\n\t" + mEndPosition + "/" + mEndCollision );
 	}
 
 

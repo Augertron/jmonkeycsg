@@ -428,9 +428,6 @@ public class CSGFace
 		else if ( aDistance < -pTolerance ) return -1;
 		else return 0;
 	}
-
-
-	//------------------------------------CLASSIFIERS-------------------------------//
 	
 	/** Classifies the face if one of its vertices are classified as INSIDE or OUTSIDE
 	 
@@ -461,7 +458,7 @@ public class CSGFace
 
  		****** TempVars used:  vectd4, vectd5, vectd6
 	 */
-	public void rayTraceClassify(
+	public CSGFaceStatus rayTraceClassify(
 		CSGSolid 		pSolid
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
@@ -559,17 +556,11 @@ public class CSGFace
 				mStatus = CSGFaceStatus.OUTSIDE;
 			}
 		}
+		return( mStatus );
 	}
 	
-	//------------------------------------PRIVATES----------------------------------//
-	
-	/**
-	 * Checks if the the face contains a point
-	 * 
-	 * @param point to be tested
-	 * @param true if the face contains the point, false otherwise 
-	 */	
-	private boolean hasPoint(
+	/** Checks if the the face contains a point */	
+	protected boolean hasPoint(
 		Vector3d 		pPoint
 	,	CSGEnvironment	pEnvironment
 	) {
