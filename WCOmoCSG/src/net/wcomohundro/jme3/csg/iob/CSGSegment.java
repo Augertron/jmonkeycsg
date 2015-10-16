@@ -73,6 +73,8 @@ public class CSGSegment
 	,	EDGE		// Terminus is on an edge
 	}
 	
+	/** The face this segment applies to */
+	protected CSGFace			mFace;
 	/** Line resulting from the two planes intersection */
 	protected CSGRay			mLine;
 	
@@ -124,6 +126,7 @@ public class CSGSegment
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
+		mFace = pFace;
 		mLine = pLine;
 		int anIndex = 0;
 		
@@ -208,12 +211,47 @@ public class CSGSegment
 	
 	public CSGFaceCollision getStartCollision() { return mStartCollision; }
 	public CSGFaceCollision getEndCollision() { return mEndCollision; }
+	
+	/** When the 'other' segment is providing the position, its collision status
+	 	is pertinent to itself, not to 'this' segment.  What we do know is that
+	 	the other position is somewhere along the intersection line, which is
+	 	shared with this segment.
+	 	
+	 	So if this segment is defined by an edge, then we know the other position
+	 	is along an edge in this segment.  If not an edge, then we have to
+	 	assume an interior collision.
+	 	
+	 	Also, once we know we have an edge, we can also look for a vertex.
+	 */
 	public CSGFaceCollision getOtherCollision(
+		Vector3d	pOtherPosition
 	) {
-		// If the collision status is determined by an 'other' segment, then the
-		// only thing we can tell about this segment is if the segment runs
-		// along an edge.
-		return( mStartCollision.getEdge( mEndCollision ) );
+		// Look for this segment along an edge, and if so, look for a vertex
+		CSGFaceCollision aCollision = mStartCollision.getEdge( mEndCollision );
+		switch( aCollision ) {
+		case EDGE12:
+			if ( pOtherPosition.equals( mFace.v1().getPosition() ) ) {
+				aCollision = CSGFaceCollision.V1;
+			} else if ( pOtherPosition.equals( mFace.v2().getPosition() ) ) {
+				aCollision = CSGFaceCollision.V2;
+			}
+			break;
+		case EDGE23:
+			if ( pOtherPosition.equals( mFace.v2().getPosition() ) ) {
+				aCollision = CSGFaceCollision.V2;
+			} else if ( pOtherPosition.equals( mFace.v3().getPosition() ) ) {
+				aCollision = CSGFaceCollision.V3;
+			}
+			break;
+		case EDGE31:
+			if ( pOtherPosition.equals( mFace.v3().getPosition() ) ) {
+				aCollision = CSGFaceCollision.V3;
+			} else if ( pOtherPosition.equals( mFace.v1().getPosition() ) ) {
+				aCollision = CSGFaceCollision.V1;
+			}
+			break;
+		}
+		return( aCollision );
 	}
 	
 	public CSGVertexIOB getStartVertex() { return mStartVertex; }

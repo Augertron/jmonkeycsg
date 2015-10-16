@@ -82,7 +82,11 @@ public class CSGFace
 	,	NONE			// Point status if none of the above
 	}
 	
-	/** Surface collision selector */
+	/** Surface collision selector 
+	 	When determining how two faces (ie planes) collide - along a line - the
+	 	following are the possibilities of how the line travels across the face.
+	 	The line will have two collision points, a start and an end.
+	 */
 	public static enum CSGFaceCollision {
 		NONE(0)			// Nothing collided
 		
@@ -92,25 +96,14 @@ public class CSGFace
 	
 	,	EDGE12(8)		// Intersection with edge between V1 and V2
 	,	EDGE23(16)		// intersection with edge between V2 and V3
-	,	EDGE31(32)		// Intersection with edge between V3 and V1
+	,	EDGE31(32)   	// Intersection with edge between V3 and V1
 	
-	,	INTERIOR(64)	// Intersection not along an edge or vertex, somewhere in the center
+	,	INTERIOR(16)	// Intersection not along an edge or vertex, somewhere in the center
 	;
 		private int		mValue;
 		private CSGFaceCollision( int pValue ) { mValue = pValue; }
 		
-		/** Check if a line defined by collision point and another collision point actually
-		 	crosses the underlying face.
-		 	Single and double vertices collisions are strictly along an edge and do not cross.
-		 	You must have a vertex and an edge, or two edges.
-		 */
-		public boolean crossesFace(
-			CSGFaceCollision		pOther
-		) {
-			return( (this.mValue + pOther.mValue) > EDGE12.mValue );
-		}
-		
-		/** Given an edge, return the vertex that joins to a second edge */
+		/** Given two edges, return the vertex in common */
 		public CSGFaceCollision getVertex(
 			CSGFaceCollision	pOtherEdge
 		) {
@@ -124,6 +117,8 @@ public class CSGFace
 		
 		/** Given a starting collision and ending collision status for a single line,
 		 	determine if we are forced to an edge.
+		 	An edge results only when the collision points for both start and end
+		 	are different vertices;
 		 */
 		public CSGFaceCollision getEdge(
 			CSGFaceCollision	pOther
@@ -132,7 +127,24 @@ public class CSGFace
 			case 3:		return( EDGE12 );	// V1 + V2
 			case 6:		return( EDGE23 );	// V2 + V3
 			case 5:		return( EDGE31 ); 	// V3 + V1
+			
 			default:	return( INTERIOR );	// Anything else is not an edge
+			}
+		}
+		
+		/** Check if this point (a vertex) is on a given edge */
+		public boolean vertexOnEdge(
+			CSGFaceCollision	pEdge
+		) {
+			switch( this ) {
+			case V1:
+				return( (pEdge == EDGE12) || (pEdge == EDGE31) );
+			case V2:
+				return( (pEdge == EDGE12) || (pEdge == EDGE23) );
+			case V3:
+				return( (pEdge == EDGE23) || (pEdge == EDGE31) );
+			default:
+				throw new IllegalArgumentException( "Not a Vertex: " + this );
 			}
 		}
 		
