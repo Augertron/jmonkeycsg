@@ -252,7 +252,7 @@ public interface ConstructiveSolidGeometry
 
 	
 	/** ASSERT style debugging flag */
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	
 	/** Force polygons to simple triangles only */
 	public static final boolean LIMIT_TO_TRIANGLES = false;

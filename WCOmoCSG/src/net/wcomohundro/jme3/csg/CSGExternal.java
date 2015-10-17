@@ -40,8 +40,8 @@ public class CSGExternal
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGExternalRevision="$Rev: 76 $";
-	public static final String sCSGExternalDate="$Date: 2015-09-27 20:25:50 -0500 (Sun, 27 Sep 2015) $";
+	public static final String sCSGExternalRevision="$Rev$";
+	public static final String sCSGExternalDate="$Date$";
 
 	/** Standard null constructor */
 	public CSGExternal(

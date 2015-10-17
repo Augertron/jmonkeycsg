@@ -24,6 +24,7 @@
 **/
 package net.wcomohundro.jme3.csg.test;
 
+import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -31,6 +32,8 @@ import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.FlyCamAppState;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
+import com.jme3.app.state.AppState;
+import com.jme3.app.state.VideoRecorderAppState;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
@@ -87,6 +90,8 @@ public class CSGTestE
 	protected int			mSceneIndex;
 	/** Spot for a bit of text */
 	protected BitmapText	mTextDisplay;
+	/** Video capture */
+	protected AppState		mVideo;
 
 	public CSGTestE(
 	) {
@@ -154,8 +159,12 @@ public class CSGTestE
     /** Service routine to activate the interactive listeners */
     protected void createListeners(
     ) {
+    	SimpleApplication thisApp = this;
+    	
         inputManager.addMapping( "nextScene"
         ,   new KeyTrigger( KeyInput.KEY_RETURN ) );
+        inputManager.addMapping( "video"
+        ,   new KeyTrigger( KeyInput.KEY_R ) );
         
         ActionListener aListener = new ActionListener() {
             public void onAction(
@@ -177,11 +186,24 @@ public class CSGTestE
                 	    if ( aScene != null ) {
                 	    	rootNode.attachChild( aScene );
                 	    }
-                    }   
+                    } else if ( pName.equals( "video" ) ) {
+                    	// Toggle the video capture
+                    	if ( mVideo == null ) {
+                        	CSGTestDriver.postText( thisApp, mTextDisplay, "Recording" );
+
+                    		mVideo = new VideoRecorderAppState( new File( "C:/Temp/JME3/CSGTestE.mpeg" ));
+                    		stateManager.attach( mVideo );
+                    	} else {
+                    		stateManager.detach( mVideo );
+                    		mVideo = null;
+                        	CSGTestDriver.postText( thisApp, mTextDisplay, "Recording Complete" );
+                    	}
+                    }
                 }
             }
         };  
         inputManager.addListener( aListener, "nextScene" );
+        inputManager.addListener( aListener, "video" );
     }
 
 }
