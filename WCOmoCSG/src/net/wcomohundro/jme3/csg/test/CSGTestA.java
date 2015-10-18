@@ -48,6 +48,9 @@ public class CSGTestA
 	    app.start();
 	}
 
+	/** Simple unique name **/
+	protected int	mShapeCounter;
+
     @Override
     public void simpleInitApp(
     ) {
@@ -56,14 +59,14 @@ public class CSGTestA
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 	    
     	CSGGeometry aGeometry;
-    	
+	
     	// Start with the cube, add the sphere
     	aGeometry = buildShape( CSGGeometry.CSGOperator.SKIP
     							,	CSGGeometry.CSGOperator.UNION
     							,	CSGGeometry.CSGOperator.UNION );
     	aGeometry.move( -3f, 0f, 0f );
     	rootNode.attachChild( aGeometry );
-    	
+
     	// Start with the cube, substract the sphere
     	aGeometry = buildShape(  CSGGeometry.CSGOperator.SKIP
 								,	CSGGeometry.CSGOperator.UNION
@@ -77,7 +80,7 @@ public class CSGTestA
 								,	CSGGeometry.CSGOperator.INTERSECTION );
     	aGeometry.move( 3f, 0f, 0f );
     	rootNode.attachChild( aGeometry );
-    	
+
     	// Start with the sphere, add the cube
     	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
 						,	CSGGeometry.CSGOperator.UNION
@@ -112,13 +115,14 @@ public class CSGTestA
     							,	CSGGeometry.CSGOperator.SKIP );
     	aGeometry.move( 3f, 0f, 5f );
     	rootNode.attachChild( aGeometry );
-    	
+
     	// Start with the sphere, subtract the cube, intersect with the sphere
     	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
     							,	CSGGeometry.CSGOperator.DIFFERENCE 
     							,	CSGGeometry.CSGOperator.INTERSECTION );
     	aGeometry.move( 0f, 0f, -10f );
     	rootNode.attachChild( aGeometry );
+
     }
 
     protected CSGGeometry buildShape(
@@ -126,19 +130,21 @@ public class CSGTestA
     ,	CSGGeometry.CSGOperator		pOperator2
     ,	CSGGeometry.CSGOperator		pOperator3
     ) {
+    	mShapeCounter += 1;
+    	
 	    // Basic material for the CSG
         Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
 
     	CSGGeometry aGeometry = new CSGGeometry();
     	aGeometry.setMaterial( mat_csg );
 
-    	CSGShape aSphere = new CSGShape( "Sphere1", new Sphere( 32, 32, 1.3f ) );
+    	CSGShape aSphere = new CSGShape( "SphereA-" + mShapeCounter, new CSGSphere( 32, 32, 1.3f ) );
     	aGeometry.addShape( aSphere, pOperator1 );
 
-    	CSGShape aCube = new CSGShape( "Box", new Box( 1,1,1 ) );
+    	CSGShape aCube = new CSGShape( "Box-" + mShapeCounter, new CSGBox( 1,1,1 ) );
     	aGeometry.addShape( aCube, pOperator2 );
 
-    	aSphere = new CSGShape( "Sphere2", new Sphere( 32, 32, 1.3f ) );
+    	aSphere = new CSGShape( "SphereB-" + mShapeCounter, new CSGSphere( 32, 32, 1.3f ) );
     	aGeometry.addShape( aSphere, pOperator3 );
     	
     	aGeometry.regenerate();

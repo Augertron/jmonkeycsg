@@ -191,8 +191,14 @@ public class CSGSegment
 	public CSGFaceCollision getStartCollision() { return mStartCollision; }
 	public CSGFaceCollision getEndCollision() { return mEndCollision; }
 	
+	/** Check if this segment is defined by an edge */
+	public boolean isEdgeCollision(
+	) { 
+		return( mStartCollision.getEdge( mEndCollision ).isEdge() );
+	}
+	
 	/** When the 'other' segment is providing the position, its collision status
-	 	is pertinent to itself, not to 'this' segment.  What we do know is that
+	 	is pertinent mainly to itself, not to 'this' segment.  What we do know is that
 	 	the other position is somewhere along the intersection line, which is
 	 	shared with this segment.
 	 	
@@ -200,30 +206,43 @@ public class CSGSegment
 	 	is along an edge in this segment.  If not an edge, then we have to
 	 	assume an interior collision.
 	 	
+	 	If the other segment is strictly along an edge, then an edge collision 
+	 	with this segment holds no interest. If the other segment is not an edge, then
+	 	an edge collision with segment may still require a split since different portions
+	 	of this face may be Inside vs Outside.
+	 	
 	 	Also, once we know we have an edge, we can also look for a vertex.
+	 	(which I am not absolutely convinced is necessary, but we will keep it for now)
 	 */
 	public CSGFaceCollision getOtherCollision(
-		Vector3d	pOtherPosition
+		CSGSegment	pOtherSegment
+	,	Vector3d	pOtherPosition
 	) {
 		// Look for this segment along an edge, and if so, look for a vertex
 		CSGFaceCollision aCollision = mStartCollision.getEdge( mEndCollision );
 		switch( aCollision ) {
 		case EDGE12:
-			if ( pOtherPosition.equals( mFace.v1().getPosition() ) ) {
+			if ( pOtherSegment.isEdgeCollision() ) {
+				aCollision = CSGFaceCollision.NONE;		// Strictly edge to edge, not interesting
+			} else if ( pOtherPosition.equals( mFace.v1().getPosition() ) ) {
 				aCollision = CSGFaceCollision.V1;
 			} else if ( pOtherPosition.equals( mFace.v2().getPosition() ) ) {
 				aCollision = CSGFaceCollision.V2;
 			}
 			break;
 		case EDGE23:
-			if ( pOtherPosition.equals( mFace.v2().getPosition() ) ) {
+			if ( pOtherSegment.isEdgeCollision() ) {
+				aCollision = CSGFaceCollision.NONE;		// Strictly edge to edge, not interesting
+			} else if ( pOtherPosition.equals( mFace.v2().getPosition() ) ) {
 				aCollision = CSGFaceCollision.V2;
 			} else if ( pOtherPosition.equals( mFace.v3().getPosition() ) ) {
 				aCollision = CSGFaceCollision.V3;
 			}
 			break;
 		case EDGE31:
-			if ( pOtherPosition.equals( mFace.v3().getPosition() ) ) {
+			if ( pOtherSegment.isEdgeCollision() ) {
+				aCollision = CSGFaceCollision.NONE;		// Strictly edge to edge, not interesting
+			} else if ( pOtherPosition.equals( mFace.v3().getPosition() ) ) {
 				aCollision = CSGFaceCollision.V3;
 			} else if ( pOtherPosition.equals( mFace.v1().getPosition() ) ) {
 				aCollision = CSGFaceCollision.V1;
@@ -275,7 +294,7 @@ public class CSGSegment
 			// The starting point is the only point on the other plane, this segment has no length
 			mEndPosition = mStartPosition;
 			mEndDist = mStartDist;
-			mEndCollision = pCollision;
+			mEndCollision = mStartCollision = pCollision;
 			return( 2 );
 			
 		default:

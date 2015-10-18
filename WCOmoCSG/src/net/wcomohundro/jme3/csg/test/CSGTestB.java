@@ -48,6 +48,8 @@ import com.jme3.texture.Texture;
 import net.wcomohundro.jme3.csg.CSGGeonode;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+import net.wcomohundro.jme3.csg.shape.CSGBox;
+import net.wcomohundro.jme3.csg.shape.CSGCylinder;
 
 /** Simple test of the CSG suport 
  		Blend together cubes and cylinders
@@ -61,6 +63,9 @@ public class CSGTestB
 	    SimpleApplication app = new CSGTestB();		    
 	    app.start();
 	}
+	
+	/** Simple unique name **/
+	protected int	mShapeCounter;
 
     @Override
     public void simpleInitApp(
@@ -96,11 +101,11 @@ public class CSGTestB
     	rootNode.attachChild( aGeometry );
     	
 	    // Long cylinder that pokes out of the cube
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, true );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
     	aGeometry.move( -3f, 0, -5f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, true );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
     	aGeometry.move( 0f, 0f, -5f );
     	rootNode.attachChild( aGeometry );
     	
@@ -109,15 +114,15 @@ public class CSGTestB
     	rootNode.attachChild( aGeometry );
     	
     	// Short cylinder that does not span out of the cube
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, true );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, false );
     	aGeometry.move( -3f, 3f, -5f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, true );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
     	aGeometry.move( 0f, 3f, -5f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, true );
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
     	aGeometry.move( 3f, 3f, -5f );
     	rootNode.attachChild( aGeometry );
     	
@@ -137,16 +142,20 @@ public class CSGTestB
     ,	CSGGeonode.CSGOperator		pOperator2
     ,	boolean						pColored
     ) {
+    	mShapeCounter += 1;
+    	
 	    // Basic material for the CSG
         Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
 
     	CSGGeonode aGeometry = new CSGGeonode();
     	aGeometry.setMaterial( mat_csg );
 
-    	CSGShape aCube = new CSGShape( "Box", new Box(1,1,1) );
+    	CSGShape aCube 
+    		= new CSGShape( "Box-" + mShapeCounter, new CSGBox(1,1,1) );
     	aGeometry.addShape( aCube, pOperator1 );
 
-    	CSGShape aCylinder = new CSGShape( "Cylinder", new Cylinder( 32, 32, 1.1f, pLength, true ) );
+    	CSGShape aCylinder 
+    		= new CSGShape( "Cylinder-" + mShapeCounter, new CSGCylinder( 32, 32, 1.1f, pLength/2f ) );
     	if ( pColored ) {
             Material mat1 = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
             mat1.setColor( "Color", ColorRGBA.Yellow );

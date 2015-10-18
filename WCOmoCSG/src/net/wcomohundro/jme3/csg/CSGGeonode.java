@@ -178,7 +178,7 @@ public class CSGGeonode
 			// Prepare for custom materials
 			Map materialMap = null;
 			Integer materialIndex;
-			int materialCount = 0;
+			int materialCountDef = 0;
 			if ( !mForceSingleMaterial ) {
 				// Construct the map of all materials in use, in order of definition.
 				// NOTE that since operator has no effect, it is possible to define extra/special
@@ -193,7 +193,7 @@ public class CSGGeonode
 							// No other custom materials - this becomes the first
 							materialMap = new HashMap( 17 );
 							
-							materialIndex = new Integer( ++materialCount );
+							materialIndex = new Integer( ++materialCountDef );
 							if ( materialKey != null ) materialMap.put( materialKey, materialIndex );
 							materialMap.put( materialIndex, aMaterial );
 							
@@ -210,10 +210,11 @@ public class CSGGeonode
 							
 						} else {
 							// Add this custom material into the list
-							materialIndex = new Integer( ++materialCount );
-							if ( materialKey != null ) materialMap.put( materialKey,  materialIndex );
+							materialIndex = new Integer( ++materialCountDef );
+							if ( materialKey != null ) materialMap.put( materialKey, materialIndex );
 							materialMap.put( materialIndex, aMaterial );
 						}
+						aShape.setMaterialIndex( materialIndex );
 					}
 				}
 			}
@@ -230,14 +231,7 @@ public class CSGGeonode
 					Material aMaterial = (mForceSingleMaterial) ? null : aShape.getMaterial();
 					if ( aMaterial != null ) {
 						// Locate cached copy of the material
-						AssetKey materialKey = aMaterial.getKey();
-						if ( materialMap.containsKey( materialKey ) ) {
-							// Use the material already found
-							materialIndex = (Integer)materialMap.get( materialKey );
-						} else {
-							// No special material
-							materialIndex = null;
-						}
+						materialIndex = aShape.getMaterialIndex();
 					} else {
 						// No custom material
 						materialIndex = null;
@@ -285,7 +279,7 @@ public class CSGGeonode
 					// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
 					//  and the 'one' mesh is the one that corresponds to the generic material)
 					List<Mesh> meshList 
-						= aProduct.toMesh( (materialMap == null) ? 0 : materialCount, tempVars, pEnvironment );
+						= aProduct.toMesh( (materialMap == null) ? 0 : materialCountDef, tempVars, pEnvironment );
 					if ( !meshList.isEmpty() ) {
 						// Use the 'zero' mesh to describe the overall geometry
 						mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );

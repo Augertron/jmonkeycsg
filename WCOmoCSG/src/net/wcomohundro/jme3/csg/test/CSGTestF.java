@@ -45,6 +45,7 @@ import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.export.Savable;
 import com.jme3.export.xml.XMLImporter;
+import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
@@ -80,13 +81,16 @@ public class CSGTestF
 //	,	"Models/CSGLoadSimple.xml"
 //	,	"Models/CSGLoadCSGCubeCylinder.xml"
 //	,	"Models/CSGLoadCSGCubeCube.xml"
-//	,	"Models/CSGLoadNonMultiTexture.xml"
+	,	"Models/CSGLoadNonMultiTexture.xml"
+	,	"Models/CSGLoadLightedCorridor.xml"
 	,	"Models/CSGLoadMultiTexture.xml"
 
 	};
 	
 	/** Which scene is currently being viewed */
 	protected int				mSceneIndex;
+	/** Spot for a bit of text */
+	protected BitmapText		mTextDisplay;
     /** Prepare the Physics Environment, using jBullet */
     protected BulletAppState    mPhysicsState;
 
@@ -100,6 +104,9 @@ public class CSGTestF
 		// Free the mouse up for debug support
 	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
+	    
+	    // Establish the text display
+	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
 	    
         /** Set up Physics environment */
 	    mPhysicsState = new BulletAppState();
@@ -144,8 +151,10 @@ public class CSGTestF
 	    	NonCachingKey aKey = new NonCachingKey( sceneName );
 	    	aNode = assetManager.loadAsset( aKey );
     	} catch( Exception ex ) {
-    		System.out.println( "***Load Scene Failed: " + ex );
-    	}
+    		sceneName += " ***Load Scene Failed: " + ex;
+		} else {
+			sceneName = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> to shoot, <ESC> to exit";
+		}
     	if ( aNode instanceof Node ) {
     		// Make every child a phsyical thing
     		for( Spatial aChild : ((Node)aNode).getChildren() ) {
@@ -155,6 +164,7 @@ public class CSGTestF
 	        	mPhysicsState.getPhysicsSpace().addAll( aChild );
     		}
     	}
+    	CSGTestDriver.postText( this, mTextDisplay, sceneName );
     	return( (aNode instanceof Spatial) ? (Spatial)aNode : null );
     }
     
@@ -194,6 +204,10 @@ public class CSGTestF
             ) {
                 if ( pKeyPressed ) {
                     if ( pName.equals( "nextScene" ) ) {
+                		// Remove any existing physics
+                		for( Spatial aChild : rootNode.getChildren() ) {
+                			mPhysicsState.getPhysicsSpace().remove( aChild );
+                		}
                         // Remove the old scene
                         rootNode.detachAllChildren();
                         

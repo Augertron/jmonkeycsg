@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
@@ -345,12 +346,18 @@ public class CSGShapeIOB
 				texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
 			}
 			// And build the appropriate face
-			faces.add( new CSGFace( CSGVertexIOB.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment )
+			CSGFace aFace 
+				= new CSGFace( CSGVertexIOB.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment )
 								, mShape.getMaterialIndex()
 								, pTempVars
-								, pEnvironment ) );
+								, pEnvironment );
+			if ( aFace.isValid() ) {
+				faces.add( aFace );
+			} else {
+				ConstructiveSolidGeometry.sLogger.log( Level.WARNING, "Invalid face in mesh:" + mShape.getName() );
+			}
 		}
 		return( faces );
 	}

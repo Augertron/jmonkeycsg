@@ -201,7 +201,7 @@ public class CSGShape
 	/** Arbitrary 'ordering' of operations within the geometry */
 	protected int						mOrder;
 	/** Index that selects a custom material */
-	protected int						mMaterialIndex;
+	protected Integer					mMaterialIndex;
 
 	
 	/** Generic constructor */
@@ -248,7 +248,7 @@ public class CSGShape
 		return( clone( 0, this.getLodLevel(), CSGEnvironment.sStandardEnvironment ) );
 	}
 	public CSGShape clone(
-		Number			pMaterialIndex
+		Integer			pMaterialIndex
 	,	int				pLODLevel
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -308,16 +308,11 @@ public class CSGShape
 	}
 
 	/** Accessor to the custom material index */
-	public int getMaterialIndex() { return mMaterialIndex; }
+	public Integer getMaterialIndex() { return mMaterialIndex; }
 	public void setMaterialIndex(
-		int		pMaterialIndex
+		Integer		pMaterialIndex
 	) {
 		mMaterialIndex = pMaterialIndex;
-	}
-	public void setMaterialIndex(
-		Number	pMaterialIndex
-	) {
-		mMaterialIndex = (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue();
 	}
 
 	/** Add a shape into this one */

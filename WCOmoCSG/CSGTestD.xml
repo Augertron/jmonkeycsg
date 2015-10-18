@@ -1,6 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <com.jme3.scene.Node format_version='2' name='CSGSamples' savable_versions='0, 0'>
-    <transform class='com.jme3.math.Transform' savable_versions='0'/>
     <lights class='com.jme3.light.LightList' savable_versions='0'>
         <lights size='1'>
             <com.jme3.light.AmbientLight savable_versions='0, 0'>
@@ -95,18 +94,18 @@
                     </MapEntry>
                     <MapEntry key='NormalMap'>
                         <Savable class='com.jme3.material.MatParamTexture' name='NormalMap' savable_versions='0, 0' texture_unit='1' varType='Texture2D'>
-                            <value_savable anisotropicFilter='0' class='com.jme3.texture.Texture2D' minificationFilter='Trilinear' name='Textures/Terrain/Pond/Pond_normal.png' reference_ID='com.jme3.texture.Texture2D@2089089495' savable_versions='0, 0'>
+                            <value_savable anisotropicFilter='0' class='com.jme3.texture.Texture2D' minificationFilter='Trilinear' name='Textures/Terrain/Pond/Pond_normal.png' reference_ID='com.jme3.texture.Texture2D@928252367' savable_versions='0, 0'>
                                 <key class='com.jme3.asset.TextureKey' flip_y='true' generate_mips='true' name='Textures/Terrain/Pond/Pond_normal.png' savable_versions='0, 0'/>
                             </value_savable>
-                            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@2089089495'/>
+                            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@928252367'/>
                         </Savable>
                     </MapEntry>
                     <MapEntry key='DiffuseMap'>
                         <Savable class='com.jme3.material.MatParamTexture' name='DiffuseMap' savable_versions='0, 0' texture_unit='0' varType='Texture2D'>
-                            <value_savable anisotropicFilter='0' class='com.jme3.texture.Texture2D' minificationFilter='Trilinear' name='Textures/Terrain/Pond/Pond.jpg' reference_ID='com.jme3.texture.Texture2D@747439166' savable_versions='0, 0'>
+                            <value_savable anisotropicFilter='0' class='com.jme3.texture.Texture2D' minificationFilter='Trilinear' name='Textures/Terrain/Pond/Pond.jpg' reference_ID='com.jme3.texture.Texture2D@1653736348' savable_versions='0, 0'>
                                 <key class='com.jme3.asset.TextureKey' flip_y='true' generate_mips='true' name='Textures/Terrain/Pond/Pond.jpg' savable_versions='0, 0'/>
                             </value_savable>
-                            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@747439166'/>
+                            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@1653736348'/>
                         </Savable>
                     </MapEntry>
                     <MapEntry key='Specular'>

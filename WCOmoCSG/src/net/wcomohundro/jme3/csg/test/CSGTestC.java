@@ -60,13 +60,13 @@ import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
  		a rendering problem.  The various blends result in some odd, unexpected
  		shapes, based on the order of what blends with whom. 
  		
- 		I now suspect a problem in the teapot mesh itself.  Perhaps there are
- 		some odd gaps or overlaps.  Such a situation could have caused the original
- 		run-away error.  But now it is reflected by the odd blending results.
+ 		Once upon a time, I suspected a problem in the teapot mesh itself.  Perhaps 
+ 		there are some odd gaps or overlaps.  Such a situation could have caused 
+ 		the original run-away error.  But now it is reflected by the odd blending results.
  		
- 		@todo - delve deeper to understand what the error condition might be.
- 				It would be interesting to know if we truely have a teapot mesh
- 				issue, or a coding bug....
+ 		I now know it is a problem with the inherent BSP 'artifacts'.  Run this test
+ 		with IOB and it all looks good.
+ 		
  */
 public class CSGTestC 
 	extends SimpleApplication 

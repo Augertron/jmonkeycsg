@@ -28,6 +28,7 @@
                </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
+
         <!-- Add a shorter box to a longer box -->
         <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
                 materialName='Textures/CobbleStone/CobbleStone.xml'>
@@ -83,7 +84,6 @@
                </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-        
 
 		<!--  These two do not touch -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestSeparate'
@@ -180,7 +180,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
      
-		<!-- A pipe -->
+		<!-- A pipe in a box -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
         		materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
@@ -204,7 +204,7 @@
                 <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
                 		materialName='Textures/BrickWall/BrickWallRpt.xml'>
 		            <transform class='com.jme3.math.Transform'>
-		                <translation class='com.jme3.math.Vector3f' x='0.0' y='-2.25' z='0.0'/>
+		                <translation class='com.jme3.math.Vector3f' x='0.0' y='-2.0' z='0.0'/>
 		            </transform>
 		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
 		            		axisSamples='90' radialSamples='24' firstRadial='PI/4' pipeEnds='CROPPED' 
@@ -220,20 +220,13 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
         <net.wcomohundro.jme3.csg.CSGGeonode name='CSGCompoundShape'
-        		materialName='Textures/Debug/Wireframe.xml' singleMaterial='false'>
-       			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
+        		singleMaterial='false'
+        		materialName='Textures/Debug/Wireframe.xml' >
+        		<!-- aterialName='Textures/Rock/Rock2Rpt.xml' -->
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='30' y='0' z='10'/>
             </transform>
             <shapes>
-		        <net.wcomohundro.jme3.csg.CSGShape name='DebugColor' operator='SKIP'
-		        		materialName='Textures/Debug/Red.xml'>
-                    <transform class='com.jme3.math.Transform'>
-		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
-                    </transform>
-                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
-                </net.wcomohundro.jme3.csg.CSGShape>
-
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <transform class='com.jme3.math.Transform'>
 		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
@@ -267,6 +260,7 @@
 		        		         
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
+?>
 
         <net.wcomohundro.jme3.csg.CSGGeonode name='CSGCompoundShape2'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
@@ -347,7 +341,7 @@
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-      
+     
         <net.wcomohundro.jme3.csg.CSGGeometry name='Box7d'
         		materialName='Textures/BrickWall/BrickWallRpt.xml' debugMesh='false'>
             <transform class='com.jme3.math.Transform'>
@@ -378,6 +372,5 @@
             	</scaleFaces>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
-
 	</children>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

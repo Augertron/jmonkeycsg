@@ -355,14 +355,12 @@ public class CSGFace
 	public CSGFaceStatus getStatus() { return mStatus; }
 	public void resetStatus(
 	) {
-		if ( mStatus != CSGFaceStatus.UNKNOWN ) {
-			mStatus = CSGFaceStatus.UNKNOWN;
-			
-			// Reset the vertices as well
-			v1().setStatus( CSGVertexStatus.UNKNOWN );
-			v2().setStatus( CSGVertexStatus.UNKNOWN );
-			v3().setStatus( CSGVertexStatus.UNKNOWN );
-		}
+		mStatus = CSGFaceStatus.UNKNOWN;
+		
+		// Reset the vertices as well
+		v1().setStatus( CSGVertexStatus.UNKNOWN );
+		v2().setStatus( CSGVertexStatus.UNKNOWN );
+		v3().setStatus( CSGVertexStatus.UNKNOWN );
 	}
 	
 

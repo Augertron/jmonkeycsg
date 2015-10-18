@@ -55,7 +55,7 @@ import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 
-/** Test of import/export
+/** Test of export
  */
 public class CSGTestD 
 	extends SimpleApplication 

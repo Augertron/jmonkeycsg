@@ -45,6 +45,7 @@ import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.export.Savable;
 import com.jme3.export.xml.XMLImporter;
+import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
@@ -82,6 +83,8 @@ public class CSGTestG
 	
 	/** Which scene is currently being viewed */
 	protected int				mSceneIndex;
+	/** Spot for a bit of text */
+	protected BitmapText		mTextDisplay;
 
 	public CSGTestG(
 	) {
@@ -94,6 +97,9 @@ public class CSGTestG
 	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 	    
+	    // Establish the text display
+	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
+
        /** Ready interaction */
         createListeners();
         
@@ -132,8 +138,11 @@ public class CSGTestG
 	    	NonCachingKey aKey = new NonCachingKey( sceneName );
 	    	aNode = assetManager.loadAsset( aKey );
     	} catch( Exception ex ) {
-    		System.out.println( "***Load Scene Failed: " + ex );
-    	}
+    		sceneName += " ***Load Scene Failed: " + ex;
+		} else {
+			sceneName = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> for LOD, <ESC> to exit";
+		}
+    	CSGTestDriver.postText( this, mTextDisplay, sceneName );
     	return( (aNode instanceof Spatial) ? (Spatial)aNode : null );
     }
     

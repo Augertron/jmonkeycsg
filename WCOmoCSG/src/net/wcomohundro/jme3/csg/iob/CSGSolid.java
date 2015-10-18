@@ -294,7 +294,7 @@ public class CSGSolid
 			
 			// The other segment collision point is not pertinent.  The face segment can
 			// tell us if an edge is involved or not
-			startCollision = pFaceSegment.getOtherCollision( startPos );
+			startCollision = pFaceSegment.getOtherCollision( pOtherSegment, startPos );
 		} else {
 			// This face segment start is deeper, so it determines the start point
 			startPos = pFaceSegment.getStartPosition();
@@ -306,7 +306,7 @@ public class CSGSolid
 			
 			// The other segment collision point is not pertinent.  The face segment can
 			// tell us if an edge is involved or not
-			endCollision = pFaceSegment.getOtherCollision( endPos );
+			endCollision = pFaceSegment.getOtherCollision( pOtherSegment, endPos );
 		} else {
 			// This face segment end is deeper, to it determines the end point
 			endPos = pFaceSegment.getEndPosition();
