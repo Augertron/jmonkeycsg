@@ -35,6 +35,7 @@ import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
@@ -110,11 +111,11 @@ public class CSGSolid
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		if ( ConstructiveSolidGeometry
+		if ( CSGEnvironment
 				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
-		|| ConstructiveSolidGeometry
+		|| CSGEnvironment
 				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
-		|| ConstructiveSolidGeometry
+		|| CSGEnvironment
 				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 			// The face is too small to be pertinent
 			return( null );
@@ -441,7 +442,7 @@ public class CSGSolid
 			case INTERIOR:
 				// Start and end on points within the interior of the face. Confirm they are
 				// a reasonable distance apart.
-				if ( ConstructiveSolidGeometry
+				if ( CSGEnvironment
 					.equalVector3d( startPos, endPos, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 					// Start and end are effectively the same, so treat it as a single center point
 					breakFaceInThree( mFaces.remove( pFaceIndex ), startPos, pTempVars, pEnvironment );
@@ -819,7 +820,7 @@ public class CSGSolid
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGSolidRevision
 													, sCSGSolidDate
 													, pBuffer ) );

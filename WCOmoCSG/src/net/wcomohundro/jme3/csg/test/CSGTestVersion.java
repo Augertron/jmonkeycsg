@@ -65,7 +65,7 @@ public class CSGTestVersion
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 
 	    // Report on all the versions we know
-		ConstructiveSolidGeometry.reportVersion();
+		CSGVersion.reportVersion();
 	}
 
 }

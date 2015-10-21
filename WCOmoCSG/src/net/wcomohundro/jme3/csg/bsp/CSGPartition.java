@@ -43,6 +43,7 @@ import net.wcomohundro.jme3.csg.CSGPolygon;
 import net.wcomohundro.jme3.csg.CSGPolygonDbl;
 import net.wcomohundro.jme3.csg.CSGPolygonFlt;
 import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.CSGVertexFlt;
@@ -533,7 +534,7 @@ public class CSGPartition
 		}
 		if ( mLevel > pEnvironment.mBSPLimit ) {
 			// This is probably an error in the algorithm, but I have not yet found the true cause.
-			ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+			CSGEnvironment.sLogger.log( Level.WARNING
 			,   pEnvironment.mShapeName + "CSGPartition.buildHierarchy - too deep: " + mLevel );
 			mPolygons.addAll( pPolygons );
 			return( mCorrupted = true );
@@ -703,7 +704,7 @@ public class CSGPartition
 				// Compare the vertex dot to the inherent plane dot
 				Vector3d aVertexPosition = ((CSGVertexDbl)polygonVertices.get( i )).getPosition();
 				double aVertexDot = vertexDot[i] = (planeNormal.dot( aVertexPosition ) - pPlane.getDot() );
-				if ( Double.isFinite( aVertexDot ) ) {
+				if ( CSGEnvironment.isFinite( aVertexDot ) ) {
 					// If within a given tolerance, it is the same plane
 					// See the discussion from the BSP FAQ paper about the distance of a point to the plane
 					//int type = (aVertexDot < -pTolerance) ? BACK : (aVertexDot > pTolerance) ? FRONT : COPLANAR;
@@ -720,18 +721,18 @@ public class CSGPartition
 					polygonType |= type;
 					polygonTypes[i] = type;
 				} else {
-					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+					CSGEnvironment.sLogger.log( Level.SEVERE
 					, pEnvironment.mShapeName + "Bogus Vertex: " + aVertexPosition );					
 				}
 			}
 			if ( pEnvironment.mStructuralDebug && (polygonPlane == pPlane) && (polygonType != COPLANAR) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+				CSGEnvironment.sLogger.log( Level.SEVERE
 				, pEnvironment.mShapeName + "Bogus polygon plane[" + pHierarchyLevel + "] " + polygonType );				
 			}
 		}
 		switch( polygonType ) {
 		default:
-			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+			CSGEnvironment.sLogger.log( Level.SEVERE
 			, pEnvironment.mShapeName + "Bogus polygon split[" + pHierarchyLevel + "] " + polygonType );
 			return( vertexCount );
 
@@ -748,7 +749,7 @@ public class CSGPartition
 			int coplaneCount
 				= addPolygonDbl( coplaneList, pPolygon, pTempVars, pEnvironment );
 			if ( coplaneCount < 1 ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+				CSGEnvironment.sLogger.log( Level.WARNING
 				, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 				return( vertexCount );
 			}
@@ -898,7 +899,7 @@ public class CSGPartition
 					coplaneCount
 						= addPolygonDbl( coplaneList, pPolygon, pTempVars, pEnvironment );
 					if ( coplaneCount < 1 ) {
-						ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+						CSGEnvironment.sLogger.log( Level.WARNING
 						, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 						return( vertexCount );
 					}
@@ -907,7 +908,7 @@ public class CSGPartition
 					// @todo - investigate further if we need to retain this polygon in front or just drop it
 					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
 					//coplaneList.add( pPolygon );		// Just adding the full poly to the plane does not work
-					ConstructiveSolidGeometry.sLogger.log( Level.INFO
+					CSGEnvironment.sLogger.log( Level.INFO
 					, pEnvironment.mShapeName + "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
 					return( vertexCount - beforeVertices.size() );
 				}
@@ -916,7 +917,7 @@ public class CSGPartition
 				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
 				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
 				//coplaneList.add( pPolygon );			// Just adding the full poly to the plane does not work
-				ConstructiveSolidGeometry.sLogger.log( Level.INFO
+				CSGEnvironment.sLogger.log( Level.INFO
 				, pEnvironment.mShapeName + "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
 				return( vertexCount - behindVertices.size() );
 			}
@@ -977,14 +978,14 @@ public class CSGPartition
 				Vector3f aVertexPosition = ((CSGVertexFlt)polygonVertices.get( i )).getPosition();
 				float aVertexDot = vertexDot[i] = planeNormal.dot( aVertexPosition );
 				aVertexDot -= pPlane.getDot();
-				if ( Float.isFinite( aVertexDot ) ) {
+				if ( CSGEnvironment.isFinite( aVertexDot ) ) {
 					// If within a given tolerance, it is the same plane
 					// See the discussion from the BSP FAQ paper about the distance of a point to the plane
 					int type = (aVertexDot < -pTolerance) ? BACK : (aVertexDot > pTolerance) ? FRONT : COPLANAR;
 					polygonType |= type;
 					polygonTypes[i] = type;
 				} else {
-					ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+					CSGEnvironment.sLogger.log( Level.SEVERE
 					, pEnvironment.mShapeName + "Bogus Vertex: " + aVertexPosition );					
 				}
 			}
@@ -1006,7 +1007,7 @@ public class CSGPartition
 											, pTempVars
 											, pEnvironment );
 			if ( coplaneCount < 1 ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+				CSGEnvironment.sLogger.log( Level.WARNING
 				, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 				return( vertexCount );
 			}
@@ -1163,10 +1164,10 @@ public class CSGPartition
 															, pPolygon.getMaterialIndex()
 														    , pTempVars, pEnvironment );
 					if ( coplaneCount > 0 ) {
-						ConstructiveSolidGeometry.sLogger.log( Level.INFO
+						CSGEnvironment.sLogger.log( Level.INFO
 						, pEnvironment.mShapeName + "Coopting planar vertices[" + pHierarchyLevel + "] " + vertexCount );
 					} else {
-						ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+						CSGEnvironment.sLogger.log( Level.WARNING
 						, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 						return( vertexCount );
 					}
@@ -1175,7 +1176,7 @@ public class CSGPartition
 					// @todo - investigate further if we need to retain this polygon in front or just drop it
 					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
 					//coplaneList.add( pPolygon );		// Just adding the full poly to the plane does not work
-					ConstructiveSolidGeometry.sLogger.log( Level.INFO
+					CSGEnvironment.sLogger.log( Level.INFO
 					, pEnvironment.mShapeName + "Discarding front vertices[" + pHierarchyLevel + "] " + beforeVertices.size() + "/" + vertexCount );
 					return( vertexCount - beforeVertices.size() );
 				}
@@ -1184,7 +1185,7 @@ public class CSGPartition
 				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
 				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
 				//coplaneList.add( pPolygon );			// Just adding the full poly to the plane does not work
-				ConstructiveSolidGeometry.sLogger.log( Level.INFO
+				CSGEnvironment.sLogger.log( Level.INFO
 				, pEnvironment.mShapeName + "Discarding back vertices[" + pHierarchyLevel + "] " + behindVertices.size() + "/" + vertexCount );
 				return( vertexCount - behindVertices.size() );
 			}
@@ -1200,7 +1201,7 @@ public class CSGPartition
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGPartitionRevision
 													, sCSGPartitionDate
 													, pBuffer ) );

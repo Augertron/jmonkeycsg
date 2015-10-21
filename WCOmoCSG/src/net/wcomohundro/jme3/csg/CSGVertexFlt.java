@@ -181,18 +181,18 @@ public class CSGVertexFlt
 			&& (Math.abs( pPosition.y ) < pEnvironment.mEpsilonMaxBetweenPoints ) 
 			&& (Math.abs( pPosition.z ) < pEnvironment.mEpsilonMaxBetweenPoints )
 			) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
+				CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
 			}
 			// Upon further research, I am not seeing a requirement for the normal to be a unit vector
 			float normalLength = pNormal.length();
 			if ( !(normalLength != 0.0f) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
+				CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
 			}
 			if ( !(
 			   (Math.abs( pTextureCoordinate.x ) <= pEnvironment.mEpsilonMaxBetweenPoints ) 
 			&& (Math.abs( pTextureCoordinate.y ) <= pEnvironment.mEpsilonMaxBetweenPoints )
 			) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
+				CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
 			}
 		}
 		mPosition = pPosition;
@@ -237,7 +237,7 @@ public class CSGVertexFlt
 		// Once upon a time, I had tolerance checks here to check for near zero and near
 		// one, then using the appropriate Vertex.  But that resulted in duplicate points
 		// which means we could not compute plane.  So punt that and always use the percentage.
-		} else if ( Float.isFinite( pPercentage ) ){
+		} else if ( CSGEnvironment.isFinite( pPercentage ) ){
 			// What is its normal?
 			Vector3f newNormal 
 				= this.mNormal.add( 
@@ -254,7 +254,7 @@ public class CSGVertexFlt
 		}
 		if ( aVertex == null ) {
 			// Not a percentage we can deal with
-			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+			CSGEnvironment.sLogger.log( Level.SEVERE
 			, pEnvironment.mShapeName + "unexpected percentage: " + pPercentage );
 		}
 		return( aVertex );
@@ -302,13 +302,13 @@ public class CSGVertexFlt
 	) {
 		if ( pOther instanceof CSGVertexFlt ) {
 			CSGVertexFlt other = (CSGVertexFlt)pOther;
-			if ( ConstructiveSolidGeometry.equalVector3f( this.getPosition()
+			if ( CSGEnvironment.equalVector3f( this.getPosition()
 															, other.getPosition()
 															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
-				if ( ConstructiveSolidGeometry.equalVector3f( this.getNormal()
+				if ( CSGEnvironment.equalVector3f( this.getNormal()
 															, other.getNormal()
 															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
-					if ( ConstructiveSolidGeometry.equalVector2f( this.getTextureCoordinate()
+					if ( CSGEnvironment.equalVector2f( this.getTextureCoordinate()
 															, pOther.getTextureCoordinate()
 															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
 						return( true );
@@ -325,7 +325,7 @@ public class CSGVertexFlt
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGVertexFltRevision
 													, sCSGVertexFltDate
 													, pBuffer ) );

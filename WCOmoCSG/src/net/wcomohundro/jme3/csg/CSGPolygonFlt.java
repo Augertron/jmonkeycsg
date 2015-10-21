@@ -142,7 +142,7 @@ public class CSGPolygonFlt
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGPolygonFltRevision
 													, sCSGPolygonFltDate
 													, pBuffer ) );

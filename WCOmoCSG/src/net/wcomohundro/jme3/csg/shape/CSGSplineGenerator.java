@@ -24,6 +24,8 @@
 **/
 package net.wcomohundro.jme3.csg.shape;
 
+import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 import java.io.IOException;
@@ -402,8 +404,8 @@ public class CSGSplineGenerator
         if ( controlPoints == null ) {
         	// If given no control points, then assume we are working on a circular arc
             mArcRadius = in.readFloat( "radius", 1.0f );
-            mArcRadians = ConstructiveSolidGeometry.readPiValue( in, "arc", FastMath.HALF_PI );
-            mArcFirstRadial = ConstructiveSolidGeometry.readPiValue( in, "firstRadial", 0.0f );
+            mArcRadians = CSGEnvironment.readPiValue( in, "arc", FastMath.HALF_PI );
+            mArcFirstRadial = CSGEnvironment.readPiValue( in, "firstRadial", 0.0f );
             
             mHelixHeight = in.readFloat( "helix", 0f );
         	
@@ -421,7 +423,7 @@ public class CSGSplineGenerator
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGSplineGeneratorRevision
 													, sCSGSplineGeneratorDate
 													, pBuffer ) );

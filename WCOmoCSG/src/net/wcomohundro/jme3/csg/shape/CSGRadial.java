@@ -47,6 +47,8 @@ import java.lang.ref.WeakReference;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
 
@@ -642,15 +644,15 @@ public abstract class CSGRadial
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
         mRadialSamples = inCapsule.readInt( "radialSamples", mRadialSamples );
-        mFirstRadial = ConstructiveSolidGeometry.readPiValue( inCapsule, "firstRadial", 0 );
+        mFirstRadial = CSGEnvironment.readPiValue( inCapsule, "firstRadial", 0 );
         mRadius = inCapsule.readFloat( "radius", mRadius );
         
-        float scaleX = ConstructiveSolidGeometry.readPiValue( inCapsule, "scaleSliceX", 1.0f );
-        float scaleY = ConstructiveSolidGeometry.readPiValue( inCapsule, "scaleSliceY", 1.0f );
+        float scaleX = CSGEnvironment.readPiValue( inCapsule, "scaleSliceX", 1.0f );
+        float scaleY = CSGEnvironment.readPiValue( inCapsule, "scaleSliceY", 1.0f );
         if ( (scaleX != 1.0f) || (scaleY != 1.0f) ) {
         	mScaleSlice = new Vector2f( scaleX, scaleY );
         }
-        mRotateSlices = ConstructiveSolidGeometry.readPiValue( inCapsule, "twist", 0 );
+        mRotateSlices = CSGEnvironment.readPiValue( inCapsule, "twist", 0 );
     }
     
 	/////// Implement ConstructiveSolidGeometry
@@ -659,7 +661,7 @@ public abstract class CSGRadial
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( CSGRadial.class
+		return( CSGVersion.getVersion( CSGRadial.class
 													, sCSGRadialRevision
 													, sCSGRadialDate
 													, pBuffer ) );

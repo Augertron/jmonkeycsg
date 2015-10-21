@@ -80,7 +80,7 @@ public class CSGExternal
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( CSGExternal.class
+		return( CSGVersion.getVersion( CSGExternal.class
 													, sCSGExternalRevision
 													, sCSGExternalDate
 													, pBuffer ) );

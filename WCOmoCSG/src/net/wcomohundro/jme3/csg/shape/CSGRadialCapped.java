@@ -43,6 +43,7 @@ import static com.jme3.util.BufferUtils.*;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 
@@ -497,7 +498,7 @@ public abstract class CSGRadialCapped
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( CSGRadialCapped.class
+		return( CSGVersion.getVersion( CSGRadialCapped.class
 													, sCSGRadialCappedRevision
 													, sCSGRadialCappedDate
 													, pBuffer ) );

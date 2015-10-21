@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 /** Constructive Solid Geometry (CSG)
@@ -232,7 +233,7 @@ public abstract class CSGMesh
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( CSGMesh.class
+		return( CSGVersion.getVersion( CSGMesh.class
 													, sCSGMeshRevision
 													, sCSGMeshDate
 													, pBuffer ) );

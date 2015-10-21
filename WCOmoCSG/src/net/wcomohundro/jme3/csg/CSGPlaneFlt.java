@@ -157,9 +157,9 @@ public class CSGPlaneFlt
 			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
 			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZeroFlt) 
 			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroFlt)
-			&& Double.isFinite( pDot )
+			&& CSGEnvironment.isFinite( pDot )
 			) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+				CSGEnvironment.sLogger.log( Level.SEVERE
 				, pEnvironment.mShapeName + "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
 				pDot =  Float.NaN;
 			}
@@ -188,7 +188,7 @@ public class CSGPlaneFlt
 	
 	/** Ensure we have something valid */
 	@Override
-	public boolean isValid() { return( Float.isFinite( mDot ) ); }
+	public boolean isValid() { return( CSGEnvironment.isFinite( mDot ) ); }
 
 	/** Check if a given point is in 'front' or 'behind' this plane  */
 	public float pointDistance(
@@ -262,7 +262,7 @@ public class CSGPlaneFlt
 				Vector3f pointOnPlane = this.pointProjection( intersection, null );
 				intersection = pointOnPlane;
 				
-				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+				CSGEnvironment.sLogger.log( Level.WARNING
 				, pEnvironment.mShapeName + "line intersect failed: "+ confirmDistance );
 			}
 		}
@@ -299,7 +299,7 @@ public class CSGPlaneFlt
 			// Two planes that are close are equal
 			if ( this.mDot != ((CSGPlaneFlt)pOther).mDot ) {
 				return( false );
-			} else if ( ConstructiveSolidGeometry.equalVector3f( this.mSurfaceNormal
+			} else if ( CSGEnvironment.equalVector3f( this.mSurfaceNormal
 														, ((CSGPlaneFlt)pOther).mSurfaceNormal
 														, pTolerance ) ) {
 				return( true );
@@ -324,7 +324,7 @@ public class CSGPlaneFlt
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGPlaneFltRevision
 													, sCSGPlaneFltDate
 													, pBuffer ) );

@@ -37,6 +37,7 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -238,13 +239,13 @@ public class CSGVertexIOB
 			CSGVertexIOB aVertex = (CSGVertexIOB)pOther;
 			double tolerance = CSGShapeIOB.sDefaultEnvironment.mEpsilonBetweenPointsDbl;
 			
-			if ( ConstructiveSolidGeometry.equalVector3d( this.getPosition()
+			if ( CSGEnvironment.equalVector3d( this.getPosition()
 														, aVertex.getPosition()
 														, tolerance ) ) {
-				if ( ConstructiveSolidGeometry.equalVector3d( this.getNormal()
+				if ( CSGEnvironment.equalVector3d( this.getNormal()
 															, aVertex.getNormal()
 															, tolerance ) ) {
-					if ( ConstructiveSolidGeometry.equalVector2f( this.getTextureCoordinate()
+					if ( CSGEnvironment.equalVector2f( this.getTextureCoordinate()
 																, aVertex.getTextureCoordinate()
 																, tolerance ) ) {
 						return( true );
@@ -263,7 +264,7 @@ public class CSGVertexIOB
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGVertexIOBRevision
 													, sCSGVertexIOBDate
 													, pBuffer ) );

@@ -92,7 +92,7 @@ public class CSGPlaneDbl
 			double bDistance = aPlane.pointDistance( pB );
 			double cDistance = aPlane.pointDistance( pC );
 			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonNearZeroDbl ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+				CSGEnvironment.sLogger.log( Level.SEVERE
 				, pEnvironment.mShapeName + "Points NOT on plane: " + aPlane );				
 			}
 		}
@@ -166,9 +166,9 @@ public class CSGPlaneDbl
 			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
 			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZeroDbl) 
 			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroDbl)
-			&& Double.isFinite( pDot )
+			&& CSGEnvironment.isFinite( pDot )
 			) ) {
-				ConstructiveSolidGeometry.sLogger.log( Level.SEVERE
+				CSGEnvironment.sLogger.log( Level.SEVERE
 				, pEnvironment.mShapeName + "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
 				pDot =  Double.NaN;
 			}
@@ -197,7 +197,7 @@ public class CSGPlaneDbl
 	
 	/** Ensure we have something valid */
 	@Override
-	public boolean isValid() { return( Double.isFinite( mDot ) ); }
+	public boolean isValid() { return( CSGEnvironment.isFinite( mDot ) ); }
 	
 	/** Check if a given point is in 'front' or 'behind' this plane  */
 	public double pointDistance(
@@ -278,7 +278,7 @@ public class CSGPlaneDbl
 				Vector3d pointOnPlane = this.pointProjection( intersection, null );
 				intersection = pointOnPlane;
 				
-				ConstructiveSolidGeometry.sLogger.log( Level.WARNING
+				CSGEnvironment.sLogger.log( Level.WARNING
 				, pEnvironment.mShapeName + "line intersect failed: "+ confirmDistance );
 			}
 		}
@@ -315,7 +315,7 @@ public class CSGPlaneDbl
 			// Two planes that are close are equal
 			if ( this.mDot != ((CSGPlaneDbl)pOther).mDot ) {
 				return( false );
-			} else if ( ConstructiveSolidGeometry.equalVector3d( this.mSurfaceNormal
+			} else if ( CSGEnvironment.equalVector3d( this.mSurfaceNormal
 														, ((CSGPlaneDbl)pOther).mSurfaceNormal
 														, pTolerance ) ) {
 				return( true );
@@ -340,7 +340,7 @@ public class CSGPlaneDbl
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGPlaneDblRevision
 													, sCSGPlaneDblDate
 													, pBuffer ) );

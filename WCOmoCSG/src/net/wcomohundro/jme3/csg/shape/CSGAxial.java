@@ -42,6 +42,7 @@ import static com.jme3.util.BufferUtils.*;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 
@@ -150,7 +151,7 @@ public abstract class CSGAxial
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( CSGAxial.class
+		return( CSGVersion.getVersion( CSGAxial.class
 													, sCSGAxialRevision
 													, sCSGAxialDate
 													, pBuffer ) );

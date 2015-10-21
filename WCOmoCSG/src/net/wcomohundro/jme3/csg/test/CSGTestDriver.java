@@ -37,6 +37,7 @@ import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.renderer.Camera;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 public class CSGTestDriver 
@@ -47,7 +48,7 @@ public class CSGTestDriver
 		System.out.println( "logging config: " 
 					+ System.getProperty( "java.util.logging.config.file" )
 					+ "/" + System.getProperty( "java.util.logging.config.class" ) );
-		ConstructiveSolidGeometry.reportVersion();
+		CSGVersion.reportVersion();
 		
 	    SimpleApplication app;
 	    
@@ -55,9 +56,9 @@ public class CSGTestDriver
 	    //app = new CSGTestB();		// Cube +/- cylinder direct calls, no import
 	    //app = new CSGTestC();		// Teapot +/- cube direct calls, no import
 	    //app = new CSGTestD();		// Export definitions
-	    //app = new CSGTestE();		// Cycle through imports listed in CSGTestE.txt
+	    app = new CSGTestE();		// Cycle through imports listed in CSGTestE.txt
 	    //app = new CSGTestF();		// Cycle through canned import list and apply physics
-	    app = new CSGTestG();		// Level Of Detail
+	    //app = new CSGTestG();		// Level Of Detail
 	    //app = new CSGTestH();		// Test case for support ticket
 	        
 	    app.start();

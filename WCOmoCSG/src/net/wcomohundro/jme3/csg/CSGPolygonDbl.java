@@ -141,7 +141,7 @@ public class CSGPolygonDbl
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGPolygonDblRevision
 													, sCSGPolygonDblDate
 													, pBuffer ) );

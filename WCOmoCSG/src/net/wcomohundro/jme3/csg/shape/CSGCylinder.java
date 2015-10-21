@@ -42,6 +42,7 @@ import static com.jme3.util.BufferUtils.*;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGRadialCapped.TextureMode;
 
@@ -457,7 +458,7 @@ public class CSGCylinder
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGCylinderRevision
 													, sCSGCylinderDate
 													, pBuffer ) );

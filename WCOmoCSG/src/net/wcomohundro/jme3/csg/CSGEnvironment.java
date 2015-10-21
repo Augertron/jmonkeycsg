@@ -31,6 +31,7 @@ package net.wcomohundro.jme3.csg;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
@@ -40,7 +41,11 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Define the operational environment to apply to the CSG processing 
  	An instance of this class acts as container for various public configuration parameters.
@@ -59,6 +64,9 @@ public class CSGEnvironment
 	public static final String sCSGEnvironmentRevision="$Rev$";
 	public static final String sCSGEnvironmentDate="$Date$";
 	
+	/** Logger available to any CSG services that desire it */
+    public static final Logger sLogger = Logger.getLogger( ConstructiveSolidGeometry.class.getName() );
+
 	/** Standard configuration 
 	 	NOTE
 	 		we do NOT declare this global as 'final' so that the default can be dynamically
@@ -66,6 +74,125 @@ public class CSGEnvironment
 	 */
 	public static CSGEnvironment sStandardEnvironment = new CSGEnvironment();
 
+	
+	/** Java 1.8 equivalent to check if a double is finite */
+    public static boolean isFinite(
+    	double		pValue
+    ) {
+        return( !Double.isNaN( pValue ) && !Double.isInfinite( pValue ) );
+    }
+	/** Java 1.8 equivalent to check if a double is finite */
+    public static boolean isFinite(
+    	float		pValue
+    ) {
+        return( !Float.isNaN( pValue ) && !Float.isInfinite( pValue ) );
+    }
+
+    /** Service routine to check two vectors and see if they are the same, within a given 
+	 	tolerance. (Typically EPSILON_BETWEEN_POINTS, but not required)
+	 */
+	public static boolean equalVector2f(
+		Vector2f 	pVector1
+	,	Vector2f	pVector2
+	,	double		pTolerance
+	) {
+		if ( pVector1 != pVector2 ) {
+	    	float deltaX = pVector1.x - pVector2.x;
+	    	if ( (deltaX < -pTolerance) || (deltaX > pTolerance) ) {
+	    		return false;
+	    	}
+	    	float deltaY = pVector1.y - pVector2.y;
+	    	if ( (deltaY < -pTolerance) || (deltaY > pTolerance) ) {
+	    		return false;
+	    	}
+		}
+		return( true );
+	}
+	public static boolean equalVector3f(
+		Vector3f 	pVector1
+	,	Vector3f	pVector2
+	,	float		pTolerance
+	) {
+		if ( pVector1 != pVector2 ) {
+	    	float deltaX = pVector1.x - pVector2.x;
+	    	if ( (deltaX < -pTolerance) || (deltaX > pTolerance) ) {
+	    		return false;
+	    	}
+	    	float deltaY = pVector1.y - pVector2.y;
+	    	if ( (deltaY < -pTolerance) || (deltaY > pTolerance) ) {
+	    		return false;
+	    	}
+	    	float deltaZ = pVector1.z - pVector2.z;
+	    	if ( (deltaZ < -pTolerance) || (deltaZ > pTolerance) ) {
+	    		return false;
+	    	}
+		}
+		return( true );
+	}
+	/** Service routine to check two vectors and see if they are the same, within a given 
+	 	tolerance. (Typically EPSILON_BETWEEN_POINTS, but not required)
+	 */
+	public static boolean equalVector3d(
+		Vector3d 	pVector1
+	,	Vector3d	pVector2
+	,	double		pTolerance
+	) {
+		if ( pVector1 != pVector2 ) {
+	    	double deltaX = pVector1.x - pVector2.x;
+	    	if ( (deltaX < -pTolerance) || (deltaX > pTolerance) ) {
+	    		return false;
+	    	}
+	    	double deltaY = pVector1.y - pVector2.y;
+	    	if ( (deltaY < -pTolerance) || (deltaY > pTolerance) ) {
+	    		return false;
+	    	}
+	    	double deltaZ = pVector1.z - pVector2.z;
+	    	if ( (deltaZ < -pTolerance) || (deltaZ > pTolerance) ) {
+	    		return false;
+	    	}
+		}
+		return( true );
+	}
+	
+	/** Service routine to interpret a Savable.read() float value that can take the form
+			xxxPI/yyy
+		that supports fractional values of PI
+	*/
+	public static float readPiValue(
+		InputCapsule	pCapsule
+	,	String			pValueName
+	,	float			pDefaultValue
+	) throws IOException {
+		float aFloatValue = pDefaultValue;
+		
+		// Read the value as a string so we can test for "PI"
+		String piText = pCapsule.readString( pValueName, null );
+		if ( piText != null ) {
+			// Something explicitly given, figure out what
+			piText = piText.toUpperCase();
+			int index = piText.indexOf( "PI" );
+			if ( index >= 0 ) {
+				// Decipher things like 3PI/4
+				int numenator = 1;
+				int denominator = 1;
+				if ( index > 0 ) {
+					// Some integer multiplier of PI
+					numenator = Integer.parseInt( piText.substring( 0, index ) );
+				}
+				index += 2;
+				if ( (index < piText.length() -1) 
+				&& (piText.charAt( index++ ) == '/') ) {
+					// Some integer divisor of PI
+					denominator = Integer.parseInt( piText.substring( index ) );
+				}
+				aFloatValue = ((float)numenator * FastMath.PI) / (float)denominator;
+			} else {
+				// If not PI, then its just a float
+				aFloatValue = Float.parseFloat( piText );
+			}
+		}
+		return( aFloatValue );
+	}
 	
 	/** Shape this environment applies to */
 	public String		mShapeName;
@@ -115,7 +242,7 @@ public class CSGEnvironment
 		try {
 			mShapeClass = Class.forName( pHandlerClassName );
 		} catch( ClassNotFoundException ex ) {
-			ConstructiveSolidGeometry.sLogger.log( Level.SEVERE, "No Handler Class:" + ex, ex );
+			CSGEnvironment.sLogger.log( Level.SEVERE, "No Handler Class:" + ex, ex );
 		}
 		mStructuralDebug = DEBUG;
 		mBSPLimit = (mDoublePrecision) ? BSP_HIERARCHY_DEEP_LIMIT : BSP_HIERARCHY_LIMIT;
@@ -269,10 +396,10 @@ public class CSGEnvironment
 	public StringBuilder getVersion(
 		StringBuilder pBuffer
 	) {
-		StringBuilder aBuffer = ConstructiveSolidGeometry.getVersion( this.getClass()
-																	, sCSGEnvironmentRevision
-																	, sCSGEnvironmentDate
-																	, pBuffer );
+		StringBuilder aBuffer = CSGVersion.getVersion( this.getClass()
+														, sCSGEnvironmentRevision
+														, sCSGEnvironmentDate
+														, pBuffer );
 		aBuffer.append( "\tDouble Precision: " ).append( this.mDoublePrecision ).append( "\n" );
 		aBuffer.append( "\tStructural Debug: " ).append( this.mStructuralDebug ).append( "\n" );
 		aBuffer.append( "\tBSPLimit: " ).append( this.mBSPLimit ).append( "\n" );

@@ -34,6 +34,7 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 /** This class is a variant of the basic jme3 Ray, but relying on 'double' coordinates rather than floats.
@@ -95,7 +96,7 @@ public class CSGRay
 			Vector3d bZero = vB2minusB1.multLocal( nB / d );
 			bZero.addLocal( pLineBPoint1 );
 			
-			if ( !ConstructiveSolidGeometry.equalVector3d( pResult, bZero, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+			if ( !CSGEnvironment.equalVector3d( pResult, bZero, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 				throw new IllegalArgumentException( "Lines do not intersect" );
 			}
 		}
@@ -318,7 +319,7 @@ public class CSGRay
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGRay3dRevision
 													, sCSGRay3dDate
 													, pBuffer ) );

@@ -83,7 +83,7 @@ public class CSGLinkNode
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGLinkNodeRevision
 													, sCSGLinkNodeDate
 													, pBuffer ) );

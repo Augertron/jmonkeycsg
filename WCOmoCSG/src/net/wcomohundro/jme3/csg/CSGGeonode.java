@@ -218,7 +218,7 @@ public class CSGGeonode
 					}
 				}
 			}
-			// Sort the shapes based on their operator
+			// Sort the shapes as needed by their handler
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
 			
 			// Save on churn by leveraging temps
@@ -468,7 +468,7 @@ public class CSGGeonode
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGGeonodeRevision
 													, sCSGGeonodeDate
 													, pBuffer ) );

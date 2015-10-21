@@ -48,6 +48,7 @@ import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.ArrayList;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGPlane;
 import net.wcomohundro.jme3.csg.CSGPlaneFlt;
@@ -743,7 +744,7 @@ if ( true ) {
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGPipeRevision
 													, sCSGPipeDate
 													, pBuffer ) );

@@ -41,6 +41,7 @@ import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGPolygonDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
@@ -610,7 +611,7 @@ public class CSGFace
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGFaceRevision
 													, sCSGFaceDate
 													, pBuffer ) );

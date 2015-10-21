@@ -50,6 +50,7 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
@@ -356,7 +357,7 @@ public class CSGShapeIOB
 			if ( aFace.isValid() ) {
 				faces.add( aFace );
 			} else {
-				ConstructiveSolidGeometry.sLogger.log( Level.WARNING, "Invalid face in mesh:" + mShape.getName() );
+				CSGEnvironment.sLogger.log( Level.WARNING, "Invalid face in mesh:" + mShape.getName() );
 			}
 		}
 		return( faces );
@@ -503,7 +504,7 @@ public class CSGShapeIOB
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGShapeIOBRevision
 													, sCSGShapeIOBDate
 													, pBuffer ) );

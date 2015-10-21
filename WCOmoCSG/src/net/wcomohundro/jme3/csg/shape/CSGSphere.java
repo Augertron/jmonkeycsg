@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 /** Specialization/Copy of standard JME3 Sphere for unification with other CSG shapes
@@ -678,7 +679,7 @@ public class CSGSphere
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGSphereRevision
 													, sCSGSphereDate
 													, pBuffer ) );

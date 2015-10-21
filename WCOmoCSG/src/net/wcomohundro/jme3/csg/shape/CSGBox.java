@@ -27,6 +27,7 @@ package net.wcomohundro.jme3.csg.shape;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 import com.jme3.export.InputCapsule;
@@ -300,7 +301,7 @@ public class CSGBox
 		StringBuilder	pBuffer
 	) {
 		pBuffer = super.getVersion( pBuffer );
-		return( ConstructiveSolidGeometry.getVersion( this.getClass()
+		return( CSGVersion.getVersion( this.getClass()
 													, sCSGBoxRevision
 													, sCSGBoxDate
 													, pBuffer ) );

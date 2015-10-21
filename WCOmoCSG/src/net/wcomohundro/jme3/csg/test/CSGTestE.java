@@ -60,6 +60,7 @@ import com.jme3.font.BitmapText;
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 
@@ -117,7 +118,10 @@ public class CSGTestE
         createListeners();
         
         /** Load the scene, leveraging the XMLImporter */
-        assetManager.registerLocator( "./Assets", FileLocator.class );
+        File aDir = new File( "./Assets" );
+        if ( aDir.isDirectory() ) {
+        	assetManager.registerLocator( "./Assets", FileLocator.class );
+        }
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
 	    
 	    Spatial aScene = loadScene();
@@ -139,7 +143,7 @@ public class CSGTestE
 	    	
 	    	if ( aNode instanceof CSGEnvironment ) {
 	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
-	    		ConstructiveSolidGeometry.reportVersion();
+	    		CSGVersion.reportVersion();
 
 	    		sceneName += " *** Processing Environment Reset";
 	    		aNode = null;
@@ -159,7 +163,7 @@ public class CSGTestE
     /** Service routine to activate the interactive listeners */
     protected void createListeners(
     ) {
-    	SimpleApplication thisApp = this;
+    	final SimpleApplication thisApp = this;
     	
         inputManager.addMapping( "nextScene"
         ,   new KeyTrigger( KeyInput.KEY_RETURN ) );
