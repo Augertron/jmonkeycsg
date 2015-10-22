@@ -58,7 +58,33 @@ import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 
 /** Constructive Solid Geometry (CSG)
 
-	Provide a basic 'shape' for CSG processing 
+ 	While struggling with the BSP approach, I stumbled across a Java implementation of a non-BSP
+ 	algorithm based on the paper:
+ 		D. H. Laidlaw, W. B. Trumbore, and J. F. Hughes.  
+ 		"Constructive Solid Geometry for Polyhedral Objects" 
+ 		SIGGRAPH Proceedings, 1986, p.161. 
+
+	Their approach is to first analyze all the faces in two objects that are being combined.  Any
+	faces that intersect are broken into smaller pieces that do not intersect.  Every resultant face
+	is then categorized as being Inside, Outside, or on the Boundary of the other object. The
+	boolean operation is performed by selecting the appropriately categorized face from the two
+	objects.
+	
+	Unlike BSP, the IOB approach is not recursive, but iterative.  However, it does involve 
+	matching every face in one solid with every face in a second solid, so you dealing with
+	M * N performance issues.
+	
+	A Java implementation of this algorithm was made open source by 
+		Danilo Balby Silva Castanheira (danbalby@yahoo.com)
+	It is based on the Java3D library, not jMonkey.  It has not been actively worked on for 
+	several years, and I was unable to get it operational.
+	
+	Like the fabsterpal BSP code, I have reimplemented this code to run within the jMonkey
+	environment.  The original code handled the vertex positions quite well, but did nothing
+	for normal and texture coordinates required by jMonkey.  I have done a significant
+	rewrite to fully implement IOB within jMonkey (and to better understand the algorithm
+	for myself)
+	
 	
 	This handler operates on classifying the faces and vertices of two shapes based on their
 	state of: Inside/Outside/Boundary
@@ -81,7 +107,7 @@ import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
  	4)	The line passes through a single vertex and a single edge of the face
  	5)	The line passes through two edges of the face
 
-	Each of the cases above can be analysed and the face split into multiple parts accordingly.
+	Each of the cases above can be analyzed and the face split into multiple parts accordingly.
 	Once we know we have no overlap, then each face can assessed to see if it is
 	1)	Inside the second solid
 	2)	Outside the second solid

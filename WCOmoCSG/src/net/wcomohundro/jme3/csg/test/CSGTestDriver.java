@@ -86,6 +86,8 @@ public class CSGTestDriver
         
         Camera aCam = pApplication.getCamera();
         pTextDisplay.setLocalTranslation( (aCam.getWidth() - pTextDisplay.getLineWidth()) / 2, aCam.getHeight(), 0);
+
+        pTextDisplay.render( pApplication.getRenderManager(), null );
     }
 
     /** Service routine to fill a list of strings */

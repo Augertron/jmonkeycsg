@@ -74,9 +74,98 @@ import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TempVars;
 
-/** Constructive Solid Geometry (CSG)
+/** Constructive Solid Geometry (CSG) and Binary Space Partitioning
  
-	Provide a basic BSP 'shape processing' for CSG
+ 	As far as I can tell, Evan Wallace put together a Javascript library for CSG support within 
+ 	browsers that support WebGL.  @see http://evanw.github.io/csg.js  (it is really quite impressive)
+ 	This was converted into jMonkey compatible Java by "fabsterpal", and posted to a Github repository
+ 	by "andychase".  Everything seems to have been properly posted and annotated for fully open 
+ 	source.
+ 	
+ -- Binary Space Partitioning --
+    BSP is a generic mechanism for producing a tree representation of a hierarchical set of shapes.  
+    In 3D, each shape is a polygon.
+ 		@see ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html 	
+ 		
+ 	While working with the "fabsterpal" code, I tripped over some bugs and encountered many spots
+ 	where I wished for a deeper level of comments.  My personal learning style is to work from an
+ 	operational example.  From there, I can make small, incremental changes to help we understand
+ 	the larger picture.  To that end, I re-implemented the Java code, following my own
+ 	conventions and structures.  But the logic and BSP algorithms are all based directly on what I
+ 	found in the original Javascript/Java code.
+ 	
+ 	My initial cut worked quite nicely, and rather quickly allowed me to duplicate the 
+ 	functionality of the original "fabsterpal" BSP code while correcting some bugs.
+ 	But as I worked with more/complex test cases, I started seeing some odd triangular 'drop outs'
+ 	and discrepancies.  At a certain point in a complex shape, bits of the polygons went missing, 
+ 	or were strangely warped.  Others have referred to these elements as 'artifacts'.
+ 	
+ 	Since simple shapes work just fine, I originally believed that the core logic was proper.  So I 
+ 	started going after rounding/overflow types of problems.  My thought was that a triangle went 
+ 	crazy due to a corrupted vertex.  For this reason, you will run across various ASSERT style 
+ 	checks that are looking for absurd constructs.  In particular, I have tried to be very careful
+ 	with boolean and comparison checks on vertex values, trying to remain sensitive to any 
+ 	possible NaN or Infinity condition. 
+ 	
+ 	** Please note the Java language specification **
+ 		Floating-point operators produce no exceptions. An operation that overflows 
+ 		produces a signed infinity, an operation that underflows produces a denormalized value 
+ 		or a signed zero, and an operation that has no mathematically definite result produces 
+ 		NaN. All numeric operations with NaN as an operand produce NaN as a result. As has already 
+ 		been described, NaN is unordered, so a numeric comparison operation involving one or two 
+ 		NaNs returns false and any != comparison involving NaN returns true, including x!=x when 
+ 		x is NaN.
+ 		
+ 	FYI, I never detected an overflow/NaN condition when generating a vertex.
+ 
+ 	While testing, I noticed I could get better results with fewer 'artifacts' if I carefully 
+ 	adjusted the tolerance of when a point was on-plane or not.  That explains the various
+ 	EPSILON values defined via CSGEnvironment.  I needed to set different tolerances for different 
+ 	conditions.  So a larger EPSILON_ONPLANE value gave me better looking results.  But it
+ 	did not fix all cases.
+ 	
+ 	I have refactored the code to allow me to operate in either float or double precision. I have
+ 	added support for forcing points near to a plane to be recomputed onto the plane. And you
+ 	will find various other experiments and test conditions within the BSP code trying to 
+ 	address the 'artifact' problem.
+ 	
+ 	 Subsequent searching on the web discovered this paper:
+ 		https://www.andrew.cmu.edu/user/jackiey/resources/CSG/CSG_report.pdf
+ 		csegurar@andrew.cmu.edu, tstine@andrew.cmu.edu, jackiey@andrew.cmu.edu (all accounts now inactive)
+ 	in which the authors are discussing CSG and BSP.  In particular was this:
+ 	
+ 		the Boolean operation would yield results with minor geometry artifacts. The artifacts 
+ 		that appear in some of our results appear to manifest themselves when operations are 
+ 		performed on objects with low polygon count. We believe that this occurs due to the 
+ 		lower resolution of one model relative to the other, and thus when the BSP trees of 
+ 		both models are merged, we occasionally are left with extraneous triangles that must 
+ 		get pushed through the BSP tree more than once but end up getting catalogued incorrectly.
+ 		
+ 	A few other sources related to BSP (if not specifically CSG) indicate an inherent flaw
+ 	with the approach itself:
+ 	
+ 		An exact representation can be obtained using signed Euclidean distance from a given 
+ 		point to the polygonal mesh.  The main problem with this solution is that the Euclidean 
+ 		distance is not Cprime-continuous and has points with the derivatives discontinuity
+		(vanishing gradients) in its domain, which can cause appearance of unexpected artifacts 
+		in results of further operations on the object.
+		
+	And the following paper may be directly addressing the problem I am seeing, but the 
+	math is too deep for me.
+		http://www.pascucci.org/pdf-papers/progressive-bsp.pdf
+		
+	In particular is the discussion of:
+		The case (2) above is numerically unstable. Three types of labels are used for vertex 
+		classification, labeling a vertex as v= when it is contained on the h hyperplane. No problems 
+		would arise in a computation with infinite precision. Unfortunately, real computers
+		are not infinitely precise, so that some vertex classification can be inexact. In order 
+		to recover from wrong vertex classifications and to consistently compute the split complex, 
+		further information concerning topological structure must be used.
+ 		
+ 	IN CONCLUSTION --- All of these statements lead me to believe there is a fundamental limitation 
+ 	in the underlying BSP algorithm. Somewhere deep inside the BSP, a polygon split is required and 
+ 	the limited precision can mean that multiple, incorrect assignment of vertices can occur.  
+ 	Unfortunately, I still have no idea how to identify, detect, capture, and fix such a condition.
  
  	----- From Evan Wallace -----
  	All CSG operations are implemented in terms of two functions, clipTo() and invert(), 

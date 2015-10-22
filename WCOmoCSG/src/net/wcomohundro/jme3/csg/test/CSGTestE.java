@@ -68,14 +68,15 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 /** Exercise the import facility */
 public class CSGTestE 
 	extends SimpleApplication 
+	implements Runnable
 {
 	/** Default list of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
-		null
 
-//	,	"Models/CSGLoadSimpleUnit.xml"
-//	,	"Models/CSGLoadSimple.xml"
+		"Models/CSGLoadSimpleUnit.xml"
+	,	"Models/CSGLoadSimple.xml"
 	,	"Models/CSGLoadMultiTexture.xml"
+	,	"Models/CSGLoadCSGSamples.xml"
 	
 //	,	"Models/CSGLoadTextureCylinders.xml"
 //	,	"Models/CSGLoadLighted.xml"
@@ -89,14 +90,27 @@ public class CSGTestE
 	protected List<String>	mSceneList;
 	/** Which scene is currently being viewed */
 	protected int			mSceneIndex;
+	/** Scene loader thread */
+	protected Thread		mLoaderThread;
+	/** Which scene is currently being loaded */
+	protected String		mLoadingScene;
+	/** Background loaded scene */
+	protected Spatial		mLoadedSpatial;
 	/** Spot for a bit of text */
 	protected BitmapText	mTextDisplay;
+	/** String to post */
+	protected String		mPostText;
 	/** Video capture */
 	protected AppState		mVideo;
 
 	public CSGTestE(
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		
+		mLoaderThread = new Thread( null, this, "SceneLoader" );
+		mLoaderThread.setPriority( Thread.MIN_PRIORITY );
+		mLoaderThread.setDaemon( true );
+		mLoaderThread.start();
 		
 		// Initialize the scene list
 		mSceneList = new ArrayList();
@@ -124,40 +138,25 @@ public class CSGTestE
         }
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
 	    
-	    Spatial aScene = loadScene();
-	    if ( aScene != null ) {
-	    	rootNode.attachChild( aScene );
-	    }
+	    loadScene();
     }
     
     /** Service routine to load the scene */
-    protected Spatial loadScene(
+    protected void loadScene(
     ) {
     	// For now, rely on a FilterKey which does not support caching
     	Object aNode = null;
     	String sceneName = mSceneList.get( mSceneIndex );
-    	if ( sceneName != null ) try {
-    		// For testing, suppress the cache
-	    	NonCachingKey aKey = new NonCachingKey( sceneName );
-	    	aNode = assetManager.loadAsset( aKey );
-	    	
-	    	if ( aNode instanceof CSGEnvironment ) {
-	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
-	    		CSGVersion.reportVersion();
-
-	    		sceneName += " *** Processing Environment Reset";
-	    		aNode = null;
-	    	} else if ( (aNode instanceof ConstructiveSolidGeometry.CSGSpatial)
-	    	&& !((ConstructiveSolidGeometry.CSGSpatial)aNode).isValid() ) {
-	    		sceneName += " ***Invalid shape";
-	    	}
-    	} catch( Exception ex ) {
-    		sceneName += " ***Load Scene Failed: " + ex;
+    	if ( sceneName != null ) synchronized( this ) {
+    		if ( mLoadingScene == null ) {
+    			mLoadingScene = sceneName;
+    			CSGTestDriver.postText( this, mTextDisplay, "** LOADING ==> " + mLoadingScene );
+    			this.notifyAll();
+    		}
     	} else {
-    		sceneName = "<ENTER> to cycle through the scenes, QWASDZ to move, <ESC> to exit";
+    		CSGTestDriver.postText( this, mTextDisplay
+    		, "<ENTER> to cycle through the scenes, QWASDZ to move, <ESC> to exit" );
     	}
-    	CSGTestDriver.postText( this, mTextDisplay, sceneName );
-    	return( (Spatial)aNode );
     }
     
     /** Service routine to activate the interactive listeners */
@@ -186,10 +185,8 @@ public class CSGTestE
                         if ( mSceneIndex >= mSceneList.size() ) mSceneIndex = 0;
                         
                         // And load it
-                	    Spatial aScene = loadScene();
-                	    if ( aScene != null ) {
-                	    	rootNode.attachChild( aScene );
-                	    }
+                	    loadScene();
+
                     } else if ( pName.equals( "video" ) ) {
                     	// Toggle the video capture
                     	if ( mVideo == null ) {
@@ -210,4 +207,63 @@ public class CSGTestE
         inputManager.addListener( aListener, "video" );
     }
 
+    @Override
+    public void update(
+    ) {
+    	super.update();
+    	
+    	if ( mPostText != null ) {
+        	CSGTestDriver.postText( this, mTextDisplay, mPostText );    			
+        	mPostText = null;
+    	}
+    	if ( mLoadedSpatial != null ) {
+    		rootNode.attachChild( mLoadedSpatial );
+    		mLoadedSpatial = null;
+    	}
+    }
+
+    /////////////////////// Implement Runnable ////////////////
+    public void run(
+    ) {
+    	boolean isActive = true;
+    	while( isActive ) {
+    		synchronized( this ) {
+	    		if ( mLoadingScene == null ) try {
+	    			this.wait();
+	    		} catch( InterruptedException ex ) {
+	    			isActive = false;
+	    			mLoadingScene = null;
+	    		}
+    		}
+    		String reportString = mLoadingScene;
+    		if ( mLoadingScene != null ) try {
+    			// Suppress any asset caching
+    	    	NonCachingKey aKey = new NonCachingKey( mLoadingScene );
+    	    	Object aNode = assetManager.loadAsset( aKey );
+    	    	
+    	    	if ( aNode instanceof CSGEnvironment ) {
+    	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
+    	    		CSGVersion.reportVersion();
+
+    	    		reportString += " *** Processing Environment Reset";
+    	    		
+    	    	} else if ( aNode instanceof Spatial ) {
+    	    		if ( (aNode instanceof ConstructiveSolidGeometry.CSGSpatial)
+    	    		&& !((ConstructiveSolidGeometry.CSGSpatial)aNode).isValid() ) {
+    	    			reportString += " ***Invalid shape";
+    	    		} else {
+    	    			mLoadedSpatial = (Spatial)aNode;
+    	    		}
+    	    	}
+        	} catch( Exception ex ) {
+        		reportString += " ***Load Scene Failed: " + ex;
+
+    		} finally {
+    			mLoadingScene = null;
+    		}
+    		if ( reportString != null ) {
+    			mPostText = reportString;
+    		}
+    	}
+    }
 }
