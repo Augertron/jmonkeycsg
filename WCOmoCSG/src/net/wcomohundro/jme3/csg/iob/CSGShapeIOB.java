@@ -1,4 +1,4 @@
-/** Copyright (c) Danilo Balby Silva Castanheira (danbalby@yahoo.com)
+/** Copyright (c) ????, Danilo Balby Silva Castanheira (danbalby@yahoo.com)
 	Copyright (c) 2015, WCOmohundro
 	All rights reserved.
 

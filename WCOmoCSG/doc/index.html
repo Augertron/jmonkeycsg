@@ -16,7 +16,7 @@
         content="jMonkey 3D CSG ConstructiveSolidGeometry">
 </head>
 <body>
-<div class="ui-widget-content">
+<div>
     <h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
     <p><a href="http://en.wikipedia.org/wiki/Constructive_solid_geometry">Constructive solid geometry (CSG)</a>
     <i>(formerly called computational binary solid geometry)</i> is a 
@@ -46,8 +46,9 @@
  	a sample implementation in Java for <i>jMonkey</i>.</p>
  	
  	<p>As far as I can tell, <b>Evan Wallace</b> put together a Javascript library for CSG support within 
- 	browsers that support WebGL.  @see <a href="http://evanw.github.io/csg.js">http://evanw.github.io/csg.js</a>
- 	 (it is really quite impressive).
+ 	browsers that support WebGL. The underlying processing algorithm is BSP - Binary Space Partitioning
+ 	  @see <a href="http://evanw.github.io/csg.js">http://evanw.github.io/csg.js</a> 
+ 	(it is really quite impressive).
  	<br>This was converted into <i>jMonkey</i> compatible Java by <b>fabsterpal</b>, and posted to a 
  	<a href="https://github.com/andychase/fabian-csg">Github repository</a>
  	by <b>andychase</b>.  Everything seems to have been properly posted and annotated for fully open 
@@ -57,9 +58,16 @@
  	where I wished for more extensive comments.  My personal learning style is to work from an
  	operational example.  From there, I can make small, incremental changes to help me understand
  	the larger picture.  To that end, I reimplemented the Java code, following my own
- 	conventions and structures.  This includes leveraging some new Java 1.8 features.
+ 	conventions and structures.
  	<br>But the logic and algorithms are all based directly on what I found
  	in the original Javascript/Java code.</p>
+ 	
+ 	<p>Unfortunately, personal experience with this code, and further research on the web, lead me
+ 	to believe there is an inherent problem with BSP.  Due to the precision limitations on any
+ 	real computer, <i>artifacts</i> are introduced into more complex shapes. Therefore, I have
+ 	implemented a different algorithm based on the work of 
+ 	<a href="https://sourceforge.net/projects/unbboolean/">Danilo Balby Silva Castanheira</a>, who
+ 	gratiously posted his work into the public domain.
  	
  	<p>In other words, I am frolicking in my sandbox...  But as a firm believer in open source, I am making my
  	experiments available to all.  If there is something here of value to you, feel free to use it.
@@ -141,14 +149,16 @@
  	<li>An x/y scale can be applied to every individual slice along the z-axis.</li>
  	<li>A rotation can be applied to every individual slice around the z-axis.  This results
  		in a twisted final shape.</li>
+ 	<li>A simple Spline generator that can easily produce a torus or a helix. </li>
  	<li>LOD processing is supported by reducing the number of slices by a given percentage. 
  	<br>A future enhancement is to reduce the number of radial points as well.</li>
  	<li>TangentBinormal generation can be triggered by a setting in the XML Savable file.</li>
  	</ul>
  	</p>
  	 
-    <h3>Licensed like jMonkey</h3>
+    <h3>Licensed - BSD like jMonkey</h3>
     <p>New BSD (3-clause) License. In other words, you do whatever makes you happy!</p>
+    
     <h3>Download/Access the Code</h3>
     <p>
         jMonkeyCSG is managed via a SourceForge project which you can reference 
@@ -159,8 +169,10 @@
     
     <h3>Getting Started</h3>
     <p>You can pull the CSG source out of its repository and include it in your project.  As
-    I stated earlier, I work in Eclipse, referencing the jme3 source in the main trunk, and
-    using Java 1.8.  I do not know what you need for the standard jMonkey SDK/IDE.</p>
+    I stated earlier, I work in Eclipse, referencing the jme3 source in the main trunk.
+    I do not know exactly what you need for the standard jMonkey SDK/IDE, but I have provided
+    a CSG .jar file that contains all of my code.  I have also provides a Windows(64bit) zip 
+    file that contains everything needed to run a simple test.</p>
     <p>The simplest example is to add some shapes into a geometry, regenerate that geometry
     and apply a Material, and add the geometry into your scene.</p>
     <code><pre>       

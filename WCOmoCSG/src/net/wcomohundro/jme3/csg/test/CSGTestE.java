@@ -33,6 +33,7 @@ import com.jme3.app.FlyCamAppState;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AppState;
+import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.app.state.VideoRecorderAppState;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
@@ -127,6 +128,10 @@ public class CSGTestE
 	    
 	    // Establish the text display
 	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
+	    
+	    // Support Sceen shots
+	    ScreenshotAppState screenShotState = new ScreenshotAppState( "C:/Temp/JME3/" );
+	    this.stateManager.attach( screenShotState );
 	    
         /** Ready interaction */
         createListeners();
