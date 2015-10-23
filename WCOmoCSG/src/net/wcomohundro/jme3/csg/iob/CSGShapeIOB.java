@@ -34,7 +34,9 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import com.jme3.math.Transform;
@@ -322,7 +324,10 @@ public class CSGShapeIOB
 			}
 		}
 		// Work from 3 points which define a triangle
-		List<CSGFace> faces = new ArrayList<CSGFace>( idxBuffer.size() / 3 );
+		int vertexCount = idxBuffer.size();
+		List<CSGFace> faces = new ArrayList<CSGFace>( vertexCount / 3 );
+		Map<Vector3d,CSGVertexIOB> aVertexList = new HashMap( vertexCount );
+
 		for (int i = 0; i < idxBuffer.size(); i += 3) {
 			int idx1 = idxBuffer.get(i);
 			int idx2 = idxBuffer.get(i + 1);
@@ -381,6 +386,15 @@ public class CSGShapeIOB
 								, pTempVars
 								, pEnvironment );
 			if ( aFace.isValid() ) {
+				// Retain this face
+				// Look for 'shared' vertices in the hope that since two vertices with the same 
+				// position, by definition, share the same IOB status, then the classification pass 
+				// would be faster. The overhead of a sequential scan through all the faces proved
+				// to be too slow.
+				// However, matching vertices via a HashMap gives us faster processing.
+				if ( aVertexList != null ) {
+					aFace.matchVertices( aVertexList, pEnvironment );
+				}
 				faces.add( aFace );
 			} else {
 				CSGEnvironment.sLogger.log( Level.WARNING, "Invalid face in mesh:" + mShape.getName() );

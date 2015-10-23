@@ -155,9 +155,11 @@ public class CSGSolid
 	,	CSGEnvironment		pEnvironment
 	) {
 		// NOTE that once upon a time, a list of unique vertices was kept and scanned
-		//		to only add a vertex that was not yet defined.
-		//		I could find no compelling reason for this, and the overhead of this separate
-		//		list was substantial, so it has been dropped.
+		//		to only add a vertex that was not yet defined.  I am assuming this was
+		//		done to optimize processing during the 'status' phase, but since we
+		//		are building a new vertex that is extrapolated between two others, I do not
+		//		think the odds of this new vertex overlapping a previously existing one
+		//		are very good.  So do not bother looking.
 		CSGVertexIOB vertex = pFace.extrapolate( pNewPosition, pEdge, pTempVars, pEnvironment );
 		return( vertex );	
 	}

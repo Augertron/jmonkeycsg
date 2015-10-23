@@ -30,6 +30,9 @@
 **/
 package net.wcomohundro.jme3.csg.iob;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -91,6 +94,9 @@ public class CSGVertexIOB
 	
 	/** Status - computed relative to some other object */
 	protected CSGVertexStatus		mStatus;
+	/** List of other vertices that have the same Position 
+	 	(which means their 'status' should be the same as this one */
+	protected List<CSGVertexIOB>	mSamePosition;
 	
 	
 	/** Constructor based on the given components */
@@ -168,10 +174,13 @@ public class CSGVertexIOB
 		}
 		// Retain the status
 		aCopy.mStatus = this.mStatus;
+		
+		// By definition, the clone has the same position as this one
+		this.samePosition( aCopy );
 		return( aCopy );
 	}
 	@Override
-	public CSGVertexDbl clone(
+	public CSGVertexDbl sibling(
 		Vector3d		pPosition
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
@@ -187,16 +196,24 @@ public class CSGVertexIOB
 		// Reset the status to whatever is given
 		mStatus = pStatus;
 	}
-
-	/** Sets the vertex status, as needed */
-	public void mark(
-		CSGVertexStatus		pStatus
+	
+	/** If we detect another vertex with the same position as this one, then track it */
+	public void samePosition(
+		CSGVertexIOB	pOtherVertex
 	) {
-		// Mark this vertex, if not already marked
-		if ( this.mStatus == CSGVertexStatus.UNKNOWN ) {
-			this.mStatus = pStatus;
+		// Work on the assumption that the 'other' vertex is new
+		if ( pOtherVertex.mSamePosition != null ) {
+			throw new IllegalArgumentException( "samePosition() invalid OTHER vertex" );
 		}
+		if ( this.mSamePosition == null ) {
+			this.mSamePosition = new ArrayList<CSGVertexIOB>( 3 );
+			this.mSamePosition.add( this );
+		}
+		// The list itself can be shared across all the Vertex instances
+		pOtherVertex.mSamePosition = this.mSamePosition;
+		pOtherVertex.mSamePosition.add( pOtherVertex );
 	}
+
 	/** Sets the vertex status, as needed */
 	public void mark(
 		CSGFace.CSGFaceStatus 	pStatus
@@ -214,6 +231,12 @@ public class CSGVertexIOB
 			case OPPOSITE:
 				this.mStatus = CSGVertexStatus.BOUNDARY;
 				break;
+			}
+			if ( this.mSamePosition != null ) {
+				// Any other vertices that share this same position have the same status
+				for( CSGVertexIOB otherVertex : mSamePosition ) {
+					otherVertex.mark( pStatus );
+				}
 			}
 		}
 	}

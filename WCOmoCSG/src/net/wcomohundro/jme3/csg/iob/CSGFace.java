@@ -33,6 +33,7 @@ package net.wcomohundro.jme3.csg.iob;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.jme3.math.Vector2f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
@@ -94,6 +95,7 @@ public class CSGFace
 	,	V1(1)			// Intersection with vertex 1
 	,	V2(2)			// Intersection with vertex 2
 	,	V3(4)			// Intersection with vertex3
+	,	ALL_VERTICES(7)	// All vertices
 	
 	,	EDGE12(8)		// Intersection with edge between V1 and V2
 	,	EDGE23(16)		// intersection with edge between V2 and V3
@@ -115,6 +117,20 @@ public class CSGFace
 			
 			default:	return( NONE );		// no other combination of edges
 			}
+		}
+		/** Check if this given vertex is in the set */
+		public boolean hasVertex(
+			int		pVertexMask
+		) {
+			// Mask off the desired vertex bit -- which must result in the desired vertes being on
+			return( (pVertexMask & this.mValue) == this.mValue );
+		}
+		/** Remove this vertex from the set */
+		public int removeVertex(
+			int		pVertexMask
+		) {
+			pVertexMask &= ~this.mValue;
+			return( pVertexMask );
 		}
 		
 		/** Given a starting collision and ending collision status for a single line,
@@ -293,6 +309,34 @@ public class CSGFace
 		return aCopy;
 	}
 	
+	/** Match this given face to a list of other vertices, looking for any vertex that
+	 	shares its position.  Such vertices can be linked together since their 'status'
+	 	will be shared.
+	 	
+	 	NOTE
+	 		That an attempt to sequenctially scan through a list of other faces 
+	 		was too slow to be useful.  Therefore we will live with the overhead
+	 		of the HashMap.
+	 */
+	public void matchVertices(
+		Map<Vector3d,CSGVertexIOB>	pVertexList
+	,	CSGEnvironment				pEnvironment
+	) {
+		for( CSGVertex aVertex : this.mVertices ) {
+			CSGVertexIOB thisVertex = (CSGVertexIOB)aVertex;
+			Vector3d thisPosition = thisVertex.getPosition();
+			CSGVertexIOB otherVertex = pVertexList.get( thisPosition );
+			if ( otherVertex == null ) {
+				// No overlap, so add this vertex to the list
+				pVertexList.put( thisPosition, thisVertex );
+			} else {
+				// Same as another vertex
+				otherVertex.samePosition( thisVertex );
+			}
+		}
+		
+	}
+	
 	/** OVERRIDE: for debug report */
 	@Override
 	public String toString(
@@ -428,7 +472,11 @@ public class CSGFace
 		else return 0;
 	}
 	
-	/** Classifies the face if one of its vertices are classified as INSIDE or OUTSIDE
+	/** Classifies the face if one of its vertices are classified as INSIDE or OUTSIDE.
+	 
+	 	Since any faces that overlap have been 'split' to eliminate any such overlap,
+	 	then if we find any vertex that is either Inside or Outside, the entire
+	 	face can be treated as Inside/Outside.
 	 
 	 	@return true if the face could be classified, false otherwise 
 	 */
@@ -502,7 +550,7 @@ public class CSGFace
 					
 					// Check if the ray lies in plane...
 					if ( (Math.abs(distance) < tolerance) && (Math.abs( dotProduct ) < tolerance) ) {
-						// Disturb the ray in order to not lie into another plane 
+						// Disturb the ray in order to not lie within the other plane 
 						ray.perturbDirection();
 						itersection = false;	// Try the test again
 						break;
@@ -538,19 +586,20 @@ public class CSGFace
 			// If a face was found, then the DOT tells us which side
 			dotProduct = closestFace.getNormal().dot( ray.getDirection() );
 			
-			// If distance = 0: coplanar faces
+			// If distance = 0, then coplanar faces
 			if ( Math.abs( closestDistance ) < tolerance ) {
+				// Same plane, but which way do we face?
 				if ( dotProduct > tolerance ) {
 					mStatus = CSGFaceStatus.SAME;
 				} else if ( dotProduct < -tolerance ) {
 					mStatus = CSGFaceStatus.OPPOSITE;
 				}
 			}
-			// If dot product > 0 (same direction): inside face
+			// If dot product > 0 (same direction), then inside face
 			else if ( dotProduct > tolerance ) {
 				mStatus = CSGFaceStatus.INSIDE;
 			}
-			// If dot product < 0 (opposite direction): outside face
+			// If dot product < 0 (opposite direction), then outside face
 			else if ( dotProduct < -tolerance ) {
 				mStatus = CSGFaceStatus.OUTSIDE;
 			}

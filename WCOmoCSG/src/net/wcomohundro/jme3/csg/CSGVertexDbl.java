@@ -214,7 +214,8 @@ public class CSGVertexDbl
 			return( this ); // new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));
 		}
 	}
-	public CSGVertexDbl clone(
+	/** Make an instance of the same class with the given parameters */
+	public CSGVertexDbl sibling(
 		Vector3d		pPosition
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
@@ -266,7 +267,7 @@ public class CSGVertexDbl
 					pTempVars.vect2d.set( pOther.getTextureCoordinate() )
 						.subtractLocal( this.mTextureCoordinate ).multLocal( (float)pPercentage ) );
 			
-			aVertex = this.clone( pNewPosition, newNormal, newTextureCoordinate );
+			aVertex = this.sibling( pNewPosition, newNormal, newTextureCoordinate );
 		}
 		if ( aVertex == null ) {
 			// Not a percentage we can deal with

@@ -271,6 +271,8 @@ public class CSGSegment
 		case 0:
 			// No end yet defined - define the starting point 
 			mStartPosition = pVertex.getPosition();
+			
+			// By definition, we recognize this vertex as on a boundary
 			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
 
 		 	mStartCollision = pCollision;
@@ -280,6 +282,8 @@ public class CSGSegment
 		case 1:
 			// Starting point already defined - define ending point as VERTEX
 			mEndPosition = pVertex.getPosition();
+			
+			// By definition, we recognize this vertex as on a boundary
 			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
 
 			mEndCollision = pCollision;
