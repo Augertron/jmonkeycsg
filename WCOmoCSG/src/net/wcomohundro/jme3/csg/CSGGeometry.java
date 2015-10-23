@@ -92,6 +92,8 @@ public class CSGGeometry
 	protected CSGEnvironment	mEnvironment;
 	/** Is this a valid geometry */
 	protected boolean			mIsValid;
+	/** How long did it take to regenerate this shape */
+	protected long				mRegenNS;
 	/** Control flag for the special 'debug' mode */
 	protected boolean			mDebugMesh;
 	
@@ -114,6 +116,10 @@ public class CSGGeometry
 	) {
 		super( pName, pMesh );
 	}
+	
+	/** How long did it take to regenerate this shape */
+	@Override
+	public long getShapeRegenerationNS() { return mRegenNS; }
 
 	/** Accessor to the debug mesh control flag */
 	public boolean isDebugMesh() { return mDebugMesh; }
@@ -188,7 +194,10 @@ public class CSGGeometry
 		CSGEnvironment		pEnvironment
 	) {
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
-			// Sort the shapes based on their operator
+			// Time the construction 
+			long startTimer = System.nanoTime();
+			
+			// Sort the shapes based on their operator (as needed)
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
 			
 			// Save on churn by leveraging temps
@@ -247,6 +256,7 @@ public class CSGGeometry
 				}
 			} finally {
 				tempVars.release();
+				mRegenNS = System.nanoTime() - startTimer;
 			}
 		} else if ( this.mesh instanceof CSGMesh ) {
 			// If in 'debug' mode, look for a possible delegate

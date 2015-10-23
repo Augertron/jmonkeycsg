@@ -219,6 +219,9 @@ public interface ConstructiveSolidGeometry
 
 		/** Is this a valid geometry */
 		public boolean isValid();
+		
+		/** How long did it take to build this shape */
+		public long getShapeRegenerationNS();
 	}
 
 	/** Version tracking support 

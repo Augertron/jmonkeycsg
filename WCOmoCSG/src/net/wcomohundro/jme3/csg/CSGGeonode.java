@@ -101,6 +101,8 @@ public class CSGGeonode
 	protected int				mLODLevel;
 	/** Is this a valid geometry */
 	protected boolean			mIsValid;
+	/** Shape regeneration time */
+	protected long				mRegenNS;
 	/** Processing environment to apply */
 	protected CSGEnvironment	mEnvironment;
 
@@ -120,6 +122,10 @@ public class CSGGeonode
 	/** Is this a valid geometry */
 	@Override
 	public boolean isValid() { return mIsValid; }
+	
+	/** How long did it take to regenerate this shape */
+	@Override
+	public long getShapeRegenerationNS() { return mRegenNS; }
 	
 	/** Add a shape to this geometry */
 	@Override
@@ -175,6 +181,9 @@ public class CSGGeonode
 		CSGEnvironment		pEnvironment
 	) {
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
+			// Time the construction operation
+			long startTimer = System.nanoTime();
+			
 			// Prepare for custom materials
 			Map materialMap = null;
 			Integer materialIndex;
@@ -308,6 +317,7 @@ public class CSGGeonode
 				}
 			} finally {
 				tempVars.release();
+				mRegenNS = System.nanoTime() - startTimer;
 			}
 		} else {
 			// Nothing interesting

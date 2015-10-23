@@ -103,8 +103,9 @@ public class CSGSolid
 	}
 	
 	/** Add a new face to this solid */
-	protected CSGFace addFace(
-		CSGVertexIOB 	pV1
+	protected int addFace(
+		int				pFaceIndex
+	,	CSGVertexIOB 	pV1
 	, 	CSGVertexIOB 	pV2
 	, 	CSGVertexIOB 	pV3
 	, 	int 			pMaterialIndex
@@ -117,15 +118,23 @@ public class CSGSolid
 				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
 		|| CSGEnvironment
 				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl ) ) {
-			// The face is too small to be pertinent
-			return( null );
+			// The face is too small to be pertinent, so if another face is added, 
+			// just overuse the given slot
+			return( pFaceIndex );
 		} else {
 			// Build the face
 			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pMaterialIndex, pTempVars, pEnvironment );
 			if ( aFace.isValid() ) {
 				// Retain the valid face
-				mFaces.add( aFace );
-				return( aFace );
+				if ( pFaceIndex < 0 ) {
+					// Simple add to the end
+					mFaces.add( aFace );
+				} else {
+					// Overwrite the slot given
+					mFaces.set( pFaceIndex, aFace );
+				}
+				// Force an append to the list on the next add
+				return( -1 );
 			} else {
 				// A face is invalid if no plane could be determined -- in other words, the
 				// vertices are in a line
@@ -267,6 +276,8 @@ public class CSGSolid
 
 	
 	/** Split an individual face
+	 	@return - true if a face was actually split and processing should 
+	 			  commence again at the same index
 	 
 	 	****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
     */	  
@@ -335,26 +346,26 @@ public class CSGSolid
 					// The vertex is ON the target edge, so we have not crossed the face, 
 					// we have a partial overlap along the given edge itself
 					// (yes, the result is the same as below without the check for vertexOnEdger)
-//					breakFaceInTwo( mFaces.remove( pFaceIndex ), endPos, endCollision, pTempVars, pEnvironment );
-//					return( true );
+//					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, endPos, endCollision, pTempVars, pEnvironment );
 //				} else {
 					// We have a line through a vertex, crossing an opposite edge.  The 
 					// new point must be on the given edge, so two new pieces will cover it.
-					breakFaceInTwo( mFaces.remove( pFaceIndex ), endPos, endCollision, pTempVars, pEnvironment );
-					return( true );
+					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, endPos, endCollision, pTempVars, pEnvironment );
 //				}
+				break;
 				
 			case INTERIOR:
 				// Start through one vertex and terminate in the middle of the face.
 				// This requires the face to be split into three pieces circling around
 				// the interior point.
-				breakFaceInThree( mFaces.remove( pFaceIndex ), endPos, pTempVars, pEnvironment );
-				return( true );
+				pFaceIndex = breakFaceInThree( aFace, pFaceIndex, endPos, pTempVars, pEnvironment );
+				break;
 				
 			default:
 				// No real collision
 				return( false );
 			}
+			break;
 			
 		case EDGE12:
 		case EDGE23:
@@ -369,14 +380,13 @@ public class CSGSolid
 					// The vertex is ON the target edge, so we have not crossed the face, 
 					// we have a partial overlap along the given edge itself
 					// (yes, the result is the same as below without the check of vertexOnEdge)
-//					breakFaceInTwo( mFaces.remove( pFaceIndex ), startPos, startCollision, pTempVars, pEnvironment );
-//					return( true );
+//					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, startPos, startCollision, pTempVars, pEnvironment );
 //				} else {
 					// We have a line through a vertex, crossing an opposite edge.  The 
 					// new point must be on the given edge, so two new pieces will cover it.
-					breakFaceInTwo( mFaces.remove( pFaceIndex ), startPos, startCollision, pTempVars, pEnvironment );
-					return( true );
+					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, startPos, startCollision, pTempVars, pEnvironment );
 //				}
+				break;
 				
 			case EDGE12:
 			case EDGE23:
@@ -384,35 +394,34 @@ public class CSGSolid
 				if ( startCollision != endCollision ) {
 					// Start through one edge and end via another edge.  This cuts the face 
 					// into three pieces with two new vertices at the edge split points.
-					breakFaceInThree( mFaces.remove( pFaceIndex )
-									, startPos, startCollision
-									, endPos, endCollision
-									, pTempVars, pEnvironment );
-					return( true );
+					pFaceIndex = breakFaceInThree( aFace, pFaceIndex
+												, startPos, startCollision
+												, endPos, endCollision
+												, pTempVars, pEnvironment );
 				} else {
 					// Collision along the same edge.  This cuts the face
 					// into three pieces with two new vertices along the same edge.
-					breakFaceInThree( mFaces.remove( pFaceIndex )
-									, startPos, endPos, startCollision
-									, pTempVars, pEnvironment );
-					
-					return( true );
+					pFaceIndex = breakFaceInThree( aFace, pFaceIndex
+												, startPos, endPos, startCollision
+												, pTempVars, pEnvironment );
 				}
+				break;
 				
 			case INTERIOR:
 				// Start through one edge and terminate in the middle of the face.
 				// This requires the face to be split into four pieces circling around
 				// the interior point.
-				breakFaceInFour( mFaces.remove( pFaceIndex )
-								, startPos, startCollision
-								, endPos
-								, pTempVars, pEnvironment );
-				return( true );
+				pFaceIndex = breakFaceInFour( aFace, pFaceIndex
+											, startPos, startCollision
+											, endPos
+											, pTempVars, pEnvironment );
+				break;
 				
 			default:
 				// No real collision
 				return( false );
 			}
+			break;
 			
 		case INTERIOR:
 			// The start point is in the middle of the face, what about the end?
@@ -423,8 +432,8 @@ public class CSGSolid
 				// Start from an interior point and end through a vertex.  This
 				// cuts the face into three pieces circling around the interior
 				// point.
-				breakFaceInThree( mFaces.remove( pFaceIndex ), startPos, pTempVars, pEnvironment );
-				return( true );
+				pFaceIndex = breakFaceInThree( aFace, pFaceIndex, startPos, pTempVars, pEnvironment );
+				break;
 			
 			case EDGE12:
 			case EDGE23:
@@ -432,21 +441,19 @@ public class CSGSolid
 				// Start from an interior point and end through an edge.
 				// This requires the face to be split into four pieces circling
 				// around the interior point.
-				breakFaceInFour( mFaces.remove( pFaceIndex )
-								, endPos, endCollision
-								, startPos
-								, pTempVars, pEnvironment );
-				return( true );
+				pFaceIndex = breakFaceInFour( aFace, pFaceIndex
+											, endPos, endCollision
+											, startPos
+											, pTempVars, pEnvironment );
+				break;
 
-				
 			case INTERIOR:
 				// Start and end on points within the interior of the face. Confirm they are
 				// a reasonable distance apart.
 				if ( CSGEnvironment
 					.equalVector3d( startPos, endPos, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 					// Start and end are effectively the same, so treat it as a single center point
-					breakFaceInThree( mFaces.remove( pFaceIndex ), startPos, pTempVars, pEnvironment );
-					return( true );
+					pFaceIndex = breakFaceInThree( aFace, pFaceIndex, startPos, pTempVars, pEnvironment );
 				} else {
 					// Select the best vertex of the face to operate from
 					// I do not really understand the following -- but we do break the face into five
@@ -477,28 +484,38 @@ public class CSGSolid
 					}
 					// Now find which of the intersection points is nearest to that vertex.
 					if ( toVertex.distance( startPos ) > toVertex.distance( endPos ) ) {
-						breakFaceInFive( mFaces.remove( pFaceIndex ), startPos, endPos, pickVertex, pTempVars, pEnvironment );
+						pFaceIndex = breakFaceInFive( aFace, pFaceIndex, startPos, endPos, pickVertex, pTempVars, pEnvironment );
 					} else {
-						breakFaceInFive( mFaces.remove( pFaceIndex ), endPos, startPos, pickVertex, pTempVars, pEnvironment );
+						pFaceIndex = breakFaceInFive( aFace, pFaceIndex, endPos, startPos, pickVertex, pTempVars, pEnvironment );
 					}
-					return( true );
-
 				}
-			
+				break;
+				
 			default:
 				// No real collision
 				return( false );
 			}
+			break;
 			
 		default:
 			// No real collision
 			return( false );
 		}
+		// We only reach this point if the face was actually split
+		// However, it might be possible that all the split pieces were so small, that no real
+		// face was actually added.  If any face at all was added, then pFaceIndex would be 
+		// reset to -1
+		if ( pFaceIndex >= 0 ) {
+			// Nothing actually added, but the original is still in its slot and must be eliminated
+			mFaces.remove( pFaceIndex );
+		}
+		return( true );
 	}
 	  
 	/** Split a face into two pieces along a vertex and a point on the opposite edge */		
-	protected void breakFaceInTwo(
+	protected int breakFaceInTwo(
 		CSGFace				pFace
+	,	int					pFaceIndex
 	, 	Vector3d 			pNewPos
 	, 	CSGFaceCollision	pEdge
 	,	CSGTempVars			pTempVars
@@ -515,8 +532,8 @@ public class CSGSolid
 			//         
 			// 
 			//		V1                V3
-			addFace( pFace.v1(), vertex, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex, pFace.v2(), pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v2(), pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		case EDGE23:
 			//               V2
@@ -526,8 +543,8 @@ public class CSGSolid
 			//         
 			// 
 			//		V1                V3
-			addFace( pFace.v2(), vertex, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex, pFace.v3(), pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v3(), pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		case EDGE31:
 			//               V2
@@ -537,15 +554,17 @@ public class CSGSolid
 			//         
 			// 
 			//		V1       New       V3
-			addFace( pFace.v3(), vertex, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex, pFace.v1(), pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v1(), pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		}
+		return( pFaceIndex );
 	}
 	
 	/** Split into three pieces along two new positions on two given edges */
-	protected void breakFaceInThree(
+	protected int breakFaceInThree(
 		CSGFace				pFace
+	,	int					pFaceIndex
 	, 	Vector3d 			pEdgePosition1
 	,	CSGFaceCollision	pEdgeCollision1
 	, 	Vector3d 			pEdgePosition2
@@ -567,9 +586,9 @@ public class CSGSolid
 				//        
 				// 
 				//		V1      New2       V3
-				addFace( pFace.v1(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( vertex1, pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( pFace.v2(), pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 				break;
 			case EDGE23:
 				//               V2
@@ -579,9 +598,9 @@ public class CSGSolid
 				//        
 				// 
 				//		V1                 V3
-				addFace( pFace.v1(), vertex1, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( vertex1, vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( pFace.v2(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 				break;
 			}
 			break;
@@ -596,9 +615,9 @@ public class CSGSolid
 				//        
 				// 
 				//		V1                 V3
-				addFace( pFace.v2(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( vertex1, pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( pFace.v3(), pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 				break;
 			case EDGE31:
 				//               V2
@@ -608,9 +627,9 @@ public class CSGSolid
 				//        
 				// 
 				//		V1      New2       V3
-				addFace( pFace.v2(), vertex1, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( vertex1, vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( pFace.v3(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 				break;
 			}
 			break;
@@ -625,9 +644,9 @@ public class CSGSolid
 				//        
 				// 
 				//		V1      New1       V3
-				addFace( pFace.v3(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( vertex1, pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( pFace.v1(), pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 				break;
 			case EDGE12:
 				//               V2
@@ -637,18 +656,20 @@ public class CSGSolid
 				//        
 				// 
 				//		V1      New1       V3
-				addFace( pFace.v3(), vertex1, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( vertex1, vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				addFace( pFace.v1(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 				break;
 			}
 			break;
 		}
+		return( pFaceIndex );
 	}
 	
 	/** Split into three pieces along two new positions on a single edge */
-	protected void breakFaceInThree(
+	protected int breakFaceInThree(
 		CSGFace				pFace
+	,	int					pFaceIndex
 	, 	Vector3d 			pEdgePosition1
 	, 	Vector3d 			pEdgePosition2
 	, 	CSGFaceCollision	pEdge
@@ -667,9 +688,9 @@ public class CSGSolid
 			//         New2
 			// 
 			//		V1                V3
-			addFace( pFace.v1(), vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex2, vertex1, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex1, pFace.v2(), pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v2(), pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		case EDGE23:
 			//               V2
@@ -679,9 +700,9 @@ public class CSGSolid
 			//                     New1
 			// 
 			//		V1                V3
-			addFace( pFace.v2(), vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex2, vertex1, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex2, pFace.v3(), pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, pFace.v3(), pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		case EDGE31:
 			//               V2
@@ -691,16 +712,18 @@ public class CSGSolid
 			//                   
 			// 
 			//		V1  New1    New2   V3
-			addFace( pFace.v3(), vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex2, vertex1, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vertex2, pFace.v1(), pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, pFace.v1(), pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		}
+		return( pFaceIndex );
 	}
 
 	/** Split into three pieces based on a single interior point */
-	protected void breakFaceInThree(
+	protected int breakFaceInThree(
 		CSGFace				pFace
+	,	int					pFaceIndex
 	, 	Vector3d 			pCenterPoint
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
@@ -714,14 +737,17 @@ public class CSGSolid
 		//               New
 		// 
 		//		V1                V3
-		addFace( pFace.v1(), pFace.v2(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-		addFace( pFace.v2(), pFace.v3(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-		addFace( pFace.v3(), pFace.v1(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+		pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+		pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+		pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+
+		return( pFaceIndex );
 	}
 	
 	/** Split into four pieces from an interior point to a given edge */	
-	protected void breakFaceInFour(
+	protected int breakFaceInFour(
 		CSGFace				pFace
+	,	int					pFaceIndex
 	, 	Vector3d 			pPositionOnEdge
 	, 	CSGFaceCollision	pEdgeCollision
 	, 	Vector3d 			pPositionOnFace
@@ -740,10 +766,10 @@ public class CSGSolid
 			//              
 			//              NewCtr
 			//		V1                V3
-			addFace( pFace.v1(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vtxEdge, pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v2(), pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v3(), pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		case EDGE23:
 			//               V2
@@ -753,10 +779,10 @@ public class CSGSolid
 			//              
 			//              NewCtr
 			//		V1                V3
-			addFace( pFace.v2(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vtxEdge, pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v3(), pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v1(), pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		case EDGE31:
 			//               V2
@@ -766,19 +792,21 @@ public class CSGSolid
 			//             NewCtr
 			//              
 			//		V1     NewEdge     V3
-			addFace( pFace.v3(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( vtxEdge, pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v1(), pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v2(), pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		}
+		return( pFaceIndex );
 	}
 	
 	/** Split into five pieces to accommodate two new points that are both in the
 	 	interior of the given face. 
 	 */
-	protected void breakFaceInFive(
+	protected int breakFaceInFive(
 		CSGFace				pFace
+	,	int					pFaceIndex
 	, 	Vector3d 			pNewPosition1
 	, 	Vector3d 			pNewPosition2
 	, 	CSGFaceCollision	pPickVertex
@@ -790,29 +818,30 @@ public class CSGSolid
 			
 		switch( pPickVertex ) {
 		case V1:
-			addFace( pFace.v2(), pFace.v3(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v2(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v3(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v2(), vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v3(), pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 			
 		case V2:
-			addFace( pFace.v3(), pFace.v1(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v3(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v1(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v3(), vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v1(), pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 			
 		case V3:
-			addFace( pFace.v1(), pFace.v2(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v1(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v2(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v1(), vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			addFace( pFace.v2(), pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
 			break;
 		}
+		return( pFaceIndex );
 	}
 
 	/////// Implement ConstructiveSolidGeometry

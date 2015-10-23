@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<com.jme3.scene.Node format_version='2' name='CSGSamplesC'>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='CSGSamplesC'>
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
@@ -250,4 +250,4 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
     </children>
-</com.jme3.scene.Node>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

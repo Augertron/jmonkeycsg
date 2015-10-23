@@ -64,6 +64,7 @@ import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 
 
 /** Exercise the import facility */
@@ -253,12 +254,17 @@ public class CSGTestE
     	    		reportString += " *** Processing Environment Reset";
     	    		
     	    	} else if ( aNode instanceof Spatial ) {
-    	    		if ( (aNode instanceof ConstructiveSolidGeometry.CSGSpatial)
-    	    		&& !((ConstructiveSolidGeometry.CSGSpatial)aNode).isValid() ) {
-    	    			reportString += " ***Invalid shape";
-    	    		} else {
-    	    			mLoadedSpatial = (Spatial)aNode;
+    	    		if ( aNode instanceof CSGSpatial ) {
+    	    			CSGSpatial csgSpatial = (CSGSpatial)aNode;
+    	    			if ( csgSpatial.isValid() ) {
+    	    				// Include timing
+    	    				reportString += ( " (" + (csgSpatial.getShapeRegenerationNS() / 1000000) + "ms)" );
+    	    			} else {
+    	    				// Something bogus in the construction
+    	    				reportString += " ***Invalid shape";
+    	    			}
     	    		}
+    	    		mLoadedSpatial = (Spatial)aNode;
     	    	}
         	} catch( Exception ex ) {
         		reportString += " ***Load Scene Failed: " + ex;
