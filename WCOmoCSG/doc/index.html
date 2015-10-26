@@ -4,6 +4,7 @@
 <head>
     <title>jMonkey CSG - Constructive Solid Geometry</title>
     <!-- Use a JQuery ThemeRoller theme, in this case 'smoothness' -->
+    <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="jquery-ui-1.11.2.custom.css">
 
     <!-- Include the basic JQuery support (core and ui) -->
@@ -16,9 +17,42 @@
         content="jMonkey 3D CSG ConstructiveSolidGeometry">
 </head>
 <body>
-<div>
-    <h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
-    <p><a href="http://en.wikipedia.org/wiki/Constructive_solid_geometry">Constructive solid geometry (CSG)</a>
+<div id="main">
+  <header>
+  	<div id="logo">
+  		<div id="logo_text">
+    		<h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
+    		<h2>Complex shapes built by combining simple primitives</h2>
+  		</div>
+  	</div>
+  	<nav>
+		<div id="menu_container">
+			<ul id="nav" class="sf-menu">
+				<li><a class="disabled">Home</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
+			</ul>
+		</div>
+	</nav>
+  </header>
+  <div id="site_content">
+  	<div id="sidebar_container">
+		<div class="sidebar">
+			<ul>
+				<li><a href="#history">History</a></li>
+				<li><a href="#structure">Code Structure</a></li>
+				<li><a href="#features">Features</a></li>
+				<li><a href="#elements">Basic Elements</a></li>
+				<li><a href="#shapes">Primitive Shapes</a></li>
+				<li><a href="#license">License</a></li>
+				<li><a href="#download">Download</a></li>
+				<li><a href="#start">Getting Started</a></li>				
+			</ul>
+		</div>
+	</div>
+    <div class="content">
+    <p id='csg'>
+    <a href="http://en.wikipedia.org/wiki/Constructive_solid_geometry"
+    	target='other' title='wiki'>Constructive solid geometry (CSG)</a>
     <i>(formerly called computational binary solid geometry)</i> is a 
  	technique used in 3D solid modeling. Constructive solid geometry allows a modeler to create 
  	a complex surface or object by using Boolean operators to combine objects. Often CSG presents 
@@ -33,7 +67,7 @@
  	<li>Difference - what is left when you remove one object from another</li>
  	</ul>
  	
- 	<h3>A Few Personal Notes on the History of this Code <i>(Q1 2015)</i></h3>
+ 	<h3 id="history">A Few Personal Notes on the History of this Code <i>(Q1 2015)</i></h3>
  	<p>After retiring from the professional life of a software engineer for over four decades, I have the
  	opportunity to indulge in a few whims and can now investigate things like 3D graphics. Having 
  	experimented with Java since its initial release in 1995, and having been developing enterprise-level,
@@ -47,10 +81,10 @@
  	
  	<p>As far as I can tell, <b>Evan Wallace</b> put together a Javascript library for CSG support within 
  	browsers that support WebGL. The underlying processing algorithm is BSP - Binary Space Partitioning
- 	  @see <a href="http://evanw.github.io/csg.js">http://evanw.github.io/csg.js</a> 
- 	(it is really quite impressive).
+ 	<br>@see <a href="http://evanw.github.io/csg.js" target='other' title='Evan Wallace BSP'
+ 	>http://evanw.github.io/csg.js</a> (it is really quite impressive).
  	<br>This was converted into <i>jMonkey</i> compatible Java by <b>fabsterpal</b>, and posted to a 
- 	<a href="https://github.com/andychase/fabian-csg">Github repository</a>
+ 	<a href="https://github.com/andychase/fabian-csg" target='other' title='fabsterpal github'>Github repository</a>
  	by <b>andychase</b>.  Everything seems to have been properly posted and annotated for fully open 
  	source.</p>
  	
@@ -66,17 +100,18 @@
  	to believe there is an inherent problem with BSP.  Due to the precision limitations on any
  	real computer, <i>artifacts</i> are introduced into more complex shapes. Therefore, I have
  	implemented a different algorithm based on the work of 
- 	<a href="https://sourceforge.net/projects/unbboolean/">Danilo Balby Silva Castanheira</a>, who
- 	gratiously posted his work into the public domain.
+ 	<a href="https://sourceforge.net/projects/unbboolean/" target='other' title='SourceForge UnbBoolean'
+ 	>Danilo Balby, Silva Castanheira</a>, who gratiously posted his work into the public domain.
  	
  	<p>In other words, I am frolicking in my sandbox...  But as a firm believer in open source, I am making my
  	experiments available to all.  If there is something here of value to you, feel free to use it.
  	I will be attempting to keep the posted code fully operational -- but for now, I am making no pledges
  	about backward compatibility.
- 	<br>If you find a problem, post a <a href="https://sourceforge.net/p/jmonkeycsg/tickets/">ticket</a>
+ 	<br>If you find a problem, post a <a href="https://sourceforge.net/p/jmonkeycsg/tickets/"
+ 	target='other' title='SourceForge Tickes'>ticket</a>
  	 via SourceForge. </p>
  	 
- 	<h3>Code Structure</h3>
+ 	<h3 id="structure">Code Structure</h3>
  	<p>I am attempting to retain the CSG code as an independent plug-in with no changes needed within
  	the jme3 core.  You will find the interesting stuff in the package "net.wcomohundro.jme3.csg".  Some
  	habits die hard (well, they really do not die at all), so I work within the Eclipse IDE tapping into
@@ -92,7 +127,7 @@
  	be submitting my core changes back to the jMonkey project. They are handy for anyone who is interested
  	and the updates have no hard connections back into CSG.</p>
  	
- 	<h3>Features</h3>
+ 	<h3 id="features">Features</h3>
  	<ul>
  	<li>Primitive <i>shapes</i> based on any arbitrary Mesh</li>
  	<li>Composite geometry based on boolean blending of the shapes</li>
@@ -102,7 +137,7 @@
  	    applying to the different surfaces (ie, front, back, top, bottom, ...)</li>
  	</ul>
  	
- 	<h3>Basic Elements</h3>
+ 	<h3 id="elements">Basic Elements</h3>
  	<p>To use CSG, you will be working with <i>shapes</i> and <i>geometries</i>.</p>
  	<dl>
  	<dt>CSGShape</dt>
@@ -124,7 +159,7 @@
  	CSGGeometry is no longer strictly required, since CSGGeonode provides all the same services.
  	But CSGGeometry does provide optimized processing for those objects that have a single material.</p>
  	
- 	<h3>CSG Primitive Shapes</h3>
+ 	<h3 id="shapes">CSG Primitive Shapes</h3>
  	<p>CSGShape can be built from any mesh.  No further primitives other than those provided by
  	the core jMonkey services are required, and my original design intent was to <i>not</i> create
  	any CSG specific primitives.  But during the course of my testing, I tripped over issues around
@@ -156,18 +191,20 @@
  	</ul>
  	</p>
  	 
-    <h3>Licensed - BSD like jMonkey</h3>
+    <h3 id='license'>Licensed - BSD like jMonkey</h3>
     <p>New BSD (3-clause) License. In other words, you do whatever makes you happy!</p>
     
-    <h3>Download/Access the Code</h3>
+    <h3 id='download'>Download/Access the Code</h3>
     <p>
         jMonkeyCSG is managed via a SourceForge project which you can reference 
-        <a href="https://sourceforge.net/projects/jmonkeycsg/">here</a>. 
+        <a href="https://sourceforge.net/projects/jmonkeycsg/" target='other'
+        title='SourceForge Project'>here</a>. 
         All source is available via the SourceForge 
-        <a href="https://sourceforge.net/p/jmonkeycsg/code/HEAD/tree/">SVN repository</a>.
+        <a href="https://sourceforge.net/p/jmonkeycsg/code/HEAD/tree/" target='other'
+        title='SourceForge Repository'>SVN repository</a>.
     </p>
     
-    <h3>Getting Started</h3>
+    <h3 id='start'>Getting Started</h3>
     <p>You can pull the CSG source out of its repository and include it in your project.  As
     I stated earlier, I work in Eclipse, referencing the jme3 source in the main trunk.
     I do not know exactly what you need for the standard jMonkey SDK/IDE, but I have provided
@@ -269,6 +306,12 @@
         &lt;/children&gt;
     &lt;/net.wcomohundro.jme3.csg.CSGLinkNode&gt;
     </pre></code>
+</div>
+</div>
+	<footer>
+		<p><a href="http://www.css3templates.co.uk" target='other'>--design from css3templates.co.uk--</a>
+		</p>
+	</footer>
 </div>
 </body>
 </html>

@@ -95,7 +95,6 @@ public class CSGFace
 	,	V1(1)			// Intersection with vertex 1
 	,	V2(2)			// Intersection with vertex 2
 	,	V3(4)			// Intersection with vertex3
-	,	ALL_VERTICES(7)	// All vertices
 	
 	,	EDGE12(8)		// Intersection with edge between V1 and V2
 	,	EDGE23(16)		// intersection with edge between V2 and V3
@@ -118,19 +117,19 @@ public class CSGFace
 			default:	return( NONE );		// no other combination of edges
 			}
 		}
-		/** Check if this given vertex is in the set */
-		public boolean hasVertex(
-			int		pVertexMask
+		/** Check if this given element is in the set */
+		public boolean hasElement(
+			int		pElementMask
 		) {
-			// Mask off the desired vertex bit -- which must result in the desired vertes being on
-			return( (pVertexMask & this.mValue) == this.mValue );
+			// Mask off the desired bit -- which must result in the desired element being on
+			return( (pElementMask & this.mValue) == this.mValue );
 		}
-		/** Remove this vertex from the set */
-		public int removeVertex(
-			int		pVertexMask
+		/** Remove this element from the set */
+		public int removeElement(
+			int		pElementMask
 		) {
-			pVertexMask &= ~this.mValue;
-			return( pVertexMask );
+			pElementMask &= ~this.mValue;
+			return( pElementMask );
 		}
 		
 		/** Given a starting collision and ending collision status for a single line,
@@ -286,6 +285,7 @@ public class CSGFace
 	}
 	
 	/** Clones the face object */
+	@Override
 	public CSGFace clone(
 		boolean		pInvert
 	) {
@@ -314,9 +314,8 @@ public class CSGFace
 	 	will be shared.
 	 	
 	 	NOTE
-	 		That an attempt to sequenctially scan through a list of other faces 
-	 		was too slow to be useful.  Therefore we will live with the overhead
-	 		of the HashMap.
+	 		That an attempt to scan through a list of other faces was too slow to be 
+	 		useful.  Therefore we will live with the overhead of the HashMap.
 	 */
 	public void matchVertices(
 		Map<Vector3d,CSGVertexIOB>	pVertexList
@@ -372,8 +371,6 @@ public class CSGFace
 	}
 	
 	/** Accessors */
-	public int getMaterialIndex() { return mMaterialIndex; }
-	
 	public CSGVertexIOB v1() { return (CSGVertexIOB)mVertices.get(0); }
 	public CSGVertexIOB v2() { return (CSGVertexIOB)mVertices.get(1); }
 	public CSGVertexIOB v3() { return (CSGVertexIOB)mVertices.get(2); }

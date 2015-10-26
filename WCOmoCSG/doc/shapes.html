@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<!-- Webpage home for the SourceForge "jMonkeyCSG" project -->
+<head>
+    <title>jMonkey CSG - Constructive Solid Geometry (shapes)</title>
+    <!-- Use a JQuery ThemeRoller theme, in this case 'smoothness' -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="jquery-ui-1.11.2.custom.css">
+
+    <!-- Include the basic JQuery support (core and ui) -->
+    <script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jquery-ui-1.11.2.custom.min.js"></script>
+    
+    <meta name="description" 
+        content="This is a plugin for the jMonkey 3D development environment which supports CSG - Constructive Solid Geometry">
+    <meta name="keywords" 
+        content="jMonkey 3D CSG ConstructiveSolidGeometry">
+</head>
+<body>
+<div id="main">
+  <header>
+  	<div id="logo">
+  		<div id="logo_text">
+    		<h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
+    		<h2>Complex shapes built by combining simple primitives</h2>
+  		</div>
+  	</div>
+  	<nav>
+		<div id="menu_container">
+			<ul id="nav" class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a class="disabled">Shapes</a></li>
+			</ul>
+		</div>
+	</nav>
+  </header>
+  <div id="site_content">
+  	<div id="sidebar_container">
+		<div class="sidebar">
+			<ul>
+				<li><a href="#mesh">CSGMesh</a></li>
+				<li><a href="#box">CSGBox</a></li>
+				<li><a href="#cylinder">CSGCylinder</a></li>
+				<li><a href="#pipe">CSGPipe</a></li>
+				<li><a href="#sphere">CSGSphere</a></li>
+				<li><a href="#spline">CSGSplineGenerator</a></li>			
+			</ul>
+		</div>
+	</div>
+	
+    <div class="content">
+    <h3 id='mesh'>CSGMesh</h3>
+	<p><i>CSGMesh</i> defines a common design approach to the CSG shape primitives, as well as
+providing common services to all the concrete shapes. The primitive is essentially built at
+the (0,0,0) origin, with some kind of <i>extent</i> in x, y and z.  The shape will have <i>faces</i>
+whose texture scaling can be individually controlled.
+<br>In particular, CSGMesh allows you to:</p>
+	<ul>
+		<li>Trigger jme3 standard Mesh processing for: scaleTextureCoordinates(Vector2f)</li>
+		<li>Apply different texture scaling to different <i>faces</i></li>
+		<li>Generate different levels of detail based on <i>LOD Factors</i>
+		<li>Produce TangentBinormal lighting information for the Mesh after it is generated</li>
+		<li>Common updateGeometry() entry point that rebuilds the shape using all current settings</li>
+	</ul>
+	<p>The java entry points for services above are:</p>
+	<dl>
+		<dt>setScaleTexture( Vector2f pScale )<dt>
+		<dd>Save the texture scaling vector <i>pScale</i> and apply it via
+Mesh.scaleTextureCoordinates( Vector2f ) when updateGeometry() is triggered.</dd>
+		<dt>setScaleFaces( List&lt;Vector3f&gt; pScale )</dt>
+		<dd>Save the list of texture scaling vectors <i>pScale</i> and apply them to the appropriate
+faces when updateGeometry() is triggered.  The x and y coordinates from each vector represent the
+x and y values expected in texture scaling Vector2f.  The z coordinate is treated as an integer
+bitmask, where each bit selects a different face.  These bits are defined by the specific shape.</dd>
+		<dt>setLODFactors( float[ ] pLODFactors )</dt>
+		<dd>Save the set of percentage load factors that create multiple VertexBuffers when 
+updateGeometry() is triggered.  Each specific shape interprets the percentage in its own way, deciding
+how best to reduce its count of indices by the desired amount. But the end result is to call
+the underlying Mesh.setLodLevels( VertexBuffer[ ] pLevelsOfDetail ).</dd>
+		<dt>setGenerateTangentBinormal( boolean	pFlag )</dt>
+		<dd>Save the flag that, when true, causes TangentBinormalGenerator.generate( thisMesh ) to be called
+when updateGeometry() is triggered.</dd>
+		<dt>updateGeometry()</dt>
+		<dd>Produce the underlying Mesh (vertices, normal, textures, indices) from the active configuration
+settings, and then apply texture scaling and tangent binormal generation as needed.  No real Mesh is
+available for this shape until updateGeometry() is called.  The final step of Savable.read(...) processing
+for every CSG shape is to invoke updateGeometry() on itself.</dd>
+	</dl>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSomeShape' 
+            xExtent='1.0' yExtent='1.0' zExtent='1.0
+            generateTangentBinormal='true'	
+    &gt;
+        &lt;scaleTexture&gt;
+            &lt;com.jme3.math.Vector2f x='1.0' y='5.0'/&gt;	
+        &lt;/scaleTexture&gt;
+        &lt;scaleFaces&gt;  &lt;!-- z used as bitmask of surfaces --&gt;
+            &lt;com.jme3.math.Vector3f x='1.0' y='10.0' z='48'/&gt;	
+            &lt;com.jme3.math.Vector3f x='10.0' y='1.0' z='10'/&gt;
+        &lt;/scaleFaces&gt;
+        &lt;lodFactors data='0.25 0.50'/&gt;
+    &lt;/mesh&gt;
+</pre></code>
+</p>
+	
+ 	<h3 id="box">CSGBox</h3>
+ 	<p></p>
+ 	
+ 	<h3 id="cylinder">CSGCylinder</h3>
+ 	<p></p>
+ 	
+ 	<h3 id="pipe">CSGPipe</h3>
+ 	<p></p>
+ 	
+ 	<h3 id="sphere">CSGSphere</h3>
+ 	<p></p>
+ 	 
+    <h3 id='spline'>CSGSplineGenerator</h3>
+    <p>New </p>
+	</div>
+ </div>
+	<footer>
+		<p><a href="http://www.css3templates.co.uk" target='other'>--design from css3templates.co.uk--</a>
+		</p>
+	</footer>
+</div>
+</body>
+</html>
