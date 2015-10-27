@@ -3,6 +3,13 @@
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' z='-4.0'/>
     </transform>
+    <lights class='com.jme3.light.LightList'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
     <children>
     	<!-- Normal, minimal cylinder -->
         <com.jme3.scene.Geometry name='Cylinder2a'

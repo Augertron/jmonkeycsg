@@ -3,28 +3,36 @@
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' z='0.0'/>
     </transform>
+    <lights class='com.jme3.light.LightList'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
     <children>
     	<!-- Just a cube with a texture -->
         <com.jme3.scene.Geometry name='Box1'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-3.0' y='0.0'/>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='5.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='5.0' />
         </com.jme3.scene.Geometry>
+        
         <com.jme3.scene.Geometry name='Box1a'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-15.0' y='6.0'/>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='10.0' yExtent='1.0' zExtent='1.0'>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='5.0' yExtent='1.0' zExtent='1.0'>
                 <scaleFaces>
-                    <com.jme3.math.Vector3f x='10' y='1' z='5'/>
-                    <com.jme3.math.Vector3f x='10' y='1' z='48'/>
+                    <com.jme3.math.Vector3f x='5' y='1' z='5'/>
+                    <com.jme3.math.Vector3f x='5' y='1' z='48'/>
             	</scaleFaces>
             </mesh>
         </com.jme3.scene.Geometry>
-        
+<?ignore
   		<!-- An elongated, rotated box with a texture -->
         <com.jme3.scene.Geometry name='Box2'
         		materialName='Textures/Rock/Rock1.xml'>
@@ -55,5 +63,6 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.5'/>
         </com.jme3.scene.Geometry>
+?>
     </children>
 </com.jme3.scene.Node>

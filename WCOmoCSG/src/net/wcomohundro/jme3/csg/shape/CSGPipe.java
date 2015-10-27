@@ -139,6 +139,15 @@ public class CSGPipe
     public Spline getSlicePath() { return (mSlicePath == null) ? null : mSlicePath.getSpline(); }
     public void setSlicePath( Spline pCurve ) { if ( mSlicePath != null ) mSlicePath.setSpline( pCurve ); }
     
+    /** Accessor to the 'smooth surface' control flag */
+    public boolean hasSmoothSurface() { return mSmoothSurface; }
+    public void setSmoothSurface( boolean pFlag ) { mSmoothSurface = pFlag; }
+    
+    /** Accessor to the how the pipe ends are processed */
+    public PipeEnds getPipeEnds() { return mPipeEnds; }
+    public void setPipeEnds( PipeEnds pEnds ) { mPipeEnds = pEnds; }
+    
+    
 	/** SUBCLASS OVERRIDE: Resolve this mesh, with possible 'debug' delegate representation */
     @Override
 	public Mesh resolveMesh(

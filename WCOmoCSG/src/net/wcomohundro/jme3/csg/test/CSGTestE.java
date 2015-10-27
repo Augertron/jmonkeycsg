@@ -107,7 +107,8 @@ public class CSGTestE
 
 	public CSGTestE(
 	) {
-		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		//super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		super( new FlyCamAppState() );
 		
 		mLoaderThread = new Thread( null, this, "SceneLoader" );
 		mLoaderThread.setPriority( Thread.MIN_PRIORITY );

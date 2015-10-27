@@ -40,9 +40,10 @@
 			<ul>
 				<li><a href="#mesh">CSGMesh</a></li>
 				<li><a href="#box">CSGBox</a></li>
+				<li><a href="#radial">CSGRadial</a></li>
 				<li><a href="#cylinder">CSGCylinder</a></li>
-				<li><a href="#pipe">CSGPipe</a></li>
 				<li><a href="#sphere">CSGSphere</a></li>
+				<li><a href="#pipe">CSGPipe</a></li>
 				<li><a href="#spline">CSGSplineGenerator</a></li>			
 			</ul>
 		</div>
@@ -89,9 +90,7 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
 	<p>The import XML definitions look something like:
 <code><pre>
     &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSomeShape' 
-            xExtent='1.0' yExtent='1.0' zExtent='1.0
-            generateTangentBinormal='true'	
-    &gt;
+            generateTangentBinormal='true' &gt;
         &lt;scaleTexture&gt;
             &lt;com.jme3.math.Vector2f x='1.0' y='5.0'/&gt;	
         &lt;/scaleTexture&gt;
@@ -105,19 +104,197 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
 </p>
 	
  	<h3 id="box">CSGBox</h3>
- 	<p></p>
+ 	<p><i>CSGBox</i> creates a basic brick shape of given x, y and z extents. The key difference 
+ between CSGBox and the standard jme3 Box is its definition of <i>faces</i> and the ability to 
+ apply different texture scaling to the different sides.  The faces are selected by an integer
+ bitmask where:
+ 	<blockquote>
+  0x01 - BACK
+ <br> 0x02 - RIGHT
+ <br> 0x04 - FRONT
+ <br> 0x08 - LEFT
+ <br> 0x10 - TOP
+ <br> 0x20 - BOTTOM
+ <br><br>and the logical combination of these values can apply that same scaling to multiple faces.
+ 	</blockquote>
+ </p>
+ 	<p>The java entry points for adjusting the configuration include everthing from CSGMesh and</p>
+ 	<dl>
+ 		<dt>setXExtent( float pExtent )</dt>
+ 		<dt>setYExtent( float pExtent )</dt>
+ 		<dt>setZExtent( float pExtent )</dt>
+ 		<dd>which sets the extent of the box in the given direction.  NOTE that the extent applies
+ plus/minus across the origin.  So the final width/height/depth is two times the extent value.</dd>
+ 	</dl>
+ 	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+            xExtent='5.0' yExtent='1.0' zExtent='1.0' &gt;
+        &lt;scaleFaces&gt;  &lt;!-- z used as bitmask of surfaces --&gt;
+            &lt;com.jme3.math.Vector3f x='1.0' y='5.0' z='48'/&gt;	
+            &lt;com.jme3.math.Vector3f x='5.0' y='1.0' z='10'/&gt;
+        &lt;/scaleFaces&gt;
+    &lt;/mesh&gt;
+</pre></code>
+</p>
+ 	<img src="images/CSGBoxes.png" alt="CSGBoxes">
+ 	<p>The box on top has had no texture scaling applied.  The box on the bottom has texture 
+ scaling applied to four faces to account for the expanded size.</p>
  	
+ 	<h3 id="radial">CSGRadial</h3>
+ 	<p><i>CSGRadial</i> is an extension to CSGMesh that defines a common design approach to  
+those CSG shape primitives that are built of a series of slices along the z-axis, with each
+slice defined by vertices radially distributed around its center. 
+<br><i>CSGRadialCapped</i> is a radial shape with flat end-caps, like a cylinder or a pipe. These shapes 
+define faces selected by the integer bitmask where:
+<blockquote>
+ 0x01 - BACK
+ <br> 0x02 - SIDES
+ <br> 0x04 - FRONT
+ <br><br>and the logical combination of these values can apply that same scaling to multiple faces.
+ 	</blockquote>
+A texture <i>mode</i> controls how the texture is applied to the faces where:
+<blockquote>
+FLAT			- The texture of the end caps is simply flat
+ <br>UNIFORM		- Texture of end caps is flat and uniform in scale to the curved surface
+ <br>FLAT_LINEAR	- Flat end caps, curved surface is linear front-to-back
+ <br>UNIFORM_LINEAR	- Flat, uniform end caps, curved surface is linear front-to-back
+</blockquote>
+</p>
+	<p>The java entry points configuring the radial are:</p>
+	<dl>
+		<dt>setZExtent( float pZExtent )<dt>
+		<dd>Set the size of the shape along the z-axis</dd>
+		<dt>setAxisSamples( int pSampleCount )<dt>
+		<dd>Set the number of slices to generate along the z-axis</dd>
+		<dt>setRadialSamples( int pSampleCount )<dt>
+		<dd>Set the number of vertices to generate along the outside of each slice. A count
+of three produces a triangular shape, a count of four produces a square shape, higher counts
+produce rounder shapes.</dd>
+		<dt>setFirstRadial( float pFirstRadial )<dt>
+		<dd>Set set the angle (in radians) of the first radial from the x-axis. For circular slices,
+this has minimal effect.  But if the count of radial samples is low (3,4,..) then this determines
+where the first vertex is placed, resulting in a square versus a diamond.</dd>
+		<dt>setRadius( float pRadius )<dt>
+		<dd>The radius to apply to the slice that determines the distance from a vertex to the center.</dd>
+		<dt>setSliceScale( Vector2f pScaling )<dt>
+		<dd>x/y scaling to apply to each individual slice. 
+<br>(overall scaling of the Geometry that contains this shape
+does produce an elliptical rather than circular radial.
+However, the texture applied to each slice is then scaled as well.
+Applying scale to the individual slice preserves the original texture mapping.)</dd>
+		<dt>setSliceRotation( float pTotalRotation )<dt>
+		<dd>The total amount of angular twist (in radians) from the back surface to the
+front surface, with an appropriate fractional amount applied to each slice.</dd>
+		<dt>setClosed( boolean pIsClosed )<dt>
+		<dd>If true, then the ends of the shape are closed.  If false, a hollow shape 
+without ends is constructed.</dd>
+		<dt>setInverted( boolean pIsInverted )<dt>
+		<dd>If true, then the shape is built with its surfaces facing inward.  If false,
+then the surfaces face outward.</dd>
+	</dl>
+	<p>The java entry points configuring the capped radial are:</p>
+	<dl>
+		<dt>setRadiusBack( float pRadius )<dt>
+		<dd>The radius to apply to the back face slice that determines the distance from a vertex to the 
+center. When the radius and back radius differ, it will be adjusted on every slice to produce a smooth
+progression.</dd>
+		<dt>setTextureMode( TextureMode pTextureMode )<dt>
+		<dd>Set how the texture is applied to the facts.</dd>
+	</dl>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSomeRadial' 
+            zExtent='3.0' axisSamples='32' radialSamples='32' firstRadial='PI/4' 
+            radius='1.1' scaleSliceX='2.0' scaleSliceY='2.0' twist='2PI' 
+            radius2='1.7' textureMode='FLAT_LINEAR' &gt;
+        ... other definitions from CSGMesh ...
+    &lt;/mesh&gt;
+</pre></code>
+</p>
+	
  	<h3 id="cylinder">CSGCylinder</h3>
- 	<p></p>
- 	
- 	<h3 id="pipe">CSGPipe</h3>
- 	<p></p>
+ 	<p><i>CSGCylinder</i> creates a basic cylinder shape, based on all the setting of 
+ CSGRadialCapped. The cylinder can be open or closed, and the two end caps can have a different
+ radius.</p>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            zExtent='3.0' radius='1.1' /&gt;
+</pre></code>
+</p>
  	
  	<h3 id="sphere">CSGSphere</h3>
- 	<p></p>
- 	 
+ 	<p><i>CSGSphere</i> creates a basic sphere shape, based on the setting of 
+ CSGRadial. A sphere has only one face and no end caps and only the single main radius applies. Since
+ sine/cosine vary more rapidly near the right-angle extremes, the sphere can be generated with either
+ even slices (same distance at each z-axis step) or to generate more slices with a smaller z-axis
+ step near the right-angle points.
+ <br>A texture <i>mode</i> controls how the texture is applied to the polar regions (the last section
+ generated from a common center point to a slice) where:
+<blockquote>
+ ZAXIS - Wrap texture radially and along the z-axis
+<br> PROJECTED - Wrap texture radially, but spherically project along the z-axis
+<br> POLAR - Apply texture to each pole.  Eliminates polar distortion, but mirrors the texture 
+across the equator</blockquote>
+ <br></p>
+	<p>The java entry points configuring the sphere are:</p>
+	<dl>
+		<dt>setEvenSlices( boolean pFlag )<dt>
+		<dd>If true, generate all equal z-axis steps.  If false, generate more slices near
+the right-angle extremes.</dd>
+		<dt>setTextureMode( TextureMode pTextureMode )<dt>
+		<dd>Set the texture mode to aplly to the polar caps.</dd>
+	</dl>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+            zExtent='3.0' radius='1.1' useEvenSlices='false' textureMode='ZAXIS' /&gt;
+</pre></code>
+</p>
+	 	 
+ 	<h3 id="pipe">CSGPipe</h3>
+ 	<p><i>CSGPipe</i> creates a cylindrical shape whose z-axis follows a given spline rather
+ than a straight line. All of the settings of CSGRadialCapped apply. The pipe can be open or closed, 
+ and the two end caps can have a different radius. The key parameter is the spline used to generate
+ the z-axis center points for each slice. The slice is expected to be perpendicular to its center point
+ at every interval. Since a single point has no perpendicular, we construct a perpendicular to the 
+ <i>line</i> between the current center point and the next. This means the end cap slices can be 
+ very sensitive to the structure of the spline. To handle some of the oddities, various PipeEnd
+ custom options are supported where:
+ <blockquote>
+ STANDARD - End slice is generated 'normally', perpendicular to the last point of the curve
+<br> PERPENDICULAR - End slice is generated perpendicular to the x/y/z axes
+<br> PERPENDICULAR45 - End slice is generated perpendicular/45degree to the x/y/z axes
+<br> CROPPED - Curve end points do NOT produce a slice, they only influence the last slice normal
+ </blockquote>
+  </p>
+ <p>Another oddity of building slices along a spline rather than a straight line is that due to the
+ bends in the spline, the slices may collide with each other.  This results in a very crumpled looking
+ shape if the spline bends too sharply.  An option to 'smooth' end result is provided.  It does the 
+ best it can to eliminate the slice overlaps.</p>
+	<p>The java entry points configuring the pipe are:</p>
+	<dl>
+		<dt>setSlicePath( Spline pCurve )<dt>
+		<dd>Provide a jme3 Spline that determines the position of each slice center point.</dd>
+		<dt>setSmoothSurface( boolean pFlag )<dt>
+		<dd>If true, scan each slice looking for a collision with its neighbor.  If an overlap
+occurs, take action to adjust the slice to eliminate the collision.</dd>
+		<dt>setPipeEnds( PipeEnds pEnds )<dt>
+		<dd>Control how the ends of the pipe are constructed.</dd>
+	</dl>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGPIPE' 
+            pipeEnds='STANDARD' smoothSurface='false &gt;
+    	&lt;slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator'  arc='PI'/&gt;
+    &lt;/mesh;&gt;
+</pre></code>
+</p>
+ 	
     <h3 id='spline'>CSGSplineGenerator</h3>
-    <p>New </p>
+    <p><i>CSGSplineGenerator</i> is not a shape.  Rather, it is a helper class that can assist
+ in the generation of a spline used by CSGPipe.</p>
 	</div>
  </div>
 	<footer>
