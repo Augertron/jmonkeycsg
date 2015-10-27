@@ -22,7 +22,7 @@
   	<div id="logo">
   		<div id="logo_text">
     		<h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
-    		<h2>Complex shapes built by combining simple primitives</h2>
+    		<h2>Complex 3D shapes built by combining simple primitives</h2>
   		</div>
   	</div>
   	<nav>
@@ -199,7 +199,7 @@ then the surfaces face outward.</dd>
 		<dd>The radius to apply to the back face slice that determines the distance from a vertex to the 
 center. When the radius and back radius differ, it will be adjusted on every slice to produce a smooth
 progression.</dd>
-		<dt>setTextureMode( TextureMode pTextureMode )<dt>
+		<dt>setTextureMode( CSGRadialCapped.TextureMode pTextureMode )<dt>
 		<dd>Set how the texture is applied to the facts.</dd>
 	</dl>
 	<p>The import XML definitions look something like:
@@ -243,7 +243,7 @@ across the equator</blockquote>
 		<dt>setEvenSlices( boolean pFlag )<dt>
 		<dd>If true, generate all equal z-axis steps.  If false, generate more slices near
 the right-angle extremes.</dd>
-		<dt>setTextureMode( TextureMode pTextureMode )<dt>
+		<dt>setTextureMode( CSGSphere.TextureMode pTextureMode )<dt>
 		<dd>Set the texture mode to aplly to the polar caps.</dd>
 	</dl>
 	<p>The import XML definitions look something like:
@@ -280,7 +280,7 @@ the right-angle extremes.</dd>
 		<dt>setSmoothSurface( boolean pFlag )<dt>
 		<dd>If true, scan each slice looking for a collision with its neighbor.  If an overlap
 occurs, take action to adjust the slice to eliminate the collision.</dd>
-		<dt>setPipeEnds( PipeEnds pEnds )<dt>
+		<dt>setPipeEnds( CSGPipe.PipeEnds pEnds )<dt>
 		<dd>Control how the ends of the pipe are constructed.</dd>
 	</dl>
 	<p>The import XML definitions look something like:
@@ -294,7 +294,47 @@ occurs, take action to adjust the slice to eliminate the collision.</dd>
  	
     <h3 id='spline'>CSGSplineGenerator</h3>
     <p><i>CSGSplineGenerator</i> is not a shape.  Rather, it is a helper class that can assist
- in the generation of a spline used by CSGPipe.</p>
+ in the generation of a spline used by CSGPipe.  The spline can be defined by:</p>
+ 		<ul>
+ 			<li>An externally defined instance of Spline</li>
+ 			<li>An explicit set of points</li>
+ 			<li>A set of control points interpreted based on the SplineType selected</li>
+ 			<li>A set of generated points around a circular arc, with an optional height adjustment that 
+ produces a helix rather than a torus.</li>
+ 		</ul>
+ 	<p>The java entry points configuring the pipe are:</p>
+	<dl>
+		<dt>setSpline( Spline pSpline )<dt>
+		<dd>Use the externally produced spline as given.</dd>
+		<dt>setPointList( List<Vector3f> pPointList )<dt>
+		<dd>Use the given set of points rather than a spline.</dd>
+		<dt>setArcRadius( float pRadius )<dt>
+		<dd>Generate an arc of the given radius.</dd>
+		<dt>setArcRadians( float pRadians )<dt>
+		<dd>Generate an arc of the given angle (in radians).  A value of 2Pi will generate
+a complete torus.  A value greater than 2Pi is only meaningful for a helix.</dd>
+		<dt>setArcFirstRadial( float pRadial )<dt>
+		<dd>Generate an arc starting with a point at the given angle (in radians).</dd>
+		<dt>setHelixHeight( float pHeight )<dt>
+		<dd>Generate a helix that spans the given height.</dd>
+ 	</dl>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+    		radius='1.5' arc='PI' firstRadial='PI/4' helix='1.75' /&gt;
+    		
+    &lt;slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator'  
+    		type='Bezier' curveTension='0.5f' cycle='false'&gt;
+        &lt;controlPoints&gt;
+            &lt;com.jme3.math.Vector3f x='0.0' y='0.0' z='1.5'/&gt;
+            &lt;com.jme3.math.Vector3f x='0.45' y='0.0' z='0.75'/&gt;
+            &lt;com.jme3.math.Vector3f x='0.45' y='0.0' z='-0.75'/&gt;
+            &lt;com.jme3.math.Vector3f x='00' y='0.0' z='-1.5'/&gt;
+        &lt;/controlPoints>
+    &lt;/slicePath&gt;
+</pre></code>
+</p>
+ 	
 	</div>
  </div>
 	<footer>

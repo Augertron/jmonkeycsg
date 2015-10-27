@@ -22,7 +22,7 @@
   	<div id="logo">
   		<div id="logo_text">
     		<h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
-    		<h2>Complex shapes built by combining simple primitives</h2>
+    		<h2>Complex 3D shapes built by combining simple primitives</h2>
   		</div>
   	</div>
   	<nav>
@@ -45,6 +45,7 @@
 				<li><a href="#shapes">Primitive Shapes</a></li>
 				<li><a href="#license">License</a></li>
 				<li><a href="#download">Download</a></li>
+				<li><a href="#jme3ide">jMonkey IDE</a></li>
 				<li><a href="#start">Getting Started</a></li>				
 			</ul>
 		</div>
@@ -198,18 +199,36 @@
     <p>
         jMonkeyCSG is managed via a SourceForge project which you can reference 
         <a href="https://sourceforge.net/projects/jmonkeycsg/" target='other'
-        title='SourceForge Project'>here</a>. 
+        title='SourceForge Project'>here</a>. The .jar and .zip files can be 
+        downloaded from <a href="https://sourceforge.net/projects/jmonkeycsg/files/" target='other'
+        title='SourceForge Download Files'>here</a>. 
         All source is available via the SourceForge 
         <a href="https://sourceforge.net/p/jmonkeycsg/code/HEAD/tree/" target='other'
         title='SourceForge Repository'>SVN repository</a>.
     </p>
     
+    <h3 id='jme3ide'>The jMonkey IDE</h3>
+    <p>As I stated earlier, I work in Eclipse, referencing the jme3 source in the main trunk 
+    of the GitHub repository.  This means I am working with the latest jme3 code.
+    I am not familiar with the jMonkey IDE and how to incorporate updates to the core code.
+    So I have provided a CSG .jar file that contains all of my code, and a jMonkey .jar file
+    that contains the trunk jme3 code that I use in Eclipse.  I have gotten the following 
+    to work:</p>
+    <ol>
+    	<li>Pull down the CSG and jMonkey .jar files from the SourceForge <i>files</i> area.</li>
+    	<li>Create a new project in the jMonkey IDE.</li>
+    	<li>In the <i>Libraries</i> section of the project, use <b>Add Jar</b> to include
+the jars you have downloaded.</li>
+		<li>Be sure these new jars are at the bottom of the list.  That way you will be
+referencing only those components needed to run your test.</li>
+		<li>Modify you application initialization to include something like the examples below.</li>
+    </ol> 
+    <p>This will allow you run the CSG process via direct program references.  However, you 
+	will be missing the core changes needed to support the .xml import mechanism.
+<br>For standalone style testing (that does support .xml import), I have also provided a Windows(64bit) zip 
+	file that contains everything needed to run a simple test.</p>
+    
     <h3 id='start'>Getting Started</h3>
-    <p>You can pull the CSG source out of its repository and include it in your project.  As
-    I stated earlier, I work in Eclipse, referencing the jme3 source in the main trunk.
-    I do not know exactly what you need for the standard jMonkey SDK/IDE, but I have provided
-    a CSG .jar file that contains all of my code.  I have also provides a Windows(64bit) zip 
-    file that contains everything needed to run a simple test.</p>
     <p>The simplest example is to add some shapes into a geometry, regenerate that geometry
     and apply a Material, and add the geometry into your scene.</p>
     <code><pre>       
@@ -225,8 +244,10 @@
     	CSGShape aCube = new CSGShape( "Box", new Box(1,1,1) );
     	aGeometry.addShape( aCube, CSGGeometry.CSGOperator.DIFFERENCE );
     	
-    	// Produce the final shape (then add it into your scene)
+    	// Produce the final shape
     	aGeometry.regenerate();
+    	
+    	// Now add aGeometry to your scene
     </pre></code>
     <p>If you want to apply materials to the primitives, and have those materials appear
     on the appropriate surfaces in the final result, do something like the following.</p>
@@ -247,8 +268,10 @@
 
     	aGeometry.addShape( aCylinder, CSGGeonode.CSGOperator.DIFFERENCE );
     	
-    	// Produce the final shape (then add it into your scene)
+    	// Produce the final shape
     	aGeometry.regenerate();
+    	
+    	// Now add aGeometry to your scene
     </pre></code>
     <h3>Test Cases</h3>
     <p>Various test cases are included in the SVN repository, all based on the Savable XML format. For

@@ -161,6 +161,20 @@ public class CSGSplineGenerator
 		setPointList( Arrays.asList( pPointList ) );
 	}
 	
+	/** Accessor to the arc controls */
+	public float getArcRadius() { return mArcRadius; }
+	public void setArcRadius( float pRadius ) { mArcRadius = pRadius; }
+	
+	public float getArcRadians() { return mArcRadians; }
+	public void setArcRadians( float pRadians ) { mArcRadians = pRadians; }
+	
+	public float getArcFirstRadial() { return mArcFirstRadial; }
+	public void setArcFirstRadial( float pRadial ) { mArcFirstRadial = pRadial; }
+	
+	public float getHelixHeight() { return mHelixHeight; }
+	public void setHelixHeight( float pHeight ) { mHelixHeight = pHeight; }
+	
+	
 	/** How many segments are involved? */
 	public List<Float> getSegmentLengths() { return mSegmentLengths; }
 	public int getSegmentCount(
@@ -183,7 +197,7 @@ public class CSGSplineGenerator
 			aDistance = mArcRadius * mArcRadians;
 			
 			if ( mHelixHeight > 0 ) {
-				// When we stretch the circle in y, then it get a litter longer
+				// When we stretch the circle in y, then it get a little longer
 				// length = sqroot( height**2 + circumference**2 )
 				aDistance = FastMath.sqrt( (mHelixHeight * mHelixHeight) + (aDistance * aDistance) );
 			}
