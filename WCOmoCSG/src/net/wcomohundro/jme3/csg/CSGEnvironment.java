@@ -235,6 +235,14 @@ public class CSGEnvironment
 	}
 	public CSGEnvironment(
 		boolean		pDoublePrecision
+	) {
+		this( pDoublePrecision
+			, (pDoublePrecision) 
+				? "net.wcomohundro.jme3.csg.iob.CSGShapeIOB"
+				: "net.wcomohundro.jme3.csg.bsp.CSGShapeBSP" );
+	}
+	public CSGEnvironment(
+		boolean		pDoublePrecision
 	,	String		pHandlerClassName
 	) {
 		mShapeName = "";

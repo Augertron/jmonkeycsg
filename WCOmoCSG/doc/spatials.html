@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<!-- Webpage home for the SourceForge "jMonkeyCSG" project -->
+<head>
+    <title>jMonkey CSG - Constructive Solid Geometry (shapes)</title>
+    <!-- Use a JQuery ThemeRoller theme, in this case 'smoothness' -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="jquery-ui-1.11.2.custom.css">
+
+    <!-- Include the basic JQuery support (core and ui) -->
+    <script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jquery-ui-1.11.2.custom.min.js"></script>
+    
+    <meta name="description" 
+        content="This is a plugin for the jMonkey 3D development environment which supports CSG - Constructive Solid Geometry">
+    <meta name="keywords" 
+        content="jMonkey 3D CSG ConstructiveSolidGeometry">
+</head>
+<body>
+<div id="main">
+  <header>
+  	<div id="logo">
+  		<div id="logo_text">
+    		<h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
+    		<h2>Complex 3D shapes built by combining simple primitives</h2>
+  		</div>
+  	</div>
+  	<nav>
+		<div id="menu_container">
+			<ul id="nav" class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
+				<li><a class="disabled">Spatials</a></li>
+			</ul>
+		</div>
+	</nav>
+  </header>
+  <div id="site_content">
+  	<div id="sidebar_container">
+		<div class="sidebar">
+			<ul>
+				<li><a href="#spatial">CSGSpatial</a></li>
+				<li><a href="#shape">CSGShape</a></li>
+				<li><a href="#environment">CSGEnvironment</a></li>
+				<li><a href="#external">CSGExternal</a></li>		
+			</ul>
+		</div>
+	</div>
+    <div class="content">
+    
+    <p>The design intent behind CSG is to make the processing as logically simple as possible. 
+The underlying <b>CSGSpatial</b> is a standard jme3 <i>Spatial</i> and as such, is added into your
+display scene like any other Spatial. As a Spatial, it can have standard Physics applied to it as 
+well. You start by creating one of the variants of CSGSpatial (<b>CSGGeometry</b>, <b>CSGGeonode</b>,
+<b>CSGLinkNode</b>). </p>
+	<p>You then add add/subtract/intersect some set of solids from this CSGSpatial.  Every solid is 
+represented by <b>CSGShape</b>, which is mainly a CSG-aware wrapper around some arbitrary <i>Mesh</i>.
+This Mesh can be provided by a jme3 primitive (Box, Sphere, ...), a CSG primitive (CSGBox, CSGSphere, ...),
+or anything else that defines Mesh.</p>
+	<p>Once the solids have been blended together into the CSGSpatial, then the CSGSpatial must be 
+explicitly 'regenerated'.  This can be done by a programmatic call to the <i>.regenerate()</i> method, or it
+is inherently done at the end of <b>Savable</b> input processing.</p>
+	<p>The final step is to add the Spatial to your scene, along with any control processing (like 
+Physics) that may be required.  At this point, the CSGSpatial should be no different than any
+other jme3 Spatial you are used to using.</p>
+
+    <h3 id='spatial'>CSGSpatial</h3>
+	<p><i>CSGSpatial</i> is an abstract interface that defines the standard CSG operations. It is
+implemented by:
+		<ul>
+			<li>CSGGeometry - a simple wrapper that supports a single common Material applied to all parts</li>
+			<li>CSGGeonode - a wrapper that maintains a set of Materials, each taken from the various
+shapes blended into this spatial</li>
+			<li>CSGLinkNode - a variant useful for <b>Savable</b> import processing that can provide
+a common environment and/or Material to other CSGSpatials created during the import process, and which 
+can trigger the load of such <i>assets</i>. However, it does nothing with CSGShapes itself.</li>
+		</ul>
+	</p>
+	<p>The common java entry points for CSGSpatial services are:</p>
+	<dl>
+		<dt>addShape( CSGShape pShape )<dt>
+		<dd>Add the given shape into the blend via the <b>UNION</b> operation.</dd>
+		<dt>subtractShape( CSGShape pShape )</dt>
+		<dd>Add the given shape into the blend via the <b>DIFFERENCE</b> operation..</dd>
+		<dt>intersectShape( CSGShape pShape )</dt>
+		<dd>Add the given shape into the blend via the <b>INTERSECTION</b> operation.</dd>
+		<dt>addShape( CSGShape pShape, CSGOperator pOperator )</dt>
+		<dd>Add the given shape into the blend via the explicitly given operation.</dd>
+		<dt>removeShape( CSGShape pShape )</dt>
+		<dd>Remove a previously added shape from the blending process.
+<br><b>NOTE</b> that this is NOT subtract. Once removed, the shape plays no part.</dd>
+		<dt>regenerate( )<dt>
+		<dt>regenerate( CSGEnvironment pEnvironment )<dt>
+		<dd>Apply all the active shape processing and produce a Mesh.  If no explicit 
+<i>CSGEnvironment</i> is provided, then the system standard environment will be used.</dd>
+		<dt>isValid( )<dt>
+		<dd>After regeneration, determine if a valid Mesh was produced or not.</dd>
+		<dt>getShapeRegenerationNS( )<dt>
+		<dd>After regeneration, return a <i>long</i> count of milliseconds it took to produce
+the final Mesh.</dd>
+	</dl>
+	<p>Some entry points defined by <i>Geometry</i> have been added to the CSGSpatial 
+interface so that Materials and LevelOfDetail can be supported uniformly:</p>
+	<dl>
+		<dt>getMaterial()<dt>
+		<dt>setMaterial( Material pMaterial )<dt>
+		<dd>Accessors for controlling the Material that applies to this Spatial.</dd>
+		<dt>getLodLevel()<dt>
+		<dt>setLodLevel( int pLODLevel )<dt>
+		<dd>Accessors for controlling the Level-Of-Detail that applies to this Spatial.</dd>
+	</dl>
+	
+	<p>The import XML definitions look something like:
+<code><pre>
+&lt;net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'&gt;
+    &lt;lights class='com.jme3.light.LightList'&gt;
+        &lt;lights size='1'&gt;
+        	&lt;com.jme3.light.AmbientLight name='ALight' enabled='true'&gt;
+        		&lt;color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/&gt;
+        	&lt;/com.jme3.light.AmbientLight&gt;
+        &lt;/lights&gt;
+    &lt;/lights&gt;
+    &lt;children&gt;
+        &lt;net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCube'
+        			materialName='Textures/Debug/Normals.xml'&gt;
+            &lt;shapes&gt;
+                &lt;net.wcomohundro.jme3.csg.CSGShape name='Box'&gt;
+                    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='1.0'/&gt;
+                &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
+                
+                &lt;net.wcomohundro.jme3.csg.CSGShape name='Sphere' operator='UNION'&gt;
+                    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
+                    	 	axisSamples='64' radialSamples='64' radius='1.2'/&gt;
+                &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
+            &lt;/shapes&gt;
+        &lt;/net.wcomohundro.jme3.csg.CSGGeonode&gt;
+    &lt;/children&gt;
+&lt;/net.wcomohundro.jme3.csg.CSGLinkNode&gt;
+</pre></code>
+</p>
+	
+ 	<h3 id="shape">CSGShape</h3>
+ 	<p><i>CSGShape</i> provides the CSG-aware wrapper around a jme3 Mesh. Programmatically, the heavy
+ lifting all occurs in the constructor, where a CSGShape is build with a name and a Mesh. The shape
+ is then added to a CSGSpatial along with the blending operator.</p>
+ 	<p>From the XML import perspective, the operator is specified on the CSGShape itself. See the
+ example above...</p>
+
+ 	<h3 id="environment">CSGEnvironment</h3>
+ 	<p><i>CSGEnviroment</i> defines the overall configuration parameters that control the CSG
+ process.  It allows you to set various tolerances and options which affect the inner workings 
+ of the shape generation. Unless you are planning on delving very deeply into the CSG code
+ itself, the default setting should work for you.</p>
+ 	<p>By default, the IOB processor (working in double precision) is what is used.  You can
+ flip the entire system to use the BSP processor by including the following in your initialization
+ code (before using any CSG service):
+ <blockquote>CSGEnvironment.sStandardEnvironment = new CSGEnvironment( false );</blockquote>
+
+ 	<h3 id="external">CSGExternal</h3>
+ 	<p><i>CSGExternal</i> is a special extension of CSGShape that supports a <b>Savable</b>
+ import option that loads its Mesh via the AssetManager.loadModel() function.  There is no 
+ programmatic use, it only applies during import.</p>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;net.wcomohundro.jme3.csg.CSGExternal name='Teapot' operator='UNION' 
+        model='Models/Teapot/Teapot.obj' /&gt;
+</pre></code>
+</p>
+
+ 	
+	</div>
+ </div>
+	<footer>
+		<div class='left'>&copy; 2015, W.C.Omohundro, All Rights Reserved</div>
+		<div class='right'><a href="http://www.css3templates.co.uk" 
+		target='other'>-- web design from css3templates.co.uk --</a></div>
+	</footer>
+</div>
+</body>
+</html>

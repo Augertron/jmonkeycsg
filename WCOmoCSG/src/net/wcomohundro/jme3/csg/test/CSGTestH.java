@@ -78,11 +78,11 @@ public class CSGTestH
     	
     	// Start with a sphere
     	CSGShape aSphere = new CSGShape( "Sphere1", new Sphere( 32, 32, 1.3f ) );
-    	aGeometry.addShape( aSphere, CSGGeometry.CSGOperator.UNION );
+    	aGeometry.addShape( aSphere );
 
     	// Subtract out a cube
     	CSGShape aCube = new CSGShape( "Box", new Box(1,1,1) );
-    	aGeometry.addShape( aCube, CSGGeometry.CSGOperator.DIFFERENCE );
+    	aGeometry.substractShape( aCube );
  	
 /******
     	// Load the primary shape

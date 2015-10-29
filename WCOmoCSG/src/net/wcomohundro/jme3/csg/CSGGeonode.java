@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
+
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.bounding.BoundingVolume;
@@ -127,6 +129,26 @@ public class CSGGeonode
 	@Override
 	public long getShapeRegenerationNS() { return mRegenNS; }
 	
+    /** Include a shape */
+	@Override
+    public void addShape(
+    	CSGShape	pShape
+    ) {
+    	addShape( pShape, CSGOperator.UNION );
+    }
+	@Override
+    public void substractShape(
+	    CSGShape	pShape
+	) {
+    	addShape( pShape, CSGOperator.DIFFERENCE );
+    }
+	@Override
+    public void intersectShape(
+	    CSGShape	pShape
+	) {
+    	addShape( pShape, CSGOperator.INTERSECTION );
+    }
+
 	/** Add a shape to this geometry */
 	@Override
 	public void addShape(

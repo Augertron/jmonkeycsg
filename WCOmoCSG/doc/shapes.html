@@ -30,6 +30,7 @@
 			<ul id="nav" class="sf-menu">
 				<li><a href="index.html">Home</a></li>
 				<li><a class="disabled">Shapes</a></li>
+				<li><a href="spatials.html">Spatials</a></li>
 			</ul>
 		</div>
 	</nav>
@@ -48,8 +49,8 @@
 			</ul>
 		</div>
 	</div>
-	
     <div class="content">
+    
     <h3 id='mesh'>CSGMesh</h3>
 	<p><i>CSGMesh</i> defines a common design approach to the CSG shape primitives, as well as
 providing common services to all the concrete shapes. The primitive is essentially built at
@@ -138,8 +139,9 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
 </pre></code>
 </p>
  	<img src="images/CSGBoxes.png" alt="CSGBoxes">
- 	<p>The box on top has had no texture scaling applied.  The box on the bottom has texture 
- scaling applied to four faces to account for the expanded size.</p>
+ 	<p>The box on top has had no texture scaling applied, so the texture is stretched to 
+ cover the expanded size.  The box on the bottom has texture 
+ scaling applied to four faces to account for the size.</p>
  	
  	<h3 id="radial">CSGRadial</h3>
  	<p><i>CSGRadial</i> is an extension to CSGMesh that defines a common design approach to  
@@ -223,6 +225,10 @@ progression.</dd>
             zExtent='3.0' radius='1.1' /&gt;
 </pre></code>
 </p>
+ 	<img src="images/CSGCylinders.png" alt="CSGBoxes">
+ 	<p>The cylinder on the left applies the texture around the circumference.  The cylinder on the 
+ right applies the texture <i>linearly</i>, from front to back.  Both have the 'sides' texture
+ scaled to approximate the pattern on the end caps.</p>
  	
  	<h3 id="sphere">CSGSphere</h3>
  	<p><i>CSGSphere</i> creates a basic sphere shape, based on the setting of 
@@ -252,6 +258,9 @@ the right-angle extremes.</dd>
             zExtent='3.0' radius='1.1' useEvenSlices='false' textureMode='ZAXIS' /&gt;
 </pre></code>
 </p>
+ 	<img src="images/CSGSpheres.png" alt="CSGBoxes">
+ 	<p>The sphere on the left uses the ZAXIS texture mode.  The sphere in the center uses the
+ PROJECTED texture mode. The sphere on the right uses the POLAR texture mode (note the equator).</p>
 	 	 
  	<h3 id="pipe">CSGPipe</h3>
  	<p><i>CSGPipe</i> creates a cylindrical shape whose z-axis follows a given spline rather
@@ -291,6 +300,8 @@ occurs, take action to adjust the slice to eliminate the collision.</dd>
     &lt;/mesh;&gt;
 </pre></code>
 </p>
+ 	<img src="images/CSGPipes.png" alt="CSGBoxes">
+ 	<p>From left to right: spline, torus, helix.</p>
  	
     <h3 id='spline'>CSGSplineGenerator</h3>
     <p><i>CSGSplineGenerator</i> is not a shape.  Rather, it is a helper class that can assist
@@ -334,12 +345,16 @@ a complete torus.  A value greater than 2Pi is only meaningful for a helix.</dd>
     &lt;/slicePath&gt;
 </pre></code>
 </p>
+ 	<img src="images/CSGTwisted.png" alt="CSGBoxes">
+ 	<p>A sample torus, where each slice is scaled in x/y to produce an ellipse, the slices are 
+twisted from front to back, and beginning radius is different from the end radius.</p>
  	
 	</div>
  </div>
 	<footer>
-		<p><a href="http://www.css3templates.co.uk" target='other'>--design from css3templates.co.uk--</a>
-		</p>
+		<div class='left'>&copy; 2015, W.C.Omohundro, All Rights Reserved</div>
+		<div class='right'><a href="http://www.css3templates.co.uk" 
+		target='other'>-- web design from css3templates.co.uk --</a></div>
 	</footer>
 </div>
 </body>

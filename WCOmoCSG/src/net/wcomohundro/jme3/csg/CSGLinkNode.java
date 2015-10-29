@@ -91,6 +91,26 @@ public class CSGLinkNode
 	@Override
 	public long getShapeRegenerationNS() { return mRegenNS; }
 	
+    /** Include a shape */
+	@Override
+    public void addShape(
+    	CSGShape	pShape
+    ) {
+    	addShape( pShape, CSGOperator.UNION );
+    }
+	@Override
+    public void substractShape(
+	    CSGShape	pShape
+	) {
+    	addShape( pShape, CSGOperator.DIFFERENCE );
+    }
+	@Override
+    public void intersectShape(
+	    CSGShape	pShape
+	) {
+    	addShape( pShape, CSGOperator.INTERSECTION );
+    }
+
 	/** Add a shape to this geometry */
 	@Override
 	public void addShape(

@@ -199,8 +199,19 @@ public interface ConstructiveSolidGeometry
 	    public void setLodLevel(
 	    	int		pLODLevel
 	    );
+	    
+	    /** Include a shape */
+	    public void addShape(
+	    	CSGShape	pShape
+	    );
+	    public void substractShape(
+		    CSGShape	pShape
+		);
+	    public void intersectShape(
+		    CSGShape	pShape
+		);
 
-		/** Add a shape to this geometry */
+		/** Add a shape to this geometry with a given boolean operator */
 		public void addShape(
 			CSGShape	pShape
 		,	CSGOperator	pOperator
