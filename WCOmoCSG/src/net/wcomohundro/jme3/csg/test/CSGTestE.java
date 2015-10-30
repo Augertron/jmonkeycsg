@@ -25,6 +25,7 @@
 package net.wcomohundro.jme3.csg.test;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -106,19 +107,28 @@ public class CSGTestE
 	protected AppState		mVideo;
 
 	public CSGTestE(
+		String[]	pArgs
 	) {
-		//super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		super( new FlyCamAppState() );
-		
-		mLoaderThread = new Thread( null, this, "SceneLoader" );
-		mLoaderThread.setPriority( Thread.MIN_PRIORITY );
-		mLoaderThread.setDaemon( true );
-		mLoaderThread.start();
+		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		//super( new FlyCamAppState() );
 		
 		// Initialize the scene list
 		mSceneList = new ArrayList();
 		mSceneList.add( null );		// Start with a blank
-		CSGTestDriver.readStrings( "./CSGTestE.txt", mSceneList, sSceneList );
+
+		if ( pArgs.length == 0 ) {
+			CSGTestDriver.readStrings( "./Assets/Tests/CSGTestE.txt", mSceneList, sSceneList );			
+		} else if ( pArgs.length == 1 ) {
+			CSGTestDriver.readStrings( pArgs[ 0 ], mSceneList, sSceneList );		
+		} else if ( pArgs.length > 1 ) {
+			mSceneList.addAll( Arrays.asList( pArgs ) );
+		}
+		
+		// Start the background thread that loads the scenes
+		mLoaderThread = new Thread( null, this, "SceneLoader" );
+		mLoaderThread.setPriority( Thread.MIN_PRIORITY );
+		mLoaderThread.setDaemon( true );
+		mLoaderThread.start();
 	}
 	
     @Override

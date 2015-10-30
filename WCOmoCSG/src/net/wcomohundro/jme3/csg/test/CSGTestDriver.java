@@ -52,14 +52,14 @@ public class CSGTestDriver
 		
 	    SimpleApplication app;
 	    
-	    //app = new CSGTestA();		// Cube +/- sphere direct calls, no import
-	    //app = new CSGTestB();		// Cube +/- cylinder direct calls, no import
-	    //app = new CSGTestC();		// Teapot +/- cube direct calls, no import
-	    //app = new CSGTestD();		// Export definitions
-	    app = new CSGTestE();		// Cycle through imports listed in CSGTestE.txt
-	    //app = new CSGTestF();		// Cycle through canned import list and apply physics
-	    //app = new CSGTestG();		// Level Of Detail
-	    //app = new CSGTestH();		// Test case for support ticket and raw shapes
+	    //app = new CSGTestA();			// Cube +/- sphere direct calls, no import
+	    //app = new CSGTestB();			// Cube +/- cylinder direct calls, no import
+	    //app = new CSGTestC();			// Teapot +/- cube direct calls, no import
+	    //app = new CSGTestD();			// Export definitions
+	    app = new CSGTestE( args );		// Cycle through imports listed in CSGTestE.txt
+	    //app = new CSGTestF();			// Cycle through canned import list and apply physics
+	    //app = new CSGTestG();			// Level Of Detail
+	    //app = new CSGTestH();			// Test case for support ticket and raw shapes
 	        
 	    app.start();
 	}

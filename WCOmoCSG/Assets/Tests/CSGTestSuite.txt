@@ -1,0 +1,9 @@
+// List of scenes to load for TestE
+//Models/CSGLoadEnvironmentIOB.xml
+//Models/CSGLoadEnvironmentBSP.xml
+
+Models/CSGLoadCSGNormalTests.xml
+Models/CSGLoadNonMultiTexture.xml
+Models/CSGLoadMultiTexture.xml
+Models/CSGLoadLightedCorridor.xml
+Models/CSGLoadCSGSamples.xml
