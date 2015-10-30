@@ -33,6 +33,7 @@ package net.wcomohundro.jme3.csg.iob;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -84,7 +85,11 @@ public class CSGRay
 		
 		Vector3d dCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd5 );
 		double d = dCrossAB.dot( dCrossAB );
-		
+		double multiplier = nA / d;
+		if ( Double.isNaN( multiplier ) || Double.isInfinite( multiplier ) ) {
+			// Somehow, we did not properly intersect (possibly the line segments are too short?)
+			return( null );
+		}
 		pResult = vA2minusA1.mult( nA / d, pResult );
 		pResult.addLocal( pLineAPoint1 );
 		
@@ -134,8 +139,10 @@ public class CSGRay
 	,	CSGEnvironment	pEnvironment
 	) {
 		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
-		Vector3d normalFace1 = pFace1.getNormal();
-		Vector3d normalFace2 = pFace2.getNormal();
+		CSGPlaneDbl planeFace1 = pFace1.getPlane();
+		CSGPlaneDbl planeFace2 = pFace2.getPlane();
+		Vector3d normalFace1 = planeFace1.getNormal();
+		Vector3d normalFace2 = planeFace2.getNormal();
 		
 		// Direction: the cross product of the normals from the faces
 		mDirection = normalFace1.cross( normalFace2 );
@@ -144,10 +151,13 @@ public class CSGRay
 		if ( mDirection.length() > tolerance ) {
 			// Getting a line point, zero is set to a coordinate whose direction 
 			// component isn't zero (line intersecting its origin plan)
-			Vector3d position1 = pFace1.v1().getPosition();
-			Vector3d position2 = pFace2.v1().getPosition();
-			double d1 = -(normalFace1.x*position1.x + normalFace1.y*position1.y + normalFace1.z*position1.z);
-			double d2 = -(normalFace2.x*position2.x + normalFace2.y*position2.y + normalFace2.z*position2.z);
+//			Vector3d position1 = pFace1.v1().getPosition();
+//			Vector3d position2 = pFace2.v1().getPosition();
+//			double d1 = -(normalFace1.x*position1.x + normalFace1.y*position1.y + normalFace1.z*position1.z);
+//			double d2 = -(normalFace2.x*position2.x + normalFace2.y*position2.y + normalFace2.z*position2.z);
+			
+			double d1 = -planeFace1.getDot();
+			double d2 = -planeFace2.getDot();
 
 			mOrigin = new Vector3d();
 			if ( Math.abs(mDirection.x) > tolerance ) {

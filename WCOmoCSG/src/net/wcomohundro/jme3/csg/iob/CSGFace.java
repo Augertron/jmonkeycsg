@@ -439,6 +439,10 @@ public class CSGFace
 											, pNewPosition, v3().getPosition()
 											, pTempVars.vectd6
 											, pTempVars, pEnvironment );
+			if ( pointOnEdge == null ) {
+				// Something not right about this intersection... Possibly things are too close
+				return( null );
+			}
 			// Figure out the vertex on the edge
 			newVertex = new CSGVertexIOB( v1(), v2(), pointOnEdge, pTempVars, pEnvironment );
 			

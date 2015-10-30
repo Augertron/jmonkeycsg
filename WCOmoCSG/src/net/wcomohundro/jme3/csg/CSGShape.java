@@ -39,6 +39,7 @@ import java.util.List;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+import net.wcomohundro.jme3.math.CSGTransform;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -394,6 +395,13 @@ public class CSGShape
 	        		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
 	        	}
 	        }
+		}
+		if ( localTransform == Transform.IDENTITY ) {
+			// No explicit transform, look for a proxy
+			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
+			if ( proxyTransform != null ) {
+				localTransform = proxyTransform.getTransform();
+			}
 		}
 	}
 

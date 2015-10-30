@@ -112,12 +112,15 @@ public class CSGSolid
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
+		// Use the 'on plane' epsilon to determine if the points are so close that no meaningful
+		// face will be built.
+		// We expect the 'on plane' epsilon to be a bit larger than the 'between points' epsilon
 		if ( CSGEnvironment
-				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
+				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
 		|| CSGEnvironment
-				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
+				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
 		|| CSGEnvironment
-				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonOnPlaneDbl ) ) {
 			// The face is too small to be pertinent, so if another face is added, 
 			// just overuse the given slot
 			return( pFaceIndex );
@@ -129,12 +132,16 @@ public class CSGSolid
 				if ( pFaceIndex < 0 ) {
 					// Simple add to the end
 					mFaces.add( aFace );
+					
+					// Track another face appended to the end
+					return( pFaceIndex -1 );
 				} else {
 					// Overwrite the slot given
 					mFaces.set( pFaceIndex, aFace );
+					
+					// Force first append on the next add
+					return( -1 );
 				}
-				// Force an append to the list on the next add
-				return( -1 );
 			} else {
 				// A face is invalid if no plane could be determined -- in other words, the
 				// vertices are in a line
@@ -187,9 +194,17 @@ public class CSGSolid
 		//	NOTE that we iterate with an index, since we dynamically adjust 'i'
 		//		 as a face is split.  This also means that mFaces.size() must
 		//		 be refreshed for testing on each iteration.
-		for( int i = 0; i < mFaces.size(); i += 1 ) {
+		int incrementer = 1;
+		CSGFace priorOverlapFace = null;
+		for( int i = 0; i < mFaces.size(); i += incrementer ) {
 			CSGFace face1 = mFaces.get( i );
-			
+			if ( incrementer > 0 ) {
+				// We have changed faces
+				priorOverlapFace = null;
+			} else {
+				// Secondary pass on the same face
+				incrementer = 1;
+			}
 			// Reset the face/vertices status for later classification
 			face1.resetStatus();
 				
@@ -235,10 +250,16 @@ public class CSGSolid
 										// A face can be split into 2 - 5 subfaces, based on how they collide
 										if ( splitFace( i, segment1, segment2, pTempVars, pEnvironment ) ) {
 											// Splitting a face removes it from its current "i" position in
-											// the list, and adds the new faces to the end.
-											// This means the next face has slid up into the "i" slot
-											i -= 1;
-											
+											// the list, and replaces it with something new that needs checking
+											incrementer = 0;
+											if ( face2 == priorOverlapFace ) {
+												// We seem to be spinning our wheels reworking the same
+												// face over and over
+												throw new IllegalStateException( "infinite split" );
+											} else {
+												// Remember what we collided with
+												priorOverlapFace = face2;
+											}
 											// Recheck with a new 'face1'
 											break;
 										}
@@ -308,7 +329,7 @@ public class CSGSolid
 			
 			// The other segment collision point is not pertinent.  The face segment can
 			// tell us if an edge is involved or not
-			startCollision = pFaceSegment.getOtherCollision( pOtherSegment, startPos );
+			startCollision = pFaceSegment.getOtherCollision( pOtherSegment, startPos, pEnvironment );
 		} else {
 			// This face segment start is deeper, so it determines the start point
 			startPos = pFaceSegment.getStartPosition();
@@ -320,7 +341,7 @@ public class CSGSolid
 			
 			// The other segment collision point is not pertinent.  The face segment can
 			// tell us if an edge is involved or not
-			endCollision = pFaceSegment.getOtherCollision( pOtherSegment, endPos );
+			endCollision = pFaceSegment.getOtherCollision( pOtherSegment, endPos, pEnvironment );
 		} else {
 			// This face segment end is deeper, to it determines the end point
 			endPos = pFaceSegment.getEndPosition();
@@ -510,6 +531,10 @@ public class CSGSolid
 		if ( pFaceIndex >= 0 ) {
 			// Nothing actually added, but the original is still in its slot and must be eliminated
 			mFaces.remove( pFaceIndex );
+		} if ( pFaceIndex == -1 ) {
+			// We replaced one face with a single other face, it was not a true split.
+			// The question is, do we need to scan that new face as well????
+			return( true );	// For now, recheck the face we just replaced
 		}
 		return( true );
 	}
@@ -731,7 +756,10 @@ public class CSGSolid
 	,	CSGEnvironment		pEnvironment
 	) {	
 		CSGVertexIOB vertex = addVertex( pCenterPoint, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
-				
+		if ( vertex == null ) {
+			// No valid interior point was generated
+			return( pFaceIndex );
+		}
 		//               V2
 		//
 		//           
@@ -758,6 +786,10 @@ public class CSGSolid
 	) {
 		CSGVertexIOB vtxEdge = addVertex( pPositionOnEdge, pFace, pEdgeCollision, pTempVars, pEnvironment );
 		CSGVertexIOB vtxCenter = addVertex( pPositionOnFace, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
+		if ( vtxCenter == null ) {
+			// No valid interior point was generated
+			return( pFaceIndex );
+		}
 		
 		switch( pEdgeCollision ) {
 		case EDGE12:
@@ -817,7 +849,10 @@ public class CSGSolid
 	) {
 		CSGVertexIOB vertex1 = addVertex( pNewPosition1, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
 		CSGVertexIOB vertex2 = addVertex( pNewPosition2, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
-			
+		if ( (vertex1 == null) || (vertex2 == null) ) {
+			// No valid interior point was generated
+			return( pFaceIndex );
+		}			
 		switch( pPickVertex ) {
 		case V1:
 			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );

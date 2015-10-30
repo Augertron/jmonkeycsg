@@ -216,8 +216,9 @@ public class CSGSegment
 	 	(which I am not absolutely convinced is necessary, but we will keep it for now)
 	 */
 	public CSGFaceCollision getOtherCollision(
-		CSGSegment	pOtherSegment
-	,	Vector3d	pOtherPosition
+		CSGSegment		pOtherSegment
+	,	Vector3d		pOtherPosition
+	,	CSGEnvironment	pEnvironment
 	) {
 		// Look for this segment along an edge, and if so, look for a vertex
 		CSGFaceCollision aCollision = mStartCollision.getEdge( mEndCollision );
@@ -225,28 +226,58 @@ public class CSGSegment
 		case EDGE12:
 			if ( pOtherSegment.isEdgeCollision() ) {
 				aCollision = CSGFaceCollision.NONE;		// Strictly edge to edge, not interesting
-			} else if ( pOtherPosition.equals( mFace.v1().getPosition() ) ) {
+			} else if ( CSGEnvironment.equalVector3d( pOtherPosition
+													,	mFace.v1().getPosition()
+													, 	pEnvironment.mEpsilonBetweenPointsDbl) ) {
 				aCollision = CSGFaceCollision.V1;
-			} else if ( pOtherPosition.equals( mFace.v2().getPosition() ) ) {
+			} else if ( CSGEnvironment.equalVector3d( pOtherPosition
+													,	mFace.v2().getPosition()
+													, 	pEnvironment.mEpsilonBetweenPointsDbl) ) {
 				aCollision = CSGFaceCollision.V2;
 			}
 			break;
+			
 		case EDGE23:
 			if ( pOtherSegment.isEdgeCollision() ) {
 				aCollision = CSGFaceCollision.NONE;		// Strictly edge to edge, not interesting
-			} else if ( pOtherPosition.equals( mFace.v2().getPosition() ) ) {
+			} else if ( CSGEnvironment.equalVector3d( pOtherPosition
+												,	mFace.v2().getPosition()
+												, 	pEnvironment.mEpsilonBetweenPointsDbl) ) {
 				aCollision = CSGFaceCollision.V2;
-			} else if ( pOtherPosition.equals( mFace.v3().getPosition() ) ) {
+			} else if ( CSGEnvironment.equalVector3d( pOtherPosition
+													,	mFace.v3().getPosition()
+													, 	pEnvironment.mEpsilonBetweenPointsDbl) ) {
 				aCollision = CSGFaceCollision.V3;
 			}
 			break;
+			
 		case EDGE31:
 			if ( pOtherSegment.isEdgeCollision() ) {
 				aCollision = CSGFaceCollision.NONE;		// Strictly edge to edge, not interesting
-			} else if ( pOtherPosition.equals( mFace.v3().getPosition() ) ) {
+			} else if ( CSGEnvironment.equalVector3d( pOtherPosition
+													,	mFace.v3().getPosition()
+													, 	pEnvironment.mEpsilonBetweenPointsDbl) ) {
 				aCollision = CSGFaceCollision.V3;
-			} else if ( pOtherPosition.equals( mFace.v1().getPosition() ) ) {
+			} else if ( CSGEnvironment.equalVector3d( pOtherPosition
+													,	mFace.v1().getPosition()
+													, 	pEnvironment.mEpsilonBetweenPointsDbl) ) {
 				aCollision = CSGFaceCollision.V1;
+			}
+			break;
+			
+		case INTERIOR:
+			// The given 'other' position looks like it is interior to this face. If it coincides
+			// with a known segment position, then we have better info
+			if ( CSGEnvironment.equalVector3d( mStartPosition
+												, pOtherPosition
+												, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+				// Since we matched this segment's start position, we can use its start status
+				aCollision = mStartCollision;
+			} else if ( CSGEnvironment.equalVector3d( mEndPosition
+												, pOtherPosition
+												, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+				// Since we matched this segment's end position, we can use its end status
+				aCollision = mEndCollision;
 			}
 			break;
 		}
@@ -333,7 +364,7 @@ public class CSGSegment
 			// No other points have yet been defined
 			mStartCollision = pCollision;
 			mStartPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
-			mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment);
+			mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment );
 			return( 1 );
 			
 		case 1:
@@ -374,8 +405,8 @@ public class CSGSegment
 	@Override
 	public String toString(
 	) {
-		return( "Seg:\t" + mStartPosition + "/" + mStartCollision 
-				 + "\n\t" + mEndPosition + "/" + mEndCollision );
+		return( "Seg:\t" + mStartPosition + "/" + mStartCollision + " : " + mStartDist
+				 + "\n\t" + mEndPosition + "/" + mEndCollision + " : " + mEndDist );
 	}
 
 
