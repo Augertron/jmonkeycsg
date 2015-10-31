@@ -11,7 +11,7 @@
         		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
         	</com.jme3.light.AmbientLight>
         	<com.jme3.light.PointLight name='BLight' enabled='true'>
-        		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='0.5' b='0' a='1'/>
         		<position class='com.jme3.math.Vector3f' x='20.0' y='20.0' z='30.0'/>>
         	</com.jme3.light.PointLight>
         </lights>
@@ -21,8 +21,8 @@
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
         		singleMaterial='false' 
         		generateTangentBinormal='true'
-        		materialName='Textures/Rock/Rock2Rpt.xml'>
-        		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml'-->
+        		materialName='Textures/Rock/Rock1NormalRpt.xml'>
+        		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
         		<!-- materialName='Textures/Debug/Normals.xml' -->
         		<!-- materialName='Textures/Debug/Wireframe.xml' -->
             <transform class='com.jme3.math.Transform'>

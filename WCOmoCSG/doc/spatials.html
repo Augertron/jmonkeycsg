@@ -96,7 +96,7 @@ can trigger the load of such <i>assets</i>. However, it does nothing with CSGSha
 		<dt>isValid( )<dt>
 		<dd>After regeneration, determine if a valid Mesh was produced or not.</dd>
 		<dt>getShapeRegenerationNS( )<dt>
-		<dd>After regeneration, return a <i>long</i> count of milliseconds it took to produce
+		<dd>After regeneration, return a <i>long</i> count of nanoseconds it took to produce
 the final Mesh.</dd>
 	</dl>
 	<p>Some entry points defined by <i>Geometry</i> have been added to the CSGSpatial 
@@ -132,6 +132,9 @@ interface so that Materials and LevelOfDetail can be supported uniformly:</p>
                 &lt;net.wcomohundro.jme3.csg.CSGShape name='Sphere' operator='UNION'&gt;
                     &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'
                     	 	axisSamples='64' radialSamples='64' radius='1.2'/&gt;
+                    &lt;transform class='com.jme3.math.Transform'&gt;
+                        &lt;translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/&gt;
+                    &lt;/transform&gt;
                 &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
             &lt;/shapes&gt;
         &lt;/net.wcomohundro.jme3.csg.CSGGeonode&gt;
@@ -146,6 +149,23 @@ interface so that Materials and LevelOfDetail can be supported uniformly:</p>
  is then added to a CSGSpatial along with the blending operator.</p>
  	<p>From the XML import perspective, the operator is specified on the CSGShape itself. See the
  example above...</p>
+ 	<p>You will frequently use a <i>Transform</i> within the CSGShape definition to position, rotate,
+ and/or scale the item before it is included within the blend. The <i>translation</i> and 
+ <i>scaling</i> vectors are quite easy to understand and adjust.  But the <i>rotation</i> Quaternion 
+ XML is based on the internal x/y/z/w values which are rather meaningless to human eyes. To make
+ the XML more meaningful, you can use CSGTransform and CSGQuaternion.  CSGTransform will accept
+ a rotation as either a 'com.jme3.math.Quaternion' definition or a 'net.wcomohundro.jme3.math.CSGQuaternion'
+ definition. With the CSGQuaternion, you specify pitch/yawl/roll in radian degrees.  You can also
+ use the PI construct and write <b>pitch="PI/2"</b> to pitch the shape 90 degrees around the X-axis.
+ 	</p>
+	<p>The import XML definition for the CSGShape transform can look like:
+<code><pre>
+        &lt;csgtransform class='net.wcomohundro.jme3.math.CSGTransform'&gt;
+            &lt;translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/&gt;
+            &lt;scale class='com.jme3.math.Vector3f' x='0' y='0' z='0'/&gt;
+            &lt;rot class='net.wcomohundro.jme3.math.CSGQuaternion' yawl='PI/2' pitch='PI/32' roll='PI'/&gt;
+        &lt;/csgtransform&gt;
+</pre></code>
 
  	<h3 id="environment">CSGEnvironment</h3>
  	<p><i>CSGEnviroment</i> defines the overall configuration parameters that control the CSG
