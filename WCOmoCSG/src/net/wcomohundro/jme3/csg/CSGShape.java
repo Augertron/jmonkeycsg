@@ -35,7 +35,10 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
@@ -78,6 +81,11 @@ import com.jme3.util.TempVars;
  	use at this time. The underlying Material applied to a shape is retained during the
  	boolean operation, so that the final shape may have faces with differing materials.
  	
+ 	In addition, CSGShape supports the idea of a Mesh with multiple Materials.  Normal
+ 	JME3 meshes have no Material information.  But the primitive CSG shapes support assigning
+ 	different materials to different faces.  Therefore, if CSGShape can figure out how
+ 	mutlitple materials are assigned, then it keeps track of them.
+ 	
  	The boolean processing is based on either:
  	
  	1)	BinarySpacePartitioning - where the polygons of a shape are sorted into front/back
@@ -117,26 +125,26 @@ public class CSGShape
 		
 		/** Add a shape into this one */
 		public CSGShape union(
-			CSGShape		pOtherShape
-		,	Number			pOtherMaterialIndex
-		,	CSGTempVars		pTempVars
-		,	CSGEnvironment	pEnvironment
+			CSGShape			pOtherShape
+		,	CSGMaterialManager	pMaterialManager
+		,	CSGTempVars			pTempVars
+		,	CSGEnvironment		pEnvironment
 		);
 		
 		/** Subtract a shape from this one */
 		public CSGShape difference(
-			CSGShape		pOtherShape
-		,	Number			pOtherMaterialIndex
-		,	CSGTempVars		pTempVars
-		,	CSGEnvironment	pEnvironment
+			CSGShape			pOtherShape
+		,	CSGMaterialManager	pMaterialManager
+		,	CSGTempVars			pTempVars
+		,	CSGEnvironment		pEnvironment
 		);
 
 		/** Find the intersection with another shape */
 		public CSGShape intersection(
-			CSGShape		pOtherShape
-		,	Number			pOtherMaterialIndex
-		,	CSGTempVars		pTempVars
-		,	CSGEnvironment	pEnvironment
+			CSGShape			pOtherShape
+		,	CSGMaterialManager	pMaterialManager
+		,	CSGTempVars			pTempVars
+		,	CSGEnvironment		pEnvironment
 		);
 		
 		/** Produce the mesh(es) that corresponds to this shape
@@ -144,9 +152,10 @@ public class CSGShape
 		 	Every other mesh (if present) applies solely to a specific Material.
 		  */
 		public List<Mesh> toMesh(
-			int				pMaxMaterialIndex
-		,	CSGTempVars		pTempVars
-		,	CSGEnvironment	pEnvironment
+			int					pMaxMaterialIndex
+		,	CSGMaterialManager	pMaterialManager
+		,	CSGTempVars			pTempVars
+		,	CSGEnvironment		pEnvironment
 		);
 
 	}
@@ -201,8 +210,6 @@ public class CSGShape
 	protected CSGGeometry.CSGOperator	mOperator;
 	/** Arbitrary 'ordering' of operations within the geometry */
 	protected int						mOrder;
-	/** Index that selects a custom material */
-	protected Integer					mMaterialIndex;
 
 	
 	/** Generic constructor */
@@ -246,12 +253,12 @@ public class CSGShape
 	@Override
 	public CSGShape clone(
 	) {
-		return( clone( 0, this.getLodLevel(), CSGEnvironment.sStandardEnvironment ) );
+		return( clone( null, this.getLodLevel(), CSGEnvironment.sStandardEnvironment ) );
 	}
 	public CSGShape clone(
-		Integer			pMaterialIndex
-	,	int				pLODLevel
-	,	CSGEnvironment	pEnvironment
+		CSGMaterialManager	pMaterialManager
+	,	int					pLODLevel
+	,	CSGEnvironment		pEnvironment
 	) {
 		CSGShape aClone;
 		
@@ -264,7 +271,6 @@ public class CSGShape
 			aClone = new CSGShape( this.getName(), this.mOrder );
 		}
 		aClone.setOperator( mOperator );
-		aClone.setMaterialIndex( pMaterialIndex );
 //		aClone.setLodLevel( pLODLevel );
 		
 		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
@@ -291,6 +297,16 @@ public class CSGShape
 		
 	/** The shape knows if it is 'valid' or not */
 	public boolean isValid() { return true; }
+	
+	/** Accessor to the material that applies to the given surface */
+	public Integer getMaterialIndex(
+		CSGMaterialManager	pMaterialManager
+	,	int					pFaceIndex
+	) {
+		// Base the index on the underlying material
+		Integer anIndex = pMaterialManager.resolveMaterialIndex( this.getMaterial() );
+		return( anIndex );
+	}
 
 	/** Accessor to the operator */
 	public CSGGeometry.CSGOperator getOperator() { return mOperator; }
@@ -307,43 +323,35 @@ public class CSGShape
 	) {
 		mOrder = pOrder;
 	}
-
-	/** Accessor to the custom material index */
-	public Integer getMaterialIndex() { return mMaterialIndex; }
-	public void setMaterialIndex(
-		Integer		pMaterialIndex
-	) {
-		mMaterialIndex = pMaterialIndex;
-	}
-
+	
 	/** Add a shape into this one */
 	public CSGShape union(
-		CSGShape		pOtherShape
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOtherShape
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
-		return( getHandler( pEnvironment ).union( pOtherShape, pOtherMaterialIndex, pTempVars, pEnvironment ) );
+		return( getHandler( pEnvironment ).union( pOtherShape, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 	
 	/** Subtract a shape from this one */
 	public CSGShape difference(
 		CSGShape		pOtherShape
-	,	Number			pOtherMaterialIndex
+	,	CSGMaterialManager	pMaterialManager
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		return( getHandler( pEnvironment ).difference( pOtherShape, pOtherMaterialIndex, pTempVars, pEnvironment ) );
+		return( getHandler( pEnvironment ).difference( pOtherShape, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 
 	/** Find the intersection with another shape */
 	public CSGShape intersection(
-		CSGShape		pOtherShape
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOtherShape
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
-		return( getHandler( pEnvironment ).intersection( pOtherShape, pOtherMaterialIndex, pTempVars, pEnvironment ) );
+		return( getHandler( pEnvironment ).intersection( pOtherShape, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 
 	/** Produce the mesh(es) that corresponds to this shape
@@ -351,11 +359,12 @@ public class CSGShape
 	 	Every other mesh (if present) applies solely to a specific Material.
 	  */
 	public List<Mesh> toMesh(
-		int				pMaxMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		int					pMaxMaterialIndex
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
-		return( getHandler( pEnvironment ).toMesh( pMaxMaterialIndex, pTempVars, pEnvironment ) );
+		return( getHandler( pEnvironment ).toMesh( pMaxMaterialIndex, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 		
 	

@@ -22,10 +22,6 @@
 	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-	
-	Logic and Inspiration taken from https://github.com/andychase/fabian-csg 
-	and http://hub.jmonkeyengine.org/users/fabsterpal, which apparently was taken from 
-	https://github.com/evanw/csg.js
 **/
 package net.wcomohundro.jme3.math;
 

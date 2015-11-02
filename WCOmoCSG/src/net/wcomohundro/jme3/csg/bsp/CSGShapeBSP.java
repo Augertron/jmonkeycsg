@@ -41,6 +41,7 @@ import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGGeometry;
+import net.wcomohundro.jme3.csg.CSGMaterialManager;
 import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGPlaneFlt;
 import net.wcomohundro.jme3.csg.CSGPolygon;
@@ -356,21 +357,19 @@ public class CSGShapeBSP
 	
 	/** Accessor to the list of polygons */
 	protected List<CSGPolygon> getPolygons(
-		Number			pMaterialIndex
-	,	int				pLevelOfDetail
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGMaterialManager	pMaterialManager
+	,	int					pLevelOfDetail
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) { 
 		if ( mPolygons.isEmpty() && (mShape.getMesh() != null) ) {
 			// Generate the polygons
-			mShape.setMaterialIndex( (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue() );
-			mPolygons = fromMesh( mShape.getMesh(), mShape.getLocalTransform(), pLevelOfDetail, pTempVars, pEnvironment );
-			
-		} else if ( !mPolygons.isEmpty() 
-				&& (pMaterialIndex != null)
-				&& (mShape.getMaterialIndex() != pMaterialIndex.intValue()) ) {
-			// We have polygons, but a different custom material is desired
-			throw new IllegalArgumentException( "CSGShape invalid change-of-material" );
+			mPolygons = fromMesh( mShape.getMesh()
+									, mShape.getLocalTransform()
+									, pMaterialManager
+									, pLevelOfDetail
+									, pTempVars
+									, pEnvironment );
 		}
 		return mPolygons; 
 	}
@@ -378,18 +377,18 @@ public class CSGShapeBSP
 	/** Add a shape into this one */
 	@Override
 	public CSGShape union(
-		CSGShape		pOther
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOther
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
 		CSGPartition a = new CSGPartition( this
-											, this.getPolygons( mShape.getMaterialIndex(), 0, pTempVars, pEnvironment )
+											, this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
 											, pEnvironment );
 		CSGPartition b = new CSGPartition( otherBSP
-											, otherBSP.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
+											, otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
 											, pEnvironment  );
 		
@@ -409,18 +408,18 @@ public class CSGShapeBSP
 	/** Subtract a shape from this one */
 	@Override
 	public CSGShape difference(
-		CSGShape		pOther
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOther
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
 		CSGPartition a = new CSGPartition( this
-											, this.getPolygons( mShape.getMaterialIndex(), 0, pTempVars, pEnvironment )
+											, this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
 											, pEnvironment  );
 		CSGPartition b = new CSGPartition( otherBSP
-											, otherBSP.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
+											, otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
 											, pEnvironment  );
 		
@@ -442,18 +441,18 @@ public class CSGShapeBSP
 	/** Find the intersection with another shape */
 	@Override
 	public CSGShape intersection(
-		CSGShape		pOther
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOther
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
 		CSGPartition a = new CSGPartition( this
-											, this.getPolygons( mShape.getMaterialIndex(), 0, pTempVars, pEnvironment )
+											, this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
 											, pEnvironment  );
 	    CSGPartition b = new CSGPartition( otherBSP
-	    									, otherBSP.getPolygons( pOtherMaterialIndex, 0, pTempVars, pEnvironment )
+	    									, otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
 											, pEnvironment  );
 		
@@ -473,11 +472,12 @@ public class CSGShapeBSP
 
 	/** Produce the set of polygons that correspond to a given mesh */
 	protected List<CSGPolygon> fromMesh(
-		Mesh			pMesh
-	,	Transform		pTransform
-	,	int				pLevelOfDetail
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		Mesh				pMesh
+	,	Transform			pTransform
+	,	CSGMaterialManager	pMaterialManager
+	,	int					pLevelOfDetail
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		// Convert the mesh in to appropriate polygons
 	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
@@ -514,7 +514,7 @@ public class CSGShapeBSP
 		}
 		// Work from 3 points which define a triangle
 		List<CSGPolygon> polygons = new ArrayList<CSGPolygon>( idxBuffer.size() / 3 );
-		for (int i = 0; i < idxBuffer.size(); i += 3) {
+		for( int i = 0, j = 0; i < idxBuffer.size(); i += 3, j += 1 ) {
 			int idx1 = idxBuffer.get(i);
 			int idx2 = idxBuffer.get(i + 1);
 			int idx3 = idxBuffer.get(i + 2);
@@ -570,8 +570,11 @@ public class CSGShapeBSP
 			aVertexList[2] = CSGVertex.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment );
 			
 			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
-			int polyCount
-				= addPolygon( polygons, aVertexList, mShape.getMaterialIndex(), pTempVars, pEnvironment );
+			int polyCount = addPolygon( polygons
+										, aVertexList
+										, mShape.getMaterialIndex( pMaterialManager, j )
+										, pTempVars
+										, pEnvironment );
 		}
 		return( polygons );
 	}
@@ -582,13 +585,14 @@ public class CSGShapeBSP
 	  */
 	@Override
 	public List<Mesh> toMesh(
-		int				pMaxMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		int					pMaxMaterialIndex
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
 		
-		List<CSGPolygon> aPolyList = getPolygons( null, 0, pTempVars, pEnvironment );
+		List<CSGPolygon> aPolyList = getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
 		int anEstimateVertexCount = aPolyList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );

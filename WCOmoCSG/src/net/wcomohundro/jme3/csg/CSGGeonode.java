@@ -88,8 +88,6 @@ public class CSGGeonode
 	public static final String sCSGGeonodeRevision="$Rev$";
 	public static final String sCSGGeonodeDate="$Date$";
 
-	/** A canned zero */
-	protected static final Integer sGenericMaterialIndex = new Integer( 0 );
 	
 	/** The master geometry/mesh that describes the overall shape */
 	protected CSGGeometry		mMasterGeometry;
@@ -207,48 +205,9 @@ public class CSGGeonode
 			long startTimer = System.nanoTime();
 			
 			// Prepare for custom materials
-			Map materialMap = null;
-			Integer materialIndex;
-			int materialCountDef = 0;
-			if ( !mForceSingleMaterial ) {
-				// Construct the map of all materials in use, in order of definition.
-				// NOTE that since operator has no effect, it is possible to define extra/special
-				//		material via the SKIP operator.
-				for( CSGShape aShape : mShapes ) {
-					Material aMaterial = aShape.getMaterial();
-					if ( aMaterial != null ) {
-						// Locate cached copy of the material
-						AssetKey materialKey = aMaterial.getKey();
-						
-						if ( materialMap == null ) {
-							// No other custom materials - this becomes the first
-							materialMap = new HashMap( 17 );
-							
-							materialIndex = new Integer( ++materialCountDef );
-							if ( materialKey != null ) materialMap.put( materialKey, materialIndex );
-							materialMap.put( materialIndex, aMaterial );
-							
-							// Include the 'generic' material as well as index zero
-							if ( this.mMaterial != null ) {
-								materialKey =  this.mMaterial.getKey();
-								if ( materialKey != null ) materialMap.put( materialKey, sGenericMaterialIndex );
-								materialMap.put( sGenericMaterialIndex, this.mMaterial );
-							}
-							
-						} else if ( (materialKey != null) && materialMap.containsKey( materialKey ) ) {
-							// Use the material already found
-							materialIndex = (Integer)materialMap.get( materialKey );
-							
-						} else {
-							// Add this custom material into the list
-							materialIndex = new Integer( ++materialCountDef );
-							if ( materialKey != null ) materialMap.put( materialKey, materialIndex );
-							materialMap.put( materialIndex, aMaterial );
-						}
-						aShape.setMaterialIndex( materialIndex );
-					}
-				}
-			}
+			CSGMaterialManager materialManager 
+				= new CSGMaterialManager( this.getMaterial(), mForceSingleMaterial );
+
 			// Sort the shapes as needed by their handler
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
 			
@@ -258,24 +217,15 @@ public class CSGGeonode
 				// Operate on each shape in turn, blending it into the common
 				CSGShape aProduct = null;
 				for( CSGShape aShape : sortedShapes ) {
-					// Any special Material?
-					Material aMaterial = (mForceSingleMaterial) ? null : aShape.getMaterial();
-					if ( aMaterial != null ) {
-						// Locate cached copy of the material
-						materialIndex = aShape.getMaterialIndex();
-					} else {
-						// No custom material
-						materialIndex = null;
-					}
 					// Apply the operator
 					switch( aShape.getOperator() ) {
 					case UNION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialIndex, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.union( aShape, materialIndex, tempVars, pEnvironment );
+							aProduct = aProduct.union( aShape, materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -284,17 +234,17 @@ public class CSGGeonode
 							// NO PLACE TO START
 						} else {
 							// Blend together
-							aProduct = aProduct.difference( aShape, materialIndex, tempVars, pEnvironment );
+							aProduct = aProduct.difference( aShape, materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case INTERSECTION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialIndex, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.intersection( aShape, materialIndex, tempVars, pEnvironment );
+							aProduct = aProduct.intersection( aShape, materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -310,7 +260,10 @@ public class CSGGeonode
 					// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
 					//  and the 'one' mesh is the one that corresponds to the generic material)
 					List<Mesh> meshList 
-						= aProduct.toMesh( (materialMap == null) ? 0 : materialCountDef, tempVars, pEnvironment );
+						= aProduct.toMesh( materialManager.getMaterialCount()
+											, materialManager
+											, tempVars
+											, pEnvironment );
 					if ( !meshList.isEmpty() ) {
 						// Use the 'zero' mesh to describe the overall geometry
 						mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );
@@ -325,7 +278,7 @@ public class CSGGeonode
 						// (which means the 'i' index is one greater than the material index)
 						for( int i = 1, j = meshList.size(); i < j; i += 1 ) {
 							Geometry aChild = new Geometry( this.getName() + i, meshList.get( i ) );
-							Material aMaterial = (Material)materialMap.get( new Integer( i - 1 ) );
+							Material aMaterial = materialManager.resolveMaterial( new Integer( i - 1 ) );
 							aChild.setMaterial( aMaterial.clone() );
 							this.attachChild( aChild );
 						}

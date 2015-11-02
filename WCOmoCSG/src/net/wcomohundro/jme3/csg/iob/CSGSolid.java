@@ -194,18 +194,9 @@ public class CSGSolid
 		//	NOTE that we iterate with an index, since we dynamically adjust 'i'
 		//		 as a face is split.  This also means that mFaces.size() must
 		//		 be refreshed for testing on each iteration.
-		int incrementer = 1;
-		CSGFace priorOverlapFace = null;
-		for( int i = 0; i < mFaces.size(); i += incrementer ) {
-			CSGFace face1 = mFaces.get( i );
-			if ( incrementer > 0 ) {
-				// We have changed faces
-				priorOverlapFace = null;
-			} else {
-				// Secondary pass on the same face
-				incrementer = 1;
-			}
+loop1:	for( int i = 0; i < mFaces.size(); i += 1 ) {
 			// Reset the face/vertices status for later classification
+			CSGFace face1 = mFaces.get( i );
 			face1.resetStatus();
 				
 			// Check if the objects bounds overlap
@@ -216,7 +207,7 @@ public class CSGSolid
 				CSGBounds thisFaceBound = face1.getBound();
 				if ( thisFaceBound.overlap( otherBound, pEnvironment ) ) {
 					// If there is a gross overlap, then each face in object 2 must be checked
-					for( CSGFace face2 : pSolid.getFaces() ) {
+loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 						// Check if object1 face and object2 face overlap at all 
 						CSGBounds otherFaceBound = face2.getBound();
 						if ( thisFaceBound.overlap( otherFaceBound, pEnvironment ) ) {
@@ -248,19 +239,26 @@ public class CSGSolid
 									// If the two segments intersect, then the face must be split
 									if ( segment1.intersect( segment2, pEnvironment ) ) {
 										// A face can be split into 2 - 5 subfaces, based on how they collide
-										if ( splitFace( i, segment1, segment2, pTempVars, pEnvironment ) ) {
-											// Splitting a face removes it from its current "i" position in
-											// the list, and replaces it with something new that needs checking
-											incrementer = 0;
-											if ( face2 == priorOverlapFace ) {
-												// We seem to be spinning our wheels reworking the same
-												// face over and over
-												throw new IllegalStateException( "infinite split" );
-											} else {
-												// Remember what we collided with
-												priorOverlapFace = face2;
-											}
-											// Recheck with a new 'face1'
+										switch( splitFace( i, segment1, segment2, pTempVars, pEnvironment ) ) {
+										case 0:
+											// The face was not really split, so continue on checking
+											// with next face from solid2
+											break;
+											
+										case -1:
+											// The face was physically removed, so a new face is in the
+											// ith position.  It must be checked from the beginning
+											i -= 1;
+											continue loop1;
+											
+										default:
+											// The face was split into some number of subpieces.  But each
+											// subpiece is a proper subsegment of the whole, so intersection
+											// checks already applied against solid2 will not change.  We
+											// can continue on from where we are, checking against the
+											// remaining faces from solid2.
+											face1 = mFaces.get( i );
+											thisFaceBound = face1.getBound();
 											break;
 										}
 									}
@@ -299,12 +297,13 @@ public class CSGSolid
 
 	
 	/** Split an individual face
-	 	@return - true if a face was actually split and processing should 
-	 			  commence again at the same index
+	 	@return   0 := the face was not actually split
+	 			 -1 := the face split into miniscule pieces and was simply removed
+	 			  n := the number of faces the face was split into
 	 
 	 	****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
     */	  
-	protected boolean splitFace(
+	protected int splitFace(
 		int 			pFaceIndex
 	, 	CSGSegment 		pFaceSegment
 	, 	CSGSegment 		pOtherSegment
@@ -359,7 +358,7 @@ public class CSGSolid
 			case V3:
 				// Start and end both through a vertex, which means we only 
 				// collided along an edge, so no split is required.
-				return( false );
+				return( 0 );
 				
 			case EDGE12:
 			case EDGE23:
@@ -386,7 +385,7 @@ public class CSGSolid
 				
 			default:
 				// No real collision
-				return( false );
+				return( 0 );
 			}
 			break;
 			
@@ -442,7 +441,7 @@ public class CSGSolid
 				
 			default:
 				// No real collision
-				return( false );
+				return( 0 );
 			}
 			break;
 			
@@ -516,13 +515,13 @@ public class CSGSolid
 				
 			default:
 				// No real collision
-				return( false );
+				return( 0 );
 			}
 			break;
 			
 		default:
 			// No real collision
-			return( false );
+			return( 0 );
 		}
 		// We only reach this point if the face was actually split
 		// However, it might be possible that all the split pieces were so small, that no real
@@ -531,12 +530,11 @@ public class CSGSolid
 		if ( pFaceIndex >= 0 ) {
 			// Nothing actually added, but the original is still in its slot and must be eliminated
 			mFaces.remove( pFaceIndex );
-		} if ( pFaceIndex == -1 ) {
-			// We replaced one face with a single other face, it was not a true split.
-			// The question is, do we need to scan that new face as well????
-			return( true );	// For now, recheck the face we just replaced
+			return( -1 );
+		} else {
+			// Return the count of the faces we split into
+			return( -pFaceIndex );
 		}
-		return( true );
 	}
 	  
 	/** Split a face into two pieces along a vertex and a point on the opposite edge */		

@@ -213,11 +213,12 @@
     <p>As I stated earlier, I work in Eclipse, referencing the jme3 source in the main trunk 
     of the GitHub repository.  This means I am working with the latest jme3 code.
     I am not familiar with the jMonkey IDE and how to incorporate updates to the core code.
-    So I have provided a CSG .jar file that contains all of my code, and a jMonkey .jar file
-    that contains the trunk jme3 code that I use in Eclipse.  I have gotten the following 
+    So I have provided a CSG .jar file that contains all of my code, and two jMonkey .jar files
+    that contain the trunk jme3 code that I use in Eclipse.  I have gotten the following 
     to work:</p>
     <ol>
-    	<li>Pull down the CSG and jMonkey .jar files from the SourceForge <i>files</i> area.</li>
+    	<li>Pull down the latest <b>WCOCSG-bXXXXX-j17.jar</b> file from the SourceForge <i>files</i> area.</li>
+    	<li>Pull down the latest <b>jMonkey3-bXXXXX-j17-minimal.jar</b> file from the SourceForge <i>files</i> area.</li>
     	<li>Create a new project in the jMonkey IDE.</li>
     	<li>In the <i>Libraries</i> section of the project, use <b>Add Jar</b> to include
 the jars you have downloaded.</li>
@@ -226,9 +227,14 @@ referencing only those components needed to run your test.</li>
 		<li>Modify you application initialization to include something like the examples below.</li>
     </ol> 
     <p>This will allow you run the CSG process via direct program references.  However, you 
-	will be missing the core changes needed to support the .xml import mechanism.
-<br>For standalone style testing (that does support .xml import), I have also provided a Windows(64bit) zip 
-	file that contains everything needed to run a simple test.</p>
+	will be missing the core changes needed to support the .xml import mechanism. If you would
+	like all of the changes I have made to the jme3 core, then download 
+	<b>jMonkey3-bXXXXX-j17.jar</b>.  This can be useful for standalone testing, but will conflict
+	with the code the jMonkey IDE uses.
+<br>For a complete, standalone test (that does support .xml import), I have also provided a 
+Windows(64bit) zip file that contains everything. You can unpack its contents into a directory
+and then run the .bat file.  I will NOT be keeping the internal jar files within the zip in
+synch with the latest jars.  You will need to replace the jars if you want the most recent code.</p>
     
     <h3 id='start'>Getting Started</h3>
     <p>The simplest example is to add some shapes into a geometry, regenerate that geometry

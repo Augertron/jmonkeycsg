@@ -50,6 +50,7 @@ import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGMaterialManager;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
@@ -182,21 +183,19 @@ public class CSGShapeIOB
 	
 	/** Accessor to the list of faces */
 	protected List<CSGFace> getFaces(
-		Number			pMaterialIndex
-	,	int				pLevelOfDetail
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGMaterialManager	pMaterialManager
+	,	int					pLevelOfDetail
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) { 
 		if ( mFaces.isEmpty() && (mShape.getMesh() != null) ) {
 			// Generate the faces
-			mShape.setMaterialIndex( (pMaterialIndex == null) ? 0 : pMaterialIndex.intValue() );
-			mFaces = fromMesh( mShape.getMesh(), mShape.getLocalTransform(), pLevelOfDetail, pTempVars, pEnvironment );
-			
-		} else if ( !mFaces.isEmpty() 
-				&& (pMaterialIndex != null)
-				&& (mShape.getMaterialIndex() != pMaterialIndex.intValue()) ) {
-			// We have faces, but a different custom material is desired
-			throw new IllegalArgumentException( "CSGShape invalid change-of-material" );
+			mFaces = fromMesh( mShape.getMesh()
+								, mShape.getLocalTransform()
+								, pMaterialManager
+								, pLevelOfDetail
+								, pTempVars
+								, pEnvironment );
 		}
 		return mFaces; 
 	}
@@ -204,18 +203,18 @@ public class CSGShapeIOB
 	/** Add a shape into this one */
 	@Override
 	public CSGShape union(
-		CSGShape		pOther
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOther
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		List<CSGFace> thisFaceList 
-			= this.getFaces( mShape.getMaterialIndex(), 0, pTempVars, pEnvironment );
+			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
 		List<CSGFace> otherFaceList 
-			= otherIOB.getFaces( pOtherMaterialIndex, 0, pTempVars, pEnvironment );
+			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList );
 		
 		List<CSGFace> newFaceList
@@ -231,18 +230,18 @@ public class CSGShapeIOB
 	/** Subtract a shape from this one */
 	@Override
 	public CSGShape difference(
-		CSGShape		pOther
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOther
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		List<CSGFace> thisFaceList 
-			= this.getFaces( mShape.getMaterialIndex(), 0, pTempVars, pEnvironment );
+			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
 		List<CSGFace> otherFaceList 
-			= otherIOB.getFaces( pOtherMaterialIndex, 0, pTempVars, pEnvironment );
+			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList );
 		
 		List<CSGFace> newFaceList
@@ -258,18 +257,18 @@ public class CSGShapeIOB
 	/** Find the intersection with another shape */
 	@Override
 	public CSGShape intersection(
-		CSGShape		pOther
-	,	Number			pOtherMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOther
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		List<CSGFace> thisFaceList 
-			= this.getFaces( mShape.getMaterialIndex(), 0, pTempVars, pEnvironment );
+			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
 		List<CSGFace> otherFaceList 
-			= otherIOB.getFaces( pOtherMaterialIndex, 0, pTempVars, pEnvironment );
+			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList );
 		
 		List<CSGFace> newFaceList
@@ -284,11 +283,12 @@ public class CSGShapeIOB
 	
 	/** Produce the set of faces that correspond to a given mesh */
 	protected List<CSGFace> fromMesh(
-		Mesh			pMesh
-	,	Transform		pTransform
-	,	int				pLevelOfDetail
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		Mesh				pMesh
+	,	Transform			pTransform
+	,	CSGMaterialManager	pMaterialManager
+	,	int					pLevelOfDetail
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		// Convert the mesh in to appropriate polygons
 	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
@@ -328,7 +328,7 @@ public class CSGShapeIOB
 		List<CSGFace> faces = new ArrayList<CSGFace>( vertexCount / 3 );
 		Map<Vector3d,CSGVertexIOB> aVertexList = new HashMap( vertexCount );
 
-		for (int i = 0; i < idxBuffer.size(); i += 3) {
+		for( int i = 0, j = 0; i < idxBuffer.size(); i += 3, j += 1) {
 			int idx1 = idxBuffer.get(i);
 			int idx2 = idxBuffer.get(i + 1);
 			int idx3 = idxBuffer.get(i + 2);
@@ -382,7 +382,7 @@ public class CSGShapeIOB
 				= new CSGFace( CSGVertexIOB.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment )
-								, mShape.getMaterialIndex()
+								, mShape.getMaterialIndex( pMaterialManager, j )
 								, pTempVars
 								, pEnvironment );
 			if ( aFace.isValid() ) {
@@ -409,13 +409,14 @@ public class CSGShapeIOB
 	  */
 	@Override
 	public List<Mesh> toMesh(
-		int				pMaxMaterialIndex
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		int					pMaxMaterialIndex
+	,	CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
 	) {
 		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
 		
-		List<CSGFace> aFaceList = getFaces( null, 0, pTempVars, pEnvironment );
+		List<CSGFace> aFaceList = getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		int anEstimateVertexCount = aFaceList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );

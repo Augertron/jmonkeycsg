@@ -75,7 +75,8 @@ public class CSGTestH
         // The geometry wrapper
     	CSGGeometry aGeometry = new CSGGeometry();
     	aGeometry.setMaterial( mat_csg );
-    	
+
+/****
     	// Start with a sphere
     	CSGShape aSphere = new CSGShape( "Sphere1", new Sphere( 32, 32, 1.3f ) );
     	aGeometry.addShape( aSphere );
@@ -84,7 +85,7 @@ public class CSGTestH
     	CSGShape aCube = new CSGShape( "Box", new Box(1,1,1) );
     	aGeometry.substractShape( aCube );
  	
-/******
+******/
     	// Load the primary shape
     	Spatial aSpatial = assetManager.loadModel("Meshes/outer.obj");
     	CSGShape aShape = new CSGShape( "OuterShape", ((Geometry)aSpatial).getMesh() );
@@ -94,7 +95,7 @@ public class CSGTestH
     	aSpatial = assetManager.loadModel("Meshes/view.obj");
     	CSGShape bShape = new CSGShape( "ViewShape", ((Geometry)aSpatial).getMesh() );
     	aGeometry.addShape( bShape, CSGGeometry.CSGOperator.INTERSECTION );
-*******/
+
     	// Build the shape
     	aGeometry.regenerate();
 

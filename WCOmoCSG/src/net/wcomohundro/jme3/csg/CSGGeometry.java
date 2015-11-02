@@ -217,6 +217,9 @@ public class CSGGeometry
 			// Time the construction 
 			long startTimer = System.nanoTime();
 			
+			// The material manager does not do much for a single material
+			CSGMaterialManager materialManager = new CSGMaterialManager( this.getMaterial(), true );
+			
 			// Sort the shapes based on their operator (as needed)
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
 			
@@ -231,10 +234,10 @@ public class CSGGeometry
 					case UNION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( null, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.union( aShape, null, tempVars, pEnvironment );
+							aProduct = aProduct.union( aShape, materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -243,17 +246,17 @@ public class CSGGeometry
 							// NO PLACE TO START
 						} else {
 							// Blend together
-							aProduct = aProduct.difference( aShape, null, tempVars, pEnvironment );
+							aProduct = aProduct.difference( aShape, materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case INTERSECTION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( null, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.intersection( aShape, null, tempVars, pEnvironment );
+							aProduct = aProduct.intersection( aShape, materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -263,7 +266,7 @@ public class CSGGeometry
 					}
 				}
 				if ( aProduct != null ) {
-					List<Mesh> meshList = aProduct.toMesh( 0, tempVars, pEnvironment );
+					List<Mesh> meshList = aProduct.toMesh( 0, materialManager, tempVars, pEnvironment );
 					if ( !meshList.isEmpty() ) {
 						// The overall, blended mesh represents this Geometry
 						this.setMesh( meshList.get( 0 ) );
