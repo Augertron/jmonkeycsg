@@ -42,6 +42,7 @@ import java.util.Map;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+import net.wcomohundro.jme3.csg.shape.CSGMesh;
 import net.wcomohundro.jme3.math.CSGTransform;
 
 import com.jme3.export.InputCapsule;
@@ -266,12 +267,20 @@ public class CSGShape
 			// Base it on the mesh (but do not clone the material)
 			aClone = (CSGShape)super.clone( false );
 			aClone.setOrder( mOrder );
+			
+			if ( this.mesh instanceof CSGMesh ) {
+				// Take this opportunity to register every custom face material in the mesh
+				((CSGMesh)this.mesh).registerMaterials( pMaterialManager );
+			}
 		} else {
 			// Empty with no mesh
 			aClone = new CSGShape( this.getName(), this.mOrder );
 		}
 		aClone.setOperator( mOperator );
 //		aClone.setLodLevel( pLODLevel );
+		
+		// Register this shape's standard Material
+		pMaterialManager.resolveMaterialIndex( this.getMaterial() );
 		
 		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
 		return( aClone );
@@ -303,9 +312,21 @@ public class CSGShape
 		CSGMaterialManager	pMaterialManager
 	,	int					pFaceIndex
 	) {
+		Material useMaterial;
+		
+		if ( this.mesh instanceof CSGMesh ) {
+			// CSGMesh based primitives may support per-face materials in their own right
+			useMaterial = ((CSGMesh)this.mesh).getMaterial( pFaceIndex );
+			if ( useMaterial == null ) {
+				// Nothing special, use the standard
+				useMaterial = this.getMaterial();
+			}
+		} else {
+			// Use the standard 
+			useMaterial = this.getMaterial();
+		}
 		// Base the index on the underlying material
-		Integer anIndex = pMaterialManager.resolveMaterialIndex( this.getMaterial() );
-		return( anIndex );
+		return( pMaterialManager.resolveMaterialIndex( useMaterial ) );
 	}
 
 	/** Accessor to the operator */

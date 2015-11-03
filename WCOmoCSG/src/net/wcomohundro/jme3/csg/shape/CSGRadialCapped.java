@@ -29,6 +29,7 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.Savable;
+import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
@@ -45,6 +46,7 @@ import java.nio.FloatBuffer;
 
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.shape.CSGBox.Face;
 
 
 /** Specialization of a radial CSG shape that has:
@@ -121,7 +123,32 @@ public abstract class CSGRadialCapped
     public TextureMode getTextureMode() { return mTextureMode; }
     public void setTextureMode( TextureMode pTextureMode ) { mTextureMode = pTextureMode; }
 
-    
+	/** Accessor to the material that applies to the given surface */
+    @Override
+	public Material getMaterial(
+		int					pFaceIndex
+	) {
+    	if ( mFaceMaterialList != null ) {
+			// Determine the face
+	    	Face aFace = Face.SIDES;
+	    	if ( mClosed ) {
+	    		// If the shape is closed, then we have front and back
+	    		if ( pFaceIndex < mRadialSamples ) {
+	    			// Looks like the SouthPole
+	    			aFace = Face.BACK;
+	    		} else if ( pFaceIndex >= mFirstFrontTriangle ) {
+	    			// Looks like the NorthPole
+	    			aFace= Face.FRONT;
+	    		}
+	    	}
+	    	Material aMaterial = resolveFaceMaterial( aFace.getMask() );
+			return( aMaterial );
+    	} else {
+    		// No custom textures
+    		return( null );
+    	}
+	}
+
     /** Rebuilds the radial based on the current set of configuration parameters */
     @Override
     protected void updateGeometryProlog(

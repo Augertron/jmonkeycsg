@@ -160,6 +160,10 @@ public abstract class CSGRadial
     protected Vector2f		mScaleSlice;
     /** Per-slice rotation across all the slices (the total angle spread across all the slices) */
     protected float		 	mRotateSlices;
+    /** Track which triangle is the first of the front face
+     	NOTE  that zero is the first of the back face, and mRadialSamples is the first of the 
+     		  side faces if closed.  */
+    protected int			mFirstFrontTriangle;
     
 	
     /** As abstract, it only makes sense to have protected constructors */
@@ -394,6 +398,7 @@ public abstract class CSGRadial
         ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * triangleCount );
 
         // Process along the axis, mapping the vertices of one slice to the slice in front of it
+        int triangleCounter = 0;
         for( int iZStart = 0, zIndex = 0, zFactor; zIndex < pContext.mSliceCount -1; zIndex += zFactor ) {
         	// Account for the starting points
             int i0 = iZStart;
@@ -434,8 +439,12 @@ public abstract class CSGRadial
 	                    }
                 	}
                 }
+                triangleCounter += mRadialSamples;
+                
         	} else if ( mClosed && (zIndex == pContext.mSliceCount -2) ) {
                 // FrontFace/NorthPole triangles
+        		mFirstFrontTriangle = triangleCounter;
+        		
                 for( int i = 0; i < mRadialSamples; i += 1 ) {
                 	if ( pSinglePoleVertex ) {
                 		// The single vertex at the pole is used over and over
@@ -464,6 +473,8 @@ public abstract class CSGRadial
 	                    }
                 	}
                 }
+                triangleCounter += mRadialSamples;
+                
         	} else {
         		// On the surface/crust
 	            for( int i = 0; i < mRadialSamples; i++ ) {
@@ -486,6 +497,7 @@ public abstract class CSGRadial
 	                    idxBuf.put( (short) i3++);
 	                }
 	            }
+	            triangleCounter += mRadialSamples * 2;
         	}
         }
         // Wrap as an Index buffer

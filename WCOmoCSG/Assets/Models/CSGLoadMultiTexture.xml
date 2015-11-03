@@ -8,6 +8,7 @@
         </lights>
     </lights>
 	<children>
+
     	<!--  ///////////// MIXED MATERIALS: brick/stone //////////////// -->
         <!-- Add a shorter box to a longer box -->
         <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
@@ -84,6 +85,26 @@
                </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+                materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-15.0' y='0.0' z='0.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape name='OtherBox'
+                		materialName='Textures/BrickWall/BrickWall.xml'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.75' yExtent='0.75' zExtent='0.75'/>
+                    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+                        <translation class='com.jme3.math.Vector3f' x='-0.4' y='-0.4' z='1.0'/>
+                        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' 
+                        	pitch='PI/6' yawl='PI/8' roll='PI/12'/>
+                    </csgtransform>
+               </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
 
 		<!--  These two do not touch -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestSeparate'
@@ -128,6 +149,118 @@
 		                <translation class='com.jme3.math.Vector3f' y='0.0'/>
 		            </transform>
                 </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        
+        <!-- Primitive with per-face material -->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestFaceTextures'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-15.0' z='10.0'/>
+            </transform>
+            <shapes>s
+                <net.wcomohundro.jme3.csg.CSGShape name='Box' operator='UNION'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
+	                    <scaleFaces>
+	                    	<com.jme3.math.Vector3f x='1.0' y='2.0' z='48'/>
+	                    	<com.jme3.math.Vector3f x='2.0' y='1.5' z='10'/>
+	                    	<com.jme3.math.Vector3f x='1.0' y='1.5' z='5'/>
+	                    </scaleFaces>
+	                    <faceMaterials>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/Rock/Rock1Rpt.xml' faceMask='5'/>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/BrickWall/BrickWallRpt.xml' faceMask='10'/>
+	                    </faceMaterials>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-10' y='0' z='10.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
+	                    <scaleFaces>
+	                    	<com.jme3.math.Vector3f x='1.0' y='2.0' z='48'/>
+	                    	<com.jme3.math.Vector3f x='2.0' y='1.5' z='10'/>
+	                    	<com.jme3.math.Vector3f x='1.0' y='1.5' z='5'/>
+	                    </scaleFaces>
+	                    <faceMaterials>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/Rock/Rock1Rpt.xml' faceMask='5'/>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/BrickWall/BrickWallRpt.xml' faceMask='10'/>
+	                    </faceMaterials>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
+                    		zExtent='2.0' radius='0.75'
+                    	 	axisSamples='34' closed='true' radialSamples='32' textureMode='FLAT_LINEAR'>
+                    	<scaleFaces>
+                    		<com.jme3.math.Vector3f x='2' y='3' z='2'/>
+                    	</scaleFaces>
+	                    <faceMaterials>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/Rock/Rock2Rpt.xml' faceMask='5'/>
+	                    </faceMaterials>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.1'/>
+                    </transform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-5' y='0' z='10.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
+	                    <scaleFaces>
+	                    	<com.jme3.math.Vector3f x='1.0' y='2.0' z='48'/>
+	                    	<com.jme3.math.Vector3f x='2.0' y='1.5' z='10'/>
+	                    	<com.jme3.math.Vector3f x='1.0' y='1.5' z='5'/>
+	                    </scaleFaces>
+	                    <faceMaterials>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/Rock/Rock1Rpt.xml' faceMask='5'/>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/BrickWall/BrickWallRpt.xml' faceMask='10'/>
+	                    </faceMaterials>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
+                    		zExtent='2.0' radius='0.75'
+                    	 	axisSamples='34' closed='true' radialSamples='32' textureMode='FLAT_LINEAR'>
+                    	<scaleFaces>
+                    		<com.jme3.math.Vector3f x='2' y='3' z='2'/>
+                    	</scaleFaces>
+	                    <faceMaterials>
+	                    	<net.wcomohundro.jme3.csg.CSGMaterial 
+	                    			materialName='Textures/Rock/Rock2Rpt.xml' faceMask='5'/>
+	                    </faceMaterials>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='-1.1'/>
+                    </transform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 

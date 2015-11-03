@@ -33,7 +33,12 @@ import com.jme3.material.Material;
 
 /** Provide standard services for all materials applied within CSG shapes */
 public class CSGMaterialManager 
-{	/** The predefined 'generic' material that applies to a shape as a whole */
+{	
+	/** Version tracking support */
+	public static final String sCSGMaterialManagerRevision="$Rev$";
+	public static final String sCSGMaterialManagerDate="$Date$";
+	
+	/** The predefined 'generic' material that applies to a shape as a whole */
 	public static final Integer sGenericMaterialIndex = new Integer( 0 );
 
 	/** Overloaded mapping of:

@@ -29,6 +29,7 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
@@ -38,6 +39,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
+import net.wcomohundro.jme3.csg.CSGMaterial;
+import net.wcomohundro.jme3.csg.CSGMaterialManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
@@ -105,6 +108,8 @@ public abstract class CSGMesh
 	protected Vector2f			mScaleTexture;
 	/** The face texture scaling configuration: x/y are the texture scaling, z is integer bitmask of the faces */
 	protected List<Vector3f>	mScaleFaceTexture;
+	/** The list of custom Materials to apply to the various faces */
+	protected List<CSGMaterial>	mFaceMaterialList;
 	/** The LOD generation values */
 	protected float[]			mLODFactors;
 	/** TangentBinormal generation control */
@@ -148,7 +153,46 @@ public abstract class CSGMesh
 	) {
 		mGenerateTangentBinormal = pFlag;
 	}
-			
+	
+	/** Accessor to the material that applies to the given surface */
+	public Material getMaterial(
+		int					pFaceIndex
+	) {
+		// Subclasses must override if they support custom material per surface
+		return( null );
+	}
+	
+	/** Register every custom face material */
+	public void registerMaterials(
+		CSGMaterialManager	pMaterialManager
+	) {
+		if ( mFaceMaterialList != null ) {
+			// Register every material in the list.  The manager will resolve multiple
+			// usages of the same material to the same index
+			for( CSGMaterial aProxy : mFaceMaterialList ) {
+				pMaterialManager.resolveMaterialIndex( aProxy.getMaterial() );
+			}
+		}
+	}
+	
+	/** Service routine to match a custom material to a given face */
+	protected Material resolveFaceMaterial(
+		int			pFaceBit
+	) {
+		if ( mFaceMaterialList != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGMaterial aProxy : mFaceMaterialList ) {
+				if ( aProxy.appliesToFace( pFaceBit ) ) {
+					// Use this one
+					return( aProxy.getMaterial() );
+				}
+			}
+		}
+		// Nothing special
+		return( null );
+	}
+		
 	/** Every CSGMesh is expected to be able to rebuild itself from its fundamental
 	 	configuration parameters.
 	 */
@@ -203,6 +247,10 @@ public abstract class CSGMesh
         outCapsule.writeSavableArrayList( (ArrayList)mScaleFaceTexture, "scaleFaces", null );
         outCapsule.write( mLODFactors, "lodFactors", null );
         outCapsule.write( mGenerateTangentBinormal, "generateTangentBinormal", false );
+        
+        // Custom per-face materials
+        outCapsule.writeSavableArrayList( (ArrayList)mFaceMaterialList, "faceMaterials", null );
+
     }
     @Override
     public void read(
@@ -222,6 +270,9 @@ public abstract class CSGMesh
         mScaleFaceTexture = inCapsule.readSavableArrayList( "scaleFaces", null );
         mLODFactors = inCapsule.readFloatArray( "lodFactors", null );
         mGenerateTangentBinormal = inCapsule.readBoolean( "generateTangentBinormal", false );
+        
+        // Custom per-face materials
+        mFaceMaterialList = inCapsule.readSavableArrayList( "faceMaterials", null );
         
         //////// NOTE NOTE NOTE
         // 			That every CSGShape is expected to callback via readComplete()

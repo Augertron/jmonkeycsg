@@ -27,6 +27,7 @@ package net.wcomohundro.jme3.csg.shape;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+import net.wcomohundro.jme3.csg.CSGMaterialManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
@@ -35,6 +36,7 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.VertexBuffer;
@@ -70,12 +72,12 @@ public class CSGBox
 	protected final Vector3f sCenter = new Vector3f( 0f, 0f, 0f );
 	
     protected static final short[] GEOMETRY_INDICES_DATA = {
-        2,  1,  0,  3,  2,  0, // back
-        6,  5,  4,  7,  6,  4, // right
-       10,  9,  8, 11, 10,  8, // front
-       14, 13, 12, 15, 14, 12, // left
-       18, 17, 16, 19, 18, 16, // top
-       22, 21, 20, 23, 22, 20  // bottom
+        2,  1,  0,    3,  2,  0, // back
+        6,  5,  4,    7,  6,  4, // right
+       10,  9,  8,   11, 10,  8, // front
+       14, 13, 12,   15, 14, 12, // left
+       18, 17, 16,   19, 18, 16, // top
+       22, 21, 20,   23, 22, 20  // bottom
     };
 
     protected static final float[] GEOMETRY_NORMALS_DATA = {
@@ -222,6 +224,18 @@ public class CSGBox
     	aBuffer.clear();
         tc.updateData( aBuffer );
     }
+    
+	/** Accessor to the material that applies to the given surface */
+    @Override
+	public Material getMaterial(
+		int					pFaceIndex
+	) {
+		// Determine the face
+    	Face aFace = Face.values()[ pFaceIndex / 2 ];
+    	Material aMaterial = resolveFaceMaterial( aFace.getMask() );
+		return( aMaterial );
+	}
+
     
     /** A bit different from standard Box, in order to run the texture along appropriate x /y 
      		(For top/bottom, the super class applies the x texture along the z axis, and the y texture
