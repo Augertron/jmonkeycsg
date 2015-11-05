@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.wcomohundro.jme3.csg.CSGMaterial;
+import net.wcomohundro.jme3.csg.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.CSGMaterialManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -71,9 +71,10 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	6)	The 'right' of the shape is in the y/z plane with a positive x, facing to the right
  	
  	7)	If top/bottom/left/right are not appropriate, but the shape still has a surface
- 		perpendicular to the front/back, this is the 'sides' face
+ 		perpendicular to the front/back, this is the 'sides' face (like a cylinder or pipe)
  		
- 	8)	If none of the above is appropriate, then there is the 'surface' face which applies to the whole
+ 	8)	If none of the above is appropriate, then there is the 'surface' face which applies 
+ 		to the whole (like a sphere)
  	
  	In particular, those shapes that are based on samples along an axis will follow the z axis, 
  	producing vertices in x/y for the given z point.
@@ -127,7 +128,7 @@ public abstract class CSGMesh
 	/** The face texture scaling configuration: x/y are the texture scaling, z is integer bitmask of the faces */
 	protected List<Vector3f>	mScaleFaceTexture;
 	/** The list of custom Materials to apply to the various faces */
-	protected List<CSGMaterial>	mFaceMaterialList;
+	protected List<CSGFaceProperties>	mFaceMaterialList;
 	/** The LOD generation values */
 	protected float[]			mLODFactors;
 	/** TangentBinormal generation control */
@@ -173,9 +174,9 @@ public abstract class CSGMesh
 	}
 	
 	/** Accessor to the per-face custom materials */
-	public List<CSGMaterial>	getFaceMaterial() { return mFaceMaterialList; }
+	public List<CSGFaceProperties>	getFaceMaterial() { return mFaceMaterialList; }
 	public void setFaceMaterials(
-		List<CSGMaterial>	pMaterialList
+		List<CSGFaceProperties>	pMaterialList
 	) {
 		mFaceMaterialList = pMaterialList;
 	}
@@ -196,7 +197,7 @@ public abstract class CSGMesh
 		if ( mFaceMaterialList != null ) {
 			// Register every material in the list.  The manager will resolve multiple
 			// usages of the same material to the same index
-			for( CSGMaterial aProxy : mFaceMaterialList ) {
+			for( CSGFaceProperties aProxy : mFaceMaterialList ) {
 				pMaterialManager.resolveMaterialIndex( aProxy.getMaterial() );
 			}
 		}
@@ -209,7 +210,7 @@ public abstract class CSGMesh
 		if ( mFaceMaterialList != null ) {
 			// Sequential scan looking for a match
 			// The assumption is there are so few faces that a sequential scan is very efficient
-			for( CSGMaterial aProxy : mFaceMaterialList ) {
+			for( CSGFaceProperties aProxy : mFaceMaterialList ) {
 				if ( aProxy.appliesToFace( pFaceBit ) ) {
 					// Use this one
 					return( aProxy.getMaterial() );

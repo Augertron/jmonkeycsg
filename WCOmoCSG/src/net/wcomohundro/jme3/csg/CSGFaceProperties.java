@@ -39,7 +39,7 @@ import com.jme3.material.Material;
 /** Simple Material proxy that supports a Material applied to a given 'face' of a CSG
  	primitive shape.
  */
-public class CSGMaterial 
+public class CSGFaceProperties 
 	implements Savable
 {
 	/** The bitmask of 'faces' this material applies to */
@@ -49,7 +49,7 @@ public class CSGMaterial
 	
 	
 	/** Null constructor */
-	public CSGMaterial(
+	public CSGFaceProperties(
 	) {
 	}
 	
