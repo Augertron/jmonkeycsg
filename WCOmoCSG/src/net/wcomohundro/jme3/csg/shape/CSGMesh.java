@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.wcomohundro.jme3.csg.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.CSGMaterialManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;

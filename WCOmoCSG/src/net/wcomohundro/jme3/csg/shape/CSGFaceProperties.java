@@ -23,10 +23,12 @@
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN 
 	IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **/
-package net.wcomohundro.jme3.csg;
+package net.wcomohundro.jme3.csg.shape;
 
 import java.io.IOException;
 import java.util.logging.Level;
+
+import net.wcomohundro.jme3.csg.CSGEnvironment;
 
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.export.InputCapsule;
