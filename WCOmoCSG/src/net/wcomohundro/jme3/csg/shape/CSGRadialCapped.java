@@ -46,6 +46,7 @@ import java.nio.FloatBuffer;
 
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 
 
 /** Specialization of a radial CSG shape that has:
@@ -116,7 +117,7 @@ public abstract class CSGRadialCapped
 	public Material getMaterial(
 		int					pFaceIndex
 	) {
-    	if ( mFaceMaterialList != null ) {
+    	if ( mFaceProperties != null ) {
 			// Determine the face
 	    	Face aFace = Face.SIDES;
 	    	if ( mClosed ) {
@@ -412,8 +413,7 @@ public abstract class CSGRadialCapped
     /** Apply texture coordinate scaling to selected 'faces' of the shape */
     @Override
     public void scaleFaceTextureCoordinates(
-    	float		pX
-    ,	float		pY
+    	Vector2f	pScaleTexture
     ,	int			pFaceMask
     ) {
     	// Operate on the TextureCoordinate buffer
@@ -474,14 +474,14 @@ public abstract class CSGRadialCapped
             } else {
             	for( int i = 0; i < aRadialCount; i += 1 ) {
             		// Scale these points
-            		index = applyScale( index, aBuffer, pX, pY, true );
+            		index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, true );
             	}
             }
     	}
         if ( mClosed ) {
         	// Two extra vertices for the centers of the end caps
-        	index = applyScale( index, aBuffer, pX, pY, doBack );
-        	index = applyScale( index, aBuffer, pX, pY, doFront );
+        	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, doBack );
+        	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, doFront );
         }
     	aBuffer.clear();
         tc.updateData( aBuffer );

@@ -185,8 +185,7 @@ public class CSGBox
     /** Apply texture coordinate scaling to selected 'faces' of the box */
     @Override
     public void scaleFaceTextureCoordinates(
-    	float		pX
-    ,	float		pY
+    	Vector2f	pScaleTexture
     ,	int			pFaceMask
     ) {
         VertexBuffer tc = getBuffer( Type.TexCoord );
@@ -212,8 +211,8 @@ public class CSGBox
     			float x = aBuffer.get( index  );
     			float y = aBuffer.get( index + 1 );
 
-                x *= pX;
-                y *= pY;
+                x *= pScaleTexture.x;
+                y *= pScaleTexture.y;
                 aBuffer.put( index++, x ).put( index++, y);
             }
     	}
@@ -226,9 +225,11 @@ public class CSGBox
 	public Material getMaterial(
 		int					pFaceIndex
 	) {
-		// Determine the face
-    	Face aFace = Face.values()[ pFaceIndex / 2 ];
-    	Material aMaterial = resolveFaceMaterial( aFace.getMask() );
+		// Determine the face, which we know is in the order
+    	//	Front/Back/Left/Right/Top/Bottom, with 2 triangles per face, which matches
+    	//  the bits in Face
+    	int faceMask = 1 << (pFaceIndex / 2);
+    	Material aMaterial = resolveFaceMaterial( faceMask );
 		return( aMaterial );
 	}
 

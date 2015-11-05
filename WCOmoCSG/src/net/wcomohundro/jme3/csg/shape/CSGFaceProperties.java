@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGVersion;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.export.InputCapsule;
@@ -37,26 +39,81 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.material.Material;
+import com.jme3.math.Vector2f;
 
-/** Simple Material proxy that supports a Material applied to a given 'face' of a CSG
- 	primitive shape.
+/** FaceProperties manage various configuration settings that can be applied to a given
+ 	'face' within a CSGMesh.  The 'face' is selected by a bitmask of appropriate faces
+ 	that these properties apply to.
+ 	
+ 	Properties:
+ 	1)	Texture scaling to apply to the face
+ 	2)	Custom material to apply to the face
  */
 public class CSGFaceProperties 
-	implements Savable
+	implements Savable, ConstructiveSolidGeometry
 {
-	/** The bitmask of 'faces' this material applies to */
+	/** Version tracking support */
+	public static final String sCSGFacePropertiesRevision="$Rev$";
+	public static final String sCSGFacePropertiesDate="$Date$";
+
+	
+	/** Identify the faces of the shape  */
+	public enum Face {
+		NONE(0)
+		
+,		FRONT(1)
+, 		BACK(2)
+,		FRONT_BACK(3)
+
+, 		LEFT(4)
+, 		RIGHT(8)
+,		LEFT_RIGHT(12)
+
+, 		TOP(16)
+, 		BOTTOM(32)
+,		TOP_BOTTOM(48)
+
+, 		SIDES(64)
+, 		SURFACE(128)
+;
+		private int		mMask;
+		private Face( int pValue ) { mMask = pValue; }
+
+		public int getMask() { return mMask; }
+		public boolean  hasFace(
+			Face	pCheckForFace
+		) {
+			return( (this.mMask & pCheckForFace.mMask) == pCheckForFace.mMask );
+		}
+		public boolean maskIncludesFace(
+			int		pFaceMask
+		) {
+			return( (pFaceMask & this.mMask) == this.mMask );
+		}
+		public static Face matchMask(
+			int		pFaceMask
+		) {
+			for( Face aFace : Face.values() ) {
+				if ( aFace.mMask == pFaceMask ) {
+					return( aFace );
+				}
+			}
+			return( null );
+		}
+	}
+
+	/** The bitmask of 'faces' these properties apply to */
 	protected int		mFaceMask;
-	/** The actual Material that applies */
+	/** A custom material that applies to the face(s) */
 	protected Material	mMaterial;
+	/** A custom texture scaling that applies to the face(s) */
+	protected Vector2f	mScaleTexture;
 	
 	
 	/** Null constructor */
 	public CSGFaceProperties(
 	) {
 	}
-	
-	/** Accessor to the Material behind this proxy */
-	public Material getMaterial() { return mMaterial; }
 	
 	/** Accessor to the mask */
 	public int getFaceMask() { return mFaceMask; }
@@ -65,6 +122,20 @@ public class CSGFaceProperties
 	) {
 		return( (mFaceMask & pFaceBit) == pFaceBit );
 	}
+	public boolean appliesToFace(
+		Face	pFace
+	) {
+		return( pFace.maskIncludesFace( mFaceMask ) );
+	}
+	
+	/** Accessor to the Material property */
+	public boolean hasMaterial() { return( mMaterial != null ); }
+	public Material getMaterial() { return mMaterial; }
+	
+	/** Accessor to the TextureScaling property */
+	public boolean hasScaleTexture() { return( mScaleTexture != null ); }
+	public Vector2f getScaleTexture() { return mScaleTexture; }
+	
 
 	/** Adjust the Savable actions */
 	@Override
@@ -73,8 +144,13 @@ public class CSGFaceProperties
     ) throws IOException {
 		// Look for the facemask 
         InputCapsule aCapsule = pImporter.getCapsule( this );
-        mFaceMask = aCapsule.readInt( "faceMask", 0 );
-        
+        Face aFace = aCapsule.readEnum( "face", Face.class, null );
+        if ( aFace == null ) {
+        	mFaceMask = aCapsule.readInt( "faceMask", 0 );
+        } else {
+        	mFaceMask = aFace.getMask();
+        }
+        // Look for a property
         mMaterial = null;
         String matName = aCapsule.readString( "materialName", null );
         if ( matName != null ) {
@@ -86,9 +162,19 @@ public class CSGFaceProperties
                 CSGEnvironment.sLogger.log( Level.FINE, "Cannot locate material: " + matName );
             }
         }
-        // If material is NULL, try to load it from the geometry
+        // If material is NULL, try to load it inline
         if ( mMaterial == null) {
             mMaterial = (Material)aCapsule.readSavable( "material", null );
+        }
+        // Look for scaling
+        mScaleTexture = (Vector2f)aCapsule.readSavable( "scaleTexture", null );
+        if ( mScaleTexture == null ) {
+        	// Look for simple attributes
+        	float scaleX = CSGEnvironment.readPiValue( aCapsule, "scaleX", 1f );
+        	float scaleY = CSGEnvironment.readPiValue( aCapsule, "scaleY", 1f );
+        	if ( (scaleX != 1f) || (scaleY != 1f) ) {
+        		mScaleTexture = new Vector2f( scaleX, scaleY );
+        	}
         }
 	}
 	
@@ -98,9 +184,31 @@ public class CSGFaceProperties
     ) throws IOException {
 		// Capture the facemask
         OutputCapsule aCapsule = pExporter.getCapsule( this );
-        aCapsule.write( mFaceMask, "faceMask", 0 );
+        
+        Face aFace = Face.matchMask( mFaceMask );
+        if ( aFace == null ) {
+            aCapsule.write( mFaceMask, "faceMask", 0 );        	
+        } else {
+        	aCapsule.write( aFace, "face", null );
+        }
         
         aCapsule.write( mMaterial, "material", null );
+        
+        if ( mScaleTexture != null ) {
+        	aCapsule.write( mScaleTexture.getX(), "scaleX", 1f );
+        	aCapsule.write( mScaleTexture.getY(), "scaleY", 1f );
+        }
+	}
+	
+	/////// Implement ConstructiveSolidGeometry
+	@Override
+	public StringBuilder getVersion(
+		StringBuilder	pBuffer
+	) {
+		return( CSGVersion.getVersion( CSGFaceProperties.class
+													, sCSGFacePropertiesRevision
+													, sCSGFacePropertiesDate
+													, pBuffer ) );
 	}
 
 }

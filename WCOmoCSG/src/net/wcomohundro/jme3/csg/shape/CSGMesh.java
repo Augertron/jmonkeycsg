@@ -87,12 +87,8 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  		3)	TangentBinormal generation (for lighting support)
  	
  	Standard configuration support:
- 	
- 		scaleTexture - 			Vector2f that applies .scaleTextureCoordinates() to the shape after
- 								its geometry has been rebuilt
- 						
- 		scaleFaces -			Array of Vector3f that applies x/y texture scaling to faces selected
- 								by the bitmask defined in the z coordinate
+ 		faceProperties -		Array of CSGFaceProperties with possible custom material and/or
+ 								texture scaling, applied according to a bitmask of faces
  						
  		lodFactors -			Array of float values in the range 0.0 - 1.0, each of which causes
  								an LevelOfDetail to be built.  The smaller the percentage, the fewer
@@ -110,28 +106,12 @@ public abstract class CSGMesh
 	public static final String sCSGMeshRevision="$Rev$";
 	public static final String sCSGMeshDate="$Date$";
 
-	/** Identify the faces of the shape  */
-	public enum Face {
-//		1      2     4     8      16   32      64     128      0
-		FRONT, BACK, LEFT, RIGHT, TOP, BOTTOM, SIDES, SURFACE, NONE;
-		
-		private int mask;
-		Face() {
-			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
-		}
-		public int getMask() { return mask; }
-	}
-
-	/** The texture scaling configuration */
-	protected Vector2f			mScaleTexture;
-	/** The face texture scaling configuration: x/y are the texture scaling, z is integer bitmask of the faces */
-	protected List<Vector3f>	mScaleFaceTexture;
 	/** The list of custom Materials to apply to the various faces */
-	protected List<CSGFaceProperties>	mFaceMaterialList;
+	protected List<CSGFaceProperties>	mFaceProperties;
 	/** The LOD generation values */
-	protected float[]			mLODFactors;
+	protected float[]					mLODFactors;
 	/** TangentBinormal generation control */
-	protected boolean			mGenerateTangentBinormal;
+	protected boolean					mGenerateTangentBinormal;
 	
 	/** FOR POSSIBLE SUBCLASS OVERRIDE: Resolve this mesh, with possible 'debug' delegate representation */
 	public Mesh resolveMesh(
@@ -140,20 +120,12 @@ public abstract class CSGMesh
 		return( this );
 	}
 	
-	/** Accessor to the overall ScaleTexture configuration */
-	public Vector2f getScaleTexture() { return mScaleTexture; }
-	public void setScaleTexture(
-		Vector2f	pScale
-	) {
-		mScaleTexture = pScale;
-	}
-	
-	/** Accessor to the per-face texture scale configuration */
-	public List<Vector3f> getScaleFaces() { return mScaleFaceTexture; }
+	/** Accessor to the per-face property configuration */
+	public List<CSGFaceProperties> getFaceProperties() { return mFaceProperties; }
 	public void setScaleFaces(
-		List<Vector3f>	pScale
+		List<CSGFaceProperties>		pPropertyList
 	) {
-		mScaleFaceTexture = pScale;
+		mFaceProperties = pPropertyList;
 	}
 	
 	/** Accessor to the LOD factors to apply */
@@ -172,14 +144,6 @@ public abstract class CSGMesh
 		mGenerateTangentBinormal = pFlag;
 	}
 	
-	/** Accessor to the per-face custom materials */
-	public List<CSGFaceProperties>	getFaceMaterial() { return mFaceMaterialList; }
-	public void setFaceMaterials(
-		List<CSGFaceProperties>	pMaterialList
-	) {
-		mFaceMaterialList = pMaterialList;
-	}
-	
 	
 	/** FOR CSGShape PROCESSING: Accessor to the material that applies to the given surface */
 	public Material getMaterial(
@@ -193,31 +157,40 @@ public abstract class CSGMesh
 	public void registerMaterials(
 		CSGMaterialManager	pMaterialManager
 	) {
-		if ( mFaceMaterialList != null ) {
+		if ( mFaceProperties != null ) {
 			// Register every material in the list.  The manager will resolve multiple
 			// usages of the same material to the same index
-			for( CSGFaceProperties aProxy : mFaceMaterialList ) {
-				pMaterialManager.resolveMaterialIndex( aProxy.getMaterial() );
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.hasMaterial() ) {
+					pMaterialManager.resolveMaterialIndex( aProperty.getMaterial() );
+				}
 			}
 		}
+	}
+	
+	/** Service routing to match a set of properties to a given face */
+	protected CSGFaceProperties matchFaceProperties(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one
+					return( aProperty );
+				}
+			}
+		}
+		return( null );
 	}
 	
 	/** Service routine to match a custom material to a given face */
 	protected Material resolveFaceMaterial(
 		int			pFaceBit
 	) {
-		if ( mFaceMaterialList != null ) {
-			// Sequential scan looking for a match
-			// The assumption is there are so few faces that a sequential scan is very efficient
-			for( CSGFaceProperties aProxy : mFaceMaterialList ) {
-				if ( aProxy.appliesToFace( pFaceBit ) ) {
-					// Use this one
-					return( aProxy.getMaterial() );
-				}
-			}
-		}
-		// Nothing special
-		return( null );
+		CSGFaceProperties aProperty = matchFaceProperties( pFaceBit );
+		return( (aProperty == null) ? null : aProperty.getMaterial() );
 	}
 		
 	/** Every CSGMesh is expected to be able to rebuild itself from its fundamental
@@ -232,14 +205,12 @@ public abstract class CSGMesh
 	protected void updateGeometryProlog() {}
 	protected void updateGeometryEpilog(
 	) {
-        // Apply any scaling required
-        if ( mScaleTexture != null ) {
-        	this.scaleTextureCoordinates( mScaleTexture );
-        }
-        if ( mScaleFaceTexture != null ) {
-        	// x and y are the normal texture scaling factors.  z is the bitmask of faces
-        	for( Vector3f faceScale : mScaleFaceTexture ) {
-        		this.scaleFaceTextureCoordinates( faceScale.x, faceScale.y, (int)faceScale.z );
+		// Apply any scaling now
+		if ( mFaceProperties != null ) {
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.hasScaleTexture() ) {
+					this.scaleFaceTextureCoordinates( aProperty.getScaleTexture(), aProperty.getFaceMask() );
+				}
         	}
         }
         // Generate tangent binormals as needed
@@ -252,8 +223,7 @@ public abstract class CSGMesh
 	 	separate face may be set independently
 	 */
 	public abstract void scaleFaceTextureCoordinates(
-		float		pScaleX
-	,	float		pScaleY
+		Vector2f	pScaleTexture
 	,	int			pFacemask
 	);
 	
@@ -270,14 +240,9 @@ public abstract class CSGMesh
         outCapsule.write( this.getMode(), "mode", Mode.Triangles );
 
         // Extended attributes
-        outCapsule.write( mScaleTexture, "scaleTexture", null );
-        outCapsule.writeSavableArrayList( (ArrayList)mScaleFaceTexture, "scaleFaces", null );
+        outCapsule.writeSavableArrayList( (ArrayList)mFaceProperties, "faceProperties", null );
         outCapsule.write( mLODFactors, "lodFactors", null );
         outCapsule.write( mGenerateTangentBinormal, "generateTangentBinormal", false );
-        
-        // Custom per-face materials
-        outCapsule.writeSavableArrayList( (ArrayList)mFaceMaterialList, "faceMaterials", null );
-
     }
     @Override
     public void read(
@@ -293,13 +258,9 @@ public abstract class CSGMesh
         this.setMode( inCapsule.readEnum( "mode", Mode.class, Mode.Triangles ) );
         
         // Extended attributes
-        mScaleTexture = (Vector2f)inCapsule.readSavable( "scaleTexture", null );
-        mScaleFaceTexture = inCapsule.readSavableArrayList( "scaleFaces", null );
+        mFaceProperties = inCapsule.readSavableArrayList( "faceProperties", null );
         mLODFactors = inCapsule.readFloatArray( "lodFactors", null );
         mGenerateTangentBinormal = inCapsule.readBoolean( "generateTangentBinormal", false );
-        
-        // Custom per-face materials
-        mFaceMaterialList = inCapsule.readSavableArrayList( "faceMaterials", null );
         
         //////// NOTE NOTE NOTE
         // 			That every CSGShape is expected to callback via readComplete()

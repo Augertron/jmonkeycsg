@@ -34,10 +34,10 @@
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='5.0' yExtent='1.0' zExtent='1.0'>
-                <scaleFaces>
-                    <com.jme3.math.Vector3f x='5' y='1' z='3'/>
-                    <com.jme3.math.Vector3f x='5' y='1' z='48'/>
-            	</scaleFaces>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='5' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='5' scaleY='1'/>
+            	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='BoxTextureStretched2'
@@ -46,10 +46,10 @@
                 <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='5.0' zExtent='1.0'>
-                <scaleFaces>
-                    <com.jme3.math.Vector3f x='1' y='5' z='3'/>
-                    <com.jme3.math.Vector3f x='1' y='5' z='12'/>
-            	</scaleFaces>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='5'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1' scaleY='5'/>
+            	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='BoxTextureStretched3'
@@ -58,10 +58,10 @@
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='5.0'>
-                <scaleFaces>
-                    <com.jme3.math.Vector3f x='5' y='1' z='12'/>
-                    <com.jme3.math.Vector3f x='1' y='5' z='48'/>
-            	</scaleFaces>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='5' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='5'/>
+            	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         
@@ -71,11 +71,11 @@
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-8.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='3.0' zExtent='4.0'>
-                <scaleFaces>
-                    <com.jme3.math.Vector3f x='2' y='3' z='3'/>
-                    <com.jme3.math.Vector3f x='4' y='3' z='12'/>
-                    <com.jme3.math.Vector3f x='2' y='4' z='48'/>
-            	</scaleFaces>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='2' scaleY='3'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='4' scaleY='3'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='2' scaleY='4'/>
+            	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         

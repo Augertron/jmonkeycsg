@@ -637,8 +637,7 @@ public class CSGSphere
     /** Apply texture coordinate scaling to selected 'faces' of the sphere */
     @Override
     public void scaleFaceTextureCoordinates(
-    	float		pX
-    ,	float		pY
+    	Vector2f	pScaleTexture
     ,	int			pFaceMask
     ) {
         VertexBuffer tc = getBuffer(Type.TexCoord);
@@ -664,8 +663,8 @@ public class CSGSphere
 	            float x = aBuffer.get();
 	            float y = aBuffer.get();
 	            aBuffer.position( aBuffer.position()-2 );
-	            x *= pX;
-	            y *= pY;
+	            x *= pScaleTexture.x;
+	            y *= pScaleTexture.y;
 	            aBuffer.put(x).put(y);
 	        }
 	        aBuffer.clear();
