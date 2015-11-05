@@ -27,6 +27,7 @@ package net.wcomohundro.jme3.csg;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.material.Material;
@@ -48,6 +49,8 @@ public class CSGMaterialManager
 	protected Map<Object,Object>		mMaterialMap;
 	/** Count of materials defined */
 	protected int						mMaterialCount;
+	/** Stack of active 'generic' indexes (to handle nested groups of shapes) */
+	protected Stack<Integer>			mGenericIndexStack;
 	/** Control flag to force a single material */
 	protected boolean					mForceSingleMaterial;
 	
@@ -60,6 +63,9 @@ public class CSGMaterialManager
 		mForceSingleMaterial = pForceSingleMaterial;
 		mMaterialMap = new HashMap( 7 );
 		
+		mGenericIndexStack = new Stack();
+		mGenericIndexStack.push( sGenericMaterialIndex );
+		
 		// Define the generic material, even if null */
 		mMaterialMap.put( sGenericMaterialIndex, pGenericMaterial );
 		if ( pGenericMaterial != null ) {
@@ -68,6 +74,17 @@ public class CSGMaterialManager
 				mMaterialMap.put( materialKey, sGenericMaterialIndex );
 			}
 		}
+	}
+	
+	/** Adjustments to the active generic index */
+	public void pushGenericIndex(
+		Material	pGenericMaterial
+	) {
+		mGenericIndexStack.push( resolveMaterialIndex( pGenericMaterial ) );
+	}
+	public void popGenericIndex(
+	) {
+		mGenericIndexStack.pop();
 	}
 	
 	/** Get the count of materials that have been defined (in addition to the generic) */
@@ -79,7 +96,7 @@ public class CSGMaterialManager
 	) {
 		if ( mForceSingleMaterial || (pMaterial == null) ) {
 			// By definition, the null material is the generic material
-			return( sGenericMaterialIndex );
+			return( mGenericIndexStack.peek() );
 		} else {
 			// The material's key is used to share the same material
 			Integer materialIndex;

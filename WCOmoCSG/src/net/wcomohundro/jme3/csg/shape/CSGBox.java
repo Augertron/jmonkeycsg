@@ -58,42 +58,38 @@ public class CSGBox
 	public static final String sCSGBoxRevision="$Rev$";
 	public static final String sCSGBoxDate="$Date$";
 
-	/** Identify the 6 faces of the box  */
-	public enum Face {
-		BACK, RIGHT, FRONT, LEFT, TOP, BOTTOM, NONE;
-		
-		private int mask;
-		Face() {
-			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
-		}
-		public int getMask() { return mask; }
-	}
 	/** Standard center */
 	protected final Vector3f sCenter = new Vector3f( 0f, 0f, 0f );
 	
     protected static final short[] GEOMETRY_INDICES_DATA = {
-        2,  1,  0,    3,  2,  0, // back
-        6,  5,  4,    7,  6,  4, // right
-       10,  9,  8,   11, 10,  8, // front
-       14, 13, 12,   15, 14, 12, // left
+        2,  1,  0,    3,  2,  0, // front
+        6,  5,  4,    7,  6,  4, // back
+        
+       10,  9,  8,   11, 10,  8, // left
+       14, 13, 12,   15, 14, 12, // right
+
        18, 17, 16,   19, 18, 16, // top
        22, 21, 20,   23, 22, 20  // bottom
     };
 
     protected static final float[] GEOMETRY_NORMALS_DATA = {
-       0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1, // back
-       1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0, // right
        0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1, // front
+       0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1, // back
+       
       -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0, // left
+       1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0, // right
+       
        0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0, // top
        0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0  // bottom
    	};
 
    	protected static final float[] GEOMETRY_TEXTURE_DATA = {
-       1, 0,   0, 0,   0, 1,   1, 1, // back
-       1, 0,   0, 0,   0, 1,   1, 1, // right
        1, 0,   0, 0,   0, 1,   1, 1, // front
+       1, 0,   0, 0,   0, 1,   1, 1, // back
+       
        1, 0,   0, 0,   0, 1,   1, 1, // left
+       1, 0,   0, 0,   0, 1,   1, 1, // right
+       
        1, 0,   0, 0,   0, 1,   1, 1, // top
        1, 0,   0, 0,   0, 1,   1, 1  // bottom
    	};
@@ -207,7 +203,7 @@ public class CSGBox
         aBuffer.clear();
         
     	// Process over the faces selected in the mask 
-    	for( int aFace = 0, aMask = pFaceMask; aMask != 0; aFace += 1, aMask >>= 1 ) {
+    	for( int aFace = 0, aMask = pFaceMask & 0x3f; aMask != 0; aFace += 1, aMask >>= 1 ) {
     		if ( (aMask & 0x01) == 0 ) continue;	// Skip this face
     		
     		// Select the points where to apply the texture
@@ -259,13 +255,14 @@ public class CSGBox
         **/
         /** This keeps the x texture along the x axis, and runs the y texture along the z axis for
          	top/bottom */
-                v[0].x, v[0].y, v[0].z, v[1].x, v[1].y, v[1].z, v[2].x, v[2].y, v[2].z, v[3].x, v[3].y, v[3].z, // back
-                v[1].x, v[1].y, v[1].z, v[4].x, v[4].y, v[4].z, v[6].x, v[6].y, v[6].z, v[2].x, v[2].y, v[2].z, // right
-                v[4].x, v[4].y, v[4].z, v[5].x, v[5].y, v[5].z, v[7].x, v[7].y, v[7].z, v[6].x, v[6].y, v[6].z, // front
-                v[5].x, v[5].y, v[5].z, v[0].x, v[0].y, v[0].z, v[3].x, v[3].y, v[3].z, v[7].x, v[7].y, v[7].z, // left
+                v[4].x, v[4].y, v[4].z,   v[5].x, v[5].y, v[5].z,   v[7].x, v[7].y, v[7].z,   v[6].x, v[6].y, v[6].z, // front
+                v[0].x, v[0].y, v[0].z,   v[1].x, v[1].y, v[1].z,   v[2].x, v[2].y, v[2].z,   v[3].x, v[3].y, v[3].z, // back
 
-                v[6].x, v[6].y, v[6].z, v[7].x, v[7].y, v[7].z, v[3].x, v[3].y, v[3].z, v[2].x, v[2].y, v[2].z, // top
-                v[1].x, v[1].y, v[1].z, v[0].x, v[0].y, v[0].z, v[5].x, v[5].y, v[5].z, v[4].x, v[4].y, v[4].z  // bottom
+                v[5].x, v[5].y, v[5].z,   v[0].x, v[0].y, v[0].z,   v[3].x, v[3].y, v[3].z,   v[7].x, v[7].y, v[7].z, // left
+                v[1].x, v[1].y, v[1].z,   v[4].x, v[4].y, v[4].z,   v[6].x, v[6].y, v[6].z,   v[2].x, v[2].y, v[2].z, // right
+
+                v[6].x, v[6].y, v[6].z,   v[7].x, v[7].y, v[7].z,   v[3].x, v[3].y, v[3].z,   v[2].x, v[2].y, v[2].z, // top
+                v[1].x, v[1].y, v[1].z,   v[0].x, v[0].y, v[0].z,   v[5].x, v[5].y, v[5].z,   v[4].x, v[4].y, v[4].z  // bottom
         });
         setBuffer( Type.Position, 3, fpb );
         updateBound();

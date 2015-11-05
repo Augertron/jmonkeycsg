@@ -160,8 +160,15 @@ public class CSGShapeIOB
 		List<CSGShape>	pShapeList
 	,	CSGEnvironment	pEnvironment
 	) {
-		// Process the shapes/operations in the order given
-		return( pShapeList );
+		List<CSGShape> sortedShapes = new ArrayList<>( pShapeList );
+		Collections.sort( sortedShapes, new Comparator<CSGShape>() {
+			@Override
+			public int compare( CSGShape pA, CSGShape pB ) {
+				int thisOrder = pA.getOrder(), otherOrder = pB.getOrder();
+				return( thisOrder - otherOrder );
+			}
+		});
+		return( sortedShapes );
 	}
 	
 	/** Connect to a shape */
@@ -180,6 +187,7 @@ public class CSGShapeIOB
 	) {
 		return( new CSGShapeIOB( pForShape, sEmptyFaces ) );
 	}
+
 	
 	/** Accessor to the list of faces */
 	protected List<CSGFace> getFaces(
@@ -191,7 +199,7 @@ public class CSGShapeIOB
 		if ( mFaces.isEmpty() && (mShape.getMesh() != null) ) {
 			// Generate the faces
 			mFaces = fromMesh( mShape.getMesh()
-								, mShape.getLocalTransform()
+								, mShape.getCSGTransform()
 								, pMaterialManager
 								, pLevelOfDetail
 								, pTempVars

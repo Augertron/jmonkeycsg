@@ -1,0 +1,111 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+    <lights class='com.jme3.light.LightList'>
+        <lights>
+        <!-- 
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        -->
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        	<com.jme3.light.PointLight name='BLight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='0.5' b='0' a='1'/>
+        		<position class='com.jme3.math.Vector3f' x='20.0' y='20.0' z='30.0'/>>
+        	</com.jme3.light.PointLight>
+        </lights>
+    </lights>
+	<children>
+		<!-- A corridor -->
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        		singleMaterial='false' 
+        		generateTangentBinormal='true'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml' >
+        		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+        		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
+        		<!-- materialName='Textures/Debug/Normals.xml' -->
+        		<!-- materialName='Textures/Debug/Wireframe.xml' -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.0' zExtent='10.0'>
+	                    <scaleFaces>
+	                    	<com.jme3.math.Vector3f x='1.0' y='10.0' z='48'/>
+	                    	<com.jme3.math.Vector3f x='10.0' y='1.0' z='12'/>
+	                    </scaleFaces>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/>
+                    </transform>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE' >
+                		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+                	<shapes>
+                		<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
+		                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+		                    	 	xExtent='0.5' yExtent='0.25' zExtent='0.5'>
+		                    	<scaleFaces>
+		                    		<com.jme3.math.Vector3f x='1.0' y='0.5' z='3'/>
+		                    		<com.jme3.math.Vector3f x='19.9' y='1.0' z='12'/>
+		                    		<com.jme3.math.Vector3f x='1.0' y='19.9' z='48'/>
+		                    	</scaleFaces>
+		                    </mesh>
+		                    <transform class='com.jme3.math.Transform'>
+		                        <translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+		                    </transform>
+		                </net.wcomohundro.jme3.csg.CSGShape>
+                		<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+		                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+		                    	 	axisSamples='34' closed='true' zExtent='0.5' 
+		                    	 	radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'>
+		                    	<scaleFaces>
+		                    		<com.jme3.math.Vector3f x='19.9' y='5.0' z='64'/>
+		                    	</scaleFaces>
+		                    </mesh>
+		                </net.wcomohundro.jme3.csg.CSGShape>
+		            </shapes>
+                    <transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
+                    </transform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
+	            
+                <net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'>
+                		<!-- materialName='Textures/Rock/Rock2.xml'> -->
+                		<!-- materialName='Textures/Rock/Rock1Rpt.xml'> -->
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='0.9' yExtent='0.5' zExtent='0.9'>
+                    	<!--scaleFaces>
+	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='48'/>
+	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='12'/>
+                    	</scaleFaces-->
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='0' y='0.5' z='10'/>
+                    </transform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
+
+	            <net.wcomohundro.jme3.csg.CSGShape name='BackDoor' operator='DIFFERENCE'>
+	            		<!-- materialName='Textures/Debug/Normals.xml' -->
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                    		radius='0.5' zExtent='0.4'>
+                    	<!--scaleFaces>
+	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='48'/>
+	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='12'/>
+                    	</scaleFaces-->
+                    </mesh>
+                    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+                        <translation class='com.jme3.math.Vector3f' x='0.7' y='-0.475' z='-9.0'/>
+                        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' yawl='PI/2' pitch='PI/32'/>
+                    </csgtransform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
+	            
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+
+	</children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

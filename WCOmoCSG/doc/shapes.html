@@ -46,6 +46,7 @@
 				<li><a href="#sphere">CSGSphere</a></li>
 				<li><a href="#pipe">CSGPipe</a></li>
 				<li><a href="#spline">CSGSplineGenerator</a></li>			
+				<li><a href="#material">CSGMaterial</a></li>			
 			</ul>
 		</div>
 	</div>
@@ -303,7 +304,7 @@ occurs, take action to adjust the slice to eliminate the collision.</dd>
  	<img src="images/CSGPipes.png" alt="CSGBoxes">
  	<p>From left to right: spline, torus, helix.</p>
  	
-    <h3 id='spline'>CSGSplineGenerator</h3>
+    <h3 id='spline'>CSGSplineGenerator (helper class)</h3>
     <p><i>CSGSplineGenerator</i> is not a shape.  Rather, it is a helper class that can assist
  in the generation of a spline used by CSGPipe.  The spline can be defined by:</p>
  		<ul>
@@ -348,6 +349,28 @@ a complete torus.  A value greater than 2Pi is only meaningful for a helix.</dd>
  	<img src="images/CSGTwisted.png" alt="CSGBoxes">
  	<p>A sample torus, where each slice is scaled in x/y to produce an ellipse, the slices are 
 twisted from front to back, and beginning radius is different from the end radius.</p>
+ 	
+ 	<h3 id='material'>CSGMaterial (helper class)</h3>
+    <p><i>CSGMaterial</i> is not a shape.  Rather, it is a helper class that can assist in 
+applying custom materials to different <i>faces</i> in a CSGMesh.  In most regards, a CSGMesh
+plays the part of a standard jme3 Mesh.  And while a Mesh understands its own Texture Coordinate
+mapping, it has no knowledge of the Material that is applied. Material is defined and applied by the
+Geometry that contains the Mesh.</p>
+	<p>But within the CSG realm, it becomes very handy if the underlying CSGMesh can associate a 
+different Material to different faces.  For example, say you are going to define a <i>Room</i> by 
+subtracting a smaller inner Box from a slightly larger outer Box. If you want different materials
+applied to the floor versus the ceiling versus the walls, then you are stuck using some kind of
+Material mapping convention or by using multiple primitives to represent the various components.</p>
+	<p>Since CSGMesh understands custom Materials mapped to its various faces, and since CSGGeonode
+understands operating with multiple Materials, in becomes quite easy to define face-specific Materials
+directly on CSGBox, and let the CSG standard processing apply the proper Material to the appropriate
+surfaces. </p>
+	<blockquote><b>Note</b> that to the core jme3 processing, a CSGBox is just a Mesh. There is no
+core process to notice that custom Materials have been defined at the Mesh level.  But the CSGShape
+processing does understand multiple Materials applied to primitives, and it especially looks for
+CSGMesh.  So if you include a CSGBox with custom Materials with a jme3 Geometry node, those 
+Materials are ignored.  But if you include that same CSGBox via a CSGShape added to a
+CSGGeonode, then the custom Materials are used.</blockquote>
  	
 	</div>
  </div>

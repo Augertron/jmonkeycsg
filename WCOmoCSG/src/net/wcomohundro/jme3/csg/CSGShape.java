@@ -35,6 +35,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -211,6 +213,10 @@ public class CSGShape
 	protected CSGGeometry.CSGOperator	mOperator;
 	/** Arbitrary 'ordering' of operations within the geometry */
 	protected int						mOrder;
+	/** If this shape represents a group of blended shapes, these are the subshapes */
+	protected List<CSGShape>			mSubShapes;
+	/** If this shape is a subshape within another shape, this is the parent shape */
+	protected CSGShape					mParentShape;
 
 	
 	/** Generic constructor */
@@ -272,6 +278,10 @@ public class CSGShape
 				// Take this opportunity to register every custom face material in the mesh
 				((CSGMesh)this.mesh).registerMaterials( pMaterialManager );
 			}
+		} else if ( this.mSubShapes != null ) {
+			// No mesh, but use a shallow copy of the subshapes
+			aClone = (CSGShape)super.clone( false );
+			aClone.setOrder( mOrder );
 		} else {
 			// Empty with no mesh
 			aClone = new CSGShape( this.getName(), this.mOrder );
@@ -295,6 +305,10 @@ public class CSGShape
 		}
 		return( mHandler );
 	}
+	
+	/** Accessor to the parent shape */
+	public CSGShape getParentShape() { return mParentShape; }
+	public void setParentShape( CSGShape pParent ) { mParentShape = pParent; }
 	
 	/** Ready a list of shapes for processing */
 	public List<CSGShape> prepareShapeList(
@@ -328,6 +342,32 @@ public class CSGShape
 		// Base the index on the underlying material
 		return( pMaterialManager.resolveMaterialIndex( useMaterial ) );
 	}
+	
+	/** Accessor to the transform to apply to the underlying Mesh */
+	public Transform getCSGTransform(
+	) {
+		// The local transform applies for sure
+		Transform aTransform = this.getLocalTransform();
+		if ( Transform.IDENTITY.equals( aTransform ) ) {
+			// Not really a transform
+			aTransform = null;
+		}
+		// If we are a subshape, then the parent's transform applies as well
+		if ( mParentShape != null ) {
+			Transform parentTransform = mParentShape.getCSGTransform();
+			if ( parentTransform != null ) {
+				// The parent transform must be incorporated
+				if ( aTransform == null ) {
+					// Nothing locally, just use the parent
+					aTransform = parentTransform;
+				} else {
+					// Blend together
+					aTransform = aTransform.clone().combineWithParent( parentTransform );
+				}
+			}
+		}
+		return( aTransform );
+	}
 
 	/** Accessor to the operator */
 	public CSGGeometry.CSGOperator getOperator() { return mOperator; }
@@ -352,7 +392,9 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		return( getHandler( pEnvironment ).union( pOtherShape, pMaterialManager, pTempVars, pEnvironment ) );
+		CSGShape useShape = this.prepareShape( pMaterialManager, pTempVars, pEnvironment );
+		CSGShape useOther = pOtherShape.prepareShape( pMaterialManager, pTempVars, pEnvironment );
+		return( useShape.getHandler( pEnvironment ).union( useOther, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 	
 	/** Subtract a shape from this one */
@@ -362,7 +404,9 @@ public class CSGShape
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		return( getHandler( pEnvironment ).difference( pOtherShape, pMaterialManager, pTempVars, pEnvironment ) );
+		CSGShape useShape = this.prepareShape( pMaterialManager, pTempVars, pEnvironment );
+		CSGShape useOther = pOtherShape.prepareShape( pMaterialManager, pTempVars, pEnvironment );
+		return( useShape.getHandler( pEnvironment ).difference( useOther, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 
 	/** Find the intersection with another shape */
@@ -372,7 +416,9 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		return( getHandler( pEnvironment ).intersection( pOtherShape, pMaterialManager, pTempVars, pEnvironment ) );
+		CSGShape useShape = this.prepareShape( pMaterialManager, pTempVars, pEnvironment );
+		CSGShape useOther = pOtherShape.prepareShape( pMaterialManager, pTempVars, pEnvironment );
+		return( useShape.getHandler( pEnvironment ).intersection( useOther, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 
 	/** Produce the mesh(es) that corresponds to this shape
@@ -385,7 +431,8 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		return( getHandler( pEnvironment ).toMesh( pMaxMaterialIndex, pMaterialManager, pTempVars, pEnvironment ) );
+		CSGShape useShape = this.prepareShape( pMaterialManager, pTempVars, pEnvironment );
+		return( useShape.getHandler( pEnvironment ).toMesh( pMaxMaterialIndex, pMaterialManager, pTempVars, pEnvironment ) );
 	}
 		
 	
@@ -425,6 +472,9 @@ public class CSGShape
 	        		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
 	        	}
 	        }
+		} else {
+			// If we have no mesh, look for a subgroup of shapes
+			mSubShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
 		}
 		if ( localTransform == Transform.IDENTITY ) {
 			// No explicit transform, look for a proxy
@@ -435,6 +485,72 @@ public class CSGShape
 		}
 	}
 
+	/** Service routine to use the appropriate representation of this shape */
+	protected CSGShape prepareShape(
+		CSGMaterialManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		if ( mSubShapes == null ) {
+			// No special processing, just use the shape as is
+			return( this );
+		}
+		// Sort the shapes as needed by their handler
+		List<CSGShape> sortedShapes = prepareShapeList( mSubShapes, pEnvironment );
+		
+		// Use this Material as the generic one for all the sub shapes
+		Material parentMaterial = this.getMaterial();
+		pMaterialManager.pushGenericIndex( parentMaterial );
+		try {
+			// Operate on each shape in turn, blending it into the common
+			CSGShape aProduct = null;
+			for( CSGShape aShape : sortedShapes ) {
+				aShape.setParentShape( this );
+				
+				// Apply the operator
+				switch( aShape.getOperator() ) {
+				case UNION:
+					if ( aProduct == null ) {
+						// A place to start
+						aProduct = aShape.clone( pMaterialManager, this.getLodLevel(), pEnvironment );
+					} else {
+						// Blend together
+						aProduct = aProduct.union( aShape, pMaterialManager, pTempVars, pEnvironment );
+					}
+					break;
+					
+				case DIFFERENCE:
+					if ( aProduct == null ) {
+						// NO PLACE TO START
+					} else {
+						// Blend together
+						aProduct = aProduct.difference( aShape, pMaterialManager, pTempVars, pEnvironment );
+					}
+					break;
+					
+				case INTERSECTION:
+					if ( aProduct == null ) {
+						// A place to start
+						aProduct = aShape.clone( pMaterialManager, this.getLodLevel(), pEnvironment );
+					} else {
+						// Blend together
+						aProduct = aProduct.intersection( aShape, pMaterialManager, pTempVars, pEnvironment );
+					}
+					break;
+					
+				case SKIP:
+					// This shape is not taking part
+					break;
+				}
+			}
+			// The final product if what is used as the result of the group
+			return( aProduct );
+			
+		} finally {
+			pMaterialManager.popGenericIndex();
+		}
+	}
+		
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(
@@ -445,5 +561,5 @@ public class CSGShape
 													, sCSGShapeDate
 													, pBuffer ) );
 	}
-
 }
+

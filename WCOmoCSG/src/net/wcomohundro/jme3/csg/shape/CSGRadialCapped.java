@@ -46,7 +46,6 @@ import java.nio.FloatBuffer;
 
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
-import net.wcomohundro.jme3.csg.shape.CSGBox.Face;
 
 
 /** Specialization of a radial CSG shape that has:
@@ -78,17 +77,6 @@ public abstract class CSGRadialCapped
     ,	UNIFORM_LINEAR	// Flat, uniform end caps, curved surface is linear front-to-back
     }
     
-	/** Identify the 3 faces of the cylinder  */
-	public enum Face {
-		BACK, SIDES, FRONT, NONE;
-		
-		private int mask;
-		Face() {
-			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
-		}
-		public int getMask() { return mask; }
-	}
-
     /** The radius of the back cap */
     protected float 		mRadiusBack;
 	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */

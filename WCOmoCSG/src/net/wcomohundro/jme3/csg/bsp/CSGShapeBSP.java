@@ -277,6 +277,7 @@ public class CSGShapeBSP
 	) {
 		List<CSGShape> sortedShapes = new ArrayList<>( pShapeList );
 		Collections.sort( sortedShapes, new Comparator<CSGShape>() {
+			@Override
 			public int compare( CSGShape pA, CSGShape pB ) {
 				int thisOrder = pA.getOrder(), otherOrder = pB.getOrder();
 				
@@ -354,6 +355,7 @@ public class CSGShapeBSP
 	) {
 		return( new CSGShapeBSP( pForShape, sEmptyPolygons ) );
 	}
+
 	
 	/** Accessor to the list of polygons */
 	protected List<CSGPolygon> getPolygons(
@@ -365,7 +367,7 @@ public class CSGShapeBSP
 		if ( mPolygons.isEmpty() && (mShape.getMesh() != null) ) {
 			// Generate the polygons
 			mPolygons = fromMesh( mShape.getMesh()
-									, mShape.getLocalTransform()
+									, mShape.getCSGTransform()
 									, pMaterialManager
 									, pLevelOfDetail
 									, pTempVars

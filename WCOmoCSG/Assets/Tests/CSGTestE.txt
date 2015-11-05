@@ -2,15 +2,16 @@
 //Models/CSGLoadEnvironmentIOB.xml
 //Models/CSGLoadEnvironmentBSP.xml
 
-//Models/CSGLoadSimpleBoxes.xml
+Models/CSGLoadSimpleBoxes.xml
 //Models/CSGLoadSimpleCylinders.xml
 //Models/CSGLoadSimpleSpheres.xml
 //Models/CSGLoadSimplePipes.xml
 
 //Models/CSGLoadCSGSamples.xml
 
-Models/CSGLoadMultiTexture.xml
 Models/CSGLoadCSGNormalTests.xml
+Models/CSGLoadMultiTexture.xml
+Models/CSGLoadCSGShapeGroups.xml
 
 //Models/CSGLoadEpsilon2.xml
 

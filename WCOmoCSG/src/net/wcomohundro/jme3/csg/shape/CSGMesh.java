@@ -64,10 +64,16 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	
  	1)	The 'front' of the shape is in the x/y plane with a positive z, facing the viewer
  	2)	The 'back' of the shape is in the x/y plane with a negative z, facing away from the viewer
+ 	
  	3)	The 'top' of the shape is in the x/z plane with a positive y, facing up
  	4)	The 'bottom' of the shape is in the x/z plane with a negative y, facing down
  	5)	The 'left' of the shape is in the y/z plane with a negative x, facing to the left
  	6)	The 'right' of the shape is in the y/z plane with a positive x, facing to the right
+ 	
+ 	7)	If top/bottom/left/right are not appropriate, but the shape still has a surface
+ 		perpendicular to the front/back, this is the 'sides' face
+ 		
+ 	8)	If none of the above is appropriate, then there is the 'surface' face which applies to the whole
  	
  	In particular, those shapes that are based on samples along an axis will follow the z axis, 
  	producing vertices in x/y for the given z point.
@@ -103,6 +109,18 @@ public abstract class CSGMesh
 	/** Version tracking support */
 	public static final String sCSGMeshRevision="$Rev$";
 	public static final String sCSGMeshDate="$Date$";
+
+	/** Identify the faces of the shape  */
+	public enum Face {
+//		1      2     4     8      16   32      64     128      0
+		FRONT, BACK, LEFT, RIGHT, TOP, BOTTOM, SIDES, SURFACE, NONE;
+		
+		private int mask;
+		Face() {
+			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
+		}
+		public int getMask() { return mask; }
+	}
 
 	/** The texture scaling configuration */
 	protected Vector2f			mScaleTexture;
@@ -154,7 +172,16 @@ public abstract class CSGMesh
 		mGenerateTangentBinormal = pFlag;
 	}
 	
-	/** Accessor to the material that applies to the given surface */
+	/** Accessor to the per-face custom materials */
+	public List<CSGMaterial>	getFaceMaterial() { return mFaceMaterialList; }
+	public void setFaceMaterials(
+		List<CSGMaterial>	pMaterialList
+	) {
+		mFaceMaterialList = pMaterialList;
+	}
+	
+	
+	/** FOR CSGShape PROCESSING: Accessor to the material that applies to the given surface */
 	public Material getMaterial(
 		int					pFaceIndex
 	) {
@@ -162,7 +189,7 @@ public abstract class CSGMesh
 		return( null );
 	}
 	
-	/** Register every custom face material */
+	/** FOR CSGShape PROCESSING: Register every custom face material */
 	public void registerMaterials(
 		CSGMaterialManager	pMaterialManager
 	) {
