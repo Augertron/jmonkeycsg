@@ -57,21 +57,21 @@ public class CSGFaceProperties
 	public static final String sCSGFacePropertiesDate="$Date$";
 
 	
-	/** Identify the faces of the shape  */
+	/** Identify the faces of the shape -- selected by bit mask */
 	public enum Face {
 		NONE(0)
 		
 ,		FRONT(1)
 , 		BACK(2)
-,		FRONT_BACK(3)
+,		FRONT_BACK(1+2)
 
 , 		LEFT(4)
 , 		RIGHT(8)
-,		LEFT_RIGHT(12)
+,		LEFT_RIGHT(4+8)
 
 , 		TOP(16)
 , 		BOTTOM(32)
-,		TOP_BOTTOM(48)
+,		TOP_BOTTOM(16+32)
 
 , 		SIDES(64)
 , 		SURFACE(128)

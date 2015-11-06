@@ -255,10 +255,11 @@
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'>
-	                    <scaleFaces>
-	                    	<com.jme3.math.Vector3f x='1.0' y='10.0' z='48'/>
-	                    	<com.jme3.math.Vector3f x='10.0' y='1.0' z='12'/>
-	                    </scaleFaces>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.0'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='10' scaleY='1.0'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='10.0'/>
+		            	</faceProperties>
                     </mesh>
                     <transform class='com.jme3.math.Transform'>
                         <scale class='com.jme3.math.Vector3f' x='1.0' y='1.0' z='10.0'/>
@@ -269,9 +270,9 @@
                 		materialName='Textures/BrickWall/BrickWallRpt.xml'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
                     	 axisSamples='34' closed='true' height='1.0' radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'>
-                    	<scaleFaces>
-                    		<com.jme3.math.Vector3f x='9.95' y='3' z='2'/>
-                    	</scaleFaces>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='9.95' scaleY='3.0'/>
+		            	</faceProperties>
                     </mesh>
                     <transform class='com.jme3.math.Transform'>
                         <scale class='com.jme3.math.Vector3f' x='1.95' y='1.95' z='19.9'/>
@@ -282,10 +283,6 @@
                 		<!-- materialName='Textures/Rock/Rock2Rpt.xml'> -->
                 		<!-- materialName='Textures/Rock/Rock2.xml'> -->
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.98' yExtent='0.98' zExtent='0.6'>
-                    	<!--scaleFaces>
-	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='48'/>
-	                    	<com.jme3.math.Vector3f x='0.5' y='0.5' z='12'/>
-                    	</scaleFaces-->
                     </mesh>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' x='0.0' y='0.3' z='10'/>
@@ -308,11 +305,9 @@
                     </transform>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
                     		xExtent='2.0' yExtent='2.0' zExtent='2.0'>
-	                    <scaleFaces>
-	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='48'/>
-	                    	<com.jme3.math.Vector3f x='3.0' y='10.0' z='3'/>
-	                    	<com.jme3.math.Vector3f x='3.0' y='10.0' z='12'/>
-	                    </scaleFaces>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties faceMask='63' scaleX='2' scaleY='2'/>
+		            	</faceProperties>
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 
@@ -326,9 +321,9 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='4PI' firstRadial='1PI/4' helix='4' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='8.0' z='64'/>
-		            	</scaleFaces>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleY='4PI'/>
+		            	</faceProperties>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
@@ -348,11 +343,6 @@
                     </transform>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
                     		xExtent='2.0' yExtent='1.0' zExtent='1.0'>
-	                    <!-- scaleFaces>
-	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='48'/>
-	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='3'/>
-	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='12'/>
-	                    </scaleFaces -->
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 
@@ -367,9 +357,9 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='64'/>
-		            	</scaleFaces>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleY='7PI/4'/>
+		            	</faceProperties>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>   
 		        		         
@@ -389,11 +379,6 @@
                     </transform>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
                     		xExtent='2.0' yExtent='1.0' zExtent='1.0'>
-	                    <!-- scaleFaces>
-	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='48'/>
-	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='3'/>
-	                    	<com.jme3.math.Vector3f x='3.0' y='3.0' z='12'/>
-	                    </scaleFaces -->
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 
@@ -408,9 +393,9 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='64'/>
-		            	</scaleFaces>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleY='7PI/4'/>
+		            	</faceProperties>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>

@@ -44,6 +44,7 @@ import java.util.Map;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
 import net.wcomohundro.jme3.math.CSGTransform;
 
@@ -217,6 +218,8 @@ public class CSGShape
 	protected List<CSGShape>			mSubShapes;
 	/** If this shape is a subshape within another shape, this is the parent shape */
 	protected CSGShape					mParentShape;
+	/** The list of custom Materials to apply to the various faces of the interior components */
+	protected List<CSGFaceProperties>	mFaceProperties;
 
 	
 	/** Generic constructor */
@@ -444,9 +447,11 @@ public class CSGShape
 		// Let the geometry do its thing
 		super.write( pExporter );
 		
-		OutputCapsule capsule = pExporter.getCapsule( this );
-		capsule.write( mOrder, "order", 0 );
-		capsule.write( mOperator, "operator", CSGGeometry.CSGOperator.UNION );
+		OutputCapsule aCapsule = pExporter.getCapsule( this );
+		aCapsule.write( mOrder, "order", 0 );
+		aCapsule.write( mOperator, "operator", CSGGeometry.CSGOperator.UNION );
+		
+		aCapsule.writeSavableArrayList( (ArrayList)mFaceProperties, "faceProperties", null );
 	}
 
 	@Override
@@ -483,6 +488,8 @@ public class CSGShape
 				localTransform = proxyTransform.getTransform();
 			}
 		}
+		// Look for possible face properties to apply to interior mesh/subgroup
+        mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
 	}
 
 	/** Service routine to use the appropriate representation of this shape */
@@ -492,7 +499,30 @@ public class CSGShape
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( mSubShapes == null ) {
-			// No special processing, just use the shape as is
+			// If we have face properties here at the Shape level, apply scaling now
+			if ( mesh instanceof CSGMesh ) {
+				// We are wrapping around a Mesh that supports per-face texture scale
+				CSGMesh thisMesh = (CSGMesh)mesh;
+				List<CSGFaceProperties> propList = mFaceProperties;
+				if ( propList != null ) {
+					// The setting on the CSGShape apply to its child mesh
+					for( CSGFaceProperties aProperty : propList ) {
+						if ( aProperty.hasScaleTexture() ) {
+							thisMesh.scaleFaceTextureCoordinates( aProperty.getScaleTexture(), aProperty.getFaceMask() );
+						}
+		        	}
+				}
+				// If this shape is part of a subgroup within a parent, apply the parent settings
+				if ( (mParentShape != null) && ((propList = mParentShape.mFaceProperties) != null) ) {
+					// The setting on the parent CSGShape apply to this child mesh
+					for( CSGFaceProperties aProperty : propList ) {
+						if ( aProperty.hasScaleTexture() ) {
+							thisMesh.scaleFaceTextureCoordinates( aProperty.getScaleTexture(), aProperty.getFaceMask() );
+						}
+		        	}
+					
+				}
+			}
 			return( this );
 		}
 		// Sort the shapes as needed by their handler

@@ -184,13 +184,55 @@ public abstract class CSGMesh
 		}
 		return( null );
 	}
+	protected Material matchFaceMaterial(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one if it has a material
+					Material aMaterial = aProperty.getMaterial();
+					if ( aMaterial != null ) {
+						return( aMaterial );
+					}
+					// NOTE that we could match a property based on the bitmask, but if
+					//		it has no material, we will keep looking.  This lets us use
+					//		separate definitions for scale versus material
+				}
+			}
+		}
+		return( null );
+	}
+	protected Vector2f matchFaceScale(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one if it has a scale
+					Vector2f aScale = aProperty.getScaleTexture();
+					if ( aScale != null ) {
+						return( aScale );
+					}
+					// NOTE that we could match a property based on the bitmask, but if
+					//		it has no scale, we will keep looking.  This lets us use
+					//		separate definitions for scale versus material
+				}
+			}
+		}
+		return( null );
+	}
 	
 	/** Service routine to match a custom material to a given face */
 	protected Material resolveFaceMaterial(
 		int			pFaceBit
 	) {
-		CSGFaceProperties aProperty = matchFaceProperties( pFaceBit );
-		return( (aProperty == null) ? null : aProperty.getMaterial() );
+		Material aMaterial = matchFaceMaterial( pFaceBit );
+		return( aMaterial );
 	}
 		
 	/** Every CSGMesh is expected to be able to rebuild itself from its fundamental
