@@ -237,7 +237,7 @@ public class CSGGeometry
 							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.union( aShape, materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.union( aShape.refresh(), materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -246,7 +246,7 @@ public class CSGGeometry
 							// NO PLACE TO START
 						} else {
 							// Blend together
-							aProduct = aProduct.difference( aShape, materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.difference( aShape.refresh(), materialManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -256,7 +256,7 @@ public class CSGGeometry
 							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.intersection( aShape, materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.intersection( aShape.refresh(), materialManager, tempVars, pEnvironment );
 						}
 						break;
 						

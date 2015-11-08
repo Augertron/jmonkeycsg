@@ -2,6 +2,11 @@
 //Models/CSGLoadEnvironmentIOB.xml
 //Models/CSGLoadEnvironmentBSP.xml
 
+//Lights/ShadowPointLight.xml
+//Lights/ShadowDirectionalLight.xml
+
+Models/PrimitiveWalls.xml
+
 //Models/CSGLoadSimpleBoxes.xml
 //Models/CSGLoadSimpleCylinders.xml
 //Models/CSGLoadSimpleSpheres.xml

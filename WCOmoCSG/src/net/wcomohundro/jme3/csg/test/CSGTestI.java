@@ -49,19 +49,26 @@ import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
+import com.jme3.light.AmbientLight;
 import com.jme3.light.Light;
+import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.post.Filter;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.SceneProcessor;
+import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.AbstractShadowRenderer;
-import com.jme3.shadow.DirectionalLightShadowRenderer;
+import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.shadow.PointLightShadowFilter;
 import com.jme3.shadow.PointLightShadowRenderer;
 import com.jme3.texture.Texture;
@@ -77,7 +84,7 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 
 
 /** Exercise the import facility */
-public class CSGTestE 
+public class CSGTestI 
 	extends SimpleApplication 
 	implements Runnable
 {
@@ -115,7 +122,7 @@ public class CSGTestE
 	/** Video capture */
 	protected AppState		mVideo;
 
-	public CSGTestE(
+	public CSGTestI(
 		String[]	pArgs
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
@@ -166,6 +173,59 @@ public class CSGTestE
         }
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
 	    
+        /** Raw shadow elements */
+        
+        AmbientLight al = new AmbientLight( ColorRGBA.White.mult(0.2f) );
+        rootNode.addLight( al );
+        
+        Geometry ground = new Geometry( "soil", new Box( 200f, 0.1f, 200f ) );
+        ground.setLocalTranslation( 0f, -1.0f, 0f );
+        Material unshaded = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Material matGroundU = unshaded.clone();
+        matGroundU.setColor( "Color", ColorRGBA.Green.mult( 0.5f ) );
+        ground.setMaterial( matGroundU );
+        ground.setShadowMode( ShadowMode.Receive );
+        rootNode.attachChild( ground );
+/***
+        Geometry box = new Geometry("box", new Box( 0.5f, 1f, 3f ));
+        Material boxMaterial = new Material( assetManager, "Textures/BrickWall/BrickWallRpt.xml" );
+        box.setMaterial( boxMaterial );
+        box.setShadowMode( RenderQueue.ShadowMode.CastAndReceive );
+        box.setLocalTranslation( -1f, 0.5f, -1f );
+        
+        rootNode.attachChild(box);
+***/
+        // Add the light source
+        if ( true ) {
+        	loadElement( "Lights/ShadowPointLight.xml", new StringBuffer() );
+        } else {
+	        PointLight aLight = new PointLight( new Vector3f( 10f, 10f, 10f )
+	        									, new ColorRGBA( 1f, 0.5f, 0f, 1f )
+	        									, 50f );
+	        rootNode.addLight( aLight );
+	        
+	        PointLightShadowRenderer plsr = new PointLightShadowRenderer(assetManager, 512 );
+	        plsr.setLight( aLight );
+	        //plsr.setEdgeFilteringMode( EdgeFilteringMode.PCF4 );
+	        //plsr.setShadowZExtend(15);
+	        //plsr.setShadowZFadeLength(5);
+	        //plsr.setFlushQueues(false);
+	        //plsr.displayFrustum();
+	        //plsr.displayDebug();
+	        
+	        viewPort.addProcessor(plsr);
+        
+	        PointLightShadowFilter plsf = new PointLightShadowFilter(assetManager, 512 );
+	        plsf.setLight( aLight );    
+	        plsf.setShadowZExtend(15);
+	        plsf.setShadowZFadeLength(5);
+	        plsf.setEdgeFilteringMode(EdgeFilteringMode.PCF4);
+	        plsf.setEnabled(false);
+	
+	        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+	        fpp.addFilter(plsf);
+	        //viewPort.addProcessor(fpp);
+        }
 	    loadScene();
     }
     
@@ -252,11 +312,62 @@ public class CSGTestE
     		mLoadedSpatial = null;
     	}
     }
+    
+    /** Service routine to load and include a given component */
+    protected Object loadElement(
+    	String			pAssetName
+    ,	StringBuffer	pStatus
+    ) {
+    	pStatus.append( pAssetName );
+    	
+		// Suppress any asset caching
+    	NonCachingKey aKey = new NonCachingKey( pAssetName );
+    	Object aNode = assetManager.loadAsset( aKey );
+    	
+    	if ( aNode instanceof CSGEnvironment ) {
+    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
+    		CSGVersion.reportVersion();
+
+    		pStatus.append( " *** Processing Environment Reset" );
+    		
+    	} else if ( aNode instanceof Spatial ) {
+    		if ( aNode instanceof CSGSpatial ) {
+    			CSGSpatial csgSpatial = (CSGSpatial)aNode;
+    			if ( csgSpatial.isValid() ) {
+    				// Include timing
+    				pStatus.append( " (" );
+    				pStatus.append( csgSpatial.getShapeRegenerationNS() / 1000000 );
+    				pStatus.append( "ms)" );
+    			} else {
+    				// Something bogus in the construction
+    				pStatus.append( " ***Invalid shape" );
+    			}
+    		}
+    		mLoadedSpatial = (Spatial)aNode;
+    		
+    	} else if ( aNode instanceof SceneProcessor ) {
+    		Light aLight = null;
+    		if ( aNode instanceof PointLightShadowRenderer ) {
+    			aLight = ((PointLightShadowRenderer)aNode).getLight();
+    			
+    			//((PointLightShadowRenderer)aNode).displayDebug();
+    		}
+    		if ( aLight != null ) {
+    			rootNode.addLight( aLight );
+    		}
+    		viewPort.addProcessor( (SceneProcessor)aNode );
+    		
+    		pStatus.append( " *** SceneProcessor added" );
+    	}
+    	return( aNode );
+    }
 
     /////////////////////// Implement Runnable ////////////////
     public void run(
     ) {
     	boolean isActive = true;
+    	StringBuffer reportString = new StringBuffer( 256 );
+    	
     	while( isActive ) {
     		synchronized( this ) {
 	    		if ( mLoadingScene == null ) try {
@@ -266,67 +377,20 @@ public class CSGTestE
 	    			mLoadingScene = null;
 	    		}
     		}
-    		String reportString = mLoadingScene;
+    		reportString.setLength( 0 );
     		if ( mLoadingScene != null ) try {
-    			// Suppress any asset caching
-    	    	NonCachingKey aKey = new NonCachingKey( mLoadingScene );
-    	    	Object aNode = assetManager.loadAsset( aKey );
-    	    	
-    	    	if ( aNode instanceof CSGEnvironment ) {
-    	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
-    	    		CSGVersion.reportVersion();
-
-    	    		reportString += " *** Processing Environment Reset";
-    	    		
-    	    	} else if ( aNode instanceof Spatial ) {
-    	    		if ( aNode instanceof CSGSpatial ) {
-    	    			CSGSpatial csgSpatial = (CSGSpatial)aNode;
-    	    			if ( csgSpatial.isValid() ) {
-    	    				// Include timing
-    	    				reportString += ( " (" + (csgSpatial.getShapeRegenerationNS() / 1000000) + "ms)" );
-    	    			} else {
-    	    				// Something bogus in the construction
-    	    				reportString += " ***Invalid shape";
-    	    			}
-    	    		}
-    	    		mLoadedSpatial = (Spatial)aNode;
-    	    		
-    	    	} else if ( aNode instanceof SceneProcessor ) {
-    	    		Light aLight = null;
-    	    		if ( aNode instanceof PointLightShadowRenderer ) {
-    	    			aLight = ((PointLightShadowRenderer)aNode).getLight();
-    	    		} else if ( aNode instanceof DirectionalLightShadowRenderer ) {
-    	    			aLight = ((DirectionalLightShadowRenderer)aNode).getLight();
-    	    		}
-    	    		if ( aLight != null ) {
-    	    			rootNode.addLight( aLight );
-    	    		}
-    	    		viewPort.addProcessor( (SceneProcessor)aNode );
-    	    		
-    	    		reportString += " *** SceneProcessor added";
-    	    		
-    	    	} else if ( aNode instanceof Filter ) {
-    	    		Light aLight = null;
-    	    		if ( aNode instanceof PointLightShadowFilter ) {
-    	    			aLight = ((PointLightShadowFilter)aNode).getLight();
-    	    		}
-    	    		if ( aLight != null ) {
-    	    			rootNode.addLight( aLight );
-    	    		}
-    	            FilterPostProcessor fpp = new FilterPostProcessor( assetManager );
-    	            fpp.addFilter( (Filter)aNode );
-    	            viewPort.addProcessor( fpp );
-
-    	            reportString += " *** PostFilter added";
-    	    	}
+    			reportString.append( mLoadingScene );
+    			loadElement( mLoadingScene, reportString );
+    			
         	} catch( Exception ex ) {
-        		reportString += " ***Load Scene Failed: " + ex;
+        		reportString.append( " ***Load Scene Failed: " );
+        		reportString.append(  ex );
 
     		} finally {
     			mLoadingScene = null;
     		}
     		if ( reportString != null ) {
-    			mPostText = reportString;
+    			mPostText = reportString.toString();
     		}
     	}
     }

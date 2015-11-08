@@ -32,6 +32,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
+import jme3test.light.TestPointLightShadows;
+
 import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
@@ -56,11 +58,14 @@ public class CSGTestDriver
 	    //app = new CSGTestB();			// Cube +/- cylinder direct calls, no import
 	    //app = new CSGTestC();			// Teapot +/- cube direct calls, no import
 	    //app = new CSGTestD();			// Export definitions
-	    app = new CSGTestE( args );		// Cycle through imports listed in CSGTestE.txt
+	    //app = new CSGTestE( args );	// Cycle through imports listed in CSGTestE.txt
 	    //app = new CSGTestF();			// Cycle through canned import list and apply physics
 	    //app = new CSGTestG();			// Level Of Detail
 	    //app = new CSGTestH();			// Test case for support ticket and raw shapes
+	    //app = new CSGTestI( args );		// Shadow test
+	    app = new CSGTestJ();			// Dynamic test from JME forum
 	        
+	    //app = new TestPointLightShadows();
 	    app.start();
 	}
 

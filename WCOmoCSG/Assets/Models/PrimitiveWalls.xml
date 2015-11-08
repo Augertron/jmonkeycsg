@@ -1,0 +1,41 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<com.jme3.scene.Node format_version='2' name='CSGSamples'>
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' z='0.0'/>
+    </transform>
+    <children>
+        <!-- Brickwall -->
+        <com.jme3.scene.Geometry name='Box2'
+                shadow_mode='CastAndReceive'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'
+            		xExtent='0.5' yExtent='1.0' zExtent='3.0'/>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+            </transform>
+        </com.jme3.scene.Geometry>
+        
+   		<!-- Rock1 -->
+        <com.jme3.scene.Geometry name='Box3'
+                shadow_mode='CastAndReceive'
+        		materialName='Textures/Rock/Rock1.xml'>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'
+            		xExtent='0.5' yExtent='2.0' zExtent='4.0'/>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.5'/>
+            </transform>
+        </com.jme3.scene.Geometry>  
+        
+   		<!-- Rock2 -->
+        <com.jme3.scene.Geometry name='Box4'
+                shadow_mode='CastAndReceive'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'
+            		xExtent='0.5' yExtent='0.5' zExtent='1.0'/>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-1.5' y='0.0'/>
+            </transform>
+        </com.jme3.scene.Geometry>  
+        
+    </children>
+</com.jme3.scene.Node>

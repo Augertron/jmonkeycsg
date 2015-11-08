@@ -179,6 +179,15 @@ public class CSGShapeIOB
 		mShape = pForShape;
 		return( this );
 	}
+	
+	/** Refresh this handler and ensure it is ready for blending */
+	@Override
+	public CSGShapeProcessor refresh(
+	) {
+		// Ensure we start with an empty list of faces
+		mFaces.clear();
+		return( this );
+	}
 
 	/** Make a copy of this shape */
 	@Override

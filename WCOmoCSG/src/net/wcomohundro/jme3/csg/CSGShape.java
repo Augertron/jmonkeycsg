@@ -116,6 +116,10 @@ public class CSGShape
 		public CSGShapeProcessor setShape(
 			CSGShape		pForShape
 		);
+		/** Refresh this handler and ensure it is ready for blending */
+		public CSGShapeProcessor refresh(
+		);
+
 		/** Make a copy */
 		public CSGShapeProcessor clone(
 			CSGShape		pForShape
@@ -259,6 +263,16 @@ public class CSGShape
 		mOrder = pOrder;
 	}
 		
+	/** Ensure this shape is ready to be blended --
+	 		In particular, assume that the Mesh underlying this shape may have been 
+	 		altered between one regenerate() call and the next.
+	 */
+	public CSGShape refresh(
+	) {
+		if ( this.mHandler != null ) this.mHandler.refresh();
+		return( this );
+	}
+	
 	/** Make a copy of this shape */
 	@Override
 	public CSGShape clone(
@@ -545,7 +559,7 @@ public class CSGShape
 						aProduct = aShape.clone( pMaterialManager, this.getLodLevel(), pEnvironment );
 					} else {
 						// Blend together
-						aProduct = aProduct.union( aShape, pMaterialManager, pTempVars, pEnvironment );
+						aProduct = aProduct.union( aShape.refresh(), pMaterialManager, pTempVars, pEnvironment );
 					}
 					break;
 					
@@ -554,7 +568,7 @@ public class CSGShape
 						// NO PLACE TO START
 					} else {
 						// Blend together
-						aProduct = aProduct.difference( aShape, pMaterialManager, pTempVars, pEnvironment );
+						aProduct = aProduct.difference( aShape.refresh(), pMaterialManager, pTempVars, pEnvironment );
 					}
 					break;
 					
@@ -564,7 +578,7 @@ public class CSGShape
 						aProduct = aShape.clone( pMaterialManager, this.getLodLevel(), pEnvironment );
 					} else {
 						// Blend together
-						aProduct = aProduct.intersection( aShape, pMaterialManager, pTempVars, pEnvironment );
+						aProduct = aProduct.intersection( aShape.refresh(), pMaterialManager, pTempVars, pEnvironment );
 					}
 					break;
 					

@@ -347,6 +347,15 @@ public class CSGShapeBSP
 		mShape = pForShape;
 		return( this );
 	}
+	
+	/** Refresh this handler and ensure it is ready for blending */
+	@Override
+	public CSGShapeProcessor refresh(
+	) {
+		// Ensure we start with an empty list of polygons
+		mPolygons.clear();
+		return( this );
+	}
 
 	/** Make a copy of this shape */
 	@Override

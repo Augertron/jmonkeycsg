@@ -10,24 +10,35 @@
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
         		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
         	</com.jme3.light.AmbientLight>
+        <!-- 
         	<com.jme3.light.PointLight name='BLight' enabled='true'>
         		<color class='com.jme3.math.ColorRGBA' r='1' g='0.5' b='0' a='1'/>
-        		<position class='com.jme3.math.Vector3f' x='20.0' y='20.0' z='30.0'/>>
+        		<position class='com.jme3.math.Vector3f' x='20.0' y='20.0' z='30.0'/>
         	</com.jme3.light.PointLight>
+        -->
         </lights>
     </lights>
 	<children>
+	    <com.jme3.scene.Geometry name='Box1' shadow_mode='CastAndReceive'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='4.0' y='2.0' z='-11.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
+        </com.jme3.scene.Geometry>
+	
 		<!-- A corridor -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
         		singleMaterial='false' 
         		generateTangentBinormal='true'
+        		shadow_mode='CastAndReceive'
         		materialName='Textures/BrickWall/BrickWallRpt.xml' >
         		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
         		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
         		<!-- materialName='Textures/Debug/Normals.xml' -->
         		<!-- materialName='Textures/Debug/Wireframe.xml' -->
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0' y='0'/>
+                <translation class='com.jme3.math.Vector3f' x='0' y='0' z='-10.0'/>
             </transform>
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
