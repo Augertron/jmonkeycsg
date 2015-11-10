@@ -53,6 +53,7 @@ import com.jme3.light.AmbientLight;
 import com.jme3.light.Light;
 import com.jme3.light.PointLight;
 import com.jme3.material.Material;
+import com.jme3.material.MaterialDef;
 import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
@@ -72,6 +73,7 @@ import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.shadow.PointLightShadowFilter;
 import com.jme3.shadow.PointLightShadowRenderer;
 import com.jme3.texture.Texture;
+import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.font.BitmapText;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
@@ -178,7 +180,7 @@ public class CSGTestI
         AmbientLight al = new AmbientLight( ColorRGBA.White.mult(0.2f) );
         rootNode.addLight( al );
         
-        Geometry ground = new Geometry( "soil", new Box( 200f, 0.1f, 200f ) );
+        Geometry ground = new Geometry( "soil", new Box( 200f, -0.5f, 200f ) );
         ground.setLocalTranslation( 0f, -1.0f, 0f );
         Material unshaded = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         Material matGroundU = unshaded.clone();
@@ -186,18 +188,20 @@ public class CSGTestI
         ground.setMaterial( matGroundU );
         ground.setShadowMode( ShadowMode.Receive );
         rootNode.attachChild( ground );
-/***
+        
         Geometry box = new Geometry("box", new Box( 0.5f, 1f, 3f ));
-        Material boxMaterial = new Material( assetManager, "Textures/BrickWall/BrickWallRpt.xml" );
+        Material boxMaterial = assetManager.loadMaterial( "Textures/Terrain/BrickWall/BrickWall2.j3m" );
         box.setMaterial( boxMaterial );
         box.setShadowMode( RenderQueue.ShadowMode.CastAndReceive );
-        box.setLocalTranslation( -1f, 0.5f, -1f );
+        box.setLocalTranslation( 1f, 0.5f, 1f );
+        TangentBinormalGenerator.generate( box );
         
         rootNode.attachChild(box);
-***/
+
         // Add the light source
-        if ( true ) {
-        	loadElement( "Lights/ShadowPointLight.xml", new StringBuffer() );
+        if ( false ) {
+        	//loadElement( "Lights/ShadowPointLight.xml", new StringBuffer() );
+        	loadElement( "Lights/ShadowDirectionalLight.xml", new StringBuffer() );
         } else {
 	        PointLight aLight = new PointLight( new Vector3f( 10f, 10f, 10f )
 	        									, new ColorRGBA( 1f, 0.5f, 0f, 1f )
@@ -205,15 +209,15 @@ public class CSGTestI
 	        rootNode.addLight( aLight );
 	        
 	        PointLightShadowRenderer plsr = new PointLightShadowRenderer(assetManager, 512 );
-	        plsr.setLight( aLight );
-	        //plsr.setEdgeFilteringMode( EdgeFilteringMode.PCF4 );
-	        //plsr.setShadowZExtend(15);
-	        //plsr.setShadowZFadeLength(5);
+	        //plsr.setLight( aLight );
+	        plsr.setEdgeFilteringMode( EdgeFilteringMode.PCF4 );
+	        plsr.setShadowZExtend(15);
+	        plsr.setShadowZFadeLength(5);
 	        //plsr.setFlushQueues(false);
 	        //plsr.displayFrustum();
 	        //plsr.displayDebug();
 	        
-	        viewPort.addProcessor(plsr);
+	        //viewPort.addProcessor(plsr);
         
 	        PointLightShadowFilter plsf = new PointLightShadowFilter(assetManager, 512 );
 	        plsf.setLight( aLight );    
@@ -224,7 +228,7 @@ public class CSGTestI
 	
 	        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
 	        fpp.addFilter(plsf);
-	        //viewPort.addProcessor(fpp);
+	        viewPort.addProcessor(fpp);
         }
 	    loadScene();
     }

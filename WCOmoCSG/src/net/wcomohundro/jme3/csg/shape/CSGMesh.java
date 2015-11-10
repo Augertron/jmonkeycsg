@@ -122,7 +122,7 @@ public abstract class CSGMesh
 	
 	/** Accessor to the per-face property configuration */
 	public List<CSGFaceProperties> getFaceProperties() { return mFaceProperties; }
-	public void setScaleFaces(
+	public void setFaceProperties(
 		List<CSGFaceProperties>		pPropertyList
 	) {
 		mFaceProperties = pPropertyList;

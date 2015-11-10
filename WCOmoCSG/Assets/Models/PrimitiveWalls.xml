@@ -11,7 +11,7 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'
             		xExtent='0.5' yExtent='1.0' zExtent='3.0'/>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.5'/>
             </transform>
         </com.jme3.scene.Geometry>
         
@@ -20,9 +20,9 @@
                 shadow_mode='CastAndReceive'
         		materialName='Textures/Rock/Rock1.xml'>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'
-            		xExtent='0.5' yExtent='2.0' zExtent='4.0'/>
+            		xExtent='0.5' yExtent='2.0' zExtent='5.0'/>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.5'/>
+                <translation class='com.jme3.math.Vector3f' x='1.5' y='0.5'/>
             </transform>
         </com.jme3.scene.Geometry>  
         

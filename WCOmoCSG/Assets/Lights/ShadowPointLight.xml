@@ -1,7 +1,7 @@
  
 <com.jme3.shadow.PointLightShadowRenderer 
  		shadowMapSize='1024' nbShadowMaps='6' shadowIntensity='0.6' 
- 		edgeFilteringMode='Nearest' edgesThickness='0.5'>
+ 		edgeFilteringMode='PCFPOISSON' edgesThickness='0.75'>
  	<light class='com.jme3.light.PointLight' name='APointLight' radius='50'>
      	<color class='com.jme3.math.ColorRGBA' r='1' g='0.5' b='0' a='1'/>
      	<position class='com.jme3.math.Vector3f' x='10.0' y='10.0' z='10.0'/>

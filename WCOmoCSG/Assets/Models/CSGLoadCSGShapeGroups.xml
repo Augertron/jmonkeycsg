@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='Scene with Grouped Corridor'>
     <lights class='com.jme3.light.LightList'>
         <lights>
         <!-- 
@@ -8,27 +8,49 @@
         	</com.jme3.light.AmbientLight>
         -->
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
-        		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+        		<color class='com.jme3.math.ColorRGBA' r='0.20' g='0.20' b='0.20' a='1'/>
         	</com.jme3.light.AmbientLight>
         <!-- 
-        	<com.jme3.light.PointLight name='BLight' enabled='true'>
-        		<color class='com.jme3.math.ColorRGBA' r='1' g='0.5' b='0' a='1'/>
-        		<position class='com.jme3.math.Vector3f' x='20.0' y='20.0' z='30.0'/>
-        	</com.jme3.light.PointLight>
+        	<com.jme3.light.PointLight name='PointLight' enabled='true'>
+       			<color class='com.jme3.math.ColorRGBA' r='.1' g='0.05' b='0' a='1'/>
+       			<position class='com.jme3.math.Vector3f' x='0' y='5' z='0.0'/>
+       		</com.jme3.light.PointLight>
+		    <com.jme3.light.SpotLight name='SpotLight' enabled='true' 
+		        		spotRange='70' spotInnerAngle='0.05' spotOuterAngle='0.5'>
+		        <color class='com.jme3.math.ColorRGBA' r='0' g='1' b='0' a='1'/>
+		        <position class='com.jme3.math.Vector3f' x='0' y='1' z='0'/>
+		        <direction class='com.jme3.math.Vector3f' x='0' y='-1.0' z='0'/>
+		    </com.jme3.light.SpotLight>
         -->
         </lights>
     </lights>
 	<children>
-	    <com.jme3.scene.Geometry name='Box1' shadow_mode='CastAndReceive'
+	    <net.wcomohundro.jme3.csg.CSGGeometry name='TheFloor' 
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='true'
+        		materialName='Textures/Rock/Rock2Rpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-1.1' z='0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='100' yExtent='0.1' zExtent='100'>
+            	<faceProperties>
+	                   <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='100' scaleY='100'/>
+		    	</faceProperties>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+	    <net.wcomohundro.jme3.csg.CSGGeometry name='Box1' 
+	    		shadow_mode='CastAndReceive'
+	    		generateTangentBinormal='true'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='4.0' y='2.0' z='-11.0'/>
+                <translation class='com.jme3.math.Vector3f' x='4.0' y='2.0' z='-5.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
-        </com.jme3.scene.Geometry>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
 	
 		<!-- A corridor -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='ACorridor'
         		singleMaterial='false' 
         		generateTangentBinormal='true'
         		shadow_mode='CastAndReceive'
@@ -37,9 +59,44 @@
         		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
         		<!-- materialName='Textures/Debug/Normals.xml' -->
         		<!-- materialName='Textures/Debug/Wireframe.xml' -->
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0' y='0' z='-10.0'/>
-            </transform>
+            <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='2' z='-5.0'/>
+                <XXXXXrot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
+            </csgtransform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        		  <!-- 
+		        	<com.jme3.light.PointLight name='PointLight' enabled='false'>
+		        		<color class='com.jme3.math.ColorRGBA' r='1' g='0.5' b='0' a='1'/>
+		        		<position class='com.jme3.math.Vector3f' x='0.0' y='0.95' z='0.0'/>
+		        	</com.jme3.light.PointLight>
+		          
+		            <com.jme3.light.DirectionalLight name='DirectionalLight' enabled='true' 
+		        			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+		        		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+		        		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+		        	</com.jme3.light.DirectionalLight>
+		          -->
+		        	<com.jme3.light.SpotLight name='SpotLightA' enabled='true' 
+		        			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+		        		<color class='com.jme3.math.ColorRGBA' r='0' g='1' b='0' a='1'/>
+		        		<position class='com.jme3.math.Vector3f' x='0.0' y='1' z='0.0'/>
+		        		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+		        	</com.jme3.light.SpotLight>
+		        	<com.jme3.light.SpotLight name='SpotLightB' enabled='true' 
+		        			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+		        		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
+		        		<position class='com.jme3.math.Vector3f' x='0.0' y='1' z='-5.0'/>
+		        		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+		        	</com.jme3.light.SpotLight>
+		        	<com.jme3.light.SpotLight name='SpotLightC' enabled='true' 
+		        			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+		        		<color class='com.jme3.math.ColorRGBA' r='0' g='0' b='1' a='1'/>
+		        		<position class='com.jme3.math.Vector3f' x='0.0' y='1' z='5.0'/>
+		        		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+		        	</com.jme3.light.SpotLight>
+		        </lights>
+        	</lights>
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
@@ -90,7 +147,7 @@
 	            	</faceProperties>
                  	<transform class='com.jme3.math.Transform'>
                         <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
-                    </transform> -->
+                    </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape> 
 	            
                 <net.wcomohundro.jme3.csg.CSGShape name='Doorway' operator='DIFFERENCE'>

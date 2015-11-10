@@ -495,7 +495,8 @@ public class CSGShape
 			// If we have no mesh, look for a subgroup of shapes
 			mSubShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
 		}
-		if ( localTransform == Transform.IDENTITY ) {
+		// Look for specially configured transform
+		if ( this.localTransform == Transform.IDENTITY ) {
 			// No explicit transform, look for a proxy
 			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
 			if ( proxyTransform != null ) {

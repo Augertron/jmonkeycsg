@@ -44,8 +44,10 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.light.Light;
 import com.jme3.material.MatParamTexture;
 import com.jme3.material.Material;
+import com.jme3.math.Transform;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.SceneGraphVisitor;
@@ -56,6 +58,7 @@ import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.TempVars;
 
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
+import net.wcomohundro.jme3.math.CSGTransform;
 
 
 /**  Constructive Solid Geometry (CSG)
@@ -345,6 +348,14 @@ public class CSGGeometry
 				}
 			}
 		}
+		// Look for specially defined tranform 
+		if ( this.localTransform == Transform.IDENTITY ) {
+			// No explicit transform, look for a proxy
+			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
+			if ( proxyTransform != null ) {
+				localTransform = proxyTransform.getTransform();
+			}
+		}
 		// Anything special for the Material?
         boolean repeatTexture = aCapsule.readBoolean( "repeatTexture", false );
         if ( repeatTexture && (this.material != null)) {
@@ -364,6 +375,20 @@ public class CSGGeometry
         boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
         if ( generate ) {
         	TangentBinormalGenerator.generate( this );
+        }
+        // Are the local lights truely local?
+        // Quite honestly, I do not understand the rationale behind how localLights
+        // are managed under standard jme3.  If I make a light local to a Node, I fully
+        // expect that light to move around as any transform is applied to the Node.
+        boolean transformLights = aCapsule.readBoolean( "transformLights", true );
+        if ( transformLights ) {
+        	// Build a control for every local light to keep its position in synch
+        	// with transforms applied to this Node
+        	for( Light aLight : this.getLocalLightList() ) {
+        		// Match the light to this node
+        		CSGLightControl aControl = new CSGLightControl( aLight );
+        		this.addControl( aControl );;
+        	}
         }
 	}
 	
