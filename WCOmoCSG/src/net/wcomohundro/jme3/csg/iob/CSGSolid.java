@@ -125,8 +125,8 @@ public class CSGSolid
 			// just overuse the given slot
 			return( pFaceIndex );
 		} else {
-			// Build the face
-			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pMaterialIndex, pTempVars, pEnvironment );
+			// Build the face (having checked the vertices above)
+			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pMaterialIndex, false, pTempVars, pEnvironment );
 			if ( aFace.isValid() ) {
 				// Retain the valid face
 				if ( pFaceIndex < 0 ) {

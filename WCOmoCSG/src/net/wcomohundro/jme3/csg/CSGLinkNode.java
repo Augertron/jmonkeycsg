@@ -99,7 +99,7 @@ public class CSGLinkNode
     	addShape( pShape, CSGOperator.UNION );
     }
 	@Override
-    public void substractShape(
+    public void subtractShape(
 	    CSGShape	pShape
 	) {
     	addShape( pShape, CSGOperator.DIFFERENCE );

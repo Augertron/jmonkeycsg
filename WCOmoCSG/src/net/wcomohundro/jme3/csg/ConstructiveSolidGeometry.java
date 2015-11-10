@@ -204,7 +204,7 @@ public interface ConstructiveSolidGeometry
 	    public void addShape(
 	    	CSGShape	pShape
 	    );
-	    public void substractShape(
+	    public void subtractShape(
 		    CSGShape	pShape
 		);
 	    public void intersectShape(

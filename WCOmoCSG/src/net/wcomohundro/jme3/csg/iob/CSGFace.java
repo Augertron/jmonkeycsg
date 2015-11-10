@@ -271,16 +271,27 @@ public class CSGFace
 	, 	CSGVertexIOB 	pV2
 	, 	CSGVertexIOB 	pV3
 	, 	int 			pMaterialIndex 
+	,	boolean			pConfirmVertices
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		super( new ArrayList( 3 ), null, pMaterialIndex );
+		mStatus = CSGFaceStatus.UNKNOWN;
+
 		mVertices.add( pV1 );
 		mVertices.add( pV2 );
 		mVertices.add( pV3 );
 		
-		mStatus = CSGFaceStatus.UNKNOWN;
-		
+		if ( pConfirmVertices
+		&& (CSGEnvironment
+				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
+			|| CSGEnvironment
+				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
+			|| CSGEnvironment
+				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )) ) {
+			// Not a meaningful face, do not bother with checking the plane
+			return;
+		}
 		mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
 	}
 	
@@ -522,16 +533,15 @@ public class CSGFace
 		p0.z = (position1.z + position2.z + position3.z) / 3.0;
 		CSGRay ray = new CSGRay( getNormal(), p0 );
 		
-		boolean itersection;
 		double dotProduct, distance; 
 		Vector3d intersectionPoint;
 		CSGFace closestFace = null;
-		double closestDistance; 
+		double closestDistance  = Double.MAX_VALUE; 
 		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
-									
-		do {
+				
+		int deadmanSwitch = 100;
+outer:	while( deadmanSwitch-- > 0 ) {
 			// Assume something touches
-			itersection = true;
 			closestDistance = Double.MAX_VALUE;
 			
 			// Match each face in the other solid
@@ -553,8 +563,9 @@ public class CSGFace
 					if ( (Math.abs(distance) < tolerance) && (Math.abs( dotProduct ) < tolerance) ) {
 						// Disturb the ray in order to not lie within the other plane 
 						ray.perturbDirection();
-						itersection = false;	// Try the test again
-						break;
+						
+						// Try the test again
+						continue outer;
 					}
 					// Check if the ray starts in plane...
 					if ( (Math.abs( distance ) < tolerance) && (Math.abs( dotProduct ) > tolerance) ) {
@@ -578,8 +589,9 @@ public class CSGFace
 					}
 				}
 			}
-		} while( itersection == false );
-		
+			// We have matched against every other face
+			break outer;
+		}
 		// If no face found: outside face
 		if ( closestFace == null ) {
 			mStatus = CSGFaceStatus.OUTSIDE;
