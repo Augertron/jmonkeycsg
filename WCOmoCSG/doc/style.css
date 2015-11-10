@@ -185,7 +185,7 @@ nav {
   background: #000;
 } 
 
-#menu_container { 
+.menu_container { 
   background: #505050 url(images/menubar.png);
   width: 100%;
   margin: 0 auto 0 auto;
@@ -431,17 +431,17 @@ ul ul span.sf-arrow {
 }
 
 /* Theming the menu */
-ul#nav { 
+.menu_container ul { 
   float: left;
 }
 
-ul#nav ul { 
+.menu_container ul ul { 
   background: #F5388C;
   margin-top: 5px;
   padding-bottom: 15px;
 }
 
-ul#nav li a { 
+.menu_container ul li a { 
   padding:5px 20px 6px 20px;
   font: 150% arial, sans-serif;
   text-shadow: 1px 1px #294701;
@@ -450,17 +450,17 @@ ul#nav li a {
   margin-right: 2px;
 }
 
-ul#nav li a:hover, ul#nav li a:focus { 
+.menu_container ul li a:hover, .menu_container ul li a:focus { 
   color: #c0c0c0;
   text-decoration: underline;
 }
 
-ul#nav li a.disabled { 
+.menu_container ul li a.disabled { 
   color: #FFF;
   text-decoration: underline;
 }
 
-ul#nav li a.disabled:hover, , ul#nav li a.disabled:focus { 
+.menu_container ulli a.disabled:hover, , .menu_container ul li a.disabled:focus { 
   text-decoration: none;
   color: #FFF;
 }

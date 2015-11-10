@@ -26,8 +26,8 @@
   		</div>
   	</div>
   	<nav>
-		<div id="menu_container">
-			<ul id="nav" class="sf-menu">
+		<div class="menu_container">
+			<ul class="sf-menu">
 				<li><a href="index.html">Home</a></li>
 				<li><a href="shapes.html">Shapes</a></li>
 				<li><a class="disabled">Spatials</a></li>
@@ -53,12 +53,12 @@ The underlying <b>CSGSpatial</b> is a standard jme3 <i>Spatial</i> and as such, 
 display scene like any other Spatial. As a Spatial, it can have standard Physics applied to it as 
 well. You start by creating one of the variants of CSGSpatial (<b>CSGGeometry</b>, <b>CSGGeonode</b>,
 <b>CSGLinkNode</b>). </p>
-	<p>You then add add/subtract/intersect some set of solids from this CSGSpatial.  Every solid is 
+	<p>You then add/subtract/intersect some set of solids from this CSGSpatial.  Every solid is 
 represented by <b>CSGShape</b>, which is mainly a CSG-aware wrapper around some arbitrary <i>Mesh</i>.
 This Mesh can be provided by a jme3 primitive (Box, Sphere, ...), a CSG primitive (CSGBox, CSGSphere, ...),
 or anything else that defines Mesh.</p>
 	<p>Once the solids have been blended together into the CSGSpatial, then the CSGSpatial must be 
-explicitly 'regenerated'.  This can be done by a programmatic call to the <i>.regenerate()</i> method, or it
+explicitly 'regenerated'.  This can be done by a programmatic call to the <i>.regenerate( )</i> method, or it
 is inherently done at the end of <b>Savable</b> input processing.</p>
 	<p>The final step is to add the Spatial to your scene, along with any control processing (like 
 Physics) that may be required.  At this point, the CSGSpatial should be no different than any
@@ -166,7 +166,70 @@ interface so that Materials and LevelOfDetail can be supported uniformly:</p>
             &lt;rot class='net.wcomohundro.jme3.math.CSGQuaternion' yawl='PI/2' pitch='PI/32' roll='PI'/&gt;
         &lt;/csgtransform&gt;
 </pre></code>
-
+	<p>Within the XML import defintion, you may find it more logically meaningful to operate with
+a <i>grouping</i> of subelements.  For example, you plan to create a corridor which is an elongated box,
+from which you will subtract an arch. This could be done by starting with a Box, subtracting a half-height
+Box to get the lower cutout portion of the arch, then subtracting out a Cylinder to cut out the higher 
+arched portion of the hole.  But you have to be very careful to match the sizing/scaling/tranform 
+of the smaller box and cylinder to keep everything in alignment.</p>
+	<p>A better approach is to create a single entity that represents the top arch blended with the
+square bottom.  You can work in a simple unit environment to get everything aligned with appropriate
+textures. Then scale that entity appropriately and subtract it from the bigger box. You have this
+ability via the <b>&lt;shapes&gt;</b> definition within CSGShape.  Rather than provide a simple Mesh, define
+a set of CSGShapes (along with their corresponding boolean operator) within a parent CSGShape.  The
+subelement interior processing takes place before the parent shape is blended into the whole.  This
+allows you to apply a transform at the parent level to get the scale and position you desire.</p>
+	<p>The import XML definition for the CSGShape subelements can look like:
+<code><pre>
+    &lt;net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry' materialName='Textures/BrickWall/BrickWallRpt.xml' &gt;
+        &lt;shapes&gt;
+            &lt;net.wcomohundro.jme3.csg.CSGShape name='OuterBox'&gt;
+                &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    	... outer box definition here ...
+            &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
+                
+            &lt;net.wcomohundro.jme3.csg.CSGShape name='InteriorArch' operator='DIFFERENCE' &gt;
+                &lt;shapes&gt;
+                    &lt;net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'&gt;
+                        &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                                    xExtent='0.5' yExtent='0.25' zExtent='0.5'&gt;
+                            &lt;faceProperties&gt;
+                                &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='0.5'/&gt;
+                                &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1' scaleY='0.5'/&gt;
+                                &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+                                    materialName='Textures/Rock/Rock1NormalRpt.xml'/&gt;
+                            &lt;/faceProperties&gt;
+                        &lt;/mesh&gt;
+                        &lt;transform class='com.jme3.math.Transform'&gt;
+                            &lt;translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/&gt;
+                        &lt;/transform&gt;
+                    &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
+                    &lt;net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'&gt;
+                        &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                                axisSamples='34' closed='true' zExtent='0.5' 
+                                radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'&gt;
+                            &lt;faceProperties&gt;
+                                &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1' scaleY='PI'/&gt;
+                            &lt;/faceProperties&gt;
+                        &lt;/mesh&gt;
+                    &lt;/net.wcomohundro.jme3.csg.CSGShape&gt;
+                &lt;/shapes&gt;
+                ... now you adjust the texture scaling to match the desired cutout size ...
+                &lt;faceProperties&gt;
+                    &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.9' scaleY='1.9'/&gt;
+                    &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='19.9' scaleY='1.9'/&gt;
+                    &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.9' scaleY='19.9'/&gt;
+                    &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='19.9' scaleY='1.0'/&gt;
+                &lt;/faceProperties&gt;
+                &lt;transform class='com.jme3.math.Transform'&gt;
+                    &lt;scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/&gt;
+                &lt;/transform&gt;
+            &lt;/net.wcomohundro.jme3.csg.CSGShape&gt; 
+            ... other blending operations here ...
+        &lt;/shapes&gt;
+    &lt;/net.wcomohundro.jme3.csg.CSGGeonode&gt;
+</pre></code>
+</p>
  	<h3 id="environment">CSGEnvironment</h3>
  	<p><i>CSGEnviroment</i> defines the overall configuration parameters that control the CSG
  process.  It allows you to set various tolerances and options which affect the inner workings 
@@ -191,6 +254,15 @@ interface so that Materials and LevelOfDetail can be supported uniformly:</p>
  	
 	</div>
  </div>
+  	<nav>
+		<div class="menu_container">
+			<ul class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
+				<li><a class="disabled">Spatials</a></li>
+			</ul>
+		</div>
+	</nav>
 	<footer>
 		<div class='left'>&copy; 2015, W.C.Omohundro, All Rights Reserved</div>
 		<div class='right'><a href="http://www.css3templates.co.uk" 

@@ -26,8 +26,8 @@
   		</div>
   	</div>
   	<nav>
-		<div id="menu_container">
-			<ul id="nav" class="sf-menu">
+		<div class="menu_container">
+			<ul  class="sf-menu">
 				<li><a href="index.html">Home</a></li>
 				<li><a class="disabled">Shapes</a></li>
 				<li><a href="spatials.html">Spatials</a></li>
@@ -56,25 +56,22 @@
 	<p><i>CSGMesh</i> defines a common design approach to the CSG shape primitives, as well as
 providing common services to all the concrete shapes. The primitive is essentially built at
 the (0,0,0) origin, with some kind of <i>extent</i> in x, y and z.  The shape will have <i>faces</i>
-whose texture scaling can be individually controlled.
+whose texture scaling can be individually controlled and custom Materials applied.
 <br>In particular, CSGMesh allows you to:</p>
 	<ul>
-		<li>Trigger jme3 standard Mesh processing for: scaleTextureCoordinates(Vector2f)</li>
 		<li>Apply different texture scaling to different <i>faces</i></li>
+		<li>Apply different Materials to different <i>faces</i></li>
 		<li>Generate different levels of detail based on <i>LOD Factors</i>
 		<li>Produce TangentBinormal lighting information for the Mesh after it is generated</li>
 		<li>Common updateGeometry() entry point that rebuilds the shape using all current settings</li>
 	</ul>
 	<p>The java entry points for services above are:</p>
 	<dl>
-		<dt>setScaleTexture( Vector2f pScale )<dt>
-		<dd>Save the texture scaling vector <i>pScale</i> and apply it via
-Mesh.scaleTextureCoordinates( Vector2f ) when updateGeometry() is triggered.</dd>
-		<dt>setScaleFaces( List&lt;Vector3f&gt; pScale )</dt>
-		<dd>Save the list of texture scaling vectors <i>pScale</i> and apply them to the appropriate
-faces when updateGeometry() is triggered.  The x and y coordinates from each vector represent the
-x and y values expected in texture scaling Vector2f.  The z coordinate is treated as an integer
-bitmask, where each bit selects a different face.  These bits are defined by the specific shape.</dd>
+		<dt>setFaceProperties( List&lt;CSGFaceProperties&gt; pPropertyList )</dt>
+		<dd>Save the list of face properties <i>pPropertyList</i> and apply them to the appropriate
+faces when updateGeometry() is triggered.  Each CSGFaceProperties instance selects a face (or faces)
+via a bitmask, and has an optional texture scaling (Vector2f) value and/or custom Material to 
+apply to that face.</dd>
 		<dt>setLODFactors( float[ ] pLODFactors )</dt>
 		<dd>Save the set of percentage load factors that create multiple VertexBuffers when 
 updateGeometry() is triggered.  Each specific shape interprets the percentage in its own way, deciding
@@ -89,17 +86,29 @@ settings, and then apply texture scaling and tangent binormal generation as need
 available for this shape until updateGeometry() is called.  The final step of Savable.read(...) processing
 for every CSG shape is to invoke updateGeometry() on itself.</dd>
 	</dl>
+	<p>  The faces are selected by an integer bitmask where:
+ 	<blockquote>
+      0x01 - FRONT
+ <br> 0x02 - BACK
+ <br> 0x04 - LEFT
+ <br> 0x08 - RIGHT
+ <br> 0x10 - TOP
+ <br> 0x20 - BOTTOM
+ <br> 0x40 - SIDES
+ <br> 0x80 - SURFACE
+ <br><br>and the logical combination of these values can apply that same scaling to multiple faces.
+ 	</blockquote>
+ 	</p>
+ 
 	<p>The import XML definitions look something like:
 <code><pre>
     &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSomeShape' 
             generateTangentBinormal='true' &gt;
-        &lt;scaleTexture&gt;
-            &lt;com.jme3.math.Vector2f x='1.0' y='5.0'/&gt;	
-        &lt;/scaleTexture&gt;
-        &lt;scaleFaces&gt;  &lt;!-- z used as bitmask of surfaces --&gt;
-            &lt;com.jme3.math.Vector3f x='1.0' y='10.0' z='48'/&gt;	
-            &lt;com.jme3.math.Vector3f x='10.0' y='1.0' z='10'/&gt;
-        &lt;/scaleFaces&gt;
+        &lt;faceProperties>
+            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.0'/&gt;
+            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='10' scaleY='1.0'/&gt;
+            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='10.0'/&gt;
+        &lt;/faceProperties&gt;
         &lt;lodFactors data='0.25 0.50'/&gt;
     &lt;/mesh&gt;
 </pre></code>
@@ -108,18 +117,7 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
  	<h3 id="box">CSGBox</h3>
  	<p><i>CSGBox</i> creates a basic brick shape of given x, y and z extents. The key difference 
  between CSGBox and the standard jme3 Box is its definition of <i>faces</i> and the ability to 
- apply different texture scaling to the different sides.  The faces are selected by an integer
- bitmask where:
- 	<blockquote>
-  0x01 - BACK
- <br> 0x02 - RIGHT
- <br> 0x04 - FRONT
- <br> 0x08 - LEFT
- <br> 0x10 - TOP
- <br> 0x20 - BOTTOM
- <br><br>and the logical combination of these values can apply that same scaling to multiple faces.
- 	</blockquote>
- </p>
+ apply different texture scaling to the different sides.</p>
  	<p>The java entry points for adjusting the configuration include everthing from CSGMesh and</p>
  	<dl>
  		<dt>setXExtent( float pExtent )</dt>
@@ -132,10 +130,10 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
 <code><pre>
     &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
             xExtent='5.0' yExtent='1.0' zExtent='1.0' &gt;
-        &lt;scaleFaces&gt;  &lt;!-- z used as bitmask of surfaces --&gt;
-            &lt;com.jme3.math.Vector3f x='1.0' y='5.0' z='48'/&gt;	
-            &lt;com.jme3.math.Vector3f x='5.0' y='1.0' z='10'/&gt;
-        &lt;/scaleFaces&gt;
+        &lt;faceProperties>
+            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='5.0' scaleY='1.0'/&gt;
+            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='5.0'/&gt;
+        &lt;/faceProperties&gt;
     &lt;/mesh&gt;
 </pre></code>
 </p>
@@ -148,14 +146,7 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
  	<p><i>CSGRadial</i> is an extension to CSGMesh that defines a common design approach to  
 those CSG shape primitives that are built of a series of slices along the z-axis, with each
 slice defined by vertices radially distributed around its center. 
-<br><i>CSGRadialCapped</i> is a radial shape with flat end-caps, like a cylinder or a pipe. These shapes 
-define faces selected by the integer bitmask where:
-<blockquote>
- 0x01 - BACK
- <br> 0x02 - SIDES
- <br> 0x04 - FRONT
- <br><br>and the logical combination of these values can apply that same scaling to multiple faces.
- 	</blockquote>
+<br><i>CSGRadialCapped</i> is a radial shape with flat end-caps, like a cylinder or a pipe. 
 A texture <i>mode</i> controls how the texture is applied to the faces where:
 <blockquote>
 FLAT			- The texture of the end caps is simply flat
@@ -281,7 +272,7 @@ the right-angle extremes.</dd>
   </p>
  <p>Another oddity of building slices along a spline rather than a straight line is that due to the
  bends in the spline, the slices may collide with each other.  This results in a very crumpled looking
- shape if the spline bends too sharply.  An option to 'smooth' end result is provided.  It does the 
+ shape if the spline bends too sharply.  An option to 'smooth' the end result is provided.  It does the 
  best it can to eliminate the slice overlaps.</p>
 	<p>The java entry points configuring the pipe are:</p>
 	<dl>
@@ -350,10 +341,10 @@ a complete torus.  A value greater than 2Pi is only meaningful for a helix.</dd>
  	<p>A sample torus, where each slice is scaled in x/y to produce an ellipse, the slices are 
 twisted from front to back, and beginning radius is different from the end radius.</p>
  	
- 	<h3 id='material'>CSGMaterial (helper class)</h3>
-    <p><i>CSGMaterial</i> is not a shape.  Rather, it is a helper class that can assist in 
-applying custom materials to different <i>faces</i> in a CSGMesh.  In most regards, a CSGMesh
-plays the part of a standard jme3 Mesh.  And while a Mesh understands its own Texture Coordinate
+ 	<h3 id='material'>CSGFaceProperties (helper class)</h3>
+    <p><i>CSGFaceProperties</i> is not a shape.  Rather, it is a helper class that can assist in 
+applying custom materials and texture scaling to different <i>faces</i> in a CSGMesh.  In most regards, 
+a CSGMesh plays the part of a standard jme3 Mesh.  And while a Mesh understands its own Texture Coordinate
 mapping, it has no knowledge of the Material that is applied. Material is defined and applied by the
 Geometry that contains the Mesh.</p>
 	<p>But within the CSG realm, it becomes very handy if the underlying CSGMesh can associate a 
@@ -371,9 +362,34 @@ processing does understand multiple Materials applied to primitives, and it espe
 CSGMesh.  So if you include a CSGBox with custom Materials with a jme3 Geometry node, those 
 Materials are ignored.  But if you include that same CSGBox via a CSGShape added to a
 CSGGeonode, then the custom Materials are used.</blockquote>
- 	
+	<p>CSGFaceProperties is also used to control the texture scaling that applies to a face. This
+addresses the issue of a box elongated in z, but not in x and y.  In that case, the front and back
+faces should retain unit texture scaling.  But the left/right/top/bottom faces should be scaled
+appropriately to prevent the texture from stretching.</p>
+	<p>In any case, CSGFaceProperties applies to a face or faces, as determined by a bitmask
+of all the faces involved.</p>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;faceProperties&gt;
+	    &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.5'
+		        materialName='Textures/Rock/Rock1Rpt.xml'/&gt;
+        &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='2' scaleY='1.5'
+		        materialName='Textures/BrickWall/BrickWallRpt.xml'/&gt;
+        &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'/&gt;
+    &lt;/faceProperties&gt;
+</pre></code>
+</p> 	
 	</div>
  </div>
+   	<nav>
+		<div class="menu_container">
+			<ul  class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a class="disabled">Shapes</a></li>
+				<li><a href="spatials.html">Spatials</a></li>
+			</ul>
+		</div>
+	</nav>
 	<footer>
 		<div class='left'>&copy; 2015, W.C.Omohundro, All Rights Reserved</div>
 		<div class='right'><a href="http://www.css3templates.co.uk" 
