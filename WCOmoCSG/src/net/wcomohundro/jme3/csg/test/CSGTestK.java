@@ -39,6 +39,8 @@ import com.jme3.math.Vector4f;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.scene.shape.Surface;
+import com.jme3.terrain.geomipmap.TerrainQuad;
+import com.jme3.util.TangentBinormalGenerator;
 
 
 /** Simple test of the CSG support 
@@ -100,14 +102,23 @@ public class CSGTestK
 
     	aGeometry = new CSGGeometry( "AScene", aSurface );
         Material aMaterial = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
-        aGeometry.setMaterial( aMaterial );
+        //aMaterial.getAdditionalRenderState().setWireframe( true );
+        aGeometry.setMaterial( aMaterial.clone() );
         
-    	aGeometry.addShape( new CSGShape( "ABox", new CSGBox( 1, 1, 1 ) ) );
-        aGeometry.intersectShape( new CSGShape( "ASurface", aSurface ) );;
-    	aGeometry.regenerate();
+        //aGeometry.addShape( new CSGShape( "ASurface", aSurface ) );;
+    	//aGeometry.subtractShape( new CSGShape( "ABox", new CSGBox( 1, 1, 1 ) ) );
     	
+    	TerrainQuad aTerrain
+    		= new TerrainQuad( "ATerrain", 3, 5, null );
+        aTerrain.setMaterial( aMaterial.clone() );
+        //TangentBinormalGenerator.generate( aTerrain );
+    	
+    	//rootNode.attachChild( aTerrain );
+        aGeometry.addShape( new CSGShape( "Terrain", aTerrain ) );;
+    	aGeometry.addShape( new CSGShape( "ABox", new CSGBox( 1, 1, 1 ) ) );
+    	
+    	aGeometry.regenerate();
     	rootNode.attachChild( aGeometry );
-
     }
 
     

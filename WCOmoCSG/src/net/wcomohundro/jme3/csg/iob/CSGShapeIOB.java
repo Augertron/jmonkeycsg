@@ -325,35 +325,53 @@ public class CSGShapeIOB
 		FloatBuffer posBuffer = pMesh.getFloatBuffer( Type.Position );
 		FloatBuffer normBuffer = pMesh.getFloatBuffer( Type.Normal );
 		FloatBuffer texCoordBuffer = pMesh.getFloatBuffer( Type.TexCoord );
-		if ( pEnvironment.mStructuralDebug ) {
-			switch( meshMode ) {
-			case Triangles:
-				// This is the only one we can deal with at this time
-				break;
-			default:
-				throw new IllegalArgumentException( "Only Mode.Triangles type mesh is currently supported" );
-			}
-			if ( posBuffer == null ) {
-				throw new IllegalArgumentException( "Mesh lacking Type.Position buffer" );
-			}
-			if ( normBuffer == null ) {
-				throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
-			}
+		
+		int triangleCount, iAdjust;
+		int vertexCount = idxBuffer.size();
+		
+		switch( meshMode ) {
+		case Triangles:
+			// Every 3 vertices specify a single triangle
+			triangleCount = vertexCount / 3;
+			iAdjust = 3;
+			break;
+		case TriangleStrip:
+			// The first 3 vertices specify a triangle, while subsequent vertices are 
+			// combined with the previous two.  But always keep in rotational order, so
+			// ABCDE...  yields ABC, CBD, CDE, EDF, EFG
+			triangleCount = vertexCount - 2;
+			iAdjust = 1;
+			break;
+		default:
+			throw new IllegalArgumentException( "Mesh type not supported: " + meshMode );
+		}
+		if ( posBuffer == null ) {
+			throw new IllegalArgumentException( "Mesh lacking Type.Position buffer" );
+		}
+		if ( normBuffer == null ) {
+			throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
 		}
 		// Work from 3 points which define a triangle
-		int vertexCount = idxBuffer.size();
-		List<CSGFace> faces = new ArrayList<CSGFace>( vertexCount / 3 );
+		List<CSGFace> faces = new ArrayList<CSGFace>( triangleCount );
 		Map<Vector3d,CSGVertexIOB> aVertexList = new HashMap( vertexCount );
 
-		for( int i = 0, j = 0; i < idxBuffer.size(); i += 3, j += 1) {
+		for( int i = 0, j = 0; j < triangleCount; i += iAdjust, j += 1) {
 			int idx1 = idxBuffer.get(i);
 			int idx2 = idxBuffer.get(i + 1);
 			int idx3 = idxBuffer.get(i + 2);
 			
+			if ( (meshMode == Mode.TriangleStrip) && ((j % 2) > 0) ) {
+				// index 1 and 2 toggle every other time in the strip
+				int temp = idx1;
+				idx1 = idx2;
+				idx2 = temp;
+			}
+			// Each position/normal entry is 3 floats for x/y/z
 			int idx1x3 = idx1 * 3;
 			int idx2x3 = idx2 * 3;
 			int idx3x3 = idx3 * 3;
 			
+			// Each texture entry is 2 floats for x/y
 			int idx1x2 = idx1 * 2;
 			int idx2x2 = idx2 * 2;
 			int idx3x2 = idx3 * 2;
@@ -371,14 +389,14 @@ public class CSGShapeIOB
 
 			// Extract the normals
 			Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
-										, normBuffer.get( idx1x3 + 1)
-										, normBuffer.get( idx1x3 + 2) );
+										 , normBuffer.get( idx1x3 + 1)
+										 , normBuffer.get( idx1x3 + 2) );
 			Vector3f norm2 = new Vector3f( normBuffer.get( idx2x3 )
-										, normBuffer.get( idx2x3 + 1)
-										, normBuffer.get( idx2x3 + 2) );
+										 , normBuffer.get( idx2x3 + 1)
+										 , normBuffer.get( idx2x3 + 2) );
 			Vector3f norm3 = new Vector3f( normBuffer.get( idx3x3)
-										, normBuffer.get( idx3x3 + 1)
-										, normBuffer.get( idx3x3 + 2) );
+										 , normBuffer.get( idx3x3 + 1)
+										 , normBuffer.get( idx3x3 + 2) );
 
 			// Extract the Texture Coordinates
 			// Based on an interaction via the SourceForge Ticket system, another user has informed

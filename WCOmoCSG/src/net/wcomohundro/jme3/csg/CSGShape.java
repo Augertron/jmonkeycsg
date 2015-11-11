@@ -58,6 +58,8 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
@@ -254,7 +256,32 @@ public class CSGShape
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;		
 	}
-	/** Constructor based on a given handler */
+	
+	/** Constructor based on a Spatial, rather than a Mesh */
+	public CSGShape(
+		String	pShapeName
+	,	Spatial	pSpatial
+	) {
+		this( (pShapeName == null) ? pSpatial.getName() : pShapeName, 0 );
+		
+		// Carry forward any transform that the Spatial knows of
+		this.localTransform = pSpatial.getLocalTransform().clone();
+		
+		if ( pSpatial instanceof Node ) {
+			// Treat the Node as a grouping of subshapes
+			int shapeCounter = 0;
+			mSubShapes = new ArrayList();
+			for( Spatial aSpatial : ((Node)pSpatial).getChildren() ) {
+				CSGShape subShape = new CSGShape( getName() + "-" + ++shapeCounter, aSpatial );
+				mSubShapes.add( subShape );
+			}
+		} else if ( pSpatial instanceof Geometry ) {
+			// Use the Geometry's Mesh
+			this.mesh = ((Geometry)pSpatial).getMesh();
+		}
+	}
+	
+	/** NOT REALLY PUBLIC/FOR HANDLER USE ONLY - Constructor based on a given handler */
 	public CSGShape(
 		CSGShapeProcessor	pHandler
 	,	int					pOrder
