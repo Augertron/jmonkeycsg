@@ -31,13 +31,18 @@ package net.wcomohundro.jme3.csg;
 
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.Light;
+import com.jme3.light.LightList;
 import com.jme3.light.PointLight;
 import com.jme3.light.SpotLight;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
+import com.jme3.scene.control.Control;
+import com.jme3.scene.control.LightControl;
 import com.jme3.util.TempVars;
 
 /** I do not understand the rationale behind the standard JME3 LightControl.  If I add a localLight
@@ -50,19 +55,79 @@ import com.jme3.util.TempVars;
  */
 public class CSGLightControl 
 	extends AbstractControl
+	implements Cloneable
 {
+	/** Factory level service routine that understands applying a light control to a 
+	 	set of lights
+	 */
+	public static void applyLightControl(
+		Control			pLightControl
+	,	LightList		pLightList
+	,	Transform		pLocalTransform
+	,	Spatial			pNode
+	,	boolean			pAttachToNode
+	) {
+		// Walk the list of lights
+		for( Light aLight : pLightList ) {
+			if ( pAttachToNode ) {
+				// Attach the light to the node
+				aLight = aLight.clone();
+				pNode.addLight( aLight );
+			}
+    		// Match the light to this node so that transforms apply
+			if ( pLightControl != null ) {
+				if ( pLightControl instanceof CSGLightControl ) {
+					CSGLightControl aControl = ((CSGLightControl)pLightControl).clone( aLight );
+					aControl.setLocalTransform( pLocalTransform );
+					pNode.addControl( aControl );
+					
+				} else if ( pLightControl instanceof LightControl ) {
+					LightControl aControl = (LightControl)pLightControl.cloneForSpatial( null );
+					aControl.setLight( aLight );
+					pNode.addControl( aControl );
+				}
+			}
+		}
+	}
+	
 	/** The Light that is local to the Spatial */
     protected Light		mLight;
+    /** Local transfrom to apply */
+    protected Transform	mLocalTransform;
     /** The original local position of the light */
     protected Vector3f	mOriginalPosition;
     /** The original local direction of the light */
     protected Vector3f	mOriginalDirection;
 
+    /** Null constructor where the light must be defined later */
+    public CSGLightControl(
+    ) {
+    }
     /** Standard constructor that knows its light */
     public CSGLightControl(
     	Light	pLight
     ) {
         this.mLight = pLight;
+    }
+    
+    /** Clone this control for a given light */
+    public CSGLightControl clone(
+    	Light	pLight
+    ) {
+    	CSGLightControl aCopy = (CSGLightControl)this.cloneForSpatial( null );
+    	aCopy.mLight = pLight;
+    	return( aCopy );
+    }
+    
+    /** Accessor to the transform */
+    public Transform getLocalTransform() { return mLocalTransform; }
+    public void setLocalTransform(
+    	Transform		pLocalTransform
+    ) {
+    	mLocalTransform = pLocalTransform;
+    	if ( Transform.IDENTITY.equals( mLocalTransform ) ) {
+    		mLocalTransform = null;
+    	}
     }
     
     /** Adjust the light to match the operation on the controlling Spatial */
@@ -73,6 +138,9 @@ public class CSGLightControl
         if ( (this.spatial != null) && (this.mLight != null) ) {
         	// A Transform affects every kind of light, which we must define in World coordinates
         	Transform aTransform = spatial.getWorldTransform();
+        	if ( mLocalTransform != null ) {
+        		aTransform = mLocalTransform.clone().combineWithParent( aTransform );
+        	}
 	        if ( mLight instanceof PointLight ) {
 	        	// A PointLight has a position that we drag along with the change
 	        	PointLight aLight = (PointLight)mLight;

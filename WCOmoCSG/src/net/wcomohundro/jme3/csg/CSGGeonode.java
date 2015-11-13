@@ -60,6 +60,7 @@ import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.control.Control;
 import com.jme3.scene.control.LightControl;
 import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
@@ -99,7 +100,9 @@ public class CSGGeonode
     protected Material 			mMaterial;
     /** Control flag to force the use of a single material set at this node level */
     protected boolean			mForceSingleMaterial;
-	/** The list of child shapes (each annotated with an action as it is added) */
+    /** Template transform control to apply to lights */
+    protected Control			mLightControl;
+	/** The optional list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
 	/** Geometry has a variable for LOD level, but Spatial does not */
 	protected int				mLODLevel;
@@ -193,6 +196,14 @@ public class CSGGeonode
     ) {
     	mLODLevel = pLODLevel;
     }
+    
+    /** Accessor to the Light control to apply */
+    public Control getLightControl() { return mLightControl; }
+    public void setLightControl(
+    	Control		pLightControl
+    ) {
+    	mLightControl = pLightControl;
+    }
 
 	/** Action to generate the mesh based on the given shapes */
     @Override
@@ -273,7 +284,7 @@ public class CSGGeonode
 						
 					} else {
 						// Multiple elements
-						for( Spatial aSpatial : meshManager.getSpatials( this.getName() ) ) {
+						for( Spatial aSpatial : meshManager.getSpatials( this.getName(), mLightControl ) ) {
 							this.attachChild( aSpatial );
 						}
 						// NOTE that we only attach the independent child meshes, not the master itself
@@ -435,6 +446,16 @@ public class CSGGeonode
 				localTransform = proxyTransform.getTransform();
 			}
 		}
+        // Are the local lights truely local?
+        // Quite honestly, I do not understand the rationale behind how localLights
+        // are managed under standard jme3.  If I make a light local to a Node, I fully
+        // expect that light to move around as any transform is applied to the Node.
+        boolean transformLights = aCapsule.readBoolean( "transformLights", true );
+        if ( transformLights ) {
+        	mLightControl = new CSGLightControl();
+        } else {
+        	mLightControl = (Control)aCapsule.readSavable( "lightControl", null );
+        }
         // Any custom environment?
         mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
         if ( mEnvironment != null ) mEnvironment.mShapeName = this.getName() + ": ";
@@ -448,19 +469,14 @@ public class CSGGeonode
         	// The Generator understands working the children of a Node
         	TangentBinormalGenerator.generate( this );
         }
-        // Are the local lights truely local?
-        // Quite honestly, I do not understand the rationale behind how localLights
-        // are managed under standard jme3.  If I make a light local to a Node, I fully
-        // expect that light to move around as any transform is applied to the Node.
-        boolean transformLights = aCapsule.readBoolean( "transformLights", true );
-        if ( transformLights ) {
+        if ( mLightControl != null ) {
         	// Build a control for every local light to keep its position in synch
         	// with transforms applied to this Node
-        	for( Light aLight : this.getLocalLightList() ) {
-        		// Match the light to this node
-        		CSGLightControl aControl = new CSGLightControl( aLight );
-        		this.addControl( aControl );;
-        	}
+			CSGLightControl.applyLightControl( mLightControl
+												, this.getLocalLightList()
+												, null
+												, this
+												, false );
         }
 	}
 	

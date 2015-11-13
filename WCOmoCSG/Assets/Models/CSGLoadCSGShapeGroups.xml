@@ -61,7 +61,7 @@
         		<!-- materialName='Textures/Debug/Wireframe.xml' -->
             <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
                 <translation class='com.jme3.math.Vector3f' x='0' y='2' z='-5.0'/>
-                <rot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
+                <XXXrot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
             </csgtransform>
         	<lights class='com.jme3.light.LightList'>
         		<lights>
@@ -143,6 +143,10 @@
                     </transform>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 
+                <!-- NOTE that we build the 'unit' interior arch to be 1 long, and adjust
+                          the textures and sizes accordingly.  Then we apply scaling to
+                          match the size of the external box.  The lights are positioned
+                          within the 'unit' interior as well. -->
                 <net.wcomohundro.jme3.csg.CSGShape name='InteriorArch' operator='DIFFERENCE' >
                 		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
 		         	<lights class='com.jme3.light.LightList'>
@@ -150,19 +154,19 @@
 				        	<com.jme3.light.SpotLight name='SpotLightA' enabled='true' 
 				        			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
 				        		<color class='com.jme3.math.ColorRGBA' r='0' g='1' b='0' a='1'/>
-				        		<position class='com.jme3.math.Vector3f' x='0.0' y='1.9' z='0.0'/>
+				        		<position class='com.jme3.math.Vector3f' x='0.0' y='1.0' z='0.0'/>
 				        		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
 				        	</com.jme3.light.SpotLight>
 				        	<com.jme3.light.SpotLight name='SpotLightB' enabled='true' 
 				        			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
 				        		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
-				        		<position class='com.jme3.math.Vector3f' x='0.0' y='1.9' z='-5.0'/>
+				        		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='-0.34'/>
 				        		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
 				        	</com.jme3.light.SpotLight>
 				        	<com.jme3.light.SpotLight name='SpotLightC' enabled='true' 
 				        			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
 				        		<color class='com.jme3.math.ColorRGBA' r='0' g='0' b='1' a='1'/>
-				        		<position class='com.jme3.math.Vector3f' x='0.0' y='1.9' z='5.0'/>
+				        		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.34'/>
 				        		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
 				        	</com.jme3.light.SpotLight>
 				        </lights>
@@ -192,12 +196,14 @@
 		                    </mesh>
 		                </net.wcomohundro.jme3.csg.CSGShape>
 		            </shapes>
+		            <!-- Scale to match the transform below -->
 	                <faceProperties>
 	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.9' scaleY='1.9'/>
 	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='19.9' scaleY='1.9'/>
 	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.9' scaleY='19.9'/>
 				        <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='19.9' scaleY='1.0'/>
 	            	</faceProperties>
+	            	<!-- Scale to match the exterior box -->
                  	<transform class='com.jme3.math.Transform'>
                         <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
                     </transform>

@@ -39,7 +39,7 @@ import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 import net.wcomohundro.jme3.csg.shape.*;
 
 /** Simple test of the CSG support 
- 		Checks UNION / DIFFERENCE / INTERSECTION / SKIP for simple Cube/Sphere
+ 		Run dynamic animation
  */
 public class CSGTestJ 
 	extends SimpleApplication 
@@ -51,10 +51,9 @@ public class CSGTestJ
 	    app.start();
 	}
 
-	/** Simple unique name **/
-	protected int		mUpdateCounter;
-	protected CSGShape CSG_obj1, CSG_obj2;
-	protected CSGGeometry CSG_obj;
+	protected int			mUpdateCounter;
+	protected CSGShape		mShape1, mShape2;
+	protected CSGGeometry 	mCSGBlend;
 
     @Override
     public void simpleInitApp(
@@ -63,34 +62,57 @@ public class CSGTestJ
 	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 	    
-	       CSG_obj1 = attachShape(new Box(1, 1, 1), new Vector3f(0, 0, 0), ColorRGBA.Blue, "Box1");
-	        CSG_obj2 = attachShape(new Box(.5f, 2, .5f), new Vector3f(0, 0, 0), ColorRGBA.Yellow, "Box2");
-	        CSG_obj = new CSGGeometry("Geom");
-	        CSG_obj.setMaterial(new Material(assetManager, "Common/MatDefs/Misc/ShowNormals.j3md"));
-	        rootNode.attachChild(CSG_obj);
-	        CSG_obj.addShape(CSG_obj1);
-	        CSG_obj.addShape(CSG_obj2, CSGGeometry.CSGOperator.INTERSECTION);
-	        CSG_obj.regenerate();
+	    Mesh mesh1 = new Box( 1, 1, 1 );
+	    //Mesh mesh2 = new Box( 0.5f, 2f, 0.5f );
+	    //Mesh mesh2 = new CSGCylinder( 32, 32, 0.5f, 1.5f );
+	    Mesh mesh2 = new CSGCylinder( 16, 16, 0.5f, 1.5f );
+	    mShape1 = attachShape( mesh1
+	    						, new Vector3f(0, 0, 0)
+	    						, ColorRGBA.Blue
+	    						, "Box1" );
+	    mShape2 = attachShape( mesh2
+	    						, new Vector3f(0, 0, 0)
+	    						, ColorRGBA.Yellow
+	    						, "Box2" );
+	    
+	    mCSGBlend = new CSGGeometry( "ABlend" );
+	    mCSGBlend.setMaterial( new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" ) );
+	    rootNode.attachChild( mCSGBlend );
+	    
+	    mCSGBlend.addShape( mShape1 );
+	    mCSGBlend.intersectShape( mShape2 );
+	    mCSGBlend.regenerate();
     }
 
-    private CSGShape attachShape( Mesh shape, Vector3f pos, ColorRGBA color, String name) {
-        CSGShape g = new CSGShape(name, shape);
-        g.setLocalTranslation(pos);
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.getAdditionalRenderState().setWireframe(true);
-        mat.setColor("Color", color);
-        g.setMaterial(mat);
-        rootNode.attachChild(g);
-        return g;
+    protected CSGShape attachShape( 
+    	Mesh 		pMesh
+    , 	Vector3f 	pPosition
+    , 	ColorRGBA 	pColor
+    , 	String 		pName
+    ) {
+        CSGShape aShape = new CSGShape( pName, pMesh );
+        aShape.setLocalTranslation( pPosition );
+        
+        // Draw the wireframe of the basic shape in the given color
+        Material aMaterial = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
+        aMaterial.getAdditionalRenderState().setWireframe( true );
+        aMaterial.setColor( "Color", pColor );
+        aShape.setMaterial( aMaterial );
+        
+        rootNode.attachChild( aShape );
+        return aShape;
     }
 
-    public void simpleUpdate(float tpf) {
+    @Override
+    public void simpleUpdate(
+    	float tpf
+    ) {
     	mUpdateCounter += 1;
-        if (mUpdateCounter == 10) {
-            CSG_obj1.rotate(tpf, tpf, tpf);
-            CSG_obj2.rotate(-tpf, -tpf,  -tpf);
+        if ( mUpdateCounter == 10 ) {
+        	mShape1.rotate( tpf, tpf, tpf );
+            mShape2.rotate( -tpf, -tpf, -tpf );
 
-            CSG_obj.regenerate();
+            mCSGBlend.regenerate();
             mUpdateCounter = 0;
         }
     }

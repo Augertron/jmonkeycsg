@@ -41,7 +41,7 @@
             	radius='1.1' axisSamples='32' radialSamples='32' textureMode='POLAR'
             	useEvenSlices='false' interior='false'/>
         </com.jme3.scene.Geometry>
-<?ignore
+
 		<!-- A low-res sphere -->
         <com.jme3.scene.Geometry name='Sphere3'
         		materialName='Textures/Debug/Normals.xml'>
@@ -56,7 +56,7 @@
         <com.jme3.scene.Geometry name='Sphere3a'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0'/>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='-3.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
             		radius='1.5' axisSamples='1' radialSamples='3' firstRadial='PI/2' useEvenSlices='true'>
@@ -69,7 +69,7 @@
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='-3.0'/>
+                <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
             	radius='1.1' axisSamples='32' radialSamples='32' useEvenSlices='true' interior='false'/>
@@ -85,6 +85,5 @@
             	radius='1.1' axisSamples='32' radialSamples='32' useEvenSlices='false' interior='true'/>
         </com.jme3.scene.Geometry>
 
-?>
     </children>
 </com.jme3.scene.Node>

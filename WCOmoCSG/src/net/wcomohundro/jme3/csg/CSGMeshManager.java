@@ -39,6 +39,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.control.AbstractControl;
+import com.jme3.scene.control.Control;
+import com.jme3.scene.control.LightControl;
 
 /** In order to provide for mapping various materials to the surfaces created by the
  	CSG blending process, it is necessary to produce independent Meshes for those
@@ -133,6 +136,7 @@ public class CSGMeshManager
 	/** Get a list of appropriate Spatials that represent all the custom Meshes being managed */
 	public List<Spatial> getSpatials(
 		String		pCoreName
+	,	Control		pLightControl
 	) {
 		Map<String,Node> lightNodeMap = new HashMap();
 		
@@ -159,14 +163,11 @@ public class CSGMeshManager
 						lightNodeMap.put( shapeKey, aNode );
 						
 						// Include the lights at the node level
-						for( Light aLight : meshInfo.mLightListOwner.getLocalLightList() ) {
-							// Attach the light to the node
-							aNode.addLight( aLight.clone() );
-							
-			        		// Match the light to this node so that transforms apply
-			        		CSGLightControl aControl = new CSGLightControl( aLight );
-			        		aNode.addControl( aControl );;
-						}
+						CSGLightControl.applyLightControl( pLightControl
+															, meshInfo.mLightListOwner.getLocalLightList()
+															, meshInfo.mLightListOwner.getLocalTransform()
+															, aNode
+															, true);
 					}
 					// Attach the mesh/material to the node with the lights
 					aNode.attachChild( aSpatial );

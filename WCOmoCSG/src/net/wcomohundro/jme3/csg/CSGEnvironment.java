@@ -173,19 +173,29 @@ public class CSGEnvironment
 			int index = piText.indexOf( "PI" );
 			if ( index >= 0 ) {
 				// Decipher things like 3PI/4
-				int numenator = 1;
-				int denominator = 1;
+				float numerator = 1.0f;
+				float denominator = 1.0f;
 				if ( index > 0 ) {
 					// Some integer multiplier of PI
-					numenator = Integer.parseInt( piText.substring( 0, index ) );
+					String numeratorTxt = piText.substring( 0, index );
+					if ( numeratorTxt.indexOf( '.' ) < 0 ) {
+						numerator = Integer.parseInt( numeratorTxt );
+					} else {
+						numerator = Float.parseFloat( numeratorTxt );
+					}
 				}
 				index += 2;
 				if ( (index < piText.length() -1) 
 				&& (piText.charAt( index++ ) == '/') ) {
 					// Some integer divisor of PI
-					denominator = Integer.parseInt( piText.substring( index ) );
+					String denominatorTxt = piText.substring( index );
+					if ( denominatorTxt.indexOf( '.' ) < 0 ) {
+						denominator = Integer.parseInt( denominatorTxt );
+					} else {
+						denominator = Float.parseFloat( denominatorTxt );
+					}
 				}
-				aFloatValue = ((float)numenator * FastMath.PI) / (float)denominator;
+				aFloatValue = (numerator * FastMath.PI) / denominator;
 			} else {
 				// If not PI, then its just a float
 				aFloatValue = Float.parseFloat( piText );

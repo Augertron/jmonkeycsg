@@ -44,7 +44,7 @@ import com.jme3.util.TangentBinormalGenerator;
 
 
 /** Simple test of the CSG support 
- 		Checks UNION / DIFFERENCE / INTERSECTION / SKIP for simple Cube/Sphere
+ 		Blend with a 2D surface rather than a 3D solid
  */
 public class CSGTestK 
 	extends SimpleApplication 
