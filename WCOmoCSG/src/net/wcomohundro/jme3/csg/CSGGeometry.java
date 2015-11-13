@@ -220,8 +220,8 @@ public class CSGGeometry
 			// Time the construction 
 			long startTimer = System.nanoTime();
 			
-			// The material manager does not do much for a single material
-			CSGMaterialManager materialManager = new CSGMaterialManager( this.getMaterial(), true );
+			// The mesh manager does not do much for a single mesh
+			CSGMeshManager meshManager = new CSGMeshManager( this.getMaterial(), true );
 			
 			// Sort the shapes based on their operator (as needed)
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
@@ -237,10 +237,10 @@ public class CSGGeometry
 					case UNION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.union( aShape.refresh(), materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.union( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -249,17 +249,17 @@ public class CSGGeometry
 							// NO PLACE TO START
 						} else {
 							// Blend together
-							aProduct = aProduct.difference( aShape.refresh(), materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.difference( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case INTERSECTION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.intersection( aShape.refresh(), materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.intersection( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -269,11 +269,10 @@ public class CSGGeometry
 					}
 				}
 				if ( aProduct != null ) {
-					List<Mesh> meshList = aProduct.toMesh( 0, materialManager, tempVars, pEnvironment );
-					if ( !meshList.isEmpty() ) {
-						// The overall, blended mesh represents this Geometry
-						this.setMesh( meshList.get( 0 ) );
-					}
+					// The overall, blended mesh represents this Geometry
+					aProduct.toMesh( meshManager, false, tempVars, pEnvironment );
+					this.setMesh( meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
+
 					// Return true if we have a valid product
 					return( mIsValid = aProduct.isValid() );
 				} else {

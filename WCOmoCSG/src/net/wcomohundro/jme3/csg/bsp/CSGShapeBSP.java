@@ -41,7 +41,7 @@ import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGGeometry;
-import net.wcomohundro.jme3.csg.CSGMaterialManager;
+import net.wcomohundro.jme3.csg.CSGMeshManager;
 import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGPlaneFlt;
 import net.wcomohundro.jme3.csg.CSGPolygon;
@@ -368,7 +368,7 @@ public class CSGShapeBSP
 	
 	/** Accessor to the list of polygons */
 	protected List<CSGPolygon> getPolygons(
-		CSGMaterialManager	pMaterialManager
+		CSGMeshManager	pMaterialManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
@@ -389,7 +389,7 @@ public class CSGShapeBSP
 	@Override
 	public CSGShape union(
 		CSGShape			pOther
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager	pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -420,7 +420,7 @@ public class CSGShapeBSP
 	@Override
 	public CSGShape difference(
 		CSGShape			pOther
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager	pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -453,7 +453,7 @@ public class CSGShapeBSP
 	@Override
 	public CSGShape intersection(
 		CSGShape			pOther
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager	pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -485,7 +485,7 @@ public class CSGShapeBSP
 	protected List<CSGPolygon> fromMesh(
 		Mesh				pMesh
 	,	Transform			pTransform
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager		pMeshManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
@@ -583,7 +583,7 @@ public class CSGShapeBSP
 			// And build the appropriate polygon (assuming the vertices are far enough apart to be significant)
 			int polyCount = addPolygon( polygons
 										, aVertexList
-										, mShape.getMaterialIndex( pMaterialManager, j )
+										, mShape.getMeshIndex( pMeshManager, j )
 										, pTempVars
 										, pEnvironment );
 		}
@@ -595,15 +595,13 @@ public class CSGShapeBSP
 	 	Every other mesh (if present) applies solely to a specific Material.
 	  */
 	@Override
-	public List<Mesh> toMesh(
-		int					pMaxMaterialIndex
-	,	CSGMaterialManager	pMaterialManager
+	public void toMesh(
+		CSGMeshManager		pMeshManager
+	,	boolean				pProduceSubelements
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
-	) {
-		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
-		
-		List<CSGPolygon> aPolyList = getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
+	) {	
+		List<CSGPolygon> aPolyList = getPolygons( pMeshManager, 0, pTempVars, pEnvironment );
 		int anEstimateVertexCount = aPolyList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );
@@ -612,20 +610,22 @@ public class CSGShapeBSP
 		List<Number> anIndexList = new ArrayList<Number>( anEstimateVertexCount );
 		
 		// Include the master list of all elements
-		meshList.add( toMesh( -1, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList ) );
+		Mesh aMesh = toMesh( -1, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList );
+		pMeshManager.registerMasterMesh( aMesh );
 		
-		// Include per-material meshes
-		for( int index = 0; (pMaxMaterialIndex > 0) && (index <= pMaxMaterialIndex); index += 1 ) {
-			// The zeroth index is the generic Material, all others are custom Materials
-			aPositionList.clear(); aNormalList.clear(); aTexCoordList.clear(); anIndexList.clear();
-			Mesh aMesh = toMesh( index, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList );
-			meshList.add( aMesh );
+		if ( pProduceSubelements ) {
+			// Produce the meshes for all the sub elements
+			for( int index = 0; index <= pMeshManager.getMeshCount(); index += 1 ) {
+				// The zeroth index is the generic Material, all others are custom Materials
+				aPositionList.clear(); aNormalList.clear(); aTexCoordList.clear(); anIndexList.clear();
+				aMesh = toMesh( index, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList );
+				pMeshManager.registerMesh( aMesh, new Integer( index ) );
+			}
 		}
-		return( meshList );
 	}
 		
 	protected Mesh toMesh(
-		int					pMaterialIndex
+		int					pMeshIndex
 	,	List<CSGPolygon>	pPolyList
 	,	List<Vector3f> 		pPositionList
 	,	List<Vector3f> 		pNormalList
@@ -638,8 +638,8 @@ public class CSGShapeBSP
 		int indexPtr = 0;
 		for( CSGPolygon aPolygon : pPolyList ) {
 			// Does this polygon have a custom material?
-			int materialIndex = aPolygon.getMaterialIndex();
-			if ( (pMaterialIndex >= 0) && (materialIndex != pMaterialIndex) ) {
+			int meshIndex = aPolygon.getMeshIndex();
+			if ( (pMeshIndex >= 0) && (meshIndex != pMeshIndex) ) {
 				// Only material-specific polygons are interesting
 				continue;
 			}

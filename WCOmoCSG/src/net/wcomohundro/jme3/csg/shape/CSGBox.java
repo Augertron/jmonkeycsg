@@ -27,7 +27,7 @@ package net.wcomohundro.jme3.csg.shape;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
-import net.wcomohundro.jme3.csg.CSGMaterialManager;
+import net.wcomohundro.jme3.csg.CSGMeshManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 

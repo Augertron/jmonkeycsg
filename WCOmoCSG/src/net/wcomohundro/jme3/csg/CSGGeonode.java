@@ -209,8 +209,7 @@ public class CSGGeonode
 			long startTimer = System.nanoTime();
 			
 			// Prepare for custom materials
-			CSGMaterialManager materialManager 
-				= new CSGMaterialManager( this.getMaterial(), mForceSingleMaterial );
+			CSGMeshManager meshManager = new CSGMeshManager( this.getMaterial(), mForceSingleMaterial );
 
 			// Sort the shapes as needed by their handler
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
@@ -226,10 +225,10 @@ public class CSGGeonode
 					case UNION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.union( aShape.refresh(), materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.union( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -238,17 +237,17 @@ public class CSGGeonode
 							// NO PLACE TO START
 						} else {
 							// Blend together
-							aProduct = aProduct.difference( aShape.refresh(), materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.difference( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case INTERSECTION:
 						if ( aProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( materialManager, getLodLevel(), pEnvironment );
+							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.intersection( aShape.refresh(), materialManager, tempVars, pEnvironment );
+							aProduct = aProduct.intersection( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -261,32 +260,23 @@ public class CSGGeonode
 				mMasterGeometry = null;
 				if ( aProduct != null ) {
 					// Transform the list of meshes into children
-					// (note that the 'zero' mesh is an Overall mesh that crosses all materials,
-					//  and the 'one' mesh is the one that corresponds to the generic material)
-					List<Mesh> meshList 
-						= aProduct.toMesh( materialManager.getMaterialCount()
-											, materialManager
-											, tempVars
-											, pEnvironment );
-					if ( !meshList.isEmpty() ) {
-						// Use the 'zero' mesh to describe the overall geometry
-						mMasterGeometry = new CSGGeometry( this.getName(), meshList.get( 0 ) );
-						mMasterGeometry.setMaterial( mMaterial.clone() );
-					}
-					if ( meshList.size() == 1 ) {
+					aProduct.toMesh( meshManager, true, tempVars, pEnvironment );
+
+					// Use the master mesh to describe the overall geometry
+					mMasterGeometry 
+						= new CSGGeometry( this.getName(), meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
+					mMasterGeometry.setMaterial( mMaterial.clone() );
+					
+					if ( meshManager.getMeshCount() == 0 ) {
 						// Singleton element, where the master becomes our only child
 						this.attachChild( mMasterGeometry );
 						
-					} else if ( meshList.size() > 1 ) {
-						// Multiple elements, with the first dedicated to the 'generic' material
-						// (which means the 'i' index is one greater than the material index)
-						for( int i = 1, j = meshList.size(); i < j; i += 1 ) {
-							Geometry aChild = new Geometry( this.getName() + i, meshList.get( i ) );
-							Material aMaterial = materialManager.resolveMaterial( new Integer( i - 1 ) );
-							aChild.setMaterial( aMaterial.clone() );
-							this.attachChild( aChild );
+					} else {
+						// Multiple elements
+						for( Spatial aSpatial : meshManager.getSpatials( this.getName() ) ) {
+							this.attachChild( aSpatial );
 						}
-						// NOTE that we only attach the independent child meshes, not the master
+						// NOTE that we only attach the independent child meshes, not the master itself
 					}
 					// Return true if we have a valid product
 					return( mIsValid = aProduct.isValid() );

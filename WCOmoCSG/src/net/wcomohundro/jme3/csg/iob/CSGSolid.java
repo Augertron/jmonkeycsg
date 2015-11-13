@@ -108,7 +108,7 @@ public class CSGSolid
 	,	CSGVertexIOB 	pV1
 	, 	CSGVertexIOB 	pV2
 	, 	CSGVertexIOB 	pV3
-	, 	int 			pMaterialIndex
+	, 	CSGFace			pFace
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -126,7 +126,7 @@ public class CSGSolid
 			return( pFaceIndex );
 		} else {
 			// Build the face (having checked the vertices above)
-			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pMaterialIndex, false, pTempVars, pEnvironment );
+			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pFace.getMeshIndex(), false, pTempVars, pEnvironment );
 			if ( aFace.isValid() ) {
 				// Retain the valid face
 				if ( pFaceIndex < 0 ) {
@@ -557,8 +557,8 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//         
 			// 
 			//		V1                V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v2(), pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex, pFace.v3(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v2(), pFace.v3(), pFace, pTempVars, pEnvironment );
 			break;
 		case EDGE23:
 			//               V2
@@ -568,8 +568,8 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//         
 			// 
 			//		V1                V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v3(), pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex, pFace.v1(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v3(), pFace.v1(), pFace, pTempVars, pEnvironment );
 			break;
 		case EDGE31:
 			//               V2
@@ -579,8 +579,8 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//         
 			// 
 			//		V1       New       V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v1(), pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex, pFace.v2(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex, pFace.v1(), pFace.v2(), pFace, pTempVars, pEnvironment );
 			break;
 		}
 		return( pFaceIndex );
@@ -611,9 +611,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 				//        
 				// 
 				//		V1      New2       V3
-				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, vertex2, pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v2(), vertex2, pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex2, pFace, pTempVars, pEnvironment );
 				break;
 			case EDGE23:
 				//               V2
@@ -623,9 +623,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 				//        
 				// 
 				//		V1                 V3
-				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, pFace.v3(), pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v3(), pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, vertex1, pFace, pTempVars, pEnvironment );
 				break;
 			}
 			break;
@@ -640,9 +640,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 				//        
 				// 
 				//		V1                 V3
-				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, vertex2, pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v3(), vertex2, pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex2, pFace, pTempVars, pEnvironment );
 				break;
 			case EDGE31:
 				//               V2
@@ -652,9 +652,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 				//        
 				// 
 				//		V1      New2       V3
-				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, pFace.v1(), pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v1(), pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, vertex1, pFace, pTempVars, pEnvironment );
 				break;
 			}
 			break;
@@ -669,9 +669,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 				//        
 				// 
 				//		V1      New1       V3
-				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, vertex2, pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v1(), vertex2, pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex2, pFace, pTempVars, pEnvironment );
 				break;
 			case EDGE12:
 				//               V2
@@ -681,9 +681,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 				//        
 				// 
 				//		V1      New1       V3
-				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, pFace.v2(), pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, vertex1, vertex2, pFace.v2(), pFace, pTempVars, pEnvironment );
+				pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, vertex1, pFace, pTempVars, pEnvironment );
 				break;
 			}
 			break;
@@ -713,9 +713,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//         New2
 			// 
 			//		V1                V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v2(), pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, pFace.v3(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v3(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex1, pFace.v2(), pFace.v3(), pFace, pTempVars, pEnvironment );
 			break;
 		case EDGE23:
 			//               V2
@@ -725,9 +725,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//                     New1
 			// 
 			//		V1                V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex2, pFace.v3(), pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, pFace.v1(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v1(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, pFace.v3(), pFace.v1(), pFace, pTempVars, pEnvironment );
 			break;
 		case EDGE31:
 			//               V2
@@ -737,9 +737,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//                   
 			// 
 			//		V1  New1    New2   V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vertex2, pFace.v1(), pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, pFace.v2(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, vertex1, pFace.v2(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vertex2, pFace.v1(), pFace.v2(), pFace, pTempVars, pEnvironment );
 			break;
 		}
 		return( pFaceIndex );
@@ -765,9 +765,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 		//               New
 		// 
 		//		V1                V3
-		pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-		pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-		pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+		pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex, pFace, pTempVars, pEnvironment );
+		pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex, pFace, pTempVars, pEnvironment );
+		pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex, pFace, pTempVars, pEnvironment );
 
 		return( pFaceIndex );
 	}
@@ -798,10 +798,10 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//              
 			//              NewCtr
 			//		V1                V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vtxEdge, vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v2(), vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vtxCenter, pFace, pTempVars, pEnvironment );
 			break;
 		case EDGE23:
 			//               V2
@@ -811,10 +811,10 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//              
 			//              NewCtr
 			//		V1                V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vtxEdge, vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v3(), vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vtxCenter, pFace, pTempVars, pEnvironment );
 			break;
 		case EDGE31:
 			//               V2
@@ -824,10 +824,10 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			//             NewCtr
 			//              
 			//		V1     NewEdge     V3
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vtxEdge, vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v1(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vtxCenter, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vtxEdge, vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, vtxEdge, pFace.v1(), vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vtxCenter, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vtxCenter, pFace, pTempVars, pEnvironment );
 			break;
 		}
 		return( pFaceIndex );
@@ -853,27 +853,27 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 		}			
 		switch( pPickVertex ) {
 		case V1:
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, pFace.v1(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex1, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex1, vertex2, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, vertex1, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, pFace.v1(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex2, pFace, pTempVars, pEnvironment );
 			break;
 			
 		case V2:
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, pFace.v2(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), pFace.v1(), vertex1, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex1, vertex2, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, vertex1, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v3(), vertex2, pFace.v2(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex2, pFace, pTempVars, pEnvironment );
 			break;
 			
 		case V3:
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, vertex1, pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, pFace.v3(), pFace.getMaterialIndex(), pTempVars, pEnvironment );
-			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex2, pFace.getMaterialIndex(), pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), pFace.v2(), vertex1, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex1, vertex2, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), vertex2, vertex1, pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v1(), vertex2, pFace.v3(), pFace, pTempVars, pEnvironment );
+			pFaceIndex = addFace( pFaceIndex, pFace.v2(), pFace.v3(), vertex2, pFace, pTempVars, pEnvironment );
 			break;
 		}
 		return( pFaceIndex );

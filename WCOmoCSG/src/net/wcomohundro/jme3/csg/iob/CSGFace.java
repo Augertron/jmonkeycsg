@@ -302,7 +302,7 @@ public class CSGFace
 	) {
 		CSGFace aCopy = new CSGFace();
 		aCopy.mStatus = this.mStatus;
-		aCopy.mMaterialIndex = this.mMaterialIndex;
+		aCopy.mMeshIndex = this.mMeshIndex;
 		
 		if ( pInvert ) {
 			// Flip the order of the vertices

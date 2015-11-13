@@ -78,8 +78,8 @@ public abstract class CSGPolygon<VertexT extends CSGVertex, PlaneT extends CSGPl
 	protected List<CSGVertex>	mVertices;
 	/** The plane that contains this shape */
 	protected PlaneT			mPlane;
-	/** The custom material that applies to this shape */
-	protected int				mMaterialIndex;
+	/** The custom mesh that applies to this shape */
+	protected int				mMeshIndex;
 
 	/** Ensure we are working with something valid */
 	public boolean isValid() { return( mPlane != null ); }
@@ -95,8 +95,8 @@ public abstract class CSGPolygon<VertexT extends CSGVertex, PlaneT extends CSGPl
 	/** Accessor to the plane */
 	public PlaneT getPlane() { return mPlane; }
 	
-	/** Accessor to the custom material index */
-	public int getMaterialIndex() { return mMaterialIndex; }
+	/** Accessor to the custom mesh index */
+	public int getMeshIndex() { return mMeshIndex; }
 	
 
 	/** Make it 'savable' */

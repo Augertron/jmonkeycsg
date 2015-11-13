@@ -62,30 +62,30 @@ public class CSGPolygonDbl
 	) {
 		mVertices = CSGVertex.sEmptyVertices;
 		mPlane = null;
-		mMaterialIndex = 0;
+		mMeshIndex = 0;
 	}
 	
 	/** Constructor based on given vertices and plane */
 	public CSGPolygonDbl(
 		List<CSGVertex>		pVertices
 	,	CSGPlaneDbl			pPlane
-	,	int					pMaterialIndex
+	,	int					pMeshIndex
 	) {
 		mVertices = pVertices;
 		
 		if ( (pPlane != null) && pPlane.isValid() ) {
 			mPlane = pPlane;
 		}
-		mMaterialIndex = pMaterialIndex;
+		mMeshIndex = pMeshIndex;
 	}
 	public CSGPolygonDbl(
 		CSGVertex[]			pVertices
 	,	CSGPlaneDbl			pPlane
-	,	int					pMaterialIndex
+	,	int					pMeshIndex
 	) {
 		mVertices = Arrays.asList( pVertices );
 		mPlane = pPlane;
-		mMaterialIndex = pMaterialIndex;
+		mMeshIndex = pMeshIndex;
 	}
 	
 	/** Make a copy */
@@ -104,7 +104,7 @@ public class CSGPolygonDbl
 			// NOTE that we are assuming that .reverse() is more efficient than repeatedly inserting
 			//		new items at the start of the list (which forces things to copy and slide)
 			Collections.reverse( newVertices );
-			return( new CSGPolygonDbl( newVertices, mPlane.clone( pFlipIt ), mMaterialIndex ) );
+			return( new CSGPolygonDbl( newVertices, mPlane.clone( pFlipIt ), mMeshIndex ) );
 		} else {
 			// The polygon is immutable, so its clone is just itself
 			return( this );

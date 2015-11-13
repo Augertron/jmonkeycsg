@@ -50,7 +50,7 @@ import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
-import net.wcomohundro.jme3.csg.CSGMaterialManager;
+import net.wcomohundro.jme3.csg.CSGMeshManager;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
@@ -200,7 +200,7 @@ public class CSGShapeIOB
 	
 	/** Accessor to the list of faces */
 	protected List<CSGFace> getFaces(
-		CSGMaterialManager	pMaterialManager
+		CSGMeshManager	pMaterialManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
@@ -221,7 +221,7 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape union(
 		CSGShape			pOther
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager	pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -248,7 +248,7 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape difference(
 		CSGShape			pOther
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager	pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -275,7 +275,7 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape intersection(
 		CSGShape			pOther
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager	pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -302,7 +302,7 @@ public class CSGShapeIOB
 	protected List<CSGFace> fromMesh(
 		Mesh				pMesh
 	,	Transform			pTransform
-	,	CSGMaterialManager	pMaterialManager
+	,	CSGMeshManager		pMeshManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
@@ -417,7 +417,7 @@ public class CSGShapeIOB
 				= new CSGFace( CSGVertexIOB.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment )
-								, mShape.getMaterialIndex( pMaterialManager, j )
+								, mShape.getMeshIndex( pMeshManager, j )
 								, true
 								, pTempVars
 								, pEnvironment );
@@ -440,19 +440,19 @@ public class CSGShapeIOB
 	}
 
 	/** Produce the mesh(es) that corresponds to this shape
-	 	The zeroth mesh in the list is the total, composite mesh.
-	 	Every other mesh (if present) applies solely to a specific Material.
+	 	The generic mesh is the total, composite mesh.
+	 	
+	 	Other meshes are produced for every other Mesh Index defined, representing
+	 	unique Materials and/or Lighting.
 	  */
 	@Override
-	public List<Mesh> toMesh(
-		int					pMaxMaterialIndex
-	,	CSGMaterialManager	pMaterialManager
+	public void toMesh(
+		CSGMeshManager		pMeshManager
+	,	boolean				pProduceSubelements
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		List<Mesh> meshList = new ArrayList( pMaxMaterialIndex + 1 );
-		
-		List<CSGFace> aFaceList = getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+		List<CSGFace> aFaceList = getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		int anEstimateVertexCount = aFaceList.size() * 3;
 		
 		List<Vector3f> aPositionList = new ArrayList<Vector3f>( anEstimateVertexCount );
@@ -461,20 +461,22 @@ public class CSGShapeIOB
 		List<Number> anIndexList = new ArrayList<Number>( anEstimateVertexCount );
 		
 		// Include the master list of all elements
-		meshList.add( toMesh( -1, aFaceList, aPositionList, aNormalList, aTexCoordList, anIndexList ) );
+		Mesh aMesh = toMesh( -1, aFaceList, aPositionList, aNormalList, aTexCoordList, anIndexList );
+		pMeshManager.registerMasterMesh( aMesh );
 		
-		// Include per-material meshes
-		for( int index = 0; (pMaxMaterialIndex > 0) && (index <= pMaxMaterialIndex); index += 1 ) {
-			// The zeroth index is the generic Material, all others are custom Materials
-			aPositionList.clear(); aNormalList.clear(); aTexCoordList.clear(); anIndexList.clear();
-			Mesh aMesh = toMesh( index, aFaceList, aPositionList, aNormalList, aTexCoordList, anIndexList );
-			meshList.add( aMesh );
+		if ( pProduceSubelements ) {
+			// Produce the meshes for all the sub elements
+			for( int index = 0; index <= pMeshManager.getMeshCount(); index += 1 ) {
+				// The zeroth index is the generic Material, all others are custom Meshes
+				aPositionList.clear(); aNormalList.clear(); aTexCoordList.clear(); anIndexList.clear();
+				aMesh = toMesh( index, aFaceList, aPositionList, aNormalList, aTexCoordList, anIndexList );
+				pMeshManager.registerMesh( aMesh, new Integer( index ) );
+			}
 		}
-		return( meshList );
 	}
 		
 	protected Mesh toMesh(
-		int					pMaterialIndex
+		int					pMeshIndex
 	,	List<CSGFace>		pFaceList
 	,	List<Vector3f> 		pPositionList
 	,	List<Vector3f> 		pNormalList
@@ -486,8 +488,8 @@ public class CSGShapeIOB
 		int indexPtr = 0;
 		for( CSGFace aFace : pFaceList ) {
 			// Does this polygon have a custom material?
-			int materialIndex = aFace.getMaterialIndex();
-			if ( (pMaterialIndex >= 0) && (materialIndex != pMaterialIndex) ) {
+			int meshIndex = aFace.getMeshIndex();
+			if ( (pMeshIndex >= 0) && (meshIndex != pMeshIndex) ) {
 				// Only material-specific polygons are interesting
 				continue;
 			}

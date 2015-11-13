@@ -166,7 +166,7 @@ public class CSGPartition
 		if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
 			// Force the use of the plane from the underlying vertices
 			aPlane = CSGPlaneDbl.fromVertices( vertexList, pTempVars, pEnvironment );
-			return( addPolygons( pPolyList, vertexList, aPlane, pPolygon.getMaterialIndex(), pEnvironment ) );
+			return( addPolygons( pPolyList, vertexList, aPlane, pPolygon.getMeshIndex(), pEnvironment ) );
 		} else {
 			// Use the polygon as given
 			pPolyList.add( pPolygon );
@@ -346,8 +346,8 @@ public class CSGPartition
 	protected CSGPartition		mFrontPartition;
 	/** Those partitions behind this one */
 	protected CSGPartition		mBackPartition;
-	/** The custom Material index that applies to this Partition */
-	protected int				mMaterialIndex;
+	/** The custom Mesh index that applies to this Partition */
+	protected int				mMeshIndex;
 	
 	/** Simple null constructor */
 	public CSGPartition(
@@ -357,14 +357,14 @@ public class CSGPartition
 	/** Internal constructor that builds a hierarchy of nodes based on a set of polygons given later */
 	protected CSGPartition(
 		CSGPartition		pParentPartition
-	,	int					pMaterialIndex
+	,	int					pMeshIndex
 	,	int					pLevel
 	,	CSGEnvironment		pEnvironment
 	) {
 		mParent = pParentPartition;
 		mLevel = pLevel;
 		mPolygons = new ArrayList<CSGPolygon>();
-		mMaterialIndex = pMaterialIndex;
+		mMeshIndex = pMeshIndex;
 	}
 	
 	/** Public constructor to partition a given shape */
@@ -380,7 +380,7 @@ public class CSGPartition
 		
 		if ( pPolygons != null ) {
 			// Use the material assigned to the first polygon
-			mMaterialIndex = pPolygons.get(0).getMaterialIndex();
+			mMeshIndex = pPolygons.get(0).getMeshIndex();
 			
 	        // Avoid some object churn by using the 'temp' variables
 	        buildHierarchy( pPolygons, pTempVars, pEnvironment );
@@ -423,8 +423,8 @@ public class CSGPartition
 		return( aCount );
 	}
 	
-	/** Accessor to the MaterialIndex */
-	public int getMaterialIndex() { return mMaterialIndex; }
+	/** Accessor to the MeshIndex */
+	public int getMeshIndex() { return mMeshIndex; }
 	
 
 	/** Access to all polygons defined within this hierarchy */
@@ -567,7 +567,7 @@ public class CSGPartition
 		if ( !aCorruptHierarchy && !front.isEmpty() ) {
 			if (this.mFrontPartition == null) {
 				this.mFrontPartition 
-					= new CSGPartition( this, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
+					= new CSGPartition( this, this.mMeshIndex, this.mLevel + 1, pEnvironment );
 			}
 			if ( this.mPolygons.isEmpty() && back.isEmpty() ) {
 				// Everything is in the front, it does not need to be processed deeper
@@ -581,7 +581,7 @@ public class CSGPartition
 		if ( !aCorruptHierarchy && !back.isEmpty() ) {
 			if ( mBackPartition == null ) {
 				mBackPartition 
-					= new CSGPartition( this, this.mMaterialIndex, this.mLevel + 1, pEnvironment );
+					= new CSGPartition( this, this.mMeshIndex, this.mLevel + 1, pEnvironment );
 			}
 			if ( mPolygons.isEmpty() && front.isEmpty() ) {
 				// Everything is in the back, it does not need to be processed deeper
@@ -885,12 +885,12 @@ public class CSGPartition
 			}
 			// What comes in front of the plane?
 			int beforeCount
-				= addPolygonDbl( pFront, beforeVertices, pPolygon.getMaterialIndex()
+				= addPolygonDbl( pFront, beforeVertices, pPolygon.getMeshIndex()
 											, pTempVars, pEnvironment );
 
 			// What comes behind the given plane?
 			int behindCount 
-				= addPolygonDbl( pBack, behindVertices, pPolygon.getMaterialIndex()
+				= addPolygonDbl( pBack, behindVertices, pPolygon.getMeshIndex()
 											, pTempVars, pEnvironment );
 
 			if ( beforeCount == 0 ) {
@@ -1003,7 +1003,7 @@ public class CSGPartition
 				= addPolygonFlt( coplaneList
 											, polygonCopy
 											, (CSGPlaneFlt)mPlane
-											, pPolygon.getMaterialIndex()
+											, pPolygon.getMeshIndex()
 											, pTempVars
 											, pEnvironment );
 			if ( coplaneCount < 1 ) {
@@ -1148,11 +1148,11 @@ public class CSGPartition
 ****/
 /*** when operating on possibly triangular polygons ***/
 			int beforeCount
-				= addPolygonFlt( pFront, beforeVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
+				= addPolygonFlt( pFront, beforeVertices, pPolygon.getMeshIndex(), pTempVars, pEnvironment );
 
 			// What comes behind the given plane?
 			int behindCount 
-				= addPolygonFlt( pBack, behindVertices, pPolygon.getMaterialIndex(), pTempVars, pEnvironment );
+				= addPolygonFlt( pBack, behindVertices, pPolygon.getMeshIndex(), pTempVars, pEnvironment );
 
 			if ( beforeCount == 0 ) {
 				if ( behindCount == 0 ) {
@@ -1161,7 +1161,7 @@ public class CSGPartition
 					coplaneCount = addPolygonFlt( pCoplanarFront
 															, polygonCopy
 															, (CSGPlaneFlt)mPlane
-															, pPolygon.getMaterialIndex()
+															, pPolygon.getMeshIndex()
 														    , pTempVars, pEnvironment );
 					if ( coplaneCount > 0 ) {
 						CSGEnvironment.sLogger.log( Level.INFO

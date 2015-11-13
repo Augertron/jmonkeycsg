@@ -39,7 +39,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.wcomohundro.jme3.csg.CSGMaterialManager;
+import net.wcomohundro.jme3.csg.CSGMeshManager;
+import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
@@ -155,14 +156,15 @@ public abstract class CSGMesh
 	
 	/** FOR CSGShape PROCESSING: Register every custom face material */
 	public void registerMaterials(
-		CSGMaterialManager	pMaterialManager
+		CSGMeshManager	pMeshManager
+	,	CSGShape		pShape
 	) {
 		if ( mFaceProperties != null ) {
 			// Register every material in the list.  The manager will resolve multiple
 			// usages of the same material to the same index
 			for( CSGFaceProperties aProperty : mFaceProperties ) {
 				if ( aProperty.hasMaterial() ) {
-					pMaterialManager.resolveMaterialIndex( aProperty.getMaterial() );
+					pMeshManager.resolveMeshIndex( aProperty.getMaterial(), pShape );
 				}
 			}
 		}
