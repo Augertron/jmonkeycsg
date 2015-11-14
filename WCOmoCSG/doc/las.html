@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<!-- Webpage home for the SourceForge "jMonkeyCSG" project -->
+<head>
+    <title>jMonkey CSG - Constructive Solid Geometry (Lights/Animation/...)</title>
+    <!-- Use a JQuery ThemeRoller theme, in this case 'smoothness' -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="jquery-ui-1.11.2.custom.css">
+
+    <!-- Include the basic JQuery support (core and ui) -->
+    <script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jquery-ui-1.11.2.custom.min.js"></script>
+    
+    <meta name="description" 
+        content="This is a plugin for the jMonkey 3D development environment which supports CSG - Constructive Solid Geometry">
+    <meta name="keywords" 
+        content="jMonkey 3D CSG ConstructiveSolidGeometry">
+</head>
+<body>
+<div id="main">
+  <header>
+  	<div id="logo">
+  		<div id="logo_text">
+    		<h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
+    		<h2>Complex 3D shapes built by combining simple primitives</h2>
+  		</div>
+  	</div>
+  	<nav>
+		<div class="menu_container">
+			<ul class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
+				<li><a href="spatials.html">Spatials</a></li>
+				<li><a class="disabled">Lights/Animation/2D Surfaces</a></li>
+			</ul>
+		</div>
+	</nav>
+  </header>
+  <div id="site_content">
+  	<div id="sidebar_container">
+		<div class="sidebar">
+			<ul>
+				<li><a href="#lights">Lights</a></li>
+				<li><a href="#animation">Animation</a></li>
+				<li><a href="#surfaces">2D Surfaces</a></li>		
+			</ul>
+		</div>
+	</div>
+    <div class="content">
+    
+    <p>I began my efforts with CSG to fulfill a need for programmatic construction tools that 
+I can leverage in other experiments.  To that end, the CSG support has grown somewhat beyond
+the minimal needs of adding/subtracting/intersecting shapes.  The following are just some of
+the features implemented to meet my other personal requirements.</p>
+
+    <h3 id='lights'>Lights</h3>
+	<p>I had not anticipated any use for Lights being locally attached to the primitive shapes
+that are being blended together.  No provision was made for them in the original code, and
+such lights were blissfully ignored.  But I started working more with <i>interior</i> spaces
+that result from subtracting a smaller object from the middle of a larger one.  I know that
+globally acting lights affect all surfaces equally, with no particular knowledge of an interior
+space.  To get the proper illumination of an enclosed/interior space, <i>shadow</i> processing
+must be turned on.</p>
+
+	<p>The core jMonkey engine supports shadow processing via Renderers/Filters that are
+tied to specific kind of lights. But my experiments yielded less-than-inspiring results.  Some
+of the effects were quite realistic, but there were many instances of just plain oddness. 
+And the frame rate dropped precipitously. I am willing to attribute many issues to my lack of
+understanding, but until I can access better examples, I need a different approach.</p>
+
+	<p>Since local lights apply only to those elements within the given Spatial, I realized that
+I can produce some level of interior-only lighting if I could create an appropriate Node as part
+of the blending process. Support for multiple Materials already knows how to associate an end-product
+surface back to its original primitive shape.  This procedure was readily expanded to keep track
+of local lights as well as materials.  The end result includes a Node that contains the local
+lights, and all the surface Mesh elements that are illuminated by such lights.</p>
+
+	<p>For example, if I subtract a cylinder from a box, I can define lights on the cylinder itself.
+These lights only appear on the final interior surfaces elements, no where else.  While certainly
+not a comprehensive solution as true shadows would be, this allows me to produce some nice effects. 
+This also works well with groups of subshapes.  To create an arch-shaped corridor, I group together
+a half-height Box for the bottom, and a Cylinder for the top.  I can then subtract this group 
+from an exterior Box.  Adding lights to the group results in some nice interior illumination.
+Adding lights locally to the exterior box means I can light the outside without bleed-through
+into the interior.<p>
+	<img src='images/CorridorLights.png' alt='Corridor with interior lights'>
+	
+	<p>The default jme3 behavior is that all lights are positioned in world space, even if locally
+defined. The goal of CSG is to build up a complex shape from simpler primitives. When lights are 
+added, one would expect that transforming the final shape would retain the proper illumination.
+But if lights are positioned globally, translating the final shape means the lights are no longer
+shining where one would expect.  jme3 addresses this issue via the LightControl, which can 
+reposition a Light as its associated Spatial is transformed.  By default, CSG will create and 
+assign an appropriate Control to all local lights encountered during a blend.  It uses a custom
+CSGLightControl that better supports the underlying CSG structure.  But you can disable this
+feature or provide any other Control to use for light management.</p>
+	
+ 	<h3 id="animation">Animation</h3>
+ 	<p>Support for animation based on dynamic CSG processing is not one of my design goals. 
+ I always anticipated severe performance hits due to matching all the surfaces in one shape 
+ against all the surfaces in some other set of shapes.  I expected to use CSG as a loading 
+ operation, absorbing the performance cost as part of initial setup.  If animation was desired, 
+ I assumed that some N number of frames would be pre-built.</p>
+ 	<p>But it is still a fun test to see just what CSG can do dynamically. A rather simple
+ test case is to have two shapes with a common center rotating in opposite directions. Then 
+ display the intersection of the two. With simple boxes (12 triangles per box), you get 
+ pretty good response.  Change one of those boxes to a somewhat smooth cylinder, and the
+ frame rate takes a hit. You can interrogate the blended shape after regeneration to get
+ a count of nanoseconds required to build the shape.</p>
+ 	<p>The setup is straight forward.  Create two shapes and blend them into a third. In the
+ update loop, apply rotation to the two primitives, and then regenerate the blended shape. 
+ The CSG code will rebuild the blend from scratch on every regenerate call.
+ <br><a href='images/CSGAnimation.mpeg'>download movie</a>(which is rather choppy due
+ to the recording being active, but which is rather smooth in real life)</p>
+
+ 	<h3 id="surfaces">2D Surfaces</h3>
+ 	<p>The main thrust of CSG is the blending of solids.  But I ran into the situation of 
+ wanting to place a solid on my 2D floor without the floor bleeding through.  There is certainly 
+ no need to build the floor as a solid, and I was hoping to leverage the jme3 Surface and Terrain.  
+ The IOB processor does a fine job of detecting overlaps and selecting the proper triangles for
+ the final blended shape.  Subtracting the solid from the floor gives me a nice hole where the
+ solid should go.  Intersecting the solid and the floor shows me exactly where the overlap is.
+ And a union gives me a funky shape that I am not sure is very useful (but which looks correct).
+ </p>
+ 	<p>I have no idea if the BSP processor will function properly, and I have no plans to
+ experiment or work on it.</p>
+	<p></p>
+	</div>
+ </div>
+ <div>
+  	<nav>
+		<div class="menu_container">
+			<ul class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
+				<li><a href="spatials.html">Spatials</a></li>
+				<li><a class="disabled">Lights/Animation/2D Surfaces</a></li>
+			</ul>
+		</div>
+	</nav>
+	<footer>
+		<div class='left'>&copy; 2015, W.C.Omohundro, All Rights Reserved</div>
+		<div class='right'><a href="http://www.css3templates.co.uk" 
+		target='other'>-- web design from css3templates.co.uk --</a></div>
+	</footer>
+</div>
+
+</div>
+</body>
+</html>
