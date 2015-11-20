@@ -1,0 +1,79 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='CylinderTexture'>
+	<children>
+        <com.jme3.scene.Geometry name='CylinderFlat'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='FLAT'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='CylinderUniform'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='-5.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='UNIFORM'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='CylinderFlatLinear'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='FLAT_LINEAR'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='CylinderUniformLinear'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='UNIFORM_LINEAR'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='CylinderFlatInverted'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='-20.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='FLAT' inverted='true'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='CylinderFlatLinearInverted'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='-25.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='FLAT_LINEAR' inverted='true'/>
+        </com.jme3.scene.Geometry>    
+        
+
+        <com.jme3.scene.Geometry name='TwistedCylinderFlat'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='-30.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            		twist='PI/2' scaleSliceY='0.5' textureMode='FLAT'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='TwistedCylinderFlatLinear'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-6.0' z='-35.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            		twist='PI/2' scaleSliceY='0.5' textureMode='FLAT_LINEAR'/>
+        </com.jme3.scene.Geometry>
+        
+        <!-- Samples of texture butted up against itself to see how it tiles -->
+        <com.jme3.scene.Geometry name='TileSurface1'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='1.0' y='-12.0' z='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='TileSurface2'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='1.0' y='-14.0' z='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='TileSurface3'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-1.0' y='-12.0' z='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
+        </com.jme3.scene.Geometry>
+        
+    </children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

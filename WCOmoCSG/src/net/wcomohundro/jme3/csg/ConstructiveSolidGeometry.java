@@ -188,17 +188,24 @@ public interface ConstructiveSolidGeometry
 	 */
 	public interface CSGSpatial {
 		
-	    /** Accessor to the Material (ala Geometry) */
+	    /** Accessor to the Material (ala Geometry) 
+	     		NOTE that setMaterial() is defined by Spatial
+	     */
 	    public Material getMaterial();
-	    public void setMaterial(
-	    	Material 	pMaterial
+	    
+	    /** Special provisional setMaterial() that does NOT override anything 
+	     	already in force, but supplies a default if any element is missing 
+	     	a material
+	     */
+	    public void setDefaultMaterial(
+	    	Material	pMaterial
 	    );
 	    
-	    /** Accessor to the LOD level (ala Geometry) */
+	    /** Accessor to the LOD level (ala Geometry) 
+	     		NOTE that setLodLevel() is defined by Spatial
+	     */
 	    public int getLodLevel();
-	    public void setLodLevel(
-	    	int		pLODLevel
-	    );
+
 	    
 	    /** Include a shape */
 	    public void addShape(

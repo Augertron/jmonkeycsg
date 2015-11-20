@@ -28,6 +28,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Stack;
 
 import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.FlyCamAppState;
@@ -42,6 +43,7 @@ import com.jme3.asset.AssetNotFoundException;
 import com.jme3.asset.NonCachingKey;
 import com.jme3.asset.plugins.ClasspathLocator;
 import com.jme3.asset.plugins.FileLocator;
+import com.jme3.collision.CollisionResults;
 import com.jme3.export.Savable;
 import com.jme3.export.xml.XMLImporter;
 import com.jme3.input.KeyInput;
@@ -53,6 +55,8 @@ import com.jme3.light.Light;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Ray;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.Filter;
 import com.jme3.post.FilterPostProcessor;
@@ -111,15 +115,18 @@ public class CSGTestE
 	/** Spot for a bit of text */
 	protected BitmapText	mTextDisplay;
 	/** String to post */
-	protected String		mPostText;
+	protected Stack<String>	mPostText;
+	protected boolean		mRefreshText;
 	/** Video capture */
 	protected AppState		mVideo;
 
 	public CSGTestE(
 		String[]	pArgs
 	) {
-		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		//super( new FlyCamAppState() );
+		//super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		super( new FlyCamAppState() );
+		
+		mPostText = new Stack();
 		
 		// Initialize the scene list
 		mSceneList = new ArrayList();
@@ -194,8 +201,12 @@ public class CSGTestE
     	
         inputManager.addMapping( "nextScene"
         ,   new KeyTrigger( KeyInput.KEY_RETURN ) );
+        inputManager.addMapping( "priorScene"
+        ,   new KeyTrigger( KeyInput.KEY_BACKSLASH ) );
         inputManager.addMapping( "video"
         ,   new KeyTrigger( KeyInput.KEY_R ) );
+        inputManager.addMapping( "pickItem"
+        ,   new MouseButtonTrigger( MouseInput.BUTTON_RIGHT ) );
         
         ActionListener aListener = new ActionListener() {
             public void onAction(
@@ -209,6 +220,7 @@ public class CSGTestE
                     	if ( mLastScene != null ) {
                     		rootNode.detachChild( mLastScene );
                     		mLastScene = null;
+                    		if ( !mPostText.isEmpty() ) mPostText.pop();
                     	}
                         // Select next scene
                         mSceneIndex += 1;
@@ -216,6 +228,24 @@ public class CSGTestE
                         
                         // And load it
                 	    loadScene();
+                    } else if ( pName.equals( "priorScene" ) ) {
+                        // Remove the old scene
+                    	if ( mLastScene != null ) {
+                    		rootNode.detachChild( mLastScene );
+                    		mLastScene = null;
+                    		if ( !mPostText.isEmpty() ) mPostText.pop();
+                    	}
+                        // Select next scene
+                        mSceneIndex -= 1;
+                        if ( mSceneIndex < 0 ) mSceneIndex = mSceneList.size() -1;
+                        
+                        // And load it
+                	    loadScene();
+                	    
+                    } else if ( pName.equals( "pickItem" ) ) {
+                    	// Report on the click
+                    	mPostText.push( resolveSelectedItem() );
+                    	mRefreshText = true;
 
                     } else if ( pName.equals( "video" ) ) {
                     	// Toggle the video capture
@@ -230,10 +260,17 @@ public class CSGTestE
                         	CSGTestDriver.postText( thisApp, mTextDisplay, "Recording Complete" );
                     	}
                     }
+                } else {
+                	if ( pName.equals( "pickItem" ) ) {
+                		if ( !mPostText.isEmpty() ) mPostText.pop();
+                		mRefreshText = true;
+                	}
                 }
             }
         };  
         inputManager.addListener( aListener, "nextScene" );
+        inputManager.addListener( aListener, "priorScene" );
+        inputManager.addListener( aListener, "pickItem" );
         inputManager.addListener( aListener, "video" );
     }
 
@@ -242,15 +279,44 @@ public class CSGTestE
     ) {
     	super.update();
     	
-    	if ( mPostText != null ) {
-        	CSGTestDriver.postText( this, mTextDisplay, mPostText );    			
-        	mPostText = null;
+    	if ( mRefreshText ) {
+    		String aMessage = (mPostText.isEmpty()) ? "" : mPostText.peek();
+        	CSGTestDriver.postText( this, mTextDisplay, aMessage );    			
+        	mRefreshText = false;
     	}
     	if ( mLoadedSpatial != null ) {
     		rootNode.attachChild( mLoadedSpatial );
     		mLastScene = mLoadedSpatial;
     		mLoadedSpatial = null;
     	}
+    }
+    
+    /** What is the user looking at? */
+    protected String resolveSelectedItem(
+    ) {
+    	String itemName = "...nothiing...";
+    	
+    	// Cast a ray in the direction of the camera and see what gets hit
+        CollisionResults results = new CollisionResults();
+        
+        // To pick what the camera is directly looking at
+        //Ray aRay = new Ray( cam.getLocation(), cam.getDirection() );
+         
+        // To pick what the mouse is over
+        Vector2f click2d = inputManager.getCursorPosition();
+        Vector3f click3d = cam.getWorldCoordinates( new Vector2f(click2d.x, click2d.y), 0f).clone();
+        Vector3f dir = cam.getWorldCoordinates(new Vector2f(click2d.x, click2d.y), 1f).subtractLocal(click3d).normalizeLocal();
+        Ray aRay = new Ray( click3d, dir );
+        
+        // What all was selected
+        if ( mLastScene != null ) {
+	        mLastScene.collideWith( aRay, results );
+	        if ( results.size() > 0 ) {
+	        	Geometry selectedItem = results.getClosestCollision().getGeometry();
+	        	itemName = selectedItem.getName();
+	        }
+        }
+    	return( itemName );
     }
 
     /////////////////////// Implement Runnable ////////////////
@@ -326,7 +392,8 @@ public class CSGTestE
     			mLoadingScene = null;
     		}
     		if ( reportString != null ) {
-    			mPostText = reportString;
+    			mPostText.push( reportString );
+    			mRefreshText = true;
     		}
     	}
     }

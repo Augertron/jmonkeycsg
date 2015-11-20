@@ -184,8 +184,36 @@ public class CSGGeonode
     public void setMaterial(
     	Material 	pMaterial
     ) {
+    	// Let the super apply the material to all the subelements
+    	super.setMaterial( pMaterial );
         this.mMaterial = pMaterial;
     }
+    /** Special provisional setMaterial() that does NOT override anything 
+	 	already in force, but supplies a default if any element is missing 
+	 	a material
+	 */
+    @Override
+	public void setDefaultMaterial(
+		Material	pMaterial
+	) {
+    	if ( this.mMaterial == null ) {
+    		this.mMaterial = pMaterial;
+    	}
+    	if ( mMaterial != null ) {
+    		// Apply to all children where appropriate
+            for( Spatial aChild : children ) {
+            	if ( aChild instanceof ConstructiveSolidGeometry.CSGSpatial ) {
+            		// Apply as default
+            		((ConstructiveSolidGeometry.CSGSpatial)aChild).setDefaultMaterial( mMaterial );
+            		
+            	} else if ( (aChild instanceof Geometry) && (((Geometry)aChild).getMaterial() == null) ) {
+            		// Apply to any Geometry that does NOT have a material
+            		aChild.setMaterial( mMaterial );
+            	}
+            }
+    	}
+    }
+
     
     /** Accessor to the LOD level (ala Geometry) */
     @Override
@@ -456,6 +484,9 @@ public class CSGGeonode
         } else {
         	mLightControl = (Control)aCapsule.readSavable( "lightControl", null );
         }
+		// Look to apply this material as a default for any elements with no material
+		this.setDefaultMaterial( mMaterial );
+
         // Any custom environment?
         mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
         if ( mEnvironment != null ) mEnvironment.mShapeName = this.getName() + ": ";

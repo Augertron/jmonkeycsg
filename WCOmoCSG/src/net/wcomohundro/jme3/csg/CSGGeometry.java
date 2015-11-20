@@ -123,6 +123,19 @@ public class CSGGeometry
 		super( pName, pMesh );
 	}
 	
+    /** Special provisional setMaterial() that does NOT override anything 
+	 	already in force, but supplies a default if any element is missing 
+	 	a material
+	 */
+    @Override
+	public void setDefaultMaterial(
+		Material	pMaterial
+	) {
+    	if ( this.material == null ) {
+    		this.material = pMaterial;
+    	}
+    }
+	
 	/** How long did it take to regenerate this shape */
 	@Override
 	public long getShapeRegenerationNS() { return mRegenNS; }

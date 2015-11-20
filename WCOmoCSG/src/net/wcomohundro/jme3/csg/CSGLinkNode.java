@@ -38,6 +38,7 @@ import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
 import com.jme3.material.Material;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 
@@ -137,7 +138,34 @@ public class CSGLinkNode
     public void setMaterial(
     	Material 	pMaterial
     ) {
+    	// Let the super apply the material to all its subelements
+    	super.setMaterial( pMaterial );
         this.mMaterial = pMaterial;
+    }
+    /** Special provisional setMaterial() that does NOT override anything 
+	 	already in force, but supplies a default if any element is missing 
+	 	a material
+	 */
+    @Override
+	public void setDefaultMaterial(
+		Material	pMaterial
+	) {
+    	if ( this.mMaterial == null ) {
+    		this.mMaterial = pMaterial;
+    	}
+    	if ( mMaterial != null ) {
+    		// Apply to all children where appropriate
+            for( Spatial aChild : children ) {
+            	if ( aChild instanceof ConstructiveSolidGeometry.CSGSpatial ) {
+            		// Apply as default
+            		((ConstructiveSolidGeometry.CSGSpatial)aChild).setDefaultMaterial( mMaterial );
+            		
+            	} else if ( (aChild instanceof Geometry) && (((Geometry)aChild).getMaterial() == null) ) {
+            		// Apply to any Geometry that does NOT have a material
+            		aChild.setMaterial( mMaterial );
+            	}
+            }
+    	}
     }
     
     /** Accessor to the LOD level (ala Geometry) */
@@ -216,6 +244,9 @@ public class CSGLinkNode
 				}
 			}
 		}
+		// Look to apply this material as a default for any elements with no material
+		this.setDefaultMaterial( mMaterial );
+
 		// Individual CSGSpatials will regenerate as part of read(), so now scan the list
 		// looking for any oddness.
 		mIsValid = true;

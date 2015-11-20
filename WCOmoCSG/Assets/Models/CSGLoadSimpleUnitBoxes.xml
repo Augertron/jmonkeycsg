@@ -1,11 +1,15 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <com.jme3.scene.Node format_version='2' name='CSGSamples'>
-    <transform class='com.jme3.math.Transform'>
-        <translation class='com.jme3.math.Vector3f' z='0.0'/>
-    </transform>
+    <lights class='com.jme3.light.LightList'>
+        <lights>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
     <children>
         <!-- Normal -->
-        <com.jme3.scene.Geometry name='Box1'
+        <com.jme3.scene.Geometry name='NormalBox'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
@@ -14,7 +18,7 @@
         </com.jme3.scene.Geometry>
         
         <!-- Wireframe -->
-        <com.jme3.scene.Geometry name='Box1'
+        <com.jme3.scene.Geometry name='WireframeBox'
         		materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0'/>
@@ -23,7 +27,7 @@
         </com.jme3.scene.Geometry>
         
         <!-- Brickwall -->
-        <com.jme3.scene.Geometry name='Box2'
+        <com.jme3.scene.Geometry name='BrickwallBox'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0'/>
@@ -32,7 +36,7 @@
         </com.jme3.scene.Geometry>
         
    		<!-- Rock1 -->
-        <com.jme3.scene.Geometry name='Box3'
+        <com.jme3.scene.Geometry name='Rock1Box'
         		materialName='Textures/Rock/Rock1.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='9.0' y='0.0'/>
@@ -41,7 +45,7 @@
         </com.jme3.scene.Geometry>  
         
    		<!-- Rock1 -->
-        <com.jme3.scene.Geometry name='Box4'
+        <com.jme3.scene.Geometry name='Rock2Box'
         		materialName='Textures/Rock/Rock2.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0'/>

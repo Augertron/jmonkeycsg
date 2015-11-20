@@ -1,0 +1,55 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='Cylinders'>
+	<children>
+        <com.jme3.scene.Geometry name='SimpleCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='DownScaledCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-5.0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.0' y='0.75' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='UpScaledCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-10.0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.0' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='BigEndCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' radius2='1.5'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='OpenedEndedCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-20.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' closed='false'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='InvertedCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-25.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' inverted='true'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='TwistedCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-30.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' twist='PI/2' scaleSliceY='0.5' />
+        </com.jme3.scene.Geometry>
+    </children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

@@ -64,7 +64,7 @@ public class CSGTestDriver
 	    //app = new CSGTestH();			// Test case for support ticket and raw shapes
 	    //app = new CSGTestI( args );	// Shadow test
 	    //app = new CSGTestJ();			// Dynamic animation test from JME forum
-	    //app = new CSGTestK();			// Surface test
+	    //app = new CSGTestK();			// 2D Surface test
 	        
 	    //app = new TestPointLightShadows();
 	    app.start();
