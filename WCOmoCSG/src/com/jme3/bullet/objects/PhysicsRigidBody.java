@@ -84,6 +84,9 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
      * Builds/rebuilds the phyiscs body when parameters have changed
      */
     protected void rebuildRigidBody() {
+// WCO 20Nov2015 -- protect against null pointer during read()
+    	if ( collisionShape == null ) return;
+    	
         boolean removed = false;
         if (collisionShape instanceof MeshCollisionShape && mass != 0) {
             throw new IllegalStateException("Dynamic rigidbody can not have mesh collision shape!");
