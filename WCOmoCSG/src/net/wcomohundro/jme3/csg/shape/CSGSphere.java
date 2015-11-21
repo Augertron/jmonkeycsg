@@ -35,7 +35,6 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
-import com.jme3.scene.shape.Sphere.TextureMode;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TempVars;
 
@@ -47,6 +46,7 @@ import java.nio.ShortBuffer;
 
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 
 /** Specialization/Copy of standard JME3 Sphere for unification with other CSG shapes
  	Like CSGCylinder (and the original Sphere) we render slices of the sphere along the
@@ -59,7 +59,7 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  	along the entire range of z, or you can vary the z slice width to produce more slices
  	where the values change most rapidly.  This gives you a smoother looking sphere.
  	
- 	I have altered the how textures are applied to the poles to (ZAXIS, PROJECTED) so that
+ 	I have altered how textures are applied to the poles to (ZAXIS, PROJECTED) so that
  	the radial distortion in the base jme3 class is eliminated.
  	 
  	NOTE that for a while, I was going to support 'eccentricity' in the generation of the
@@ -83,17 +83,6 @@ public class CSGSphere
         				// but mirrors the texture across the equator
     }
     
-	/** For possible future enhances to texture scaling  */
-	public enum Face {
-		BACK, CRUST, FRONT, NONE;
-		
-		private int mask;
-		Face() {
-			mask = (this.name().equals("NONE")) ? 0 : (1 << this.ordinal());
-		}
-		public int getMask() { return mask; }
-	}
-
     /** When generating the slices along the z-axis, evenly space them (else create more near the extremities) */
     protected boolean 		mEvenSlices;
 	/** Marker to enforce 'uniform' texture (once around the cylinder matches once across the end cap) */
@@ -401,7 +390,13 @@ public class CSGSphere
 		// And even though the north/south poles are a single point, we need to 
 		// generate different texture coordinates for the pole for each different 
 		// radial, so we need a full set of vertices
-   	 	CSGSphereContext aContext = new CSGSphereContext( mAxisSamples, mRadialSamples, mClosed, mRadius );
+    	if ( (mTextureMode == CSGSphere.TextureMode.POLAR) && ((mAxisSamples & 1) == 0) ) {
+    		// Polar mode works much better with an odd count of samples,
+    		// which eliminates the duplication across the equator
+    		mAxisSamples += 1;
+    	}
+   	 	CSGSphereContext aContext 
+   	 		= new CSGSphereContext( mAxisSamples, mRadialSamples, mClosed, mRadius, mTextureMode );
     	 
     	return( aContext );
     }
@@ -621,7 +616,7 @@ public class CSGSphere
 
         // Super processing of zExtent reads to zero to allow us to apply an appropriate default here
         if ( mExtentZ == 0 ) {
-        	// For a cylinder the default is to match the radius
+        	// For a sphere the default is to match the radius
         	mExtentZ = mRadius;
         } else if ( mRadius == 1 ) {
         	// An explicit Z extent overrides a default radius
@@ -656,7 +651,7 @@ public class CSGSphere
         // Nothing really custom yet
         boolean doBack = (pFaceMask & Face.BACK.getMask()) != 0;
         boolean doFront = (pFaceMask & Face.FRONT.getMask()) != 0;
-        boolean doCrust = (pFaceMask & Face.CRUST.getMask()) != 0;
+        boolean doCrust = (pFaceMask & Face.SURFACE.getMask()) != 0;
 
         if ( doCrust ) {
 	        for( int i = 0, j = aBuffer.limit() / 2; i < j; i += 1 ) {
@@ -689,17 +684,19 @@ public class CSGSphere
 class CSGSphereContext
 	extends CSGRadialContext
 {
-	float	mRadiusSquared;
+	/** Fast access to r squared */
+	float						mRadiusSquared;
 	
     /** Initialize the context */
     CSGSphereContext(
-    	int		pAxisSamples
-    ,	int		pRadialSamples
-    ,	boolean	pIsClosed
-    ,	float	pRadius
+    	int						pAxisSamples
+    ,	int						pRadialSamples
+    ,	boolean					pIsClosed
+    ,	float					pRadius
+    ,	CSGSphere.TextureMode	pTextureMode
     ) {	
     	// The sphere has RadialSamples (+1 for the overlapping end point) times the number of slices
-    	super( pAxisSamples, pRadialSamples, pIsClosed );
+    	initializeContext( pAxisSamples, pRadialSamples, pIsClosed );	
     	
     	// The rSquared is constant for a given radius and can be calculated here
     	mRadiusSquared = pRadius * pRadius;

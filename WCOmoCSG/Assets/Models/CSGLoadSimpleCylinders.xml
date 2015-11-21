@@ -1,8 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<com.jme3.scene.Node format_version='2' name='CSGSamples'>
-    <transform class='com.jme3.math.Transform'>
-        <translation class='com.jme3.math.Vector3f' z='0.0'/>
-    </transform>
+<net.wcomohundro.jme3.csg.CSGLinkNode  name='SimpleCylinders'>
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
@@ -11,44 +8,92 @@
         </lights>
     </lights>
     <children>
-    	<!-- Normal, minimal cylinder -->
-        <com.jme3.scene.Geometry name='MinimalCylinder'
-       			materialName='Textures/Debug/Normals.xml'>	
-            <transform class='com.jme3.math.Transform' >
-                <translation class='com.jme3.math.Vector3f' x='-6.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
-        </com.jme3.scene.Geometry>
+        <net.wcomohundro.jme3.csg.CSGLinkNode name='NormalCylinders'
+        		materialName='Textures/Debug/Normals.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='WireframeCylinders'
+        		materialName='Textures/Debug/Wireframe.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = C      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='BrickwallCylinders'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = C     -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='RedbrickCylinders'
+        		materialName='Textures/BrickWall/RedBrickRpt.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='18.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
 
-		<!-- A closed cylinder -->
-        <com.jme3.scene.Geometry name='SimpleCylinder'
-        		materialName='Textures/BrickWall/BrickWallRpt.xml' >
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-3.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
-            		textureMode='FLAT'>
-                <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5PI' scaleY='1.1'/>
-            	</faceProperties>
-            </mesh>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='LinearCylinder'
-        		materialName='Textures/BrickWall/BrickWallRpt.xml' >
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
-            		textureMode='FLAT_LINEAR'>
-                <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.1' scaleY='1.5PI'/>
-            	</faceProperties>
-            </mesh>
-        </com.jme3.scene.Geometry>
+	    <!-- GRADE FOR TEXTURE:  Tiling = F     -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='Rock1Cylinders'
+        		materialName='Textures/Rock/Rock1Rpt.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='24.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = B+      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='Rock2Cylinders'
+        		materialName='Textures/Rock/Rock2Rpt.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='30.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = A-      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='CobbleStoneCylinders'
+        		materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='36.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = A      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='PebblesCylinders'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='42.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>  
+<?ignore
 
 		<!-- An inverted cylinder -->
         <com.jme3.scene.Geometry name='InvertedCylinder'
@@ -122,6 +167,6 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
             	closed='true' height='1.5' radialSamples='32' radius='1.1' radius2='1.5'/>
         </com.jme3.scene.Geometry>
-
+?>
     </children>
-</com.jme3.scene.Node>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

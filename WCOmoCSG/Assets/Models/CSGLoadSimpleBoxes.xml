@@ -1,8 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <com.jme3.scene.Node format_version='2' name='CSGSamples'>
-    <transform class='com.jme3.math.Transform'>
-        <translation class='com.jme3.math.Vector3f' z='0.0'/>
-    </transform>
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
@@ -20,7 +17,7 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' />
         </com.jme3.scene.Geometry>
 
-        <com.jme3.scene.Geometry name='BoxStretched'
+        <com.jme3.scene.Geometry name='LongXBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='5.0'/>
@@ -28,7 +25,7 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='5.0' />
         </com.jme3.scene.Geometry>
         
-        <com.jme3.scene.Geometry name='BoxTextureStretched'
+        <com.jme3.scene.Geometry name='LongStretchedXBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
@@ -40,7 +37,7 @@
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='BoxTextureStretched2'
+        <com.jme3.scene.Geometry name='LongStretchedYBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0'/>
@@ -52,7 +49,7 @@
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='BoxTextureStretched3'
+        <com.jme3.scene.Geometry name='LongStretchedZBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='0.0'/>
@@ -65,7 +62,7 @@
             </mesh>
         </com.jme3.scene.Geometry>
         
-        <com.jme3.scene.Geometry name='BoxTextureStretched4'
+        <com.jme3.scene.Geometry name='LongStretchedXYYBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-8.0'/>

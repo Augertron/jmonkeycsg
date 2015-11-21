@@ -264,12 +264,23 @@ public abstract class CSGRadial
         // along the zAxis.  But if the end caps are not flat, then they consume
         // zAxis space and must be figured in.
         pContext.mZAxisUniformPercent = 2.0f;
+        pContext.mIndex = 0;
+    	pContext.mZOffset = 0;
+    	
         if ( mFlatEnds ) {
         	// Only samples take up space, not the flat end caps
         	pContext.mZAxisUniformPercent /= (mAxisSamples -1);
         } else {
         	// Every slice, including the non-flat end caps consume space
-        	pContext.mZAxisUniformPercent /= (pContext.mSliceCount - 1);
+        	if ( mClosed ) {
+        		// North and South poles consume space along z
+        		pContext.mZAxisUniformPercent /= (pContext.mSliceCount - 1);
+        	} else {
+        		// North and South poles still consume space, but we are not
+        		// producing triangles for them so they are not in the slice count
+        		pContext.mZAxisUniformPercent /= (pContext.mSliceCount + 1);
+        		pContext.mZOffset = 1;
+        	}
         }
         // Generate points on the unit circle to be used in computing the mesh
         // points on a sphere slice.
@@ -277,11 +288,9 @@ public abstract class CSGRadial
 
         // Avoid some object churn by using the thread-specific 'temp' variables
         TempVars vars = TempVars.get();
-        pContext.mIndex = 0;
         int southPoleIndex = -1, northPoleIndex = -1;
         try {
 	        // Iterate down the zAxis
-        	pContext.mZOffset = 0;
 	        for( int zIndex = 0; zIndex < pContext.mSliceCount; zIndex += 1 ) {
 	        	// If closed, zIndex == 0 is the backface (-1), zIndex == sliceCount-1 is the frontface (1)
 	        	int aSurface = 0;					// On the curve/crust
@@ -740,7 +749,7 @@ abstract class CSGRadialContext
     Vector2f			mTexVector;				// The texture vector of the current radial point
     
     /** Initialize the context */
-    CSGRadialContext(
+    protected void initializeContext(
     	int		pAxisSamples
     ,	int		pRadialSamples
     ,	boolean	pIsClosed
@@ -783,7 +792,7 @@ abstract class CSGRadialContext
     	int useAxisSamples = pAxisSamples;
     	
     	if ( pLODFactor > 0.0f ) {
-    		// Reduce the number of slices by 'skipping' past selected slices (every second, every thirds...)
+    		// Reduce the number of slices by 'skipping' past selected slices (every second, every third...)
     		// while we produce the Index buffer
     		if ( pLODFactor > 0.5f ) {
     			// Minimal 'skipping' is every other, so if you want some special LOD, then you get
@@ -797,7 +806,7 @@ abstract class CSGRadialContext
 	    		// Account for final slice
 	    		useAxisSamples = (pAxisSamples / mSliceReductionFactor) + 1;
 	    		if ( (pAxisSamples % mSliceReductionFactor) > 0 ) {
-	    			// Not an even multiple of the 'factor' so we will have an extra short slice to the end
+	    			// Not an even multiple of the 'factor' so we will add an extra short slice to the end
 	    			useAxisSamples += 1;
 	    		}
     		}

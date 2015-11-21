@@ -1,0 +1,174 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='Pipes'>
+	<children>
+        <!-- Shaped pipes that follow a path -->
+        <com.jme3.scene.Geometry name='BezierPipe5Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' axisSamples='5'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='2'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='BezierPipe9Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-5.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' axisSamples='9'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='2'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='BigEndBezierPipe15Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f'  y='-12.0' z='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='15' radius2='1.25' smoothSurface='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='2'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='TwistedBezierPipe15Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='15' twist='PI/2' scaleSliceY='0.5' smoothSurface='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='2'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <net.wcomohundro.jme3.csg.CSGGeometry name='QuaterPipe15Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-20.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' axisSamples='15' pipeEnds='PERPENDICULAR'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='PI/2'/>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='PI/2'/>
+            	</faceProperties>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+        
+        <net.wcomohundro.jme3.csg.CSGGeometry name='HalfPipe15Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-25.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' axisSamples='15' pipeEnds='PERPENDICULAR'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='PI'/>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='PI'/>
+            	</faceProperties>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <net.wcomohundro.jme3.csg.CSGGeometry name='ThreeQuaterPipe15Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-30.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' axisSamples='15' pipeEnds='PERPENDICULAR'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='3PI/2'/>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='3PI/2'/>
+            	</faceProperties>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+         <net.wcomohundro.jme3.csg.CSGGeometry name='HelixPipe90Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-35.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='90' pipeEnds='PERPENDICULAR' radius='0.3'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='4PI' helix='2'/>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='4PI'/>
+            	</faceProperties>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+        
+        <net.wcomohundro.jme3.csg.CSGGeometry name='TwistedPipe30Samples'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-40.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe'
+            		 twist='PI/2' scaleSliceX='1.5' scaleSliceY='0.8'
+            		 axisSamples='30' radius='0.3' radius2='0.5' 
+            		 pipeEnds='CROPPED' smoothSurface='true'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' arc='3PI/2'/>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='PI'/>
+            	</faceProperties>
+             </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+ 
+        <net.wcomohundro.jme3.csg.CSGGeometry name='DegenerateSquareBezierPipe'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' y='-12.0' z='-45.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+            		axisSamples='15' radialSamples='4' firstRadial='PI/4' smoothSurface='false'>
+            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' type='Bezier'>
+            		<controlPoints>
+	                    <com.jme3.math.Vector3f x='0.0' y='0.0' z='1.0'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='0.75'/>
+	                    <com.jme3.math.Vector3f x='0.25' y='0.0' z='-0.75'/>
+	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-1.0'/>
+	                </controlPoints>
+	            </slicePath>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+    </children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

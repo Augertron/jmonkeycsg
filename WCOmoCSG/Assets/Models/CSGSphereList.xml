@@ -1,0 +1,92 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='Spheres'>
+	<children>
+        <com.jme3.scene.Geometry name='SimpleSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='DownScaledSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-5.0'/>
+                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='UpScaledSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-10.0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='BigSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' radius='1.5'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='OpenedEndedSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-20.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' closed='false'
+            		 axisSamples='16' radialSamples='16'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='InvertedSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-25.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' inverted='true'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='PROJECTEDSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-30.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='POLARSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-35.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='HiRezSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-40.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' axisSamples='64' radialSamples='64'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='LoRezSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-45.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' axisSamples='8' radialSamples='8'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='EvenSliceSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-50.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' useEvenSlices='true'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='TwistedSphere'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-55.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' twist='PI'/>
+        </com.jme3.scene.Geometry>
+
+    </children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

@@ -1,0 +1,96 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='ScaledCylinders'>
+	<children>
+        <com.jme3.scene.Geometry name='MinimalCylinder'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='FlatCylinder1.1x1.5' >
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-5.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
+            		textureMode='FLAT'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5PI' scaleY='1.1'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='LinearCylinder1.1x1.5' >
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
+            		textureMode='FLAT_LINEAR'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.1' scaleY='1.5PI'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='InvertedFlatCylinder1.1x1.5' >
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
+            		textureMode='FLAT' inverted='true'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5PI' scaleY='1.1'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='InvertedLinearCylinder1.1x1.5' >
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-20.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
+            		textureMode='FLAT_LINEAR' inverted='true'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.1' scaleY='1.5PI'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <!-- Closed, degenerate cylinder (more like a cube/triangle) -->
+        <com.jme3.scene.Geometry name='DegenerateCubeCylinderLinear'>	
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-25.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
+            		closed='true' axisSamples='2' radialSamples='4' firstRadial='PI/4' radius='1.4' zExtent='1'
+            		textureMode='FLAT_LINEAR'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.4' scaleY='1.4'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.4' scaleY='1PI'/>
+            	</faceProperties>
+            </mesh> 
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='DegenerateTriangleCylinderFlat'>	
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' z='-30.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
+            		closed='true' axisSamples='2' radialSamples='3' firstRadial='PI/2' radius='1.4' zExtent='1'
+            		textureMode='FLAT'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.4' scaleY='1.4'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1PI' scaleY='1.4'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+    </children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

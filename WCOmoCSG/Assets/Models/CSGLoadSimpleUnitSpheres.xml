@@ -1,271 +1,99 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <com.jme3.scene.Node format_version='2' name='CSGSamples'>
-    <transform class='com.jme3.math.Transform'>
-        <translation class='com.jme3.math.Vector3f' y='10.0'/>
-    </transform>
+    <lights class='com.jme3.light.LightList'>
+        <lights>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
+    
     <children>
-        <!-- Normal -->
-        <com.jme3.scene.Geometry name='Box1'
+        <net.wcomohundro.jme3.csg.CSGLinkNode name='NormalSpheres'
         		materialName='Textures/Debug/Normals.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Normals.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-3'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Normals.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-6'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Normals.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-9'/>
-                <scale class='com.jme3.math.Vector3f' x='0.75' y='0.5' z='1.2'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Normals.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-12.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' closed='false'/>
-        </com.jme3.scene.Geometry>
-        
-        <!-- Wireframe -->
-        <com.jme3.scene.Geometry name='Box1'
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='WireframeSpheres'
         		materialName='Textures/Debug/Wireframe.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Wireframe.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-3'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Wireframe.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-6'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Wireframe.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-9'/>
-                <scale class='com.jme3.math.Vector3f' x='0.75' y='0.5' z='1.2'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box1'
-        		materialName='Textures/Debug/Wireframe.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0' z='-12.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' closed='false'/>
-        </com.jme3.scene.Geometry>
-        
-        <!-- Brickwall -->
-        <com.jme3.scene.Geometry name='Box2'
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = C      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='BrickwallSpheres'
         		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-         <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-3'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-6'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR' axisSamples='31'/>
-        </com.jme3.scene.Geometry>
-        
-        <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-9'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-         <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-12'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-15'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR' axisSamples='31'/>
-        </com.jme3.scene.Geometry>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = C     -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='RedbrickSpheres'
+        		materialName='Textures/BrickWall/RedBrick.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='18.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
 
-        <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-18'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>
-         <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-21'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
-        </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Box2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0' z='-24'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR' axisSamples='31'/>
-        </com.jme3.scene.Geometry>
-
-   		<!-- Rock1 -->
-        <com.jme3.scene.Geometry name='Box3'
+	    <!-- GRADE FOR TEXTURE:  Tiling = F     -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='Rock1Spheres'
         		materialName='Textures/Rock/Rock1.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='9.0' y='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box3'
-        		materialName='Textures/Rock/Rock1.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='9.0' y='0.0' z='-3'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box3'
-        		materialName='Textures/Rock/Rock1.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='9.0' y='0.0' z='-6'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR' axisSamples='31'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box3'
-        		materialName='Textures/Rock/Rock1.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='9.0' y='0.0' z='-9'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' scaleSliceX='1.3'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box3'
-        		materialName='Textures/Rock/Rock1.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='9.0' y='0.0' z='-12'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' twist='PI/2' scaleSliceX='1.3'/>
-        </com.jme3.scene.Geometry>  
-        
-   		<!-- Rock2 -->
-        <com.jme3.scene.Geometry name='Box4'
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='24.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = B+      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='Rock2Spheres'
         		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-3'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-6'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR' axisSamples='31'/>
-        </com.jme3.scene.Geometry>  
-        
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-9'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-12'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-15'/>
-                <scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR' axisSamples='31'/>
-        </com.jme3.scene.Geometry>  
-            
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-18'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-21'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='PROJECTED'/>
-        </com.jme3.scene.Geometry>  
-        <com.jme3.scene.Geometry name='Box4'
-        		materialName='Textures/Rock/Rock2.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0' z='-24'/>
-                <scale class='com.jme3.math.Vector3f' x='1.33' y='1.33' z='1.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' textureMode='POLAR' axisSamples='31'/>
-        </com.jme3.scene.Geometry>  
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='30.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = A-      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='CobbleStoneSpheres'
+        		materialName='Textures/CobbleStone/CobbleStone.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='36.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>
+	    
+	    <!-- GRADE FOR TEXTURE:  Tiling = A      -->
+	    <net.wcomohundro.jme3.csg.CSGLinkNode name='PebblesSpheres'
+        		materialName='Textures/CobbleStone/Pebbles.xml'>
+	        <transform class='com.jme3.math.Transform'>
+	            <translation class='com.jme3.math.Vector3f' x='42.0' y='0.0' z='0.0'/>
+	        </transform>
+		    <assetLoaderKeyList>
+		   		<com.jme3.asset.NonCachingKey name='Models/CSGSphereList.xml'/>
+		    </assetLoaderKeyList>
+	    </net.wcomohundro.jme3.csg.CSGLinkNode>  
         
     </children>
 </com.jme3.scene.Node>

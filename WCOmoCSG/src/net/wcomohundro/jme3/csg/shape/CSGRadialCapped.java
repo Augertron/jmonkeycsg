@@ -535,7 +535,7 @@ class CSGRadialCappedContext
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
     ) {	
-    	super( pAxisSamples, pRadialSamples, pClosed );
+    	initializeContext( pAxisSamples, pRadialSamples, pClosed );
     	
     	// Account for the span of the texture on the end caps
     	switch( pTextureMode ) {
