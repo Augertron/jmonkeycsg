@@ -36,6 +36,11 @@ import java.util.logging.Logger;
 import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
 
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.control.PhysicsControl;
+import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -45,6 +50,8 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Spatial;
+import com.jme3.scene.control.Control;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Define the operational environment to apply to the CSG processing 
@@ -203,6 +210,7 @@ public class CSGEnvironment
 		}
 		return( aFloatValue );
 	}
+
 	
 	/** Shape this environment applies to */
 	public String		mShapeName;

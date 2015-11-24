@@ -79,7 +79,7 @@ public class XMLLoader
     	} catch( IOException ex ) {
     		sLogger.log( Level.WARNING, "XMLLoader failed", ex );
     		throw ex;
-    	} catch( Exception ex ) {
+    	} catch( Throwable ex ) {
     		sLogger.log( Level.WARNING, "XMLLoader failed", ex );
     		throw new IOException( ex );
     	} finally {

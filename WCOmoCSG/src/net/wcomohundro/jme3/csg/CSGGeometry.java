@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Queue;
 
 import com.jme3.asset.AssetKey;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -54,6 +55,11 @@ import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import com.jme3.bounding.BoundingVolume;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.TempVars;
@@ -94,11 +100,13 @@ public class CSGGeometry
 	protected List<CSGShape>	mShapes;
 	/** Template of light control to apply transforms */
 	protected Control			mLightControl;
+	/** Physics that applies to this shape */
+	protected PhysicsControl	mPhysics;
 	/** Processing environment to apply */
 	protected CSGEnvironment	mEnvironment;
 	/** Is this a valid geometry */
 	protected boolean			mIsValid;
-	/** How long did it take to regenerate this shape */
+	/** How long did it take to regenerate this shape (nanoseconds) */
 	protected long				mRegenNS;
 	/** Control flag for the special 'debug' mode */
 	protected boolean			mDebugMesh;
@@ -134,6 +142,15 @@ public class CSGGeometry
     	if ( this.material == null ) {
     		this.material = pMaterial;
     	}
+    }
+    
+    /** If physics is active for the shape, connect it all up now */
+    @Override
+    public void applyPhysics(
+    	PhysicsSpace		pPhysicsSpace
+	,	PhysicsControl		pDefaultPhysics
+    ) {
+    	CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, pDefaultPhysics, this );
     }
 	
 	/** How long did it take to regenerate this shape */
@@ -397,6 +414,9 @@ public class CSGGeometry
         } else {
         	mLightControl = (Control)aCapsule.readSavable( "lightControl", null );
         }
+        // Any physics?
+        mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
+
         // Any custom environment?
         mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
         if ( mEnvironment != null ) mEnvironment.mShapeName = this.getName() + ": ";

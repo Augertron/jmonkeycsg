@@ -29,11 +29,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
@@ -41,6 +45,7 @@ import com.jme3.material.Material;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.control.Control;
 
 /** Simple extension of Node that extends Savable.read() to accept a list of external references 
  	and provides for a custom environment.
@@ -167,6 +172,22 @@ public class CSGLinkNode
             }
     	}
     }
+    
+    /** If physics is active for the shape, connect it all up now */
+    @Override
+    public void applyPhysics(
+    	PhysicsSpace		pPhysicsSpace
+	,	PhysicsControl		pDefaultPhysics
+    ) {
+    	// Apply to all subcomponents
+    	for( Spatial aSpatial : children ) {
+    		if ( aSpatial instanceof CSGSpatial ) {
+    			// Let the subshape decide how to apply the physics
+    			((CSGSpatial)aSpatial).applyPhysics( pPhysicsSpace, pDefaultPhysics );
+    		} 
+    	}
+    }
+
     
     /** Accessor to the LOD level (ala Geometry) */
     @Override

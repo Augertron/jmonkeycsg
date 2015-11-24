@@ -39,6 +39,9 @@ import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.shape.*;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
@@ -199,6 +202,12 @@ public interface ConstructiveSolidGeometry
 	     */
 	    public void setDefaultMaterial(
 	    	Material	pMaterial
+	    );
+	    
+	    /** If physics is active for the shape, connect it all up now */
+	    public void applyPhysics(
+	    	PhysicsSpace		pPhysicsSpace
+	    ,	PhysicsControl		pDefaultPhysics
 	    );
 	    
 	    /** Accessor to the LOD level (ala Geometry) 

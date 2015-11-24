@@ -44,6 +44,9 @@ import net.wcomohundro.jme3.math.CSGTransform;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.bounding.BoundingVolume;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsCollisionObject;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.collision.Collidable;
 import com.jme3.collision.CollisionResults;
 import com.jme3.export.InputCapsule;
@@ -102,13 +105,15 @@ public class CSGGeonode
     protected boolean			mForceSingleMaterial;
     /** Template transform control to apply to lights */
     protected Control			mLightControl;
+	/** Physics that applies to this shape */
+	protected PhysicsControl	mPhysics;
 	/** The optional list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
 	/** Geometry has a variable for LOD level, but Spatial does not */
 	protected int				mLODLevel;
 	/** Is this a valid geometry */
 	protected boolean			mIsValid;
-	/** Shape regeneration time */
+	/** Shape regeneration time (nanoseconds) */
 	protected long				mRegenNS;
 	/** Processing environment to apply */
 	protected CSGEnvironment	mEnvironment;
@@ -213,7 +218,28 @@ public class CSGGeonode
             }
     	}
     }
-
+    
+    /** If physics is active for the shape, connect it all up now */
+    @Override
+    public void applyPhysics(
+    	PhysicsSpace		pPhysicsSpace
+	,	PhysicsControl		pDefaultPhysics
+    ) {
+    	// Unfortunately, some of the more useful functions dealing with the nesting of
+    	// Geometries within Nodes is hidden within 'privates' in CollisionShapeFactory.
+    	// So to get the proper parent transforms to apply, we have to take one pass
+    	// through our children, looking for those with a 'physics' node that can apply
+    	// their own overrides.
+    	for( Spatial aSpatial : children ) {
+    		if ( aSpatial instanceof CSGSpatial ) {
+    			// Let the subshape decide how to apply the physics
+    			//((CSGSpatial)aSpatial).applyPhysics( pPhysicsSpace, (mPhysics == null) ? pDefaultPhysics : mPhysics );
+    		}
+    	}
+    	// Build up a Compound shape for this node, with any subnodes that were not
+    	// covered in the above loop
+    	CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, pDefaultPhysics, this );
+    }
     
     /** Accessor to the LOD level (ala Geometry) */
     @Override
@@ -231,6 +257,14 @@ public class CSGGeonode
     	Control		pLightControl
     ) {
     	mLightControl = pLightControl;
+    }
+    
+    /** Accessor to the physics */
+    public PhysicsControl getPhysics() { return mPhysics; }
+    public void setPhysics(
+    	PhysicsControl		pPhysics
+    ) {
+    	mPhysics = pPhysics;
     }
 
 	/** Action to generate the mesh based on the given shapes */
@@ -486,6 +520,9 @@ public class CSGGeonode
         }
 		// Look to apply this material as a default for any elements with no material
 		this.setDefaultMaterial( mMaterial );
+
+        // Any physics?
+        mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
 
         // Any custom environment?
         mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );

@@ -48,6 +48,7 @@ import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
 import net.wcomohundro.jme3.math.CSGTransform;
 
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -238,7 +239,9 @@ public class CSGShape
 	protected List<CSGShape>			mSubShapes;
 	/** If this shape is a subshape within another shape, this is the parent shape */
 	protected CSGShape					mParentShape;
-	/** The list of custom Materials to apply to the various faces of the interior components */
+	/** Physics that applies to this shape */
+	protected PhysicsControl			mPhysics;
+	/** The list of custom Propertes to apply to the various faces of the interior components */
 	protected List<CSGFaceProperties>	mFaceProperties;
 
 	
@@ -452,6 +455,14 @@ public class CSGShape
 		mOrder = pOrder;
 	}
 	
+	/** Accessor to the Physics */
+	public PhysicsControl getPhysics() { return mPhysics; }
+	public void setPhysics(
+		PhysicsControl		pPhysics
+	) {
+		mPhysics = pPhysics;
+	}
+	
 	/** Add a shape into this one */
 	public CSGShape union(
 		CSGShape			pOtherShape
@@ -553,7 +564,10 @@ public class CSGShape
 				localTransform = proxyTransform.getTransform();
 			}
 		}
-		// Look for possible face properties to apply to interior mesh/subgroup
+        // Any physics?
+        mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
+
+        // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
 	}
 
