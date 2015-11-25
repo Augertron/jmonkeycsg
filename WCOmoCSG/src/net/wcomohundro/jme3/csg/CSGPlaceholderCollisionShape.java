@@ -29,6 +29,8 @@
 **/
 package net.wcomohundro.jme3.csg;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
+
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
@@ -78,22 +80,18 @@ public class CSGPlaceholderCollisionShape
     public static void applyPhysics(
     	PhysicsSpace		pPhysicsSpace
     ,	PhysicsControl		pPhysics
-    ,	PhysicsControl		pDefaultPhysics
     ,	Spatial				pSpatial
     ) {
-    	if ( (pPhysics == null) && (pDefaultPhysics != null) ) {
-    		// Operate on a copy of the shared default
-        	pPhysics = (PhysicsControl)pDefaultPhysics.cloneForSpatial( pSpatial );    		
-    	}
     	if ( pPhysics != null ) {
     		// Refresh the CollisionShape as needed
     		if ( pPhysics instanceof PhysicsCollisionObject ) {
     			PhysicsCollisionObject aCollision = (PhysicsCollisionObject)pPhysics;
-	    		if ( aCollision.getCollisionShape() instanceof CSGPlaceholderCollisionShape ) {
+    			CollisionShape aCollisionShape = aCollision.getCollisionShape();
+	    		if ( (aCollisionShape == null) || (aCollisionShape instanceof CSGPlaceholderCollisionShape) ) {
 	    			// Reset the shape to match this items mesh
-	    			CollisionShape aShape = createMeshShape( pSpatial );
+	    			aCollisionShape = createMeshShape( pSpatial );
 	    			//CollisionShape aShape = CollisionShapeFactory.createMeshShape( pSpatial );
-	    			aCollision.setCollisionShape( aShape );
+	    			aCollision.setCollisionShape( aCollisionShape );
 	    		}
     		}
     		pSpatial.addControl( (PhysicsControl)pPhysics );
@@ -122,45 +120,6 @@ public class CSGPlaceholderCollisionShape
         }
     }
 
-    /** Calculate the appropriate transform for a CollisionShape in relation to the 
-     	ancestor for which the CollisionShape is generated
-     */
-    protected static Transform getTransform(
-    	Spatial		pSpatial
-    , 	Spatial		pRealParent
-    ,	Transform	pShapeTransform
-    ) {
-        if ( pShapeTransform == null ) {
-        	// Allocate new
-        	pShapeTransform = new Transform();
-        } else {
-        	// Reset 
-        	pShapeTransform.setRotation( Quaternion.IDENTITY );
-        	pShapeTransform.setScale( 1 );
-        	pShapeTransform.setTranslation( 0, 0, 0 );
-        }
-    	// Blend transforms until we reach the desired parent level
-        Spatial parentNode = pSpatial.getParent();
-        if ( parentNode == null ) parentNode = pSpatial;
-        
-        Spatial currentSpatial = pSpatial;
-        while( parentNode != null ) {
-            if ( pRealParent == currentSpatial ) {
-                // Processing the real parent, so only apply scale
-                Transform scaleOnlyTransform = new Transform();
-                scaleOnlyTransform.setScale( pSpatial.getLocalScale() );
-                pShapeTransform.combineWithParent( scaleOnlyTransform );        	
-                break;
-            } else {
-            	// Blend in the current info
-                pShapeTransform.combineWithParent( currentSpatial.getLocalTransform() );
-                parentNode = currentSpatial.getParent();
-                currentSpatial = parentNode;
-            }
-        }
-        return( pShapeTransform );
-    }
-
     /** Service routine that builds up a Compound collision shape based on the children
      	of a given Node
      */
@@ -170,8 +129,14 @@ public class CSGPlaceholderCollisionShape
     , 	CompoundCollisionShape	pShape
     ,	Transform				pTempTransform
     ) {
+    	if ( pRootNode == null ) pRootNode = pSourceNode;
+    	
         for( Spatial aSpatial : pSourceNode.getChildren() ) {
-            if ( aSpatial instanceof Node ) {
+        	if ( (aSpatial instanceof CSGSpatial) && ((CSGSpatial)aSpatial).hasPhysics() ) {
+        		// The spatial has its own custom physics so it is NOT part of the whole
+        		continue;
+        		
+        	} else if ( aSpatial instanceof Node ) {
             	// Keep blending into what we have
             	Node aNode = (Node)aSpatial;
                 createCompoundShape( pRootNode, aNode, pShape, pTempTransform );
@@ -204,6 +169,8 @@ public class CSGPlaceholderCollisionShape
     ,	Spatial		pRealParent
     ,	Transform	pTempTransform
     ) {
+    	if ( pRealParent == null ) pRealParent = pGeometry;
+    	
     	// A MeshCollsionShape is what is desired
         Mesh aMesh = pGeometry.getMesh();
         if ( (aMesh != null) && (aMesh.getMode() == Mesh.Mode.Triangles) ) {
@@ -217,6 +184,46 @@ public class CSGPlaceholderCollisionShape
         	return( null );
         }
     }
+
+    /** Calculate the appropriate transform for a CollisionShape in relation to the 
+	 	ancestor for which the CollisionShape is generated
+	 */
+	protected static Transform getTransform(
+		Spatial		pSpatial
+	, 	Spatial		pRealParent
+	,	Transform	pShapeTransform
+	) {
+	    if ( pShapeTransform == null ) {
+	    	// Allocate new
+	    	pShapeTransform = new Transform();
+	    } else {
+	    	// Reset 
+	    	pShapeTransform.setRotation( Quaternion.IDENTITY );
+	    	pShapeTransform.setScale( 1 );
+	    	pShapeTransform.setTranslation( 0, 0, 0 );
+	    }
+		// Blend transforms until we reach the desired parent level
+	    Spatial parentNode = pSpatial.getParent();
+	    if ( parentNode == null ) parentNode = pSpatial;
+	    
+	    Spatial currentSpatial = pSpatial;
+	    while( parentNode != null ) {
+	        if ( pRealParent == currentSpatial ) {
+	            // Processing the real parent, so only apply scale
+	            Transform scaleOnlyTransform = new Transform();
+	            scaleOnlyTransform.setScale( pSpatial.getLocalScale() );
+	            pShapeTransform.combineWithParent( scaleOnlyTransform );        	
+	            break;
+	        } else {
+	        	// Blend in the current info
+	            pShapeTransform.combineWithParent( currentSpatial.getLocalTransform() );
+	            parentNode = currentSpatial.getParent();
+	            currentSpatial = parentNode;
+	        }
+	    }
+	    return( pShapeTransform );
+	}
+
 
 	/** Standard null constructor as used by .read() processing */
 	public CSGPlaceholderCollisionShape(

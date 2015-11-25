@@ -144,13 +144,21 @@ public class CSGGeometry
     	}
     }
     
+    /** Test if this Spatial has its own custom physics defined */
+    @Override
+    public boolean hasPhysics() { return mPhysics != null; }
+    
     /** If physics is active for the shape, connect it all up now */
     @Override
     public void applyPhysics(
     	PhysicsSpace		pPhysicsSpace
-	,	PhysicsControl		pDefaultPhysics
     ) {
-    	CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, pDefaultPhysics, this );
+    	// A CSGGeometry only applies its own physics.  If it does not have its own
+    	// custom physics, then it assumes it is part of a compound shape where the
+    	// physics is applied at a higher level.
+    	if ( mPhysics != null ) {
+    		CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, this );
+    	}
     }
 	
 	/** How long did it take to regenerate this shape */
@@ -311,6 +319,8 @@ public class CSGGeometry
 				}
 				if ( aProduct != null ) {
 					// The overall, blended mesh represents this Geometry
+					// The meshManager will retain the generated meshes and can provide
+					// any given mesh based on its index.  For a singleton, we want the master.
 					aProduct.toMesh( meshManager, false, tempVars, pEnvironment );
 					this.setMesh( meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
 

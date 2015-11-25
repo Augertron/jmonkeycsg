@@ -191,7 +191,7 @@ public class CSGMeshManager
 					aNode.attachChild( aSpatial );
 					
 				} else {
-					// No lights, just add the Geometry as is
+					// No lights/physics, just add the Geometry as is
 					aList.add( aSpatial );
 				}
 			}

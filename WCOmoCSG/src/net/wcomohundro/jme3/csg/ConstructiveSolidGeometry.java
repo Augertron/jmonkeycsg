@@ -204,10 +204,11 @@ public interface ConstructiveSolidGeometry
 	    	Material	pMaterial
 	    );
 	    
+	    /** Test if this Spatial has its own custom physics defined */
+	    public boolean hasPhysics();
 	    /** If physics is active for the shape, connect it all up now */
 	    public void applyPhysics(
 	    	PhysicsSpace		pPhysicsSpace
-	    ,	PhysicsControl		pDefaultPhysics
 	    );
 	    
 	    /** Accessor to the LOD level (ala Geometry) 

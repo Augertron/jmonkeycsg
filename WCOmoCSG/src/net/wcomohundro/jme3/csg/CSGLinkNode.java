@@ -173,17 +173,21 @@ public class CSGLinkNode
     	}
     }
     
+    /** Test if this Spatial has its own custom physics defined */
+    @Override
+    public boolean hasPhysics() { return false; }
+
     /** If physics is active for the shape, connect it all up now */
     @Override
     public void applyPhysics(
     	PhysicsSpace		pPhysicsSpace
-	,	PhysicsControl		pDefaultPhysics
     ) {
-    	// Apply to all subcomponents
+    	// A LinkNode implies no special structure/grouping in terms of Physics.
+    	// Let each individual element decide how to structure its own Physics.
     	for( Spatial aSpatial : children ) {
     		if ( aSpatial instanceof CSGSpatial ) {
     			// Let the subshape decide how to apply the physics
-    			((CSGSpatial)aSpatial).applyPhysics( pPhysicsSpace, pDefaultPhysics );
+    			((CSGSpatial)aSpatial).applyPhysics( pPhysicsSpace );
     		} 
     	}
     }

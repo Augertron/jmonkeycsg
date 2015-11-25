@@ -500,8 +500,10 @@ public class CSGShape
 	}
 
 	/** Produce the mesh(es) that corresponds to this shape
-	 	The zeroth mesh in the list is the total, composite mesh.
-	 	Every other mesh (if present) applies solely to a specific Material.
+	 	The active handler knows how to construct a Mesh from its own underlying structure.
+	 	Each Mesh will then be registered with the MeshManager under its appropriate
+	 	index.  The MeshManager can subsequently be asked for Meshes/Spatials based on 
+	 	any given index.
 	  */
 	public void toMesh(
 		CSGMeshManager		pMeshManager

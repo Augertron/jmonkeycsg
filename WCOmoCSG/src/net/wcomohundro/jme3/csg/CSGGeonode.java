@@ -219,26 +219,29 @@ public class CSGGeonode
     	}
     }
     
+    /** Test if this Spatial has its own custom physics defined */
+    @Override
+    public boolean hasPhysics() { return mPhysics != null; }
+    
     /** If physics is active for the shape, connect it all up now */
     @Override
     public void applyPhysics(
     	PhysicsSpace		pPhysicsSpace
-	,	PhysicsControl		pDefaultPhysics
     ) {
-    	// Unfortunately, some of the more useful functions dealing with the nesting of
-    	// Geometries within Nodes is hidden within 'privates' in CollisionShapeFactory.
-    	// So to get the proper parent transforms to apply, we have to take one pass
-    	// through our children, looking for those with a 'physics' node that can apply
-    	// their own overrides.
-    	for( Spatial aSpatial : children ) {
-    		if ( aSpatial instanceof CSGSpatial ) {
-    			// Let the subshape decide how to apply the physics
-    			//((CSGSpatial)aSpatial).applyPhysics( pPhysicsSpace, (mPhysics == null) ? pDefaultPhysics : mPhysics );
-    		}
+    	// If this instance of Geonode has its own explicit mPhysics, then it defines its own
+    	// collision shape and acts as the active default for all subcomponents within a single shape
+    	// which we build now.
+    	if ( mPhysics != null ) {
+        	CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, this );
     	}
-    	// Build up a Compound shape for this node, with any subnodes that were not
-    	// covered in the above loop
-    	CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, pDefaultPhysics, this );
+    	// We also cycle through all children to give any with there own explicit physics
+    	// a chance to process
+	    for( Spatial aSpatial : children ) {
+	    	if ( aSpatial instanceof CSGSpatial ) {
+	    		// Let the subshape decide how to apply the physics
+	    		((CSGSpatial)aSpatial).applyPhysics( pPhysicsSpace );
+	    	}
+	    }
     }
     
     /** Accessor to the LOD level (ala Geometry) */
@@ -332,7 +335,9 @@ public class CSGGeonode
 				// Build up the mesh(es)
 				mMasterGeometry = null;
 				if ( aProduct != null ) {
-					// Transform the list of meshes into children
+					// Transform the blended product into children
+					// The meshManager will retain the set of generated meshes and can provide
+					// any given mesh based on its index.
 					aProduct.toMesh( meshManager, true, tempVars, pEnvironment );
 
 					// Use the master mesh to describe the overall geometry
@@ -346,10 +351,10 @@ public class CSGGeonode
 						
 					} else {
 						// Multiple elements
+						// 	NOTE that we only attach the independent child meshes, not the master itself
 						for( Spatial aSpatial : meshManager.getSpatials( this.getName(), mLightControl ) ) {
 							this.attachChild( aSpatial );
 						}
-						// NOTE that we only attach the independent child meshes, not the master itself
 					}
 					// Return true if we have a valid product
 					return( mIsValid = aProduct.isValid() );
