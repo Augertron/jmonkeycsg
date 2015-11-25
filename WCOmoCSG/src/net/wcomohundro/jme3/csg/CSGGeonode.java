@@ -89,7 +89,7 @@ import com.jme3.util.TempVars;
 	that is produced by standard processing. 
 */
 public class CSGGeonode
-	extends Node
+	extends CSGNode
 	implements Savable, ConstructiveSolidGeometry, ConstructiveSolidGeometry.CSGSpatial
 {
 	/** Version tracking support */
@@ -99,24 +99,12 @@ public class CSGGeonode
 	
 	/** The master geometry/mesh that describes the overall shape */
 	protected CSGGeometry		mMasterGeometry;
-	/** The master material */
-    protected Material 			mMaterial;
     /** Control flag to force the use of a single material set at this node level */
     protected boolean			mForceSingleMaterial;
-    /** Template transform control to apply to lights */
-    protected Control			mLightControl;
-	/** Physics that applies to this shape */
-	protected PhysicsControl	mPhysics;
 	/** The optional list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
 	/** Geometry has a variable for LOD level, but Spatial does not */
 	protected int				mLODLevel;
-	/** Is this a valid geometry */
-	protected boolean			mIsValid;
-	/** Shape regeneration time (nanoseconds) */
-	protected long				mRegenNS;
-	/** Processing environment to apply */
-	protected CSGEnvironment	mEnvironment;
 
 	
 	/** Basic null constructor */
@@ -129,15 +117,10 @@ public class CSGGeonode
 		String	pName
 	) {
 		super( pName );
+		
+		// Assume invalid until regeneration OR read() completes
+		mIsValid = false;
 	}
-	
-	/** Is this a valid geometry */
-	@Override
-	public boolean isValid() { return mIsValid; }
-	
-	/** How long did it take to regenerate this shape */
-	@Override
-	public long getShapeRegenerationNS() { return mRegenNS; }
 	
     /** Include a shape */
 	@Override
@@ -182,68 +165,6 @@ public class CSGGeonode
 		}
 	}
 	
-    /** Accessor to the Material (ala Geometry) */
-	@Override
-    public Material getMaterial() { return mMaterial; }
-    @Override
-    public void setMaterial(
-    	Material 	pMaterial
-    ) {
-    	// Let the super apply the material to all the subelements
-    	super.setMaterial( pMaterial );
-        this.mMaterial = pMaterial;
-    }
-    /** Special provisional setMaterial() that does NOT override anything 
-	 	already in force, but supplies a default if any element is missing 
-	 	a material
-	 */
-    @Override
-	public void setDefaultMaterial(
-		Material	pMaterial
-	) {
-    	if ( this.mMaterial == null ) {
-    		this.mMaterial = pMaterial;
-    	}
-    	if ( mMaterial != null ) {
-    		// Apply to all children where appropriate
-            for( Spatial aChild : children ) {
-            	if ( aChild instanceof ConstructiveSolidGeometry.CSGSpatial ) {
-            		// Apply as default
-            		((ConstructiveSolidGeometry.CSGSpatial)aChild).setDefaultMaterial( mMaterial );
-            		
-            	} else if ( (aChild instanceof Geometry) && (((Geometry)aChild).getMaterial() == null) ) {
-            		// Apply to any Geometry that does NOT have a material
-            		aChild.setMaterial( mMaterial );
-            	}
-            }
-    	}
-    }
-    
-    /** Test if this Spatial has its own custom physics defined */
-    @Override
-    public boolean hasPhysics() { return mPhysics != null; }
-    
-    /** If physics is active for the shape, connect it all up now */
-    @Override
-    public void applyPhysics(
-    	PhysicsSpace		pPhysicsSpace
-    ) {
-    	// If this instance of Geonode has its own explicit mPhysics, then it defines its own
-    	// collision shape and acts as the active default for all subcomponents within a single shape
-    	// which we build now.
-    	if ( mPhysics != null ) {
-        	CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, this );
-    	}
-    	// We also cycle through all children to give any with there own explicit physics
-    	// a chance to process
-	    for( Spatial aSpatial : children ) {
-	    	if ( aSpatial instanceof CSGSpatial ) {
-	    		// Let the subshape decide how to apply the physics
-	    		((CSGSpatial)aSpatial).applyPhysics( pPhysicsSpace );
-	    	}
-	    }
-    }
-    
     /** Accessor to the LOD level (ala Geometry) */
     @Override
     public int getLodLevel() { return mLODLevel; }
@@ -254,28 +175,7 @@ public class CSGGeonode
     	mLODLevel = pLODLevel;
     }
     
-    /** Accessor to the Light control to apply */
-    public Control getLightControl() { return mLightControl; }
-    public void setLightControl(
-    	Control		pLightControl
-    ) {
-    	mLightControl = pLightControl;
-    }
-    
-    /** Accessor to the physics */
-    public PhysicsControl getPhysics() { return mPhysics; }
-    public void setPhysics(
-    	PhysicsControl		pPhysics
-    ) {
-    	mPhysics = pPhysics;
-    }
-
 	/** Action to generate the mesh based on the given shapes */
-    @Override
-	public boolean regenerate(
-	) {
-		return( regenerate( (mEnvironment == null) ? CSGEnvironment.sStandardEnvironment : mEnvironment ) );
-	}
 	@Override
 	public boolean regenerate(
 		CSGEnvironment		pEnvironment
@@ -439,19 +339,8 @@ public class CSGGeonode
 	) throws IOException {
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 
-		// We are NOT interested in saving the generated children
-		// since we expect to rebuild the composite
-		SafeArrayList<Spatial> saveChildren = this.children;
-		this.children = null;
-		try {
-			super.write( pExporter );
-		} finally {
-			this.children = saveChildren;
-		}
-		// Like a Geometry, a possible Material
-        if ( mMaterial != null ) {
-            aCapsule.write( mMaterial.getAssetName(), "materialName", null );
-        }
+		super.write( pExporter );
+
         // Override on handling multiple materials
         aCapsule.write( mForceSingleMaterial, "singleMaterial",  false );
 
@@ -459,10 +348,6 @@ public class CSGGeonode
 		// NOTE a deficiency in the OutputCapsule API which should operate on a List,
 		//		but instead requires an ArrayList
 		aCapsule.writeSavableArrayList( (ArrayList<CSGShape>)mShapes, "shapes", null );
-		
-		if ( mEnvironment != null ) {
-			aCapsule.write( mEnvironment, "csgEnvironment", null );
-		}
 	}
 	
 	@Override
@@ -473,38 +358,15 @@ public class CSGGeonode
 
 		// Let the super do its thing
 		super.read( pImporter );
-		// But ensure we rebuild the children list from scratch
+		// But ensure we rebuild the children list from scratch based on "shapes"
 		this.children.clear();;
 		
-		// Act like a Geometry and support a Material
-        String matName = aCapsule.readString( "materialName", null );
-        if ( matName != null ) {
-            // Material name is set, attempt to load material via J3M
-            try {
-                mMaterial = pImporter.getAssetManager().loadMaterial( matName );
-            } catch( AssetNotFoundException ex ) {
-                throw new IllegalArgumentException( "Cannot locate material: " + matName );
-            }
-        }
         // Multi-materials can be suppressed
         mForceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  false );
         
 		// Look for the list of shapes
 		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
 		
-		// Look for list of external definitions
-		List<AssetKey> assetLoaderKeys
-        	= (List<AssetKey>)aCapsule.readSavableArrayList( "assetLoaderKeyList", null );
-		if ( assetLoaderKeys != null ) {
-			// Load each associated asset
-			for( AssetKey aKey : assetLoaderKeys ) {
-				Object aShape = pImporter.getAssetManager().loadAsset( aKey );
-				if ( aShape instanceof CSGShape ) {
-					if ( mShapes == null ) mShapes = new ArrayList<CSGShape>();
-					mShapes.add( (CSGShape)aShape );
-				}
-			}
-		}
 		// Look for specially defined tranform 
 		if ( this.localTransform == Transform.IDENTITY ) {
 			// No explicit transform, look for a proxy
@@ -513,26 +375,6 @@ public class CSGGeonode
 				localTransform = proxyTransform.getTransform();
 			}
 		}
-        // Are the local lights truely local?
-        // Quite honestly, I do not understand the rationale behind how localLights
-        // are managed under standard jme3.  If I make a light local to a Node, I fully
-        // expect that light to move around as any transform is applied to the Node.
-        boolean transformLights = aCapsule.readBoolean( "transformLights", true );
-        if ( transformLights ) {
-        	mLightControl = new CSGLightControl();
-        } else {
-        	mLightControl = (Control)aCapsule.readSavable( "lightControl", null );
-        }
-		// Look to apply this material as a default for any elements with no material
-		this.setDefaultMaterial( mMaterial );
-
-        // Any physics?
-        mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
-
-        // Any custom environment?
-        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
-        if ( mEnvironment != null ) mEnvironment.mShapeName = this.getName() + ": ";
-
 		// Rebuild based on the shapes just loaded
 		mIsValid = regenerate();
 		
@@ -541,15 +383,6 @@ public class CSGGeonode
         if ( generate ) {
         	// The Generator understands working the children of a Node
         	TangentBinormalGenerator.generate( this );
-        }
-        if ( mLightControl != null ) {
-        	// Build a control for every local light to keep its position in synch
-        	// with transforms applied to this Node
-			CSGLightControl.applyLightControl( mLightControl
-												, this.getLocalLightList()
-												, null
-												, this
-												, false );
         }
 	}
 	

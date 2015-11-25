@@ -29,6 +29,7 @@
 **/
 package net.wcomohundro.jme3.csg;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 
 import com.jme3.bullet.PhysicsSpace;
@@ -77,39 +78,42 @@ public class CSGPlaceholderCollisionShape
 	 	placeholder class, then we assume it was used during .read() processing and
 	 	must be replaced by a proper CollisionShape.
 	 */
-    public static void applyPhysics(
+    public static CollisionShape applyPhysics(
     	PhysicsSpace		pPhysicsSpace
     ,	PhysicsControl		pPhysics
     ,	Spatial				pSpatial
+    ,	Node				pRoot
     ) {
+    	CollisionShape aCollisionShape = null;
     	if ( pPhysics != null ) {
     		// Refresh the CollisionShape as needed
     		if ( pPhysics instanceof PhysicsCollisionObject ) {
     			PhysicsCollisionObject aCollision = (PhysicsCollisionObject)pPhysics;
-    			CollisionShape aCollisionShape = aCollision.getCollisionShape();
+    			aCollisionShape = aCollision.getCollisionShape();
 	    		if ( (aCollisionShape == null) || (aCollisionShape instanceof CSGPlaceholderCollisionShape) ) {
 	    			// Reset the shape to match this items mesh
-	    			aCollisionShape = createMeshShape( pSpatial );
-	    			//CollisionShape aShape = CollisionShapeFactory.createMeshShape( pSpatial );
+	    			aCollisionShape = createMeshShape( pSpatial, pRoot );
 	    			aCollision.setCollisionShape( aCollisionShape );
 	    		}
     		}
     		pSpatial.addControl( (PhysicsControl)pPhysics );
     		pPhysicsSpace.add( pPhysics );
     	}
+    	return( aCollisionShape );
     }
     
     /** Service routine to construct an appropriate collision shape */
     public static CollisionShape createMeshShape(
     	Spatial 	pSpatial
+    ,	Node		pRoot
     ) {
         if ( pSpatial instanceof Geometry ) {
         	// Simple geometry includes nothing of the parent transform except for scale
-            return createSingleMeshShape( (Geometry)pSpatial, pSpatial, new Transform() );
+            return createSingleMeshShape( pRoot, (Geometry)pSpatial, new Transform() );
             
         } else if ( pSpatial instanceof Node ) {
         	// Create a compound shape from all the children
-            return createCompoundShape( 	(Node)pSpatial
+            return createCompoundShape( 	pRoot
             							, 	(Node)pSpatial
             							, 	new CompoundCollisionShape()
             							,	new Transform() );
@@ -124,22 +128,22 @@ public class CSGPlaceholderCollisionShape
      	of a given Node
      */
     protected static CompoundCollisionShape createCompoundShape(
-    	Node 					pRootNode
+    	Node					pRoot
     ,	Node 					pSourceNode
     , 	CompoundCollisionShape	pShape
     ,	Transform				pTempTransform
     ) {
-    	if ( pRootNode == null ) pRootNode = pSourceNode;
+    	if ( pRoot == null ) pRoot = pSourceNode;
     	
         for( Spatial aSpatial : pSourceNode.getChildren() ) {
-        	if ( (aSpatial instanceof CSGSpatial) && ((CSGSpatial)aSpatial).hasPhysics() ) {
+        	if ( (aSpatial instanceof CSGElement) && ((CSGElement)aSpatial).hasPhysics() ) {
         		// The spatial has its own custom physics so it is NOT part of the whole
         		continue;
         		
         	} else if ( aSpatial instanceof Node ) {
             	// Keep blending into what we have
             	Node aNode = (Node)aSpatial;
-                createCompoundShape( pRootNode, aNode, pShape, pTempTransform );
+                createCompoundShape( pRoot, aNode, pShape, pTempTransform );
 
             } else if ( aSpatial instanceof Geometry ) {
                 Boolean ignoreFlag = aSpatial.getUserData( UserData.JME_PHYSICSIGNORE );
@@ -149,7 +153,7 @@ public class CSGPlaceholderCollisionShape
                 }
                 // Get the appropriate shape for this Geometry
                 Geometry aGeometry = (Geometry)aSpatial;
-                CollisionShape childShape = createSingleMeshShape( aGeometry, pRootNode, pTempTransform );
+                CollisionShape childShape = createSingleMeshShape( pRoot, aGeometry, pTempTransform );
                 if ( childShape != null ) {
                     pShape.addChildShape( childShape
                                 		,	pTempTransform.getTranslation()
@@ -165,18 +169,18 @@ public class CSGPlaceholderCollisionShape
      	pTempTransform is set with the appropriate parent level transform as a side effect
      */
     protected static CollisionShape createSingleMeshShape(
-    	Geometry	pGeometry
-    ,	Spatial		pRealParent
-    ,	Transform	pTempTransform
+    	Node			pRoot
+    ,	Geometry		pGeometry
+    ,	Transform		pTempTransform
     ) {
-    	if ( pRealParent == null ) pRealParent = pGeometry;
+    	Spatial useRoot = (pRoot == null) ? pGeometry : pRoot;
     	
     	// A MeshCollsionShape is what is desired
         Mesh aMesh = pGeometry.getMesh();
         if ( (aMesh != null) && (aMesh.getMode() == Mesh.Mode.Triangles) ) {
             CollisionShape childShape = new MeshCollisionShape( aMesh );
             
-            Transform aTransform = getTransform( pGeometry, pRealParent, pTempTransform );
+            Transform aTransform = getTransform( pGeometry, useRoot, pTempTransform );
             childShape.setScale( aTransform.getScale() );
             return( childShape );
         } else {

@@ -48,6 +48,7 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Node;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Constructive solid geometry (CSG) (formerly called computational binary solid geometry) is a 
@@ -186,37 +187,56 @@ public interface ConstructiveSolidGeometry
 	,	SKIP
 	}
 	
+	/** Basic CSGElement interface that provides standard Material/Light/Physics
+	 	access across the various CSG support classes
+	 */
+	public interface CSGElement 
+	{		
+		/** Is this a valid element */
+		public boolean isValid();	
+		
+	    /** Accessor to the Material (ala Geometry) 
+		 		NOTE that setMaterial() is defined by Spatial, but setDefaultMaterial
+		 			 is more meaningful for CSG elements
+		 */
+		public Material getMaterial();
+		
+		/** Special provisional setMaterial() that does NOT override anything 
+		 	already in force, but supplies a default if any element is missing 
+		 	a material
+		 */
+		public void setDefaultMaterial(
+			Material	pMaterial
+		);
+		
+		/** Test if this Element has its own custom physics defined */
+		public boolean hasPhysics();
+		/** If physics is active for the element, connect it all up now */
+		public void applyPhysics(
+			PhysicsSpace		pPhysicsSpace
+		,	Node				pRoot
+		);
+		
+		/** Action to generate the mesh based on the given shapes */
+		public boolean regenerate();
+		public boolean regenerate(
+			CSGEnvironment		pEnvironment
+		);
+		/** How long did it take to build this shape */
+		public long getShapeRegenerationNS();
+	}
+	
 	/** Basic Spatial/Geometry interface:
 	 		Define the services common across CSGGeometry and CSGGeonode
 	 */
-	public interface CSGSpatial {
-		
-	    /** Accessor to the Material (ala Geometry) 
-	     		NOTE that setMaterial() is defined by Spatial
-	     */
-	    public Material getMaterial();
-	    
-	    /** Special provisional setMaterial() that does NOT override anything 
-	     	already in force, but supplies a default if any element is missing 
-	     	a material
-	     */
-	    public void setDefaultMaterial(
-	    	Material	pMaterial
-	    );
-	    
-	    /** Test if this Spatial has its own custom physics defined */
-	    public boolean hasPhysics();
-	    /** If physics is active for the shape, connect it all up now */
-	    public void applyPhysics(
-	    	PhysicsSpace		pPhysicsSpace
-	    );
-	    
+	public interface CSGSpatial
+		extends CSGElement
+	{
 	    /** Accessor to the LOD level (ala Geometry) 
 	     		NOTE that setLodLevel() is defined by Spatial
 	     */
 	    public int getLodLevel();
-
-	    
+  
 	    /** Include a shape */
 	    public void addShape(
 	    	CSGShape	pShape
@@ -238,18 +258,6 @@ public interface ConstructiveSolidGeometry
 		public void removeShape(
 			CSGShape	pShape
 		);
-		
-		/** Action to generate the mesh based on the given shapes */
-		public boolean regenerate();
-		public boolean regenerate(
-			CSGEnvironment		pEnvironment
-		);
-
-		/** Is this a valid geometry */
-		public boolean isValid();
-		
-		/** How long did it take to build this shape */
-		public long getShapeRegenerationNS();
 	}
 
 	/** Version tracking support 

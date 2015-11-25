@@ -140,7 +140,7 @@ public class CSGMeshManager
 		String		pCoreName
 	,	Control		pLightControl
 	) {
-		Map<String,CSGGeonode> nodeMap = new HashMap();
+		Map<String,CSGNode> nodeMap = new HashMap();
 		
 		List<Spatial> aList = new ArrayList( mMeshCount + 1 );
 		for( int i = 0; i <= mMeshCount; i += 1 ) {
@@ -168,10 +168,10 @@ public class CSGMeshManager
 					// In anticipation of multiple meshes sharing the same set of lights
 					// and/or physics, attach it all to a Node
 					String stringKey = shapeKey.toString();
-					CSGGeonode aNode = nodeMap.get( stringKey );
+					CSGNode aNode = nodeMap.get( stringKey );
 					if ( aNode == null ) {
 						// This shape's Node has not yet been created
-						aNode = new CSGGeonode( pCoreName + i + "Node" );
+						aNode = new CSGNode( pCoreName + i + "Node" );
 						aList.add( aNode );
 						nodeMap.put( stringKey, aNode );
 						
@@ -184,10 +184,10 @@ public class CSGMeshManager
 															, true );
 						}
 						if ( meshInfo.mPhysicsOwner != null ) {
-							aNode.setPhysics( meshInfo.mLightListOwner.getPhysics() );
+							aNode.setPhysics( meshInfo.mPhysicsOwner.getPhysics() );
 						}
 					}
-					// Attach the mesh/material to the node with the lights
+					// Attach the mesh/material to the node with the lights/physics
 					aNode.attachChild( aSpatial );
 					
 				} else {
@@ -310,19 +310,19 @@ public class CSGMeshManager
 			// shape who has definced the active 'generic'
 			physicsOwner = mGenericIndexStack.peek().mPhysicsOwner;
 		}
-		Object materialKey = selectKey( pMaterial, lightOwner, physicsOwner );
+		Object meshKey = selectKey( pMaterial, lightOwner, physicsOwner );
 		
 		// Look for custom material
-		if ( materialKey == null ) {
+		if ( meshKey == null ) {
 			// By definition, the null material is the generic material
 			return( mGenericIndexStack.peek() );
 			
 		} else {
 			// The material's key is used to share the same material
 			CSGMeshInfo meshInfo;
-			if ( (materialKey != null) && mMeshMap.containsKey( materialKey ) ) {
-				// Use the material already found
-				meshInfo = mMeshMap.get( materialKey );
+			if ( (meshKey != null) && mMeshMap.containsKey( meshKey ) ) {
+				// Use the info already found
+				meshInfo = mMeshMap.get( meshKey );
 			} else {
 				// Use the next index in sequence
 				Integer meshIndex = new Integer( ++mMeshCount );
@@ -334,9 +334,9 @@ public class CSGMeshManager
 				}
 				meshInfo = new CSGMeshInfo( meshIndex, pMaterial, lightOwner, physicsOwner );
 				
-				if ( materialKey != null ) {
+				if ( meshKey != null ) {
 					// Track the material by its AssetKey
-					mMeshMap.put( materialKey, meshInfo );
+					mMeshMap.put( meshKey, meshInfo );
 				}
 				mMeshMap.put( meshIndex, meshInfo );
 			}

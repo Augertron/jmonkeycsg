@@ -51,6 +51,7 @@ import com.jme3.material.Material;
 import com.jme3.math.Transform;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
@@ -152,12 +153,13 @@ public class CSGGeometry
     @Override
     public void applyPhysics(
     	PhysicsSpace		pPhysicsSpace
+    ,	Node				pRoot
     ) {
     	// A CSGGeometry only applies its own physics.  If it does not have its own
     	// custom physics, then it assumes it is part of a compound shape where the
     	// physics is applied at a higher level.
     	if ( mPhysics != null ) {
-    		CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, this );
+    		CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, this, pRoot );
     	}
     }
 	

@@ -88,8 +88,8 @@ public class CSGNode
 	implements Savable, ConstructiveSolidGeometry, ConstructiveSolidGeometry.CSGElement
 {
 	/** Version tracking support */
-	public static final String sCSGNodeRevision="$Rev: 124 $";
-	public static final String sCSGNodeDate="$Date: 2015-11-24 21:21:47 -0600 (Tue, 24 Nov 2015) $";
+	public static final String sCSGNodeRevision="$Rev$";
+	public static final String sCSGNodeDate="$Date$";
 
 	
 	/** The master material */

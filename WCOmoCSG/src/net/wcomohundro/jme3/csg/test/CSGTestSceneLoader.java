@@ -77,6 +77,7 @@ import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 
@@ -360,16 +361,16 @@ public class CSGTestSceneLoader
     	    		reportString += " *** Processing Environment Reset";
     	    		
     	    	} else if ( aNode instanceof Spatial ) {
-    	        	if ( aNode instanceof CSGSpatial ) {
-    	        		// We know a bit more about CSGSpatials
-    	    			CSGSpatial csgSpatial = (CSGSpatial)aNode;
+    	        	if ( aNode instanceof CSGElement ) {
+    	        		// We know a bit more about Elements
+    	        		CSGElement csgSpatial = (CSGElement)aNode;
     	    			if ( csgSpatial.isValid() ) {
     	    				// Include timing
     	    				reportString += ( " (" + (csgSpatial.getShapeRegenerationNS() / 1000000) + "ms)" );
     	    				
     	    				// Assign physics if active
     	    				if ( mPhysicsState != null ) {
-    	    					csgSpatial.applyPhysics( mPhysicsState.getPhysicsSpace() );
+    	    					csgSpatial.applyPhysics( mPhysicsState.getPhysicsSpace(), null );
     	    				}
     	    			} else {
     	    				// Something bogus in the construction
