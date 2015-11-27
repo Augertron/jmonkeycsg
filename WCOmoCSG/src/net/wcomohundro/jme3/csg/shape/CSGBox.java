@@ -31,6 +31,7 @@ import net.wcomohundro.jme3.csg.CSGMeshManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -232,7 +233,20 @@ public class CSGBox
     	Material aMaterial = resolveFaceMaterial( faceMask );
 		return( aMaterial );
 	}
-
+    
+	/** Accessor to the physics that applies to the given surface */
+    @Override
+	public PhysicsControl getPhysics(
+		int					pFaceIndex
+	) {
+		// Subclasses must override if they support custom material per surface
+		// Determine the face, which we know is in the order
+    	//	Front/Back/Left/Right/Top/Bottom, with 2 triangles per face, which matches
+    	//  the bits in Face
+    	int faceMask = 1 << (pFaceIndex / 2);
+    	PhysicsControl aPhysics = resolveFacePhysics( faceMask );
+		return( aPhysics );
+	}
     
     /** A bit different from standard Box, in order to run the texture along appropriate x /y 
      		(For top/bottom, the super class applies the x texture along the z axis, and the y texture

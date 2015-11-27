@@ -24,6 +24,7 @@
 **/
 package net.wcomohundro.jme3.csg.shape;
 
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.JmeImporter;
@@ -137,6 +138,33 @@ public abstract class CSGRadialCapped
     		return( null );
     	}
 	}
+    
+	/** Accessor to the physics that applies to the given surface */
+    @Override
+	public PhysicsControl getPhysics(
+		int					pFaceIndex
+	) {
+    	if ( mFaceProperties != null ) {
+			// Determine the face
+	    	Face aFace = Face.SIDES;
+	    	if ( mClosed ) {
+	    		// If the shape is closed, then we have front and back
+	    		if ( pFaceIndex < mRadialSamples ) {
+	    			// Looks like the SouthPole
+	    			aFace = Face.BACK;
+	    		} else if ( pFaceIndex >= mFirstFrontTriangle ) {
+	    			// Looks like the NorthPole
+	    			aFace= Face.FRONT;
+	    		}
+	    	}
+	    	PhysicsControl aPhysics = resolveFacePhysics( aFace.getMask() );
+			return( aPhysics );
+    	} else {
+    		// No custom textures
+    		return( null );
+    	}
+	}
+
 
     /** Rebuilds the radial based on the current set of configuration parameters */
     @Override

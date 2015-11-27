@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import com.jme3.asset.AssetKey;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.light.Light;
 import com.jme3.light.LightList;
 import com.jme3.material.Material;
@@ -120,7 +121,7 @@ public class CSGMeshManager
 		Material	pGenericMaterial
 	,	CSGShape	pShape
 	) {
-		CSGMeshInfo meshInfo = resolveMeshInfo( pGenericMaterial, pShape );
+		CSGMeshInfo meshInfo = resolveMeshInfo( pGenericMaterial, null, pShape );
 		if ( meshInfo.mMaterial == null ) {
 			// No specific override, still using the generic in force
 			meshInfo.mMaterial = this.resolveMaterial( sGenericMeshIndex );
@@ -154,15 +155,13 @@ public class CSGMeshManager
 					aSpatial.setMaterial( meshInfo.mMaterial.clone() );
 				}
 				StringBuilder shapeKey = new StringBuilder( 128 );
-				if ( meshInfo.mLightListOwner != null ) {
+				if ( meshInfo.mLightListKey != null ) {
 					// Custom lights have been defined.  
-					shapeKey.append( "LL" );
-					shapeKey.append( meshInfo.mLightListOwner.getShapeKey() );
+					shapeKey.append( meshInfo.mLightListKey );
 				}
-				if ( meshInfo.mPhysicsOwner != null ) {
+				if ( meshInfo.mPhysicsKey != null ) {
 					// Custom physics have been defined
-					shapeKey.append( "P" );
-					shapeKey.append( meshInfo.mPhysicsOwner.getShapeKey() );
+					shapeKey.append( meshInfo.mPhysicsKey );
 				}
 				if ( shapeKey.length() > 0 ) {
 					// In anticipation of multiple meshes sharing the same set of lights
@@ -183,8 +182,9 @@ public class CSGMeshManager
 															, aNode
 															, true );
 						}
-						if ( meshInfo.mPhysicsOwner != null ) {
-							aNode.setPhysics( meshInfo.mPhysicsOwner.getPhysics() );
+						if ( meshInfo.mPhysics != null ) {
+							// Remember the active physics
+							aNode.setPhysics( meshInfo.mPhysics );
 						}
 					}
 					// Attach the mesh/material to the node with the lights/physics
@@ -201,10 +201,11 @@ public class CSGMeshManager
 	
 	/** Define a material for subsequent use, returning its associated Mesh index */
 	public Integer resolveMeshIndex(
-		Material	pMaterial
-	,	CSGShape	pShape
+		Material		pMaterial
+	,	PhysicsControl	pPhysics
+	,	CSGShape		pShape
 	) {
-		return( resolveMeshInfo( pMaterial, pShape ).mIndex );
+		return( resolveMeshInfo( pMaterial, pPhysics, pShape ).mIndex );
 	}
 	
 	/** Register the Master mesh */
@@ -256,7 +257,7 @@ public class CSGMeshManager
 	protected Object selectKey(
 		Material	pMaterial
 	,	CSGShape	pLightListOwner
-	,	CSGShape	pPhysicsOwner
+	,	String		pPhysicsKey
 	) {
 		// Base the key on the material itself
 		AssetKey materialKey = null;
@@ -268,10 +269,9 @@ public class CSGMeshManager
 			aBuffer.append( "L" );
 			aBuffer.append( pLightListOwner.getShapeKey() );
 		}
-		if ( pPhysicsOwner != null ) {
+		if ( pPhysicsKey != null ) {
 			if ( aBuffer.length() > 0 ) aBuffer.append( "-" );
-			aBuffer.append( "P" );
-			aBuffer.append( pPhysicsOwner.getShapeKey() );
+			aBuffer.append( pPhysicsKey );
 		}
 		if ( materialKey != null ) {
 			if ( aBuffer.length() == 0 ) {
@@ -288,8 +288,9 @@ public class CSGMeshManager
 	
 	/** Service routine that locates or creates the appropriate MeshInfo to use */
 	protected CSGMeshInfo resolveMeshInfo(
-		Material	pMaterial
-	,	CSGShape	pShape
+		Material		pMaterial
+	,	PhysicsControl	pPhysics
+	,	CSGShape		pShape
 	) {
 		// Decide which 'key' we are looking up
 		CSGShape lightOwner = null;
@@ -301,16 +302,24 @@ public class CSGMeshManager
 			// who has defined the active 'generic'
 			lightOwner = mGenericIndexStack.peek().mLightListOwner;
 		}
-		CSGShape physicsOwner = null;
-		if ( pShape.getPhysics() != null ) {
-			// This shape has custom physics, remember it
-			physicsOwner = pShape;
-		} else {
-			// If the given shape has no local physics, then use the physics of the
-			// shape who has definced the active 'generic'
-			physicsOwner = mGenericIndexStack.peek().mPhysicsOwner;
+		String aPhysicsKey;
+		PhysicsControl aPhysics = pPhysics;
+		if ( aPhysics == null ) {
+			aPhysics = pShape.getPhysics();
 		}
-		Object meshKey = selectKey( pMaterial, lightOwner, physicsOwner );
+		if ( aPhysics == null ) {
+			// Nothing based on this shape, so leverage the generic
+			CSGMeshInfo genericInfo = mGenericIndexStack.peek();
+			aPhysics = genericInfo.mPhysics;
+			aPhysicsKey = genericInfo.mPhysicsKey;
+		} else if ( pPhysics != null ) {
+			// Physics that supercedes the shape, probably a 'face' level definition
+			aPhysicsKey = pPhysics.toString();
+		} else {
+			// Use the explicit physics for this shape
+			aPhysicsKey = "P" + pShape.getShapeKey();
+		}
+		Object meshKey = selectKey( pMaterial, lightOwner, aPhysicsKey );
 		
 		// Look for custom material
 		if ( meshKey == null ) {
@@ -318,7 +327,7 @@ public class CSGMeshManager
 			return( mGenericIndexStack.peek() );
 			
 		} else {
-			// The material's key is used to share the same material
+			// The material's key is used to share the same material/lights/physics
 			CSGMeshInfo meshInfo;
 			if ( (meshKey != null) && mMeshMap.containsKey( meshKey ) ) {
 				// Use the info already found
@@ -332,7 +341,7 @@ public class CSGMeshManager
 				if ( pMaterial == null ) {
 					pMaterial = mGenericIndexStack.peek().mMaterial;
 				}
-				meshInfo = new CSGMeshInfo( meshIndex, pMaterial, lightOwner, physicsOwner );
+				meshInfo = new CSGMeshInfo( meshIndex, pMaterial, lightOwner, aPhysics, aPhysicsKey );
 				
 				if ( meshKey != null ) {
 					// Track the material by its AssetKey
@@ -350,15 +359,17 @@ public class CSGMeshManager
 class CSGMeshInfo
 {
 	/** The index that selects this info */
-	protected Integer		mIndex;
+	protected Integer			mIndex;
 	/** The Material that applies */
-	protected Material		mMaterial;
+	protected Material			mMaterial;
 	/** The custom lighting that applies */
-	protected CSGShape		mLightListOwner;
+	protected CSGShape			mLightListOwner;
+	protected String			mLightListKey;
 	/** The custom physics that applies */
-	protected CSGShape		mPhysicsOwner;
+	protected PhysicsControl	mPhysics;
+	protected String			mPhysicsKey;
 	/** The generated mesh */
-	protected Mesh			mMesh;
+	protected Mesh				mMesh;
 	
 	/** Standard constructor */
 	CSGMeshInfo(
@@ -372,11 +383,30 @@ class CSGMeshInfo
 		if ( (pLightListOwner != null) && (pLightListOwner.getLocalLightList().size() > 0) ) {
 			// Remember the active lights
 			this.mLightListOwner = pLightListOwner;
+			this.mLightListKey = "LL" + pLightListOwner.getShapeKey();
 		}
-		if ( (pPhysicsOwner != null) && (pPhysicsOwner.getPhysics() != null) ) {
+		if ( (pPhysicsOwner != null) && ((mPhysics = pPhysicsOwner.getPhysics()) != null) ) {
 			// Remember the active physics
-			this.mPhysicsOwner = pPhysicsOwner;
+			this.mPhysicsKey = "P" + pPhysicsOwner.getShapeKey();
 		}
+	}
+	CSGMeshInfo(
+		Integer			pIndex
+	,	Material		pMaterial
+	,	CSGShape		pLightListOwner
+	,	PhysicsControl	pPhysics
+	,	String			pPhysicsKey
+	) {
+		this.mIndex = pIndex;
+		this.mMaterial = pMaterial;
+		if ( (pLightListOwner != null) && (pLightListOwner.getLocalLightList().size() > 0) ) {
+			// Remember the active lights
+			this.mLightListOwner = pLightListOwner;
+			this.mLightListKey = "LL" + pLightListOwner.getShapeKey();
+		}
+		// Remember the active physics
+		this.mPhysics = pPhysics;
+		this.mPhysicsKey = pPhysicsKey;
 	}
 	CSGMeshInfo(
 		Integer			pIndex

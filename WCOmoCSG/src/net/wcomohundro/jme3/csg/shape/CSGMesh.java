@@ -24,6 +24,7 @@
 **/
 package net.wcomohundro.jme3.csg.shape;
 
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -154,17 +155,26 @@ public abstract class CSGMesh
 		return( null );
 	}
 	
-	/** FOR CSGShape PROCESSING: Register every custom face material */
-	public void registerMaterials(
+	/** FOR CSGShape PROCESSING: Accessor to the physics that applies to the given surface */
+	public PhysicsControl getPhysics(
+		int					pFaceIndex
+	) {
+		// Subclasses must override if they support custom material per surface
+		return( null );
+	}
+
+	
+	/** FOR CSGShape PROCESSING: Register every custom face material/physics */
+	public void registerFaceProperties(
 		CSGMeshManager	pMeshManager
 	,	CSGShape		pShape
 	) {
 		if ( mFaceProperties != null ) {
-			// Register every material in the list.  The manager will resolve multiple
-			// usages of the same material to the same index
+			// Register every property in the list.  The manager will resolve multiple
+			// usages of the same item to the same index
 			for( CSGFaceProperties aProperty : mFaceProperties ) {
-				if ( aProperty.hasMaterial() ) {
-					pMeshManager.resolveMeshIndex( aProperty.getMaterial(), pShape );
+				if ( aProperty.hasMaterial() || aProperty.hasPhysics()) {
+					pMeshManager.resolveMeshIndex( aProperty.getMaterial(), aProperty.getPhysics(), pShape );
 				}
 			}
 		}
@@ -201,7 +211,7 @@ public abstract class CSGMesh
 					}
 					// NOTE that we could match a property based on the bitmask, but if
 					//		it has no material, we will keep looking.  This lets us use
-					//		separate definitions for scale versus material
+					//		separate definitions for scale versus material versus physics
 				}
 			}
 		}
@@ -222,7 +232,28 @@ public abstract class CSGMesh
 					}
 					// NOTE that we could match a property based on the bitmask, but if
 					//		it has no scale, we will keep looking.  This lets us use
-					//		separate definitions for scale versus material
+					//		separate definitions for scale versus material versus physics
+				}
+			}
+		}
+		return( null );
+	}
+	protected PhysicsControl matchFacePhysics(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one if it has physics
+					PhysicsControl aPhysics = aProperty.getPhysics();
+					if ( aPhysics != null ) {
+						return( aPhysics );
+					}
+					// NOTE that we could match a property based on the bitmask, but if
+					//		it has no physics, we will keep looking.  This lets us use
+					//		separate definitions for scale versus material versus physics
 				}
 			}
 		}
@@ -235,6 +266,13 @@ public abstract class CSGMesh
 	) {
 		Material aMaterial = matchFaceMaterial( pFaceBit );
 		return( aMaterial );
+	}
+	/** Service routine to match a custom physics to a given face */
+	protected PhysicsControl resolveFacePhysics(
+		int			pFaceBit
+	) {
+		PhysicsControl aPhysics = matchFacePhysics( pFaceBit );
+		return( aPhysics );
 	}
 		
 	/** Every CSGMesh is expected to be able to rebuild itself from its fundamental

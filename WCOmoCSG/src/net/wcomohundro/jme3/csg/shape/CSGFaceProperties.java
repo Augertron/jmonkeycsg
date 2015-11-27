@@ -33,6 +33,7 @@ import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 import com.jme3.asset.AssetNotFoundException;
+import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -48,6 +49,7 @@ import com.jme3.math.Vector2f;
  	Properties:
  	1)	Texture scaling to apply to the face
  	2)	Custom material to apply to the face
+ 	3)	Custom physics to apply to the face
  */
 public class CSGFaceProperties 
 	implements Savable, ConstructiveSolidGeometry
@@ -103,12 +105,13 @@ public class CSGFaceProperties
 	}
 
 	/** The bitmask of 'faces' these properties apply to */
-	protected int		mFaceMask;
+	protected int				mFaceMask;
 	/** A custom material that applies to the face(s) */
-	protected Material	mMaterial;
+	protected Material			mMaterial;
 	/** A custom texture scaling that applies to the face(s) */
-	protected Vector2f	mScaleTexture;
-	
+	protected Vector2f			mScaleTexture;
+	/** A custom Physics that applies to the face(s) */
+	protected PhysicsControl	mPhysics;
 	
 	/** Null constructor */
 	public CSGFaceProperties(
@@ -135,6 +138,10 @@ public class CSGFaceProperties
 	/** Accessor to the TextureScaling property */
 	public boolean hasScaleTexture() { return( mScaleTexture != null ); }
 	public Vector2f getScaleTexture() { return mScaleTexture; }
+	
+	/** Accessor to the Physics property */
+	public boolean hasPhysics() { return( mPhysics != null ); }
+	public PhysicsControl getPhysics() { return mPhysics; }
 	
 
 	/** Adjust the Savable actions */
@@ -176,6 +183,8 @@ public class CSGFaceProperties
         		mScaleTexture = new Vector2f( scaleX, scaleY );
         	}
         }
+        // Look for physics
+        mPhysics =(PhysicsControl)aCapsule.readSavable( "physics", null );
 	}
 	
 	@Override
@@ -198,6 +207,8 @@ public class CSGFaceProperties
         	aCapsule.write( mScaleTexture.getX(), "scaleX", 1f );
         	aCapsule.write( mScaleTexture.getY(), "scaleY", 1f );
         }
+        
+        // For now, physics is too complicated to be captured by a write()
 	}
 	
 	/////// Implement ConstructiveSolidGeometry

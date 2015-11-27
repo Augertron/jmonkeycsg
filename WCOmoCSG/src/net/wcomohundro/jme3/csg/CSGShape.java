@@ -342,7 +342,7 @@ public class CSGShape
 			
 			if ( this.mesh instanceof CSGMesh ) {
 				// Take this opportunity to register every custom face material in the mesh
-				((CSGMesh)this.mesh).registerMaterials( pMeshManager, aClone );
+				((CSGMesh)this.mesh).registerFaceProperties( pMeshManager, aClone );
 			}
 		} else if ( this.mSubShapes != null ) {
 			// No mesh, but use a shallow copy of the subshapes
@@ -357,7 +357,7 @@ public class CSGShape
 //		aClone.setLodLevel( pLODLevel );
 		
 		// Register this shape's standard Material
-		pMeshManager.resolveMeshIndex( this.getMaterial(), aClone );
+		pMeshManager.resolveMeshIndex( this.getMaterial(), null, aClone );
 		
 		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
 		return( aClone );
@@ -397,6 +397,7 @@ public class CSGShape
 	,	int					pFaceIndex
 	) {
 		Material useMaterial;
+		PhysicsControl usePhysics;
 		
 		if ( this.mesh instanceof CSGMesh ) {
 			// CSGMesh based primitives may support per-face materials in their own right
@@ -405,12 +406,14 @@ public class CSGShape
 				// Nothing special, use the standard
 				useMaterial = this.getMaterial();
 			}
+			usePhysics = ((CSGMesh)this.mesh).getPhysics( pFaceIndex );
 		} else {
 			// Use the standard 
 			useMaterial = this.getMaterial();
+			usePhysics = null;
 		}
 		// Base the index on the underlying material
-		return( pMeshManager.resolveMeshIndex( useMaterial, this ) );
+		return( pMeshManager.resolveMeshIndex( useMaterial, usePhysics, this ) );
 	}
 	
 	/** Accessor to the transform to apply to the underlying Mesh */
