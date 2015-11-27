@@ -96,7 +96,16 @@ public class CSGPlaceholderCollisionShape
 	    			aCollision.setCollisionShape( aCollisionShape );
 	    		}
     		}
-    		pSpatial.addControl( (PhysicsControl)pPhysics );
+    		// NOTE that we add the control to the 'root' node, which we assume represents
+    		//		the overall CSG shape.  It is the root that we expect to be 
+    		//		transformed to the proper orientation.
+    		if ( pRoot == null ) {
+    			// No explicit root shape provided, so assume the Spatial is the outer CSG shape
+    			pSpatial.addControl( (PhysicsControl)pPhysics );
+    		} else {
+    			// Attach the physics to the root CSG shape
+    			pRoot.addControl( (PhysicsControl)pPhysics );
+    		}
     		pPhysicsSpace.add( pPhysics );
     	}
     	return( aCollisionShape );

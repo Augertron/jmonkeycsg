@@ -174,9 +174,9 @@ public class CSGNode
     ,	Node				pRoot
     ) {
     	if ( pRoot == null ) {
-    		// We are not part of a larger object, so we act as the root of any
-    		// interior pieces
-    		pRoot = this;
+    		// CSGNode is only designed to represent a subcomponent of a larger CSG shape,
+    		// to a root node is always expected to be supplied
+    		throw new IllegalArgumentException( "CSGNode.applyPhysics expects a root node" );
     	}
     	// If this instance of Geonode has its own explicit mPhysics, then it defines its own
     	// collision shape from all participating subelements.

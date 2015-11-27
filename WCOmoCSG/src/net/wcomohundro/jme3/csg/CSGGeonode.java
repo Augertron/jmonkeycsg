@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.math.CSGTransform;
 
@@ -122,6 +123,32 @@ public class CSGGeonode
 		mIsValid = false;
 	}
 	
+    /** If physics is active for the shape, connect it all up now */
+    @Override
+    public void applyPhysics(
+    	PhysicsSpace		pPhysicsSpace
+    ,	Node				pRoot
+    ) {
+    	if ( pRoot == null ) {
+    		// We are not part of a larger object, so we act as the root of any
+    		// interior pieces
+    		pRoot = this;
+    	}
+    	// If this instance of Geonode has its own explicit mPhysics, then it defines its own
+    	// collision shape from all participating subelements.
+    	if ( mPhysics != null ) {
+        	CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, this, pRoot );
+    	}
+    	// We also cycle through all children to give any with their own explicit physics
+    	// a chance to process
+	    for( Spatial aSpatial : children ) {
+	    	if ( aSpatial instanceof CSGElement ) {
+	    		// Let the subshape decide how to apply the physics
+	    		((CSGElement)aSpatial).applyPhysics( pPhysicsSpace, pRoot );
+	    	}
+	    }
+    }
+
     /** Include a shape */
 	@Override
     public void addShape(
