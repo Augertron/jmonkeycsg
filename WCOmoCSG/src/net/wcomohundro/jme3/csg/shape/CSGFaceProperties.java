@@ -117,6 +117,18 @@ public class CSGFaceProperties
 	public CSGFaceProperties(
 	) {
 	}
+	/** Constructor with all properties */
+	public CSGFaceProperties(
+		Face			pFace
+	,	Material		pMaterial
+	,	Vector2f		pScaleTexture
+	,	PhysicsControl	pPhysics
+	) {
+		mFaceMask = pFace.getMask();
+		mMaterial = pMaterial;
+		mScaleTexture = pScaleTexture;
+		mPhysics = pPhysics;
+	}
 	
 	/** Accessor to the mask */
 	public int getFaceMask() { return mFaceMask; }

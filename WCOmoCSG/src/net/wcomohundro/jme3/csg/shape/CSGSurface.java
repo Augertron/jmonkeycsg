@@ -66,8 +66,8 @@ public class CSGSurface
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGSurfaceRevision="$Rev: 128 $";
-	public static final String sCSGSurfaceDate="$Date: 2015-11-26 20:56:50 -0600 (Thu, 26 Nov 2015) $";
+	public static final String sCSGSurfaceRevision="$Rev$";
+	public static final String sCSGSurfaceDate="$Date$";
 
 	
 	/** Basic size */

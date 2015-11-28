@@ -129,6 +129,12 @@ public abstract class CSGMesh
 	) {
 		mFaceProperties = pPropertyList;
 	}
+	public void addFaceProperties(
+		CSGFaceProperties	pProperties
+	) {
+		if ( mFaceProperties == null ) mFaceProperties = new ArrayList( 5 );
+		mFaceProperties.add( pProperties );
+	}
 	
 	/** Accessor to the LOD factors to apply */
 	public float[] getLODFactors() { return mLODFactors; }
