@@ -99,7 +99,7 @@ public class CSGGeonode
 
 	
 	/** The master geometry/mesh that describes the overall shape */
-	protected CSGGeometry		mMasterGeometry;
+	protected Geometry			mMasterGeometry;
     /** Control flag to force the use of a single material set at this node level */
     protected boolean			mForceSingleMaterial;
 	/** The optional list of child shapes (each annotated with an action as it is added) */
@@ -122,6 +122,10 @@ public class CSGGeonode
 		// Assume invalid until regeneration OR read() completes
 		mIsValid = false;
 	}
+	
+	/** Access to the MasterGeometry that defines the overall shape */
+	public Geometry getMasterGeometry() { return mMasterGeometry; }
+	
 	
     /** If physics is active for the shape, connect it all up now */
     @Override
@@ -256,6 +260,16 @@ public class CSGGeonode
 						
 					case SKIP:
 						// This shape is not taking part
+						break;
+
+					case MERGE:
+						if ( aProduct == null ) {
+							// A place to start
+							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+						} else {
+							// Treat multiple meshes as a single mesh
+							aProduct = aProduct.merge( aShape.refresh(), meshManager, tempVars, pEnvironment );
+						}
 						break;
 					}
 				}

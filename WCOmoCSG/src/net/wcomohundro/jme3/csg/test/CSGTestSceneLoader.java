@@ -409,6 +409,7 @@ public class CSGTestSceneLoader
     	    	}
         	} catch( Exception ex ) {
         		reportString += " ***Load Scene Failed: " + ex;
+        		ex.printStackTrace( System.err );
 
     		} finally {
     			mLoadingScene = null;

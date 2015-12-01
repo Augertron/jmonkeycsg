@@ -200,7 +200,7 @@ public class CSGShapeIOB
 	
 	/** Accessor to the list of faces */
 	protected List<CSGFace> getFaces(
-		CSGMeshManager	pMaterialManager
+		CSGMeshManager		pMaterialManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
@@ -221,7 +221,7 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape union(
 		CSGShape			pOther
-	,	CSGMeshManager	pMaterialManager
+	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -248,7 +248,7 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape difference(
 		CSGShape			pOther
-	,	CSGMeshManager	pMaterialManager
+	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -275,7 +275,7 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape intersection(
 		CSGShape			pOther
-	,	CSGMeshManager	pMaterialManager
+	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
@@ -296,6 +296,26 @@ public class CSGShapeIOB
 		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
 		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder() );
 		return( aShape );
+	}
+	
+	/** Find the merge with another shape */
+	@Override
+	public CSGShape merge(
+		CSGShape			pOther
+	,	CSGMeshManager		pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		// This is a simple addition of all the 'other' faces into this face list
+		List<CSGFace> thisFaceList 
+			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+		
+		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
+		List<CSGFace> otherFaceList 
+			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+
+		this.mFaces.addAll( otherFaceList );
+		return( this.mShape );
 	}
 	
 	/** Produce the set of faces that correspond to a given mesh */
@@ -326,7 +346,7 @@ public class CSGShapeIOB
 		FloatBuffer normBuffer = pMesh.getFloatBuffer( Type.Normal );
 		FloatBuffer texCoordBuffer = pMesh.getFloatBuffer( Type.TexCoord );
 		
-		int triangleCount, iAdjust;
+		int triangleCount, iAdjust, invalidFaceCount = 0;
 		int vertexCount = idxBuffer.size();
 		
 		switch( meshMode ) {
@@ -353,8 +373,16 @@ public class CSGShapeIOB
 		}
 		// Work from 3 points which define a triangle
 		List<CSGFace> faces = new ArrayList<CSGFace>( triangleCount );
-		Map<Vector3d,CSGVertexIOB> aVertexList = new HashMap( vertexCount );
-
+		
+		// Looking for 'common' vertices can speed up the I/O/B processing, but if
+		// we are talking an extremely large count, then the overhead is not worth it.
+		Map<Vector3d,CSGVertexIOB> aVertexList;
+		if ( vertexCount < 5000 ) {
+			aVertexList = new HashMap( vertexCount );
+		} else {
+			// Too many vertices to track, the HashMap wastes more time than it saves
+			aVertexList = null;
+		}
 		for( int i = 0, j = 0; j < triangleCount; i += iAdjust, j += 1) {
 			int idx1 = idxBuffer.get(i);
 			int idx2 = idxBuffer.get(i + 1);
@@ -386,7 +414,6 @@ public class CSGShapeIOB
 			Vector3f pos3 = new Vector3f( posBuffer.get( idx3x3 )
 										, posBuffer.get( idx3x3 + 1)
 										, posBuffer.get( idx3x3 + 2) );
-
 			// Extract the normals
 			Vector3f norm1 = new Vector3f( normBuffer.get( idx1x3 )
 										 , normBuffer.get( idx1x3 + 1)
@@ -432,9 +459,17 @@ public class CSGShapeIOB
 					aFace.matchVertices( aVertexList, pEnvironment );
 				}
 				faces.add( aFace );
-			} else {
+			} else if ( meshMode == Mode.Triangles ) {
+				// We expect reasonable triangles in Triangle mode
 				CSGEnvironment.sLogger.log( Level.WARNING, "Invalid face in mesh:" + mShape.getName() );
+			} else {
+				// Other triangle modes may use degenerate triangles on purpose
+				invalidFaceCount += 1;
 			}
+		}
+		if ( invalidFaceCount > 0 ) {
+			CSGEnvironment.sLogger.log( Level.WARNING
+			, "Degenerate triangles(" + invalidFaceCount + ") in mesh:" + mShape.getName() );			
 		}
 		return( faces );
 	}
@@ -517,7 +552,7 @@ public class CSGShapeIOB
 		aMesh.setBuffer( Type.Position, 3, CSGShape.createVector3Buffer( pPositionList ) );
 		aMesh.setBuffer( Type.Normal, 3, CSGShape.createVector3Buffer( pNormalList ) );
 		aMesh.setBuffer( Type.TexCoord, 2, CSGShape.createVector2Buffer( pTexCoordList ) );
-		aMesh.setBuffer( Type.Index, 3, CSGShape.createIndexBuffer( pIndexList ) );
+		CSGShape.createIndexBuffer( pIndexList, aMesh );
 
 		aMesh.updateBound();
 		aMesh.updateCounts();

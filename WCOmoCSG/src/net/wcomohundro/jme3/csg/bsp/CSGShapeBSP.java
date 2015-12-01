@@ -311,6 +311,12 @@ public class CSGShapeBSP
 						case SKIP: return( 0 );			// Same as other SKIP
 						default: return( 1 );			// After all others
 						}
+						
+					case MERGE:
+						switch( pB.getOperator() ) {
+						case MERGE: return( 0 );		// Same as other MERGE
+						default: return( -1 );			// Before all others
+						}
 					}
 					// If we fall out the above, then we come before
 					return( -1 );
@@ -458,27 +464,27 @@ public class CSGShapeBSP
 	,	CSGEnvironment		pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
-		CSGPartition a = new CSGPartition( this
-											, this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment  );
-	    CSGPartition b = new CSGPartition( otherBSP
-	    									, otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
-											, pTempVars
-											, pEnvironment  );
+		List<CSGPolygon> thisList = this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
 		
-	    a.invert();
-	    b.clipTo( a, pTempVars, pEnvironment );
-	    b.invert();
-	    a.clipTo( b, pTempVars, pEnvironment );
-	    b.clipTo( a, pTempVars, pEnvironment );
-	    a.buildHierarchy( b.allPolygons( null ), pTempVars, pEnvironment );
-	    a.invert();
-
-		CSGShapeBSP aHandler = new CSGShapeBSP( null, a.allPolygons( null ) );
-		aHandler.setCorrupt( a, b );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder() );
-        return( aShape );
+	    List<CSGPolygon> otherList = otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
+		this.mPolygons.addAll( otherList );
+	    return( this.mShape );
+	}
+	
+	/** Find the merge with another shape */
+	@Override
+	public CSGShape merge(
+		CSGShape			pOther
+	,	CSGMeshManager	pMaterialManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
+		List<CSGPolygon> thisList = this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
+		
+	    List<CSGPolygon> otherList = otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
+		this.mPolygons.addAll( otherList );
+	    return( this.mShape );
 	}
 
 	/** Produce the set of polygons that correspond to a given mesh */
@@ -667,7 +673,7 @@ public class CSGShapeBSP
 		aMesh.setBuffer( Type.Position, 3, CSGShape.createVector3Buffer( pPositionList ) );
 		aMesh.setBuffer( Type.Normal, 3, CSGShape.createVector3Buffer( pNormalList ) );
 		aMesh.setBuffer( Type.TexCoord, 2, CSGShape.createVector2Buffer( pTexCoordList ) );
-		aMesh.setBuffer( Type.Index, 3, CSGShape.createIndexBuffer( pIndexList ) );
+		CSGShape.createIndexBuffer( pIndexList, aMesh );
 
 		aMesh.updateBound();
 		aMesh.updateCounts();

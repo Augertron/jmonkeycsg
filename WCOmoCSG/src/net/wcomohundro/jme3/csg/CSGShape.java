@@ -31,6 +31,7 @@
 package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
@@ -44,10 +45,15 @@ import java.util.Map;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+import net.wcomohundro.jme3.csg.shape.CSGBox;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
+import net.wcomohundro.jme3.csg.shape.CSGSphere;
 import net.wcomohundro.jme3.math.CSGTransform;
 
+import com.jme3.bounding.BoundingBox;
+import com.jme3.bounding.BoundingSphere;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -67,6 +73,7 @@ import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.scene.Mesh.Mode;
 import com.jme3.material.Material;
 import com.jme3.material.MatParamTexture;
+import com.jme3.terrain.Terrain;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TempVars;
@@ -121,6 +128,13 @@ public class CSGShape
 	public static final String sCSGShapeRevision="$Rev$";
 	public static final String sCSGShapeDate="$Date$";
 	
+	/** The 'surface' to use for the shape */
+	public enum CSGShapeSurface {
+		USE_MESH				// Use the actual shape
+	,	USE_BOUNDING_BOX		// Use a box that matches the bounds
+	,	USE_BOUNDING_SPHERE		// Use a sphere that encompasses the bounds
+	}
+	
 	/** Handler interface */
 	public interface CSGShapeProcessor {
 		
@@ -161,6 +175,14 @@ public class CSGShape
 
 		/** Find the intersection with another shape */
 		public CSGShape intersection(
+			CSGShape			pOtherShape
+		,	CSGMeshManager		pMeshManager
+		,	CSGTempVars			pTempVars
+		,	CSGEnvironment		pEnvironment
+		);
+		
+		/** Find the merge with another shape */
+		public CSGShape merge(
 			CSGShape			pOtherShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
@@ -209,17 +231,38 @@ public class CSGShape
         aBuffer.flip();
         return aBuffer;
     }
-    public static ShortBuffer createIndexBuffer(
+    public static Buffer createIndexBuffer(
     	List<Number> 	pIndices
+    ,	Mesh			pMesh
     ) {
-    	ShortBuffer aBuffer = BufferUtils.createShortBuffer( pIndices.size() );
-        for( Number aValue : pIndices ) {
-            if ( aValue != null ) {
-            	aBuffer.put( aValue.shortValue() );
-            } else {
-            	aBuffer.put( (short)0 );
-            }
-        }
+    	Buffer aBuffer;
+    	if ( pIndices.size() >= (Short.MAX_VALUE * 2) ) {
+    		IntBuffer intBuffer;
+	    	aBuffer = intBuffer = BufferUtils.createIntBuffer( pIndices.size() );
+	        for( Number aValue : pIndices ) {
+	            if ( aValue != null ) {
+	            	intBuffer.put( aValue.intValue() );
+	            } else {
+	            	intBuffer.put( 0 );
+	            }
+	        }
+	        if ( pMesh != null ) {
+	        	pMesh.setBuffer( Type.Index, 3, intBuffer );
+	        }
+    	} else {
+    		ShortBuffer shortBuffer;
+	    	aBuffer = shortBuffer = BufferUtils.createShortBuffer( pIndices.size() );
+	        for( Number aValue : pIndices ) {
+	            if ( aValue != null ) {
+	            	shortBuffer.put( aValue.shortValue() );
+	            } else {
+	            	shortBuffer.put( (short)0 );
+	            }
+	        }
+	        if ( pMesh != null ) {
+	        	pMesh.setBuffer( Type.Index, 3, shortBuffer );
+	        }
+    	}
         aBuffer.flip();
         return aBuffer;
     }
@@ -235,6 +278,8 @@ public class CSGShape
 	protected CSGGeometry.CSGOperator	mOperator;
 	/** Arbitrary 'ordering' of operations within the geometry */
 	protected int						mOrder;
+	/** The surface to use for the shape */
+	protected CSGShapeSurface			mSurface;
 	/** If this shape represents a group of blended shapes, these are the subshapes */
 	protected List<CSGShape>			mSubShapes;
 	/** If this shape is a subshape within another shape, this is the parent shape */
@@ -266,6 +311,7 @@ public class CSGShape
 		mShapeKey = "Shape" + ++sInstanceMarker;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
+		mSurface = CSGShapeSurface.USE_MESH;
 	}
 	public CSGShape(
 		String	pShapeName
@@ -275,31 +321,16 @@ public class CSGShape
 		mShapeKey = "Shape" + ++sInstanceMarker;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;		
+		mSurface = CSGShapeSurface.USE_MESH;
 	}
 	
 	/** Constructor based on a Spatial, rather than a Mesh */
 	public CSGShape(
-		String	pShapeName
-	,	Spatial	pSpatial
+		String		pShapeName
+	,	Spatial		pSpatial
 	) {
 		this( (pShapeName == null) ? pSpatial.getName() : pShapeName, 0 );
-		
-		// Carry forward any transform that the Spatial knows of
-		this.localTransform = pSpatial.getLocalTransform().clone();
-		
-		if ( pSpatial instanceof Node ) {
-			// Treat the Node as a grouping of subshapes
-			int shapeCounter = 0;
-			mSubShapes = new ArrayList();
-			for( Spatial aSpatial : ((Node)pSpatial).getChildren() ) {
-				CSGShape subShape = new CSGShape( getName() + "-" + ++shapeCounter, aSpatial );
-				mSubShapes.add( subShape );
-			}
-		} else if ( pSpatial instanceof Geometry ) {
-			// Use the Geometry's Mesh and Material
-			this.mesh = ((Geometry)pSpatial).getMesh();
-			this.material = ((Geometry)pSpatial).getMaterial();
-		}
+		setSpatial( pSpatial, null );
 	}
 	
 	/** NOT REALLY PUBLIC/FOR HANDLER USE ONLY - Constructor based on a given handler */
@@ -310,6 +341,56 @@ public class CSGShape
 		mHandler = pHandler.setShape( this );
 		mShapeKey = "Shape" + ++sInstanceMarker;
 		mOrder = pOrder;
+		mSurface = CSGShapeSurface.USE_MESH;
+	}
+	
+	/** Accessor to the shape surface in use */
+	public CSGShapeSurface getShapeSurface() { return mSurface; }
+	public void setShapeSurface(
+		CSGShapeSurface		pSurface
+	) {
+		mSurface = pSurface;
+	}
+	
+	/** Initialization based on type of Spatial provided */
+	protected void setSpatial(
+		Spatial			pSpatial
+	,	CSGOperator		pOperator
+	) {
+		if ( pSpatial != null ) {
+			// Carry forward any transform that the Spatial knows of
+			this.localTransform = pSpatial.getLocalTransform().clone();
+			
+			if ( pSpatial instanceof CSGGeonode ) {
+				// Use the overall Geometry as the representation of the Geonode
+				pSpatial = ((CSGGeonode)pSpatial).getMasterGeometry();
+			}
+			if ( pSpatial instanceof Geometry ) {
+				// Use the Geometry's Mesh and Material
+				this.mesh = ((Geometry)pSpatial).getMesh();
+				this.material = ((Geometry)pSpatial).getMaterial();	
+				
+			} else if ( pSpatial instanceof Node ) {
+				// Treat the Node as a grouping of subshapes
+				if ( pOperator == null ) {
+					// Select the appropriate default operator for subelements in a node
+					pOperator = CSGOperator.UNION;
+					if ( pSpatial instanceof Terrain ) {
+						// It makes no sense to UNION all the components of a Terrain.  
+						// Just blend it all together
+						pOperator = CSGOperator.MERGE;
+					}
+				}
+				int shapeCounter = 0;
+				mSubShapes = new ArrayList();
+				for( Spatial aSpatial : ((Node)pSpatial).getChildren() ) {
+					String subShapeName = getName() + "-" + ++shapeCounter;
+					CSGShape subShape = new CSGShape( subShapeName, aSpatial );
+					subShape.setOperator( pOperator );
+					mSubShapes.add( subShape );
+				}
+			}
+		}
 	}
 		
 	/** Ensure this shape is ready to be blended --
@@ -340,9 +421,9 @@ public class CSGShape
 			aClone = (CSGShape)super.clone( false );
 			aClone.setOrder( mOrder );
 			
-			if ( this.mesh instanceof CSGMesh ) {
+			if ( aClone.mesh instanceof CSGMesh ) {
 				// Take this opportunity to register every custom face material in the mesh
-				((CSGMesh)this.mesh).registerFaceProperties( pMeshManager, aClone );
+				((CSGMesh)aClone.mesh).registerFaceProperties( pMeshManager, aClone );
 			}
 		} else if ( this.mSubShapes != null ) {
 			// No mesh, but use a shallow copy of the subshapes
@@ -353,11 +434,12 @@ public class CSGShape
 			aClone = new CSGShape( this.getName(), this.mOrder );
 		}
 		aClone.mShapeKey = "Shape" + ++sInstanceMarker;
-		aClone.setOperator( mOperator );
+		aClone.setOperator( this.mOperator );
+		aClone.setShapeSurface( this.mSurface );
 //		aClone.setLodLevel( pLODLevel );
 		
 		// Register this shape's standard Material
-		pMeshManager.resolveMeshIndex( this.getMaterial(), null, aClone );
+		pMeshManager.resolveMeshIndex( aClone.getMaterial(), null, aClone );
 		
 		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
 		return( aClone );
@@ -502,6 +584,18 @@ public class CSGShape
 		return( useShape.getHandler( pEnvironment ).intersection( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
 
+	/** Find the merge with another shape */
+	public CSGShape merge(
+		CSGShape			pOtherShape
+	,	CSGMeshManager		pMeshManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
+		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
+		return( useShape.getHandler( pEnvironment ).merge( useOther, pMeshManager, pTempVars, pEnvironment ) );
+	}
+
 	/** Produce the mesh(es) that corresponds to this shape
 	 	The active handler knows how to construct a Mesh from its own underlying structure.
 	 	Each Mesh will then be registered with the MeshManager under its appropriate
@@ -518,7 +612,39 @@ public class CSGShape
 		useShape.getHandler( pEnvironment ).toMesh( pMeshManager, pProduceSubelements, pTempVars, pEnvironment  );
 	}
 		
-	
+	/** Mediate access to the mesh representing this shape */
+	@Override
+    public Mesh getMesh(
+    ) {
+		if ( mSurface == CSGShapeSurface.USE_MESH ) {
+			// Use what we know
+			return( this.mesh );
+		}
+		// Determine the span of the underlying mesh
+		Vector3f extent = new Vector3f();
+		BoundingVolume aVolume = this.mesh.getBound();
+		switch( aVolume.getType() ) {
+		case AABB:
+			((BoundingBox)aVolume).getExtent( extent );
+			break;
+		case Sphere:
+			float radius = ((BoundingSphere)aVolume).getRadius();
+			extent.set( radius, radius, radius );
+			break;
+		}
+		if ( !extent.equals( Vector3f.ZERO ) ) {
+			switch( mSurface ) {
+			case USE_BOUNDING_BOX:
+				CSGBox aBox = new CSGBox( extent.x, extent.y, extent.z );
+				return( aBox );
+			case USE_BOUNDING_SPHERE:
+				CSGSphere aSphere = new CSGSphere( 32, 32, extent.x );
+				return( aSphere );
+			}
+		}
+		return( null );
+    }
+
 	/** Make this shape 'savable' */
 	@Override
 	public void write(
@@ -529,7 +655,7 @@ public class CSGShape
 		
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mOrder, "order", 0 );
-		aCapsule.write( mOperator, "operator", CSGGeometry.CSGOperator.UNION );
+		aCapsule.write( mOperator, "operator", CSGOperator.UNION );
 		
 		aCapsule.writeSavableArrayList( (ArrayList)mFaceProperties, "faceProperties", null );
 	}
@@ -543,7 +669,8 @@ public class CSGShape
 		
 		InputCapsule aCapsule = pImporter.getCapsule(this);
 		mOrder = aCapsule.readInt( "order", 0 );
-		mOperator = aCapsule.readEnum( "operator", CSGGeometry.CSGOperator.class, CSGGeometry.CSGOperator.UNION );
+		mOperator = aCapsule.readEnum( "operator", CSGOperator.class, CSGOperator.UNION );
+		mSurface = aCapsule.readEnum( "surface", CSGShapeSurface.class, CSGShapeSurface.USE_MESH );
 		if ( this.mesh != null ) {
 	        // Extended attributes
 	        Vector2f aScale = (Vector2f)aCapsule.readSavable( "scaleTexture", null );
@@ -560,6 +687,12 @@ public class CSGShape
 		} else {
 			// If we have no mesh, look for a subgroup of shapes
 			mSubShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
+			
+			if ( mSubShapes == null ) {
+				// No mesh and no subgroup -- how about a Spatial?
+				Spatial aSpatial = (Spatial)aCapsule.readSavable( "spatial", null );
+				setSpatial( aSpatial, null );
+			}
 		}
 		// Look for specially configured transform
 		if ( this.localTransform == Transform.IDENTITY ) {
@@ -604,7 +737,6 @@ public class CSGShape
 							thisMesh.scaleFaceTextureCoordinates( aProperty.getScaleTexture(), aProperty.getFaceMask() );
 						}
 		        	}
-					
 				}
 			}
 			return( this );
@@ -653,6 +785,16 @@ public class CSGShape
 					
 				case SKIP:
 					// This shape is not taking part
+					break;
+					
+				case MERGE:
+					if ( aProduct == null ) {
+						// A place to start
+						aProduct = aShape.clone( pMeshManager, this.getLodLevel(), pEnvironment );
+					} else {
+						// Treat multiple meshes as a single mesh
+						aProduct = aProduct.merge( aShape.refresh(), pMeshManager, pTempVars, pEnvironment );
+					}
 					break;
 				}
 			}

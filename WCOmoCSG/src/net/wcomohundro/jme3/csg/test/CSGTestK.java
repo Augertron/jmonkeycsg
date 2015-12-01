@@ -40,6 +40,7 @@ import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.scene.shape.Surface;
 import com.jme3.terrain.geomipmap.TerrainQuad;
+import com.jme3.util.SkyFactory;
 import com.jme3.util.TangentBinormalGenerator;
 
 
@@ -74,7 +75,10 @@ public class CSGTestK
 	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 	    
-    	CSGGeometry aGeometry;
+    	CSGGeometry aGeometry = new CSGGeometry( "AScene" );
+        Material aMaterial = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
+        aMaterial.getAdditionalRenderState().setWireframe( true );
+        aGeometry.setMaterial( aMaterial.clone() );
 	
     	List<List<Vector4f>> controlPoints = new ArrayList( sControlPoints.length );
     	for( Vector4f[] aRow : sControlPoints ) {
@@ -99,26 +103,26 @@ public class CSGTestK
     										, 3
     										, 1
     										, 1 );
-
-    	aGeometry = new CSGGeometry( "AScene", aSurface );
-        Material aMaterial = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
-        //aMaterial.getAdditionalRenderState().setWireframe( true );
-        aGeometry.setMaterial( aMaterial.clone() );
+        //aGeometry.addShape( new CSGShape( "ASurface", aSurface ) );
         
-        //aGeometry.addShape( new CSGShape( "ASurface", aSurface ) );;
-    	//aGeometry.subtractShape( new CSGShape( "ABox", new CSGBox( 1, 1, 1 ) ) );
-    	
-    	TerrainQuad aTerrain
-    		= new TerrainQuad( "ATerrain", 3, 5, null );
-        aTerrain.setMaterial( aMaterial.clone() );
-        //TangentBinormalGenerator.generate( aTerrain );
-    	
+    	TerrainQuad aTerrain = new TerrainQuad( "ATerrain", 65, 129, null );
+    	aTerrain.setLocked( true );
+    	//aTerrain.setMaterial( aMaterial.clone() );
     	//rootNode.attachChild( aTerrain );
-        aGeometry.addShape( new CSGShape( "Terrain", aTerrain ) );;
-    	aGeometry.addShape( new CSGShape( "ABox", new CSGBox( 1, 1, 1 ) ) );
-    	
+
+    	aGeometry.addShape( new CSGShape( "ATerrain", aTerrain ) );
+
+        CSGShape aBox = new CSGShape( "ABox", new CSGBox( 1, 1, 2 ) );
+        aBox.setLocalTranslation( -2, -0.5f, -1 );
+    	aGeometry.subtractShape( aBox );
+
     	aGeometry.regenerate();
     	rootNode.attachChild( aGeometry );
+    	
+//    	rootNode.attachChild(SkyFactory.createSky(
+//                assetManager, "Textures/Sky/Bright/BrightSky.dds", false));
+    	rootNode.attachChild(SkyFactory.createSky(
+                assetManager, "Textures/Sky/Bright/FullskiesBlueClear03.dds", false));
     }
 
     

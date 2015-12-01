@@ -37,6 +37,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
+import com.jme3.terrain.heightmap.HeightMap;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TangentBinormalGenerator;
 
@@ -227,9 +228,14 @@ public class CSGSurface
         mScale = (Vector3f)inCapsule.readSavable( "scale", Vector3f.UNIT_XYZ );
         
         // Expect some help with the height map data
-        Object heightHelper = inCapsule.readSavable( "heightMap", null );
-        
-
+        CSGHeightMapGenerator heightHelper 
+        	= (CSGHeightMapGenerator)inCapsule.readSavable( "heightMap", null );
+        if ( heightHelper != null ) {
+        	HeightMap aMap = heightHelper.getHeightMap();
+        	if ( aMap != null ) {
+        		mHeightData = aMap.getScaledHeightMap();
+        	}
+        }
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
     }

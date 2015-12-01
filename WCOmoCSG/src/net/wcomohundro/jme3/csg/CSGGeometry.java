@@ -317,6 +317,16 @@ public class CSGGeometry
 					case SKIP:
 						// This shape is not taking part
 						break;
+						
+					case MERGE:
+						if ( aProduct == null ) {
+							// A place to start
+							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+						} else {
+							// Treat a compound mesh as a single mesh
+							aProduct = aProduct.merge( aShape.refresh(), meshManager, tempVars, pEnvironment );
+						}
+						break;
 					}
 				}
 				if ( aProduct != null ) {

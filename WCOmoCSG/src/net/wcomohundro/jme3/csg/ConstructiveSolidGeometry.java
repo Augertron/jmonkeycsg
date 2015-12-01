@@ -181,10 +181,13 @@ public interface ConstructiveSolidGeometry
 	/** Supported actions applied to the CSGShapes */
 	public static enum CSGOperator
 	{
-		UNION
-	,	DIFFERENCE
-	,	INTERSECTION
-	,	SKIP
+		UNION			// The addition of all surfaces from both shapes
+	,	DIFFERENCE		// The removal of one shape's surfaces from the other shape
+	,	INTERSECTION	// The surfaces in common across the two shapes
+	
+	,	SKIP			// Special Handling: just skip this shape in the blending process
+	,	MERGE			// Special Handling: add surfaces without normal UNION processing
+						// (in other words, treat all the triangles in two meshes as a single mesh)
 	}
 	
 	/** Basic CSGElement interface that provides standard Material/Light/Physics
