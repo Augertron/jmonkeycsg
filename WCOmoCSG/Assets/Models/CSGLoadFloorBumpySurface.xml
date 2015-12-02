@@ -1,0 +1,282 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode fname='FloorSamples'>
+    <library>
+       	<com.jme3.light.AmbientLight name='ALightBright' id='ALightBright' enabled='true'>
+       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+       	</com.jme3.light.AmbientLight>
+       	<com.jme3.light.AmbientLight name='ALight' id='ALight' enabled='true'>
+       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+       	</com.jme3.light.AmbientLight>
+       	<com.jme3.light.AmbientLight name='ALightDim' id='ALightDim' enabled='true'>
+       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
+       	</com.jme3.light.AmbientLight>
+       	
+        <com.jme3.light.DirectionalLight name='DLight' id='DLight' enabled='true' 
+       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+       	</com.jme3.light.DirectionalLight>
+
+    	<!-- Just a cube -->
+        <com.jme3.scene.Geometry name='ABox' id='ABox'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' yExtent='10'/>
+        </com.jme3.scene.Geometry>
+
+	</library>
+    <children>
+        <com.jme3.scene.Geometry name='SimpleHillFloor'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-5' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+    		<mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+          		<faceProperties>
+					<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+							face='SURFACE' scaleX='1032' scaleY='1032'/>
+            	</faceProperties>
+		        <heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='HILL' size='129' scale='0.025' seed='12345' />
+		    </mesh>
+    	</com.jme3.scene.Geometry>
+
+		<net.wcomohundro.jme3.csg.CSGGeometry name='BlendedHillFloor' 
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='false'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-40' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Surface'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+		          		<faceProperties>
+							<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+									face='SURFACE' scaleX='1032' scaleY='1032'/>
+		            	</faceProperties>
+		            	<heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='HILL' size='129' scale='0.025' seed='12345' />
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+		        <net.wcomohundro.jme3.csg.CSGShape name='ABox' 
+		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
+		        	<spatial ref='ABox'/>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <com.jme3.scene.Geometry name='SimpleFaultFloor'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-75' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+    		<mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+          		<faceProperties>
+					<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+							face='SURFACE' scaleX='1032' scaleY='1032'/>
+            	</faceProperties>
+		        <heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='FAULT' size='129' scale='0.025' seed='12345' />
+		    </mesh>
+    	</com.jme3.scene.Geometry>
+
+		<net.wcomohundro.jme3.csg.CSGGeometry name='BlendedFaultFloor' 
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='false'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-110' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Surface'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+		          		<faceProperties>
+							<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+									face='SURFACE' scaleX='1032' scaleY='1032'/>
+		            	</faceProperties>
+		            	<heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='FAULT' size='129' scale='0.025' seed='12345' />
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+		        <net.wcomohundro.jme3.csg.CSGShape name='ABox' 
+		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
+		        	<spatial ref='ABox'/>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <com.jme3.scene.Geometry name='SimpleFluidFloor'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-145' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+    		<mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+          		<faceProperties>
+					<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+							face='SURFACE' scaleX='1032' scaleY='1032'/>
+            	</faceProperties>
+		        <heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='FLUID' size='129' scale='0.025' seed='12345' />
+		    </mesh>
+    	</com.jme3.scene.Geometry>
+
+		<net.wcomohundro.jme3.csg.CSGGeometry name='BlendedFluidFloor' 
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='false'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-180' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Surface'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+		          		<faceProperties>
+							<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+									face='SURFACE' scaleX='1032' scaleY='1032'/>
+		            	</faceProperties>
+		            	<heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='FLUID' size='129' scale='0.025' seed='12345' />
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+		        <net.wcomohundro.jme3.csg.CSGShape name='ABox' 
+		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
+		        	<spatial ref='ABox'/>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <com.jme3.scene.Geometry name='SimpleDisplacementFloor'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-215' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+    		<mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+          		<faceProperties>
+					<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+							face='SURFACE' scaleX='1032' scaleY='1032'/>
+            	</faceProperties>
+		        <heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='DISPLACEMENT' size='129' scale='0.025' seed='12345' />
+		    </mesh>
+    	</com.jme3.scene.Geometry>
+
+		<net.wcomohundro.jme3.csg.CSGGeometry name='BlendedDisplacementFloor' 
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='false'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-250' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Surface'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+		          		<faceProperties>
+							<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+									face='SURFACE' scaleX='1032' scaleY='1032'/>
+		            	</faceProperties>
+		            	<heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='DISPLACEMENT' size='129' scale='0.025' seed='12345' />
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+		        <net.wcomohundro.jme3.csg.CSGShape name='ABox' 
+		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
+		        	<spatial ref='ABox'/>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <com.jme3.scene.Geometry name='SimpleParticleFloor'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-285' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+    		<mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+          		<faceProperties>
+					<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+							face='SURFACE' scaleX='1032' scaleY='1032'/>
+            	</faceProperties>
+		        <heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='PARTICLE' size='129' scale='0.025' seed='12345' />
+		    </mesh>
+    	</com.jme3.scene.Geometry>
+
+		<net.wcomohundro.jme3.csg.CSGGeometry name='BlendedParticleFloor' 
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='false'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-320' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Surface'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+		          		<faceProperties>
+							<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+									face='SURFACE' scaleX='1032' scaleY='1032'/>
+		            	</faceProperties>
+		            	<heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='PARTICLE' size='129' scale='0.025' seed='12345' />
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+		        <net.wcomohundro.jme3.csg.CSGShape name='ABox' 
+		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
+		        	<spatial ref='ABox'/>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+    </children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

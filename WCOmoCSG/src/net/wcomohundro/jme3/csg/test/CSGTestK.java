@@ -41,6 +41,7 @@ import com.jme3.scene.shape.Sphere;
 import com.jme3.scene.shape.Surface;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.util.SkyFactory;
+import com.jme3.util.SkyFactory.EnvMapType;
 import com.jme3.util.TangentBinormalGenerator;
 
 
@@ -121,8 +122,10 @@ public class CSGTestK
     	
 //    	rootNode.attachChild(SkyFactory.createSky(
 //                assetManager, "Textures/Sky/Bright/BrightSky.dds", false));
-    	rootNode.attachChild(SkyFactory.createSky(
-                assetManager, "Textures/Sky/Bright/FullskiesBlueClear03.dds", false));
+    	rootNode.attachChild(
+    		SkyFactory.createSky( assetManager
+    				              , "Textures/Sky/Bright/FullskiesBlueClear03.dds"
+    				              , EnvMapType.CubeMap ));
     }
 
     

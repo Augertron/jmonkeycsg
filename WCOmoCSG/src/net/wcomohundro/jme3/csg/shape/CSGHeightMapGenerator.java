@@ -83,6 +83,25 @@ public class CSGHeightMapGenerator
 		private Class	mMapClass;
 		private HeightMapType( Class pClass ) { mMapClass = pClass; }
 	}
+	
+	/** Enumerated fault types */
+	public enum FaultMapTypeShape {
+		// The types
+		STEP( FaultHeightMap.FAULTTYPE_STEP )
+	,   LINEAR( FaultHeightMap.FAULTTYPE_LINEAR )
+	,   COSINE( FaultHeightMap.FAULTTYPE_COSINE )
+	,   SINE( FaultHeightMap.FAULTTYPE_SINE )
+	
+		// The shapes
+	,   LINE( FaultHeightMap.FAULTSHAPE_LINE )
+	,   CIRCLE( FaultHeightMap.FAULTSHAPE_CIRCLE )
+	;
+		// The associated class
+		private int		mFaultTypeValue;
+		private FaultMapTypeShape( int pValue ) { mFaultTypeValue = pValue; }
+		
+		public int getValue() { return mFaultTypeValue; }
+	}
 
 	/** The type of height map to produce */
 	protected HeightMapType		mMapType;
@@ -117,23 +136,85 @@ public class CSGHeightMapGenerator
         InputCapsule in = pImporter.getCapsule(this);
         
         mMapType = in.readEnum( "type", HeightMapType.class, HeightMapType.HILL );
+    	int extent = in.readInt( "size", 257 );
+    	int iterations = in.readInt( "iterations", 100 );
+    	long seed = in.readLong( "seed", 0 );
+    	if ( seed == 0 ) seed = new Random().nextLong();
+    	
         try { switch( mMapType ) {
         case HILL:
-        	int extent = in.readInt( "size", 257 );
-        	int iterations = in.readInt( "iterations", 100 );
         	float minRadius = in.readFloat( "minRadius", 10.0f );
         	float maxRadius = in.readFloat( "maxRadius", 25.0f );
-        	long seed = in.readLong( "seed", 0 );
-        	if ( seed == 0 ) seed = new Random().nextLong();
         	mHeightMap = new HillHeightMap( extent, iterations, minRadius, maxRadius, seed );
         	
+        	break;
+        	
+        case FAULT:
+        	FaultMapTypeShape faultType 
+        		= in.readEnum( "faultType", FaultMapTypeShape.class, FaultMapTypeShape.STEP );
+        	FaultMapTypeShape faultShape
+    			= in.readEnum( "faultShape", FaultMapTypeShape.class, FaultMapTypeShape.LINE );
+        	float minFaultHeight = in.readFloat( "minHeight", 10.0f );
+        	float maxFaultHeight = in.readFloat( "maxHeight", 25.0f );
+        	mHeightMap = new FaultHeightMap( extent
+        									,	iterations
+        									,	faultType.getValue()
+        									, 	faultShape.getValue()
+        									, 	minFaultHeight
+        									, 	maxFaultHeight
+        									, 	seed );
+        	break;
+        	
+        case FLUID:
+        	float minInitialHeight = in.readFloat( "minInitialHeight", -100.0f );
+        	float maxInitialHeight = in.readFloat( "maxHeight", 100.0f );
+        	float viscosity = in.readFloat( "viscosity", 100.0f );
+        	float waveSpeed = in.readFloat( "waveSpeed", 100.0f );
+        	float timeStep = in.readFloat( "timeStep", 0.033f );
+        	float nodeDistance = in.readFloat( "nodeDistance", 10.0f );
+        	mHeightMap = new FluidSimHeightMap( extent
+        									,	iterations
+        									, 	minInitialHeight
+        									, 	maxInitialHeight
+        									,	viscosity
+        									,	waveSpeed
+        									,	timeStep
+        									,	nodeDistance
+        									, 	seed );
+        	break;
+        	
+        case DISPLACEMENT:
+        	float range = in.readFloat( "range", 1.0f );
+        	float persistence = in.readFloat( "persistence", 0.5f );
+        	mHeightMap = new MidpointDisplacementHeightMap( extent, range, persistence, seed );
+        	
+        	break;
+
+        case PARTICLE:
+        	int jumps = in.readInt( "jumps", 50 );
+        	int peakWalk = in.readInt( "peakWalk", 5 );
+        	int minParticles = in.readInt( "minParticles", 10 );
+        	int maxParticles = in.readInt( "maxParticles", 25 );
+        	float caldera = in.readFloat( "caldera", 0.5f );
+        	mHeightMap = new ParticleDepositionHeightMap( extent
+        									, jumps
+        									, peakWalk
+        									, minParticles
+        									, maxParticles
+        									, caldera );
+        	break;
+        	
+        default:
+        	throw new IllegalArgumentException( "Not yet supported: " + mMapType );
+        	
+        } } catch( Exception ex ) {
+        	throw new IOException( "HeightMap generation failed", ex );
+        }
+        if ( mHeightMap != null ) {
         	float scale = in.readFloat( "scale", Float.NaN );
         	if ( !Float.isNaN( scale ) ) {
         		mHeightMap.setHeightScale( scale );
-        	}
-        	break;
-        } } catch( Exception ex ) {
-        	throw new IOException( "HeightMap generation failed", ex );
+        	}        	
         }
     }
 

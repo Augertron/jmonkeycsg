@@ -17,7 +17,7 @@
             		textureMode='FLAT'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5PI' scaleY='1.1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.1PI' scaleY='1.5'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -31,7 +31,7 @@
             		textureMode='FLAT_LINEAR'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.1' scaleY='1.5PI'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5' scaleY='2.2PI'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>

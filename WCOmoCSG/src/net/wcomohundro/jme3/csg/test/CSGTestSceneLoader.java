@@ -104,6 +104,8 @@ public class CSGTestSceneLoader
 	/** String to post */
 	protected Stack<String>		mPostText;
 	protected boolean			mRefreshText;
+	/** Active item for wireframe display */
+	protected Geometry			mWireframe;
     /** Prepared Physics Environment, using jBullet */
     protected BulletAppState    mPhysicsState;
 	/** Capture file path */
@@ -223,11 +225,16 @@ public class CSGTestSceneLoader
         ,   new KeyTrigger( KeyInput.KEY_R ) );
         inputManager.addMapping( "pickItem"
         ,   new MouseButtonTrigger( MouseInput.BUTTON_RIGHT ) );
+        inputManager.addMapping( "wireframe"
+        ,   new MouseButtonTrigger( 3 ) );
+        inputManager.addMapping( "wireframe"
+        ,   new MouseButtonTrigger( 4 ) );
         
         ActionListener aListener = createActionListener(); 
         inputManager.addListener( aListener, "nextScene" );
         inputManager.addListener( aListener, "priorScene" );
         inputManager.addListener( aListener, "pickItem" );
+        inputManager.addListener( aListener, "wireframe" );
         
         if ( mCapturePath != null ) {
         	inputManager.addListener( aListener, "video" );
@@ -267,7 +274,13 @@ public class CSGTestSceneLoader
                 	// Report on the click
                 	mPostText.push( resolveSelectedItem() );
                 	mRefreshText = true;
-
+                	
+                } else if ( pName.equals( "wireframe" ) ) {
+                	// Report on the click
+                	mWireframe = resolveSelectedGeometry();
+                	if ( mWireframe != null ) {
+                		mWireframe.getMaterial().getAdditionalRenderState().setWireframe( true );
+                	}
                 } else if ( pName.equals( "video" ) ) {
                 	// Toggle the video capture
                 	if ( mVideoCapture == null ) {
@@ -285,6 +298,12 @@ public class CSGTestSceneLoader
             	if ( pName.equals( "pickItem" ) ) {
             		if ( !mPostText.isEmpty() ) mPostText.pop();
             		mRefreshText = true;
+            		
+            	} else if ( pName.equals( "wireframe" ) ) {
+            		if ( mWireframe != null ) {
+                		mWireframe.getMaterial().getAdditionalRenderState().setWireframe( false );            			
+            			mWireframe = null;
+            		}
             	}
             }
         }
@@ -311,7 +330,14 @@ public class CSGTestSceneLoader
     protected String resolveSelectedItem(
     ) {
     	String itemName = "...nothiing...";
-    	
+    	Geometry picked = resolveSelectedGeometry();
+    	if ( picked != null ) {
+    		itemName = picked.getName();
+    	}
+    	return( itemName );
+    }
+    protected Geometry resolveSelectedGeometry(
+    ) {
     	// Cast a ray in the direction of the camera and see what gets hit
         CollisionResults results = new CollisionResults();
         
@@ -329,10 +355,10 @@ public class CSGTestSceneLoader
 	        mLastScene.collideWith( aRay, results );
 	        if ( results.size() > 0 ) {
 	        	Geometry selectedItem = results.getClosestCollision().getGeometry();
-	        	itemName = selectedItem.getName();
+	        	return( selectedItem );
 	        }
         }
-    	return( itemName );
+    	return( null );
     }
 
     /////////////////////// Implement Runnable ////////////////
