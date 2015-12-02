@@ -186,7 +186,9 @@ public class CSGPlaceholderCollisionShape
     	
     	// A MeshCollsionShape is what is desired
         Mesh aMesh = pGeometry.getMesh();
-        if ( (aMesh != null) && (aMesh.getMode() == Mesh.Mode.Triangles) ) {
+        if ( (aMesh != null) 
+        && (aMesh.getTriangleCount() > 0)
+        && (aMesh.getMode() == Mesh.Mode.Triangles) ) {
             CollisionShape childShape = new MeshCollisionShape( aMesh );
             
             Transform aTransform = getTransform( pGeometry, useRoot, pTempTransform );

@@ -43,9 +43,11 @@ import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
+import com.jme3.light.LightList;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -198,6 +200,9 @@ public interface ConstructiveSolidGeometry
 		/** Is this a valid element */
 		public boolean isValid();	
 		
+		/** Unique keystring identifying this element */
+		public String getInstanceKey();
+		
 	    /** Accessor to the Material (ala Geometry) 
 		 		NOTE that setMaterial() is defined by Spatial, but setDefaultMaterial
 		 			 is more meaningful for CSG elements
@@ -212,8 +217,15 @@ public interface ConstructiveSolidGeometry
 			Material	pMaterial
 		);
 		
+		/** Accessor to the light list (ala Spatial) */
+		public LightList getLocalLightList();
+		
+		/** Accessor to the transform */
+		public Transform getLocalTransform();
+		
 		/** Test if this Element has its own custom physics defined */
 		public boolean hasPhysics();
+		public PhysicsControl getPhysics();
 		/** If physics is active for the element, connect it all up now */
 		public void applyPhysics(
 			PhysicsSpace		pPhysicsSpace

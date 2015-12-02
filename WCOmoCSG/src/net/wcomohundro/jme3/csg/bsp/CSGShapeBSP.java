@@ -418,7 +418,7 @@ public class CSGShapeBSP
 
 		CSGShapeBSP aHandler = new CSGShapeBSP( null, a.allPolygons( null ) );
 		aHandler.setCorrupt( a, b );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), aHandler.isValid() );
 		return( aShape );
 	}
 	
@@ -451,7 +451,7 @@ public class CSGShapeBSP
 
 		CSGShapeBSP aHandler = new CSGShapeBSP( null, a.allPolygons( null ) );
 		aHandler.setCorrupt( a, b );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), aHandler.isValid() );
         return( aShape );
 	}
 

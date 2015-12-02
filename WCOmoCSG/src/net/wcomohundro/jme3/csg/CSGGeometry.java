@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
+import java.util.logging.Level;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.bullet.control.PhysicsControl;
@@ -97,6 +98,9 @@ public class CSGGeometry
 	public static final String sCSGGeometryRevision="$Rev$";
 	public static final String sCSGGeometryDate="$Date$";
 
+	
+	/** Unique identifier */
+	protected String			mInstanceKey;
 	/** The list of child shapes (each annotated with an action as it is added) */
 	protected List<CSGShape>	mShapes;
 	/** Template of light control to apply transforms */
@@ -123,6 +127,7 @@ public class CSGGeometry
 		String	pName
 	) {
 		super( pName );
+		mInstanceKey = CSGShape.assignInstanceKey( "CSGGeometry" );
 	}
 	/** Constructor on a name and given mesh */
 	public CSGGeometry(
@@ -130,8 +135,18 @@ public class CSGGeometry
 	,	Mesh	pMesh
 	) {
 		super( pName, pMesh );
+		mInstanceKey = CSGShape.assignInstanceKey( "CSGGeometry" );
 	}
 	
+	/** Unique instance identifier */
+	@Override
+	public String getInstanceKey() { return mInstanceKey; }
+	
+	/** Is this a valid geometry */
+	@Override
+	public boolean isValid() { return mIsValid; }
+	
+
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
 	 	a material
@@ -148,6 +163,8 @@ public class CSGGeometry
     /** Test if this Spatial has its own custom physics defined */
     @Override
     public boolean hasPhysics() { return mPhysics != null; }
+    @Override
+    public PhysicsControl getPhysics() { return mPhysics; }
     
     /** If physics is active for the shape, connect it all up now */
     @Override
@@ -170,10 +187,6 @@ public class CSGGeometry
 	/** Accessor to the debug mesh control flag */
 	public boolean isDebugMesh() { return mDebugMesh; }
 	public void setDebugMesh( boolean pFlag ) { mDebugMesh = pFlag; }
-	
-	/** Is this a valid geometry */
-	@Override
-	public boolean isValid() { return mIsValid; }
 	
     /** Include a shape */
 	@Override
@@ -272,7 +285,7 @@ public class CSGGeometry
 			long startTimer = System.nanoTime();
 			
 			// The mesh manager does not do much for a single mesh
-			CSGMeshManager meshManager = new CSGMeshManager( this.getMaterial(), true );
+			CSGMeshManager meshManager = new CSGMeshManager( this, true );
 			
 			// Sort the shapes based on their operator (as needed)
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
@@ -340,7 +353,7 @@ public class CSGGeometry
 					return( mIsValid = aProduct.isValid() );
 				} else {
 					// Nothing interesting produced
-					return( false );
+					return( mIsValid = false );
 				}
 			} finally {
 				tempVars.release();
@@ -352,8 +365,8 @@ public class CSGGeometry
 			return( true );
 			
 		} else {
-			// Nothing of interest
-			return( false );
+			// Could be just a mesh
+			return( mIsValid = (this.mesh != null) );
 		}
 	}
 
@@ -446,20 +459,24 @@ public class CSGGeometry
 		// Rebuild based on the shapes just loaded
 		mIsValid = regenerate();
 		
-        // TangentBinormalGenerator directive
-        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
-        if ( generate ) {
-        	TangentBinormalGenerator.generate( this );
-        }
-        if ( mLightControl != null ) {
-        	// Build a control for every local light to keep its position in synch
-        	// with transforms applied to this Node
-			CSGLightControl.applyLightControl( mLightControl
-												, this.getLocalLightList()
-												, null
-												, this
-												, false );
-        }
+		if ( mIsValid ) {
+	        // TangentBinormalGenerator directive
+	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
+	        if ( generate ) {
+	        	TangentBinormalGenerator.generate( this );
+	        }
+	        if ( mLightControl != null ) {
+	        	// Build a control for every local light to keep its position in synch
+	        	// with transforms applied to this Node
+				CSGLightControl.applyLightControl( mLightControl
+													, this.getLocalLightList()
+													, null
+													, this
+													, false );
+	        }
+		} else {
+			CSGEnvironment.sLogger.log( Level.WARNING, "Geometry invalid: " + this );
+		}
 	}
 	
 	/////// Implement ConstructiveSolidGeometry
@@ -473,5 +490,10 @@ public class CSGGeometry
 													, pBuffer ) );
 	}
 
-
+	////// Debug support
+	@Override
+	public String toString(
+	) {
+		return( (this.name == null) ? getInstanceKey() : getInstanceKey() + "|" + getName() );
+	}
 }

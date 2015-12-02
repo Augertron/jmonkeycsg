@@ -205,9 +205,10 @@ public class CSGShapeIOB
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) { 
-		if ( mFaces.isEmpty() && (mShape.getMesh() != null) ) {
+		Mesh aMesh;
+		if ( mFaces.isEmpty() && ((aMesh = mShape.getMesh()) != null) ) {
 			// Generate the faces
-			mFaces = fromMesh( mShape.getMesh()
+			mFaces = fromMesh( aMesh
 								, mShape.getCSGTransform()
 								, pMaterialManager
 								, pLevelOfDetail
@@ -240,7 +241,7 @@ public class CSGShapeIOB
 							,	pTempVars, pEnvironment );
 		
 		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), this.mShape.isValid() && pOther.isValid() );
 		return( aShape );
 	}
 
@@ -267,7 +268,7 @@ public class CSGShapeIOB
 							,	pTempVars, pEnvironment );
 		
 		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), this.mShape.isValid() && pOther.isValid() );
 		return( aShape );
 	}
 
@@ -294,7 +295,7 @@ public class CSGShapeIOB
 							,	pTempVars, pEnvironment );
 
 		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), this.mShape.isValid() && pOther.isValid() );
 		return( aShape );
 	}
 	
@@ -307,14 +308,21 @@ public class CSGShapeIOB
 	,	CSGEnvironment		pEnvironment
 	) {
 		// This is a simple addition of all the 'other' faces into this face list
-		List<CSGFace> thisFaceList 
-			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+		if ( this.mShape.isValid() ) {
+			if ( pOther.isValid() ) {
+				List<CSGFace> thisFaceList 
+					= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+				
+				CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
+				List<CSGFace> otherFaceList 
+					= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		
-		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
-		List<CSGFace> otherFaceList 
-			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
-
-		this.mFaces.addAll( otherFaceList );
+				this.mFaces.addAll( otherFaceList );
+			} else {
+				// This shape is not valid if merged with an invalid shape
+				this.mShape.setValid( false );
+			}
+		}
 		return( this.mShape );
 	}
 	

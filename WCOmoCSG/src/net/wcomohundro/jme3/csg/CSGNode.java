@@ -92,6 +92,8 @@ public class CSGNode
 	public static final String sCSGNodeDate="$Date$";
 
 	
+	/** Unique identifier */
+	protected String			mInstanceKey;
 	/** The master material */
     protected Material 			mMaterial;
     /** Template transform control to apply to lights */
@@ -116,11 +118,16 @@ public class CSGNode
 		String	pName
 	) {
 		super( pName );
+		mInstanceKey = CSGShape.assignInstanceKey( "CSGNode" );
 	}
 	
 	/** Is this a valid geometry */
 	@Override
 	public boolean isValid() { return mIsValid; }
+	
+	/** Unique keystring identifying this element */
+	@Override
+	public String getInstanceKey() { return mInstanceKey; }
 	
 	/** How long did it take to regenerate this shape */
 	@Override
@@ -202,6 +209,7 @@ public class CSGNode
     }
     
     /** Accessor to the physics */
+    @Override
     public PhysicsControl getPhysics() { return mPhysics; }
     public void setPhysics(
     	PhysicsControl		pPhysics
@@ -360,5 +368,10 @@ public class CSGNode
 													, pBuffer ) );
 	}
 
-
+	////// Debug support
+	@Override
+	public String toString(
+	) {
+		return( (this.name == null) ? getInstanceKey() : getInstanceKey() + "|" + getName() );
+	}
 }

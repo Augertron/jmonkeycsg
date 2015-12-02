@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
+import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
@@ -216,7 +217,7 @@ public class CSGGeonode
 			long startTimer = System.nanoTime();
 			
 			// Prepare for custom materials
-			CSGMeshManager meshManager = new CSGMeshManager( this.getMaterial(), mForceSingleMaterial );
+			CSGMeshManager meshManager = new CSGMeshManager( this, mForceSingleMaterial );
 
 			// Sort the shapes as needed by their handler
 			List<CSGShape> sortedShapes = mShapes.get(0).prepareShapeList( mShapes, pEnvironment );
@@ -301,7 +302,7 @@ public class CSGGeonode
 					return( mIsValid = aProduct.isValid() );
 				} else {
 					// Nothing produced
-					return( false );
+					return( mIsValid = false );
 				}
 			} finally {
 				tempVars.release();
@@ -309,7 +310,7 @@ public class CSGGeonode
 			}
 		} else {
 			// Nothing interesting
-			return( false );
+			return( mIsValid = false );
 		}
 	}
 	
@@ -419,12 +420,16 @@ public class CSGGeonode
 		// Rebuild based on the shapes just loaded
 		mIsValid = regenerate();
 		
-        // TangentBinormalGenerator directive
-        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
-        if ( generate ) {
-        	// The Generator understands working the children of a Node
-        	TangentBinormalGenerator.generate( this );
-        }
+		if ( mIsValid ) {
+	        // TangentBinormalGenerator directive
+	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
+	        if ( generate ) {
+	        	// The Generator understands working the children of a Node
+	        	TangentBinormalGenerator.generate( this );
+	        }
+		} else {
+			CSGEnvironment.sLogger.log( Level.WARNING, "Invalid Geonode: " + this );
+		}
 	}
 	
 	/////// Implement ConstructiveSolidGeometry

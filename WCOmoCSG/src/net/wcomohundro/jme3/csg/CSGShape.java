@@ -54,6 +54,7 @@ import net.wcomohundro.jme3.math.CSGTransform;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
+import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -122,7 +123,7 @@ import com.jme3.util.TempVars;
  */
 public class CSGShape 
 	extends Geometry
-	implements Savable, ConstructiveSolidGeometry
+	implements Savable, ConstructiveSolidGeometry.CSGElement, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
 	public static final String sCSGShapeRevision="$Rev$";
@@ -202,6 +203,14 @@ public class CSGShape
 
 	}
 	
+	/** Service routine to assing unique identifiers */
+	protected static int sInstanceCounter;
+	public static synchronized String assignInstanceKey(
+		String		pSeed
+	) {
+		return( pSeed +  ++sInstanceCounter );
+	}
+	
 	/** Service to create a vector buffer for a given List */
     public static FloatBuffer createVector3Buffer(
     	List<Vector3f> 	pVectors
@@ -272,6 +281,8 @@ public class CSGShape
     
     /** Unique instance marker, suitable as a key */
     protected String					mShapeKey;
+    /** Valid shape flag */
+    protected boolean					mIsValid;
 	/** The active handler that performs shape manipulation */
 	protected CSGShapeProcessor			mHandler;
 	/** The operator applied to this shape as it is added into the geometry */
@@ -288,6 +299,8 @@ public class CSGShape
 	protected PhysicsControl			mPhysics;
 	/** The list of custom Propertes to apply to the various faces of the interior components */
 	protected List<CSGFaceProperties>	mFaceProperties;
+	/** Nanoseconds needed to regenerate this shape */
+	protected long						mRegenNS;
 
 	
 	/** Generic constructor */
@@ -308,7 +321,8 @@ public class CSGShape
 	,	int		pOrder
 	) {
 		super( pShapeName, pMesh );
-		mShapeKey = "Shape" + ++sInstanceMarker;
+		mIsValid = true;
+		mShapeKey = assignInstanceKey( "CSGShape" );
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
 		mSurface = CSGShapeSurface.USE_MESH;
@@ -318,6 +332,7 @@ public class CSGShape
 	,	int		pOrder
 	) {
 		super( pShapeName );	// no mesh provided
+		mIsValid = true;
 		mShapeKey = "Shape" + ++sInstanceMarker;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;		
@@ -337,8 +352,10 @@ public class CSGShape
 	public CSGShape(
 		CSGShapeProcessor	pHandler
 	,	int					pOrder
+	,	boolean				pIsValid
 	) {
 		mHandler = pHandler.setShape( this );
+		mIsValid = pIsValid;
 		mShapeKey = "Shape" + ++sInstanceMarker;
 		mOrder = pOrder;
 		mSurface = CSGShapeSurface.USE_MESH;
@@ -445,8 +462,14 @@ public class CSGShape
 		return( aClone );
 	}
 	
-	/** Accessor to the unique shape instance key */
-	public String getShapeKey() { return mShapeKey; }
+	/** Unique keystring identifying this element */
+	@Override
+	public String getInstanceKey() { return mShapeKey; }
+	
+	/** The shape knows if it is 'valid' or not */
+	@Override
+	public boolean isValid() { return mIsValid; }
+	public void setValid( boolean pFlag ) { mIsValid = pFlag; }
 	
 	/** Mostly internal access to the handler */
 	public CSGShapeProcessor getHandler(
@@ -470,9 +493,6 @@ public class CSGShape
 		return( getHandler( pEnvironment ).prepareShapeList( pShapeList, pEnvironment ) );
 	}
 		
-	/** The shape knows if it is 'valid' or not */
-	public boolean isValid() { return true; }
-	
 	/** Accessor to the mesh that applies to the given surface */
 	public Integer getMeshIndex(
 		CSGMeshManager		pMeshManager
@@ -541,12 +561,35 @@ public class CSGShape
 	}
 	
 	/** Accessor to the Physics */
+	@Override
+	public boolean hasPhysics() { return( mPhysics != null ); }
+	@Override
 	public PhysicsControl getPhysics() { return mPhysics; }
 	public void setPhysics(
 		PhysicsControl		pPhysics
 	) {
 		mPhysics = pPhysics;
 	}
+	@Override
+	public void applyPhysics(
+		PhysicsSpace		pPhysicsSpace
+	,	Node				pRoot
+	) {
+		// Shapes really play no part in the final 'world'
+	}
+	
+    /** Special provisional setMaterial() that does NOT override anything 
+	 	already in force, but supplies a default if any element is missing 
+	 	a material
+	 */
+    @Override
+	public void setDefaultMaterial(
+		Material	pMaterial
+	) {
+    	if ( this.material == null ) {
+    		this.material = pMaterial;
+    	}
+    }
 	
 	/** Add a shape into this one */
 	public CSGShape union(
@@ -616,34 +659,63 @@ public class CSGShape
 	@Override
     public Mesh getMesh(
     ) {
-		if ( mSurface == CSGShapeSurface.USE_MESH ) {
-			// Use what we know
-			return( this.mesh );
-		}
-		// Determine the span of the underlying mesh
-		Vector3f extent = new Vector3f();
-		BoundingVolume aVolume = this.mesh.getBound();
-		switch( aVolume.getType() ) {
-		case AABB:
-			((BoundingBox)aVolume).getExtent( extent );
-			break;
-		case Sphere:
-			float radius = ((BoundingSphere)aVolume).getRadius();
-			extent.set( radius, radius, radius );
-			break;
-		}
-		if ( !extent.equals( Vector3f.ZERO ) ) {
-			switch( mSurface ) {
-			case USE_BOUNDING_BOX:
-				CSGBox aBox = new CSGBox( extent.x, extent.y, extent.z );
-				return( aBox );
-			case USE_BOUNDING_SPHERE:
-				CSGSphere aSphere = new CSGSphere( 32, 32, extent.x );
-				return( aSphere );
+		if ( this.mesh != null ) {
+			if ( mSurface == CSGShapeSurface.USE_MESH ) {
+				// Use what we know
+				return( this.mesh );
+			}
+			// Determine the span of the underlying mesh
+			Vector3f extent = new Vector3f();
+			BoundingVolume aVolume = this.mesh.getBound();
+			switch( aVolume.getType() ) {
+			case AABB:
+				((BoundingBox)aVolume).getExtent( extent );
+				break;
+			case Sphere:
+				float radius = ((BoundingSphere)aVolume).getRadius();
+				extent.set( radius, radius, radius );
+				break;
+			}
+			if ( !extent.equals( Vector3f.ZERO ) ) {
+				switch( mSurface ) {
+				case USE_BOUNDING_BOX:
+					CSGBox aBox = new CSGBox( extent.x, extent.y, extent.z );
+					return( aBox );
+				case USE_BOUNDING_SPHERE:
+					CSGSphere aSphere = new CSGSphere( 32, 32, extent.x );
+					return( aSphere );
+				}
 			}
 		}
 		return( null );
     }
+	
+	/** Action to generate the mesh based on the given shapes
+	 	NOTE
+	 		I am not too sure if this is at all meaningful, but we need it anyway for CSGElement
+	 */
+	@Override
+	public boolean regenerate(
+	) {
+		return( regenerate( CSGEnvironment.sStandardEnvironment ) );		
+	}
+	@Override
+	public boolean regenerate(
+		CSGEnvironment		pEnvironment
+	) {
+		CSGTempVars tempVars = CSGTempVars.get();
+		CSGMeshManager meshManager = new CSGMeshManager( this, false );
+		try {
+			CSGShape aShape = regenerateShape( mSubShapes, meshManager, tempVars, pEnvironment );
+			return( true );
+		} finally {
+			tempVars.release();
+		}
+	}
+	/** How long did it take to build this shape */
+	@Override
+	public long getShapeRegenerationNS() { return mRegenNS; }
+
 
 	/** Make this shape 'savable' */
 	@Override
@@ -691,7 +763,14 @@ public class CSGShape
 			if ( mSubShapes == null ) {
 				// No mesh and no subgroup -- how about a Spatial?
 				Spatial aSpatial = (Spatial)aCapsule.readSavable( "spatial", null );
-				setSpatial( aSpatial, null );
+				
+				if ( aSpatial != null ) {
+					// Base this shape on the given spatial
+					setSpatial( aSpatial, null );
+				} else {
+					// No mesh/subshapes/spatial -- so just what is this???
+					mIsValid = false;
+				}
 			}
 		}
 		// Look for specially configured transform
@@ -740,9 +819,20 @@ public class CSGShape
 				}
 			}
 			return( this );
+		} else {
+			return( regenerateShape( mSubShapes, pMeshManager, pTempVars, pEnvironment ) );
 		}
+	}
+	protected CSGShape regenerateShape(
+		List<CSGShape>		pShapes
+	,	CSGMeshManager		pMeshManager
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironment		pEnvironment
+	) {
+		long startTimeNS = System.nanoTime();
+		
 		// Sort the shapes as needed by their handler
-		List<CSGShape> sortedShapes = prepareShapeList( mSubShapes, pEnvironment );
+		List<CSGShape> sortedShapes = prepareShapeList( pShapes, pEnvironment );
 		
 		// Use this Material as the generic one for all the sub shapes
 		pMeshManager.pushGenericIndex( this.getMaterial(), this );
@@ -803,8 +893,10 @@ public class CSGShape
 			
 		} finally {
 			pMeshManager.popGenericIndex();
+			mRegenNS = System.nanoTime() - startTimeNS;
 		}
 	}
+
 		
 	/////// Implement ConstructiveSolidGeometry
 	@Override
@@ -816,5 +908,13 @@ public class CSGShape
 													, sCSGShapeDate
 													, pBuffer ) );
 	}
+	
+	////// Debug support
+	@Override
+	public String toString(
+	) {
+		return( (this.name == null) ? getInstanceKey() : getInstanceKey() + "|" + getName() );
+	}
+
 }
 
