@@ -12,51 +12,49 @@
     </lights>
     <children>
 		<!-- A standard sphere -->
-        <com.jme3.scene.Geometry name='Sphere1'
+        <com.jme3.scene.Geometry name='ZAxisSphere'
         		materialName='Textures/BrickWall/BrickWall.xml'>
         		<!-- materialName='Textures/Rock/Rock1.xml' -->
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-3.0' y='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
-            	radius='1.1' axisSamples='32' radialSamples='32' textureMode='ZAXIS'
-            	useEvenSlices='false' interior='false'/>
-        </com.jme3.scene.Geometry>
-        
-        <com.jme3.scene.Geometry name='Sphere2'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
-            	radius='1.1' axisSamples='32' radialSamples='32' textureMode='PROJECTED'
-            	useEvenSlices='false' interior='false'/>
+            	radius='1.1' axisSamples='32' radialSamples='32' textureMode='ZAXIS'/>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='Sphere2'
+        
+        <com.jme3.scene.Geometry name='ProjectedSphere'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
-            	radius='1.1' axisSamples='32' radialSamples='32' textureMode='POLAR'
-            	useEvenSlices='false' interior='false'/>
+            	radius='1.1' axisSamples='32' radialSamples='32' textureMode='PROJECTED'/>
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='PolarSphere'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+            	radius='1.1' axisSamples='32' radialSamples='32' textureMode='POLAR'/>
         </com.jme3.scene.Geometry>
 
 		<!-- A low-res sphere -->
-        <com.jme3.scene.Geometry name='Sphere3'
+        <com.jme3.scene.Geometry name='LoResSphere'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-3.0' y='-3.0'/>
+                <translation class='com.jme3.math.Vector3f' x='9.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere'  
-            	radius='1.1' axisSamples='8' radialSamples='8' useEvenSlices='false' interior='false'/>
+            	radius='1.1' axisSamples='8' radialSamples='8'/>
         </com.jme3.scene.Geometry>
         
         <!-- A degenerate sphere -->
-        <com.jme3.scene.Geometry name='Sphere3a'
+        <com.jme3.scene.Geometry name='TriangularSphere'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='-3.0'/>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='0.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
             		radius='1.5' axisSamples='1' radialSamples='3' firstRadial='PI/2' useEvenSlices='true'>
@@ -65,25 +63,54 @@
         </com.jme3.scene.Geometry>
 
         <!-- A sphere with even slices -->
-        <com.jme3.scene.Geometry name='Sphere4'
+        <com.jme3.scene.Geometry name='EvenSliceSphere'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <rot class='com.jme3.math.Quaternion' w='0.9605305' x='0.19470917' y='0.19470917' z='-0.039469503'/>
-                <translation class='com.jme3.math.Vector3f' x='-3.0' y='3.0'/>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='-3.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
-            	radius='1.1' axisSamples='32' radialSamples='32' useEvenSlices='true' interior='false'/>
+            	radius='1.1' axisSamples='32' radialSamples='32' useEvenSlices='true'/>
         </com.jme3.scene.Geometry>
         
         <!-- An 'interior' sphere -->
-        <com.jme3.scene.Geometry name='Sphere5'
+        <com.jme3.scene.Geometry name='InteriorSphere'
         		materialName='Textures/Rock/Rock1.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='3.0' y='3.0'/>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='-3.0'/>
              </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
-            	radius='1.1' axisSamples='32' radialSamples='32' useEvenSlices='false' interior='true'/>
+            	radius='1.1' axisSamples='32' radialSamples='32' useEvenSlices='false' inverted='true'/>
         </com.jme3.scene.Geometry>
+        
+        <!-- A Gradient sphere -->
+        <com.jme3.scene.Geometry name='GradientSphere'
+        		materialName='Textures/Debug/VertexColor.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='-3.0'/>
+             </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+            	radius='1.1' axisSamples='32' radialSamples='32'>
+            	<colorGradient>
+            		<com.jme3.math.ColorRGBA r='0.1' g='0.1' b='0.1'/>
+            		<com.jme3.math.ColorRGBA r='0.9' g='0.9' b='0.9'/>
+            	</colorGradient>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <net.wcomohundro.jme3.csg.CSGGeometry name='BlueGradientRotatedInvertedSphere'
+        		materialName='Textures/Debug/VertexColor.xml'>
+            <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+                <translation class='com.jme3.math.Vector3f' x='15.0' y='-6.0'/>
+                <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='PI/2' />
+             </csgtransform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+            	radius='3' axisSamples='32' radialSamples='32' inverted='true'>
+            	<colorGradient>
+            		<com.jme3.math.ColorRGBA r='0.1' g='0.1' b='0.2'/>
+            		<com.jme3.math.ColorRGBA r='0.2' g='0.2' b='0.9'/>
+            	</colorGradient>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
 
     </children>
 </com.jme3.scene.Node>

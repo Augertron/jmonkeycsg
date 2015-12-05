@@ -1,0 +1,8 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<material class='com.jme3.material.Material' material_def='Common/MatDefs/Misc/Unshaded.j3md'>
+	<parameters>
+	    <MapEntry key='VertexColor'>
+	    	<Savable class='com.jme3.material.MatParam' varType='Boolean' value_bool='true' name='VertexColor'/>
+	    </MapEntry>
+	</parameters>
+</material>

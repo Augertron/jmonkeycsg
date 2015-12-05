@@ -87,6 +87,20 @@ public class CSGTestSceneLoader
 	extends SimpleApplication 
 	implements Runnable
 {
+	public static void main(
+		String[] args
+	) {
+		System.out.println( "logging config: " 
+					+ System.getProperty( "java.util.logging.config.file" )
+					+ "/" + System.getProperty( "java.util.logging.config.class" ) );
+		CSGVersion.reportVersion();
+		
+	    SimpleApplication app;
+	    app = new CSGTestE( args );		// Cycle through imports listed in CSGTestE.txt
+	    app.start();
+	}
+	
+	
 	/** List of available scenes */
 	protected List<String>		mSceneList;
 	/** Which scene is currently being viewed */

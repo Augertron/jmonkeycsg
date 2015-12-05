@@ -121,15 +121,16 @@ public abstract class CSGRadialCapped
     	if ( mFaceProperties != null ) {
 			// Determine the face
 	    	Face aFace = Face.SIDES;
-	    	if ( mClosed ) {
-	    		// If the shape is closed, then we have front and back
-	    		if ( pFaceIndex < mRadialSamples ) {
-	    			// Looks like the SouthPole
-	    			aFace = Face.BACK;
-	    		} else if ( pFaceIndex >= mFirstFrontTriangle ) {
-	    			// Looks like the NorthPole
-	    			aFace= Face.FRONT;
-	    		}
+	    	
+    		// If the shape is closed, then we have front and back
+    		if ( (pFaceIndex < mRadialSamples) 
+    				&& Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+    			// Looks like the SouthPole
+    			aFace = Face.BACK;
+    		} else if ( (pFaceIndex >= mFirstFrontTriangle)  
+    				&& Face.BACK.maskIncludesFace( mGeneratedFacesMask )) {
+    			// Looks like the NorthPole
+    			aFace= Face.FRONT;
 	    	}
 	    	Material aMaterial = resolveFaceMaterial( aFace.getMask() );
 			return( aMaterial );
@@ -147,15 +148,16 @@ public abstract class CSGRadialCapped
     	if ( mFaceProperties != null ) {
 			// Determine the face
 	    	Face aFace = Face.SIDES;
-	    	if ( mClosed ) {
-	    		// If the shape is closed, then we have front and back
-	    		if ( pFaceIndex < mRadialSamples ) {
-	    			// Looks like the SouthPole
-	    			aFace = Face.BACK;
-	    		} else if ( pFaceIndex >= mFirstFrontTriangle ) {
-	    			// Looks like the NorthPole
-	    			aFace= Face.FRONT;
-	    		}
+	    	
+    		// If the shape is closed, then we have front and back
+    		if ( (pFaceIndex < mRadialSamples) 
+    				&& Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+    			// Looks like the SouthPole
+    			aFace = Face.BACK;
+    		} else if ( (pFaceIndex >= mFirstFrontTriangle)  
+    				&& Face.BACK.maskIncludesFace( mGeneratedFacesMask )) {
+    			// Looks like the NorthPole
+    			aFace= Face.FRONT;
 	    	}
 	    	PhysicsControl aPhysics = resolveFacePhysics( aFace.getMask() );
 			return( aPhysics );
@@ -177,45 +179,52 @@ public abstract class CSGRadialCapped
     	int southPoleIndex = -1, northPoleIndex = -1;
     	createGeometry( aContext );
     	
-        if ( mClosed ) { TempVars vars = TempVars.get(); try {
+        TempVars vars = TempVars.get(); 
+        try {
         	// Two extra vertices for the centers of the end caps
-        	southPoleIndex = aContext.mIndex++;
-        	//aContext.mPosBuf.put( 0 ).put( 0 ).put( -mExtentZ ); // bottom center
-        	//aContext.mNormBuf.put( 0 ).put( 0 ).put( -1 * (mInverted ? -1 : 1) );
-        	
-        	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, -1 );
-        	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, -1 );
-            aContext.mPosBuf.put( aContext.mPosVector.x )
-            				.put( aContext.mPosVector.y )
-            				.put( aContext.mPosVector.z );
+    		// If the shape is closed, then we have front and back
+    		if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
+    			// Include the back/south pole
+            	southPoleIndex = aContext.mIndex++;
+            	//aContext.mPosBuf.put( 0 ).put( 0 ).put( -mExtentZ ); // bottom center
+            	//aContext.mNormBuf.put( 0 ).put( 0 ).put( -1 * (mInverted ? -1 : 1) );
+            	
+            	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, -1 );
+            	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, -1 );
+                aContext.mPosBuf.put( aContext.mPosVector.x )
+                				.put( aContext.mPosVector.y )
+                				.put( aContext.mPosVector.z );
 
-        	aContext.mNormVector = getCenterNormal( vars.vect4, aContext, -1 );
-            aContext.mNormBuf.put( aContext.mNormVector.x )
-            				.put( aContext.mNormVector.y )
-            				.put( aContext.mNormVector.z );
+            	aContext.mNormVector = getCenterNormal( vars.vect4, aContext, -1 );
+                aContext.mNormBuf.put( aContext.mNormVector.x )
+                				.put( aContext.mNormVector.y )
+                				.put( aContext.mNormVector.z );
 
-            aContext.mTexBuf.put( 0.5f ).put( 0.5f );
-            
-        	northPoleIndex = aContext.mIndex++;
-            //aContext.mPosBuf.put( 0).put( 0 ).put( mExtentZ); // top center
-            //aContext.mNormBuf.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
-        	
-        	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, 1 );
-        	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, 1 );
-            aContext.mPosBuf.put( aContext.mPosVector.x )
-            				.put( aContext.mPosVector.y )
-            				.put( aContext.mPosVector.z );
-
-        	aContext.mNormVector = getCenterNormal( vars.vect4, aContext, 1 );
-            aContext.mNormBuf.put( aContext.mNormVector.x )
-            				.put( aContext.mNormVector.y )
-            				.put( aContext.mNormVector.z );
-
-            aContext.mTexBuf.put( 0.5f ).put( 0.5f );
+                aContext.mTexBuf.put( 0.5f ).put( 0.5f );
+    		}
+    		if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+    			// Include the front/north pole
+	        	northPoleIndex = aContext.mIndex++;
+	            //aContext.mPosBuf.put( 0).put( 0 ).put( mExtentZ); // top center
+	            //aContext.mNormBuf.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
+	        	
+	        	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, 1 );
+	        	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, 1 );
+	            aContext.mPosBuf.put( aContext.mPosVector.x )
+	            				.put( aContext.mPosVector.y )
+	            				.put( aContext.mPosVector.z );
+	
+	        	aContext.mNormVector = getCenterNormal( vars.vect4, aContext, 1 );
+	            aContext.mNormBuf.put( aContext.mNormVector.x )
+	            				.put( aContext.mNormVector.y )
+	            				.put( aContext.mNormVector.z );
+	
+	            aContext.mTexBuf.put( 0.5f ).put( 0.5f );
+    		}
         } finally {
         	// Return the borrowed vectors
         	vars.release();
-        }}
+        }
         // The poles are represented by a single point
         VertexBuffer idxBuffer 
         	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, true );
@@ -415,6 +424,7 @@ public abstract class CSGRadialCapped
     	super.write( pExporter );
     	
         OutputCapsule outCapsule = pExporter.getCapsule( this );
+        outCapsule.write( mGeneratedFacesMask, "generateFaces", Face.SIDES.getMask() | Face.FRONT_BACK.getMask() );
         outCapsule.write( mRadiusBack, "radius2", mRadius );
         outCapsule.write( mTextureMode, "textureMode", TextureMode.FLAT );
     }
@@ -422,11 +432,14 @@ public abstract class CSGRadialCapped
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
+        InputCapsule inCapsule = pImporter.getCapsule( this );
+
         // Let the super do its thing
         super.read( pImporter );
-
-        InputCapsule inCapsule = pImporter.getCapsule( this );
-        
+        if ( mGeneratedFacesMask == 0 ) {
+        	mGeneratedFacesMask = Face.SIDES.getMask();
+        	setClosed( inCapsule.readBoolean( "closed", true ) );
+        }
         // The super will have read 'radius'
         mRadiusBack = inCapsule.readFloat( "radius2", mRadius );
         mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.FLAT );
@@ -468,28 +481,26 @@ public abstract class CSGRadialCapped
         // is no puck with an edge.  Instead, the triangles describe the flat closed face.
         // For that, we will have 2 extra vertices that describe the center of the face.
         int index = 0;
-        int aSliceCount = (mClosed) ? mAxisSamples + 2 : mAxisSamples;
+        int aSliceCount = mAxisSamples;
+        if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
+        	aSliceCount += 1;
+        }
+        if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+        	aSliceCount += 1;
+        }
         int aRadialCount = mRadialSamples + 1;
         for( int axisCount = 0; axisCount < aSliceCount; axisCount += 1 ) {
             Face whichFace = Face.NONE;
-            if ( mClosed ) {
-            	// The first slice is the closed bottom, and the last slice is the closed top
-                if (axisCount == 0) {
-                	if ( doBack ) {
-                		// Actively processing the back
-                		whichFace = Face.BACK;
-                	}
-                } else if (axisCount == aSliceCount - 1) {
-                	if ( doFront ) {
-                		// Actively processing the front
-                		whichFace = Face.FRONT;
-                	}
-                } else {
-                	if ( doSides ) {
-                		// Actively processing the sides
-                		whichFace = Face.SIDES;
-                	}
-                }
+            if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) && (axisCount == 0) ) {
+            	// The first slice is the closed bottom
+            	if ( doBack  ) {
+            		whichFace = Face.BACK;
+            	}
+            } else if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) && (axisCount == aSliceCount - 1) ) {
+            	// The last slice is the closed top
+            	if ( doFront ) {
+            		whichFace = Face.FRONT;
+                } 
             } else {
             	if ( doSides ) {
             		// Actively processing the sides
@@ -506,9 +517,11 @@ public abstract class CSGRadialCapped
             	}
             }
     	}
-        if ( mClosed ) {
+        if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
         	// Two extra vertices for the centers of the end caps
         	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, doBack );
+        }
+        if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
         	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, doFront );
         }
     	aBuffer.clear();
@@ -559,11 +572,11 @@ class CSGRadialCappedContext
     CSGRadialCappedContext(
     	int							pAxisSamples
     ,	int							pRadialSamples
-    ,	boolean						pClosed
+    ,	int							pGeneratedFacesMask
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
     ) {	
-    	initializeContext( pAxisSamples, pRadialSamples, pClosed );
+    	initializeContext( pAxisSamples, pRadialSamples, pGeneratedFacesMask );
     	
     	// Account for the span of the texture on the end caps
     	switch( pTextureMode ) {
@@ -588,11 +601,17 @@ class CSGRadialCappedContext
     @Override
     protected int resolveSliceCount(
     	int			pAxisSamples
-    ,	boolean		pIsClosed
+    ,	int			pGeneratedFacesMask
     ) {
 		// Even though the north/south poles are a single point, we need to 
 		// generate different textures and normals for the two EXTRA end slices if closed
-    	int sliceCount = (pIsClosed) ? pAxisSamples + 2 : pAxisSamples;
+    	int sliceCount = pAxisSamples;
+    	if ( Face.BACK.maskIncludesFace( pGeneratedFacesMask ) ) {
+    		sliceCount += 1;
+    	}
+    	if ( Face.FRONT.maskIncludesFace( pGeneratedFacesMask ) ) {
+    		sliceCount += 1;
+    	}
     	return( sliceCount );
     }
 
@@ -601,11 +620,17 @@ class CSGRadialCappedContext
     protected int resolveVetexCount(
     	int			pSliceCount
     ,	int			pRadialSamples
-    ,	boolean		pIsClosed
+    ,	int			pGeneratedFacesMask
     ) {
     	// The cylinder has RadialSamples (+1 for the overlapping end point) times the number of slices
     	// plus the 2 polar center points if closed
-    	int vertCount = (pSliceCount * (pRadialSamples + 1)) + (pIsClosed ? 2 : 0);
+    	int vertCount = pSliceCount * (pRadialSamples + 1);
+    	if ( Face.BACK.maskIncludesFace( pGeneratedFacesMask ) ) {
+    		vertCount += 1;
+    	}
+    	if ( Face.FRONT.maskIncludesFace( pGeneratedFacesMask ) ) {
+    		vertCount += 1;
+    	}
     	return( vertCount );
     }
 

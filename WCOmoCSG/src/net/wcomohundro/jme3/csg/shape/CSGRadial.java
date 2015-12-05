@@ -50,6 +50,7 @@ import java.nio.ShortBuffer;
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
 
 
@@ -271,16 +272,22 @@ public abstract class CSGRadial
         	// Only samples take up space, not the flat end caps
         	pContext.mZAxisUniformPercent /= (mAxisSamples -1);
         } else {
-        	// Every slice, including the non-flat end caps consume space
-        	if ( mClosed ) {
-        		// North and South poles consume space along z
-        		pContext.mZAxisUniformPercent /= (pContext.mSliceCount - 1);
+        	// Every slice, including the non-flat end caps consume space if they
+        	// are in use
+        	int countBias = 1;
+        	if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
+        		// Closed at the back, so account for space along z
+        		countBias -= 1;
         	} else {
-        		// North and South poles still consume space, but we are not
-        		// producing triangles for them so they are not in the slice count
-        		pContext.mZAxisUniformPercent /= (pContext.mSliceCount + 1);
+        		// No back face, so skip the first Z offset
         		pContext.mZOffset = 1;
         	}
+        	if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+        		// Closed at the front, so account for space along z
+        		countBias -= 1;
+        	}
+        	// How far along Z we take with each step
+        	pContext.mZAxisUniformPercent /= (pContext.mSliceCount + countBias );
         }
         // Generate points on the unit circle to be used in computing the mesh
         // points on a sphere slice.
@@ -295,14 +302,14 @@ public abstract class CSGRadial
 	        	// If closed, zIndex == 0 is the backface (-1), zIndex == sliceCount-1 is the frontface (1)
 	        	int aSurface = 0;					// On the curve/crust
 	        	int zOffsetAdjust = 1;				// Account for change of z offset
-	        	if ( mClosed && (zIndex == 0) ) {
+	        	if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) && (zIndex == 0) ) {
 	        		// Southpole/Backface
 	        		aSurface = -1;
 	        		southPoleIndex = pContext.mIndex;
 	        		
 	        		if ( mFlatEnds ) zOffsetAdjust = 0;
 	        		
-	        	} else if ( mClosed && (zIndex == pContext.mSliceCount -1) ) {
+	        	} else if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) && (zIndex == pContext.mSliceCount -1) ) {
 	        		// Northpole/Frontface
 	        		aSurface = 1;
 	        		northPoleIndex = pContext.mIndex;
@@ -401,7 +408,8 @@ public abstract class CSGRadial
     ,	boolean				pSinglePoleVertex
     ) {
     	// Accommodate the LOD factor
-    	int triangleCount = pContext.setReductionFactors( pLODFactor, mAxisSamples, mRadialSamples, mClosed );
+    	int triangleCount 
+    		= pContext.setReductionFactors( pLODFactor, mAxisSamples, mRadialSamples, mGeneratedFacesMask );
     	
         // Allocate the indices, 3 points on every triangle
         ShortBuffer idxBuf = BufferUtils.createShortBuffer( 3 * triangleCount );
@@ -413,12 +421,12 @@ public abstract class CSGRadial
             int i0 = iZStart;
             int i1 = i0 + 1;
             
-        	zFactor = pContext.nextSliceFactor( zIndex, mClosed );
+        	zFactor = pContext.nextSliceFactor( zIndex, mGeneratedFacesMask );
             iZStart += (mRadialSamples + 1) * zFactor;
             int i2 = iZStart;
             int i3 = i2 + 1;
             
-        	if ( mClosed && (zIndex == 0) ) {
+        	if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) && (zIndex == 0) ) {
                 // BackFace/SouthPole triangles
                 for( int i = 0; i < mRadialSamples; i += 1 ) {
                 	if ( pSinglePoleVertex ) {
@@ -450,7 +458,7 @@ public abstract class CSGRadial
                 }
                 triangleCounter += mRadialSamples;
                 
-        	} else if ( mClosed && (zIndex == pContext.mSliceCount -2) ) {
+        	} else if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) && (zIndex == pContext.mSliceCount -2) ) {
                 // FrontFace/NorthPole triangles
         		mFirstFrontTriangle = triangleCounter;
         		
@@ -752,10 +760,10 @@ abstract class CSGRadialContext
     protected void initializeContext(
     	int		pAxisSamples
     ,	int		pRadialSamples
-    ,	boolean	pIsClosed
+    ,	int		pGeneratedFacesMask
     ) {	
-    	mSliceCount = resolveSliceCount( pAxisSamples, pIsClosed );
-    	mVertCount = resolveVetexCount( mSliceCount, pRadialSamples, pIsClosed );
+    	mSliceCount = resolveSliceCount( pAxisSamples, pGeneratedFacesMask );
+    	mVertCount = resolveVetexCount( mSliceCount, pRadialSamples, pGeneratedFacesMask );
 
     	mPosBuf = BufferUtils.createVector3Buffer( mVertCount );
         mNormBuf = BufferUtils.createVector3Buffer( mVertCount );
@@ -765,14 +773,14 @@ abstract class CSGRadialContext
     /** How many slices are needed? */
     protected abstract int resolveSliceCount(
     	int			pAxisSamples
-    ,	boolean		pIsClosed
+    ,	int			pGeneratedFacesMask
     );
     
     /** How many vertices are produced? */
     protected abstract int resolveVetexCount(
     	int			pSliceCount
     ,	int			pRadialSamples
-    ,	boolean		pIsClosed
+    ,	int			pGeneratedFacesMask
     );
     
     /** Establish the reduction factors for LOD processing, returning the count of triangles 
@@ -782,7 +790,7 @@ abstract class CSGRadialContext
     	float		pLODFactor
     ,	int			pAxisSamples
     ,	int			pRadialSamples
-    ,	boolean		pClosed
+    ,	int			pGeneratedFacesMask
     ) {
     	// Account for reduction to slices and radial points
     	mSliceReductionFactor = 0;
@@ -812,10 +820,13 @@ abstract class CSGRadialContext
     		}
     	}
         int triCount = 2 * (useAxisSamples -1) * pRadialSamples;
-        if ( pClosed ) {
+        if ( Face.FRONT.maskIncludesFace( pGeneratedFacesMask ) ) {
         	// If the shape is closed, then there is one triangle for every radial point,
-        	// but there are two ends
-        	triCount += 2 * pRadialSamples;
+        	triCount += pRadialSamples;
+        }
+        if ( Face.BACK.maskIncludesFace( pGeneratedFacesMask ) ) {
+        	// If the shape is closed, then there is one triangle for every radial point,
+        	triCount += pRadialSamples;
         }
         return( triCount );
     }
@@ -823,20 +834,20 @@ abstract class CSGRadialContext
     /** For a given slice, how many slices to skip to during LOD processing */
     int nextSliceFactor(
     	int		pZIndex
-    ,	boolean	pClosed
+    ,	int		pGeneratedFacesMask
     ) {
     	// If closed, zIndex == 0 is the backface (-1), zIndex == sliceCount-2 is the frontface (1)
-    	if ( pClosed && (pZIndex == 0) ) {
+    	if ( Face.BACK.maskIncludesFace( pGeneratedFacesMask ) && (pZIndex == 0) ) {
     		// Southpole/Backface does not reduce
     		return( 1 );
     		
-    	} else if ( pClosed && (pZIndex == mSliceCount -2) ) {
+    	} else if ( Face.FRONT.maskIncludesFace( pGeneratedFacesMask ) && (pZIndex == mSliceCount -2) ) {
     		// Northpole/Frontface does not reduce
     		return( 1 );
     	}
     	if ( mSliceReductionFactor > 1 ) {
     		// We cannot skip past the very last slice
-    		int closedBias = (pClosed) ? 2 : 1;
+    		int closedBias = (Face.FRONT.maskIncludesFace( pGeneratedFacesMask )) ? 2 : 1;
     		if ( pZIndex + mSliceReductionFactor > mSliceCount - closedBias ) {
     			// Count of slices left to the last one
     			return( mSliceCount - pZIndex - closedBias );

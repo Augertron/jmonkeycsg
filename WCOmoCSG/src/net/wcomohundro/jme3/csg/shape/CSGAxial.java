@@ -44,6 +44,7 @@ import java.nio.FloatBuffer;
 
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 
 
 
@@ -69,10 +70,6 @@ public abstract class CSGAxial
     protected int 			mAxisSamples;
     /** How tall is the shape along the z axis (where the 'extent' is half the total height) */
     protected float 		mExtentZ;
-    /** If closed, then the front and end caps are produced */
-    protected boolean 		mClosed;
-    /** If inverted, then the cylinder is intended to be viewed from the inside */
-    protected boolean 		mInverted;
 
 
 	protected CSGAxial(
@@ -87,8 +84,8 @@ public abstract class CSGAxial
     ) {
         mAxisSamples = pAxisSamples;
         mExtentZ = pZExtent;
-        mClosed = pClosed;
-        mInverted = pInverted;
+        setClosed( pClosed );
+        setInverted( pInverted );
     }
 
     /** Configuration accessors */
@@ -101,12 +98,21 @@ public abstract class CSGAxial
     public float getHeight() { return mExtentZ * 2; }
     public void setHeight( float pHeight ) { mExtentZ = pHeight / 2.0f; }
     
-    public boolean isClosed() { return mClosed; }
-    public void setClosed( boolean pIsClosed ) { mClosed = pIsClosed; }
-    
-    public boolean isInverted() { return mInverted; }
-    public void setInverted( boolean pIsInverted ) { mInverted = pIsInverted; }
-    
+    /** An Axial is considered 'closed' if the front/back faces are generated */
+    public boolean isClosed(
+    ) { 
+    	return( (mGeneratedFacesMask & Face.FRONT_BACK.getMask()) == Face.FRONT_BACK.getMask() ); 
+    }
+    public void setClosed( 
+    	boolean pIsClosed 
+    ) { 
+    	if ( pIsClosed ) {
+    		mGeneratedFacesMask |= Face.FRONT_BACK.getMask();
+    	} else {
+    		mGeneratedFacesMask &= ~Face.FRONT_BACK.getMask();
+    	}
+    }
+        
 
     /** Support texture scaling */
     @Override
@@ -118,8 +124,6 @@ public abstract class CSGAxial
         OutputCapsule outCapsule = pExporter.getCapsule( this );
         outCapsule.write( mAxisSamples, "axisSamples", 32 );
         outCapsule.write( mExtentZ, "zExtent", 1 );
-        outCapsule.write( mClosed, "closed", true );
-        outCapsule.write( mInverted, "inverted", false );
     }
     @Override
     public void read(
@@ -130,7 +134,7 @@ public abstract class CSGAxial
         
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
-        mAxisSamples = inCapsule.readInt( "axisSamples", 32 );
+        mAxisSamples = inCapsule.readInt( "axisSamples", mAxisSamples );
         
         // Let each shape apply its own zExtent default
         mExtentZ = inCapsule.readFloat( "zExtent", 0 );
@@ -141,8 +145,6 @@ public abstract class CSGAxial
         		mExtentZ = aHeight / 2.0f;
         	}
         }
-        mClosed = inCapsule.readBoolean( "closed", true );
-        mInverted = inCapsule.readBoolean( "inverted", mInverted );
     }
         
 	/////// Implement ConstructiveSolidGeometry

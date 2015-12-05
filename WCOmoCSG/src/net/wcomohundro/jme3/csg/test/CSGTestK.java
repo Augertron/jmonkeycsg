@@ -32,17 +32,22 @@ import java.util.List;
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.shape.CSGBox;
+import net.wcomohundro.jme3.csg.shape.CSGSkyDome;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector4f;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.scene.shape.Surface;
 import com.jme3.terrain.geomipmap.TerrainQuad;
+import com.jme3.texture.TextureCubeMap;
 import com.jme3.util.SkyFactory;
 import com.jme3.util.SkyFactory.EnvMapType;
 import com.jme3.util.TangentBinormalGenerator;
+
 
 
 /** Simple test of the CSG support 
@@ -120,12 +125,27 @@ public class CSGTestK
     	aGeometry.regenerate();
     	rootNode.attachChild( aGeometry );
     	
-//    	rootNode.attachChild(SkyFactory.createSky(
-//                assetManager, "Textures/Sky/Bright/BrightSky.dds", false));
-    	rootNode.attachChild(
-    		SkyFactory.createSky( assetManager
-    				              , "Textures/Sky/Bright/FullskiesBlueClear03.dds"
-    				              , EnvMapType.CubeMap ));
+    	CSGSkyDome aSky = new CSGSkyDome( "MySky" );
+    	aSky.applyGradient( new ColorRGBA( 0.1f, 0.1f, 0.2f, 1.0f )
+    						, new ColorRGBA( 0.2f, 0.2f, 0.9f, 1.0f ) );
+    	
+    	Material skyMaterial = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
+    	skyMaterial.setBoolean( "VertexColor", true );
+
+//    	Material skyMaterial = new Material( assetManager, "Common/MatDefs/Misc/Sky.j3md" );
+//    	skyMaterial.setBoolean( "SphereMap", true );
+    	aSky.setMaterial( skyMaterial );
+    	
+//			= SkyFactory.createSky( assetManager, aTexture, EnvMapType.CubeMap );
+	
+//			= SkyFactory.createSky( assetManager
+//				              	, "Textures/Sky/Bright/FullskiesBlueClear03.dds"
+//				              	, EnvMapType.CubeMap );
+//			= SkyFactory.createSky( assetManager
+//        						, "Textures/Sky/Bright/BrightSky.dds"
+//        						, EnvMapType.CubeMap );
+    	
+    	rootNode.attachChild( aSky );
     }
 
     

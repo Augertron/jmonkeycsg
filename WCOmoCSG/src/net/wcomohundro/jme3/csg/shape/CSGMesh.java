@@ -89,12 +89,18 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
  		3)	TangentBinormal generation (for lighting support)
  	
  	Standard configuration support:
+ 		generateFaces -			Bit mask of those faces of the solid to generate
+ 								(Subclasses will pick an appropriate default)
+ 								
  		faceProperties -		Array of CSGFaceProperties with possible custom material and/or
  								texture scaling, applied according to a bitmask of faces
  						
  		lodFactors -			Array of float values in the range 0.0 - 1.0, each of which causes
  								an LevelOfDetail to be built.  The smaller the percentage, the fewer
  								triangles are created for a given LOD.
+ 								
+ 		inverted - 				true/false with false being a normal facing outward structure and
+ 								true meaning a solid meant to be viewed from the inside
  						
  		generateTangentBinormal - true/false if the TangentBinormal information should be
  								generated for appropriate lighting
@@ -108,8 +114,12 @@ public abstract class CSGMesh
 	public static final String sCSGMeshRevision="$Rev$";
 	public static final String sCSGMeshDate="$Date$";
 
+	/** The bitmask of faces to generate */
+	protected int						mGeneratedFacesMask;
 	/** The list of custom Materials to apply to the various faces */
 	protected List<CSGFaceProperties>	mFaceProperties;
+    /** If inverted, then the cylinder is intended to be viewed from the inside */
+    protected boolean 		mInverted;
 	/** The LOD generation values */
 	protected float[]					mLODFactors;
 	/** TangentBinormal generation control */
@@ -120,6 +130,14 @@ public abstract class CSGMesh
 		boolean		pDebug
 	) {
 		return( this );
+	}
+	
+	/** Accessor to the bitmask of faces being generated */
+	public int getGeneratedFacesMask() { return mGeneratedFacesMask; }
+	public void setGeneratedFacesMask(
+		int		pFaceMask
+	) {
+		mGeneratedFacesMask = pFaceMask;
 	}
 	
 	/** Accessor to the per-face property configuration */
@@ -136,6 +154,10 @@ public abstract class CSGMesh
 		mFaceProperties.add( pProperties );
 	}
 	
+	/** Accessor to the inversion control flag */
+    public boolean isInverted() { return mInverted; }
+    public void setInverted( boolean pIsInverted ) { mInverted = pIsInverted; }
+
 	/** Accessor to the LOD factors to apply */
 	public float[] getLODFactors() { return mLODFactors; }
 	public void setLODFactors(
@@ -328,8 +350,11 @@ public abstract class CSGMesh
         outCapsule.write( this.getMode(), "mode", Mode.Triangles );
 
         // Extended attributes
+        //	NOTE that be design, we do NOT write the generatedFacesMask at this level, since
+        //		 we do not know an appropriate default.  Subclasses can choose to write it or not
         outCapsule.writeSavableArrayList( (ArrayList)mFaceProperties, "faceProperties", null );
         outCapsule.write( mLODFactors, "lodFactors", null );
+        outCapsule.write( mInverted, "inverted", false );
         outCapsule.write( mGenerateTangentBinormal, "generateTangentBinormal", false );
     }
     @Override
@@ -346,8 +371,10 @@ public abstract class CSGMesh
         this.setMode( inCapsule.readEnum( "mode", Mode.class, Mode.Triangles ) );
         
         // Extended attributes
+        mGeneratedFacesMask = inCapsule.readInt( "generateFaces", 0 );
         mFaceProperties = inCapsule.readSavableArrayList( "faceProperties", null );
         mLODFactors = inCapsule.readFloatArray( "lodFactors", null );
+        mInverted = inCapsule.readBoolean( "inverted", mInverted );
         mGenerateTangentBinormal = inCapsule.readBoolean( "generateTangentBinormal", false );
         
         //////// NOTE NOTE NOTE

@@ -52,6 +52,7 @@ import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGPlane;
 import net.wcomohundro.jme3.csg.CSGPlaneFlt;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 
 
 /** A CSG Pipe is a 'capped' radial whose slices follow a given curve.
@@ -211,8 +212,14 @@ public class CSGPipe
    		
     		// NOTE that we treat the endcaps as inviolate, so we work from the ends to 
     		//		the middle
-        	int startPoint = (this.mClosed) ? 1 : 0;
-        	int endPoint = (this.mClosed) ? pContext.mSliceCount -2 : pContext.mSliceCount -1;
+        	int startPoint = 0;
+        	if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
+        		startPoint += 1;
+        	}
+        	int endPoint = pContext.mSliceCount -1;
+        	if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+        		endPoint -= 1;
+        	}
     		int midPoint = pContext.mSliceCount / 2;
     		
     		// Every slice has mRadialSamples +1 entries
@@ -373,7 +380,7 @@ if ( true ) {
      	// As a side effect of .computeCenters(), the mAxisSamples count may be adjusted.
 		List<Vector3f> centerList = computeCenters();
     	CSGPipeContext aContext 
-    		= new CSGPipeContext( mAxisSamples, mRadialSamples, mClosed, mTextureMode, mScaleSlice );
+    		= new CSGPipeContext( mAxisSamples, mRadialSamples, mGeneratedFacesMask, mTextureMode, mScaleSlice );
     	aContext.mCenterList = centerList;
     	return( aContext );
     }
@@ -777,22 +784,28 @@ class CSGPipeContext
     CSGPipeContext(
     	int							pAxisSamples
     ,	int							pRadialSamples
-    ,	boolean						pClosed
+    ,	int							pGeneratedFacesMask
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
     ) {	
-    	super( pAxisSamples, pRadialSamples, pClosed, pTextureMode, pScaleSlice );
+    	super( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pTextureMode, pScaleSlice );
     }
     
     /** How many slices are needed? */
     @Override
     protected int resolveSliceCount(
     	int			pAxisSamples
-    ,	boolean		pIsClosed
+    ,	int			pGeneratedFacesMask
     ) {
 		// Even though the north/south poles are a single point, we need to 
 		// generate different textures and normals for the two EXTRA end slices if closed
-    	int sliceCount = (pIsClosed) ? pAxisSamples + 2 : pAxisSamples;
+    	int sliceCount = pAxisSamples;
+    	if ( Face.BACK.maskIncludesFace( pGeneratedFacesMask ) ) {
+    		sliceCount += 1;
+    	}
+    	if ( Face.FRONT.maskIncludesFace( pGeneratedFacesMask ) ) {
+    		sliceCount += 1;
+    	}
     	return( sliceCount );
     }
 

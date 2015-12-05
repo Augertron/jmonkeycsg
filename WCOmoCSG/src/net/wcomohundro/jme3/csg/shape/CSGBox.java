@@ -30,6 +30,7 @@ import java.nio.FloatBuffer;
 import net.wcomohundro.jme3.csg.CSGMeshManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 
 import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
@@ -154,12 +155,17 @@ public class CSGBox
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
+        InputCapsule inCapsule = pImporter.getCapsule( this );
+
         // Let the super do its thing
         super.read( pImporter );
-
+        if ( mGeneratedFacesMask == 0 ) {
+        	// Default to full box
+        	mGeneratedFacesMask = Face.FRONT_BACK.getMask() 
+        							| Face.LEFT_RIGHT.getMask()
+        							| Face.TOP_BOTTOM.getMask();
+        }
         // Basic configuration
-        InputCapsule inCapsule = pImporter.getCapsule( this );
-        
         mExtentX = inCapsule.readFloat( "xExtent", 1 );
         mExtentY = inCapsule.readFloat( "yExtent", 1 );
         mExtentZ = inCapsule.readFloat( "zExtent", 1 );
@@ -172,14 +178,17 @@ public class CSGBox
     public void write(
     	JmeExporter		pExporter
     ) throws IOException {
-        OutputCapsule capsule = pExporter.getCapsule(this);
+        OutputCapsule outCapsule = pExporter.getCapsule(this);
         
     	// Let the super do its thing
         super.write( pExporter );
+        outCapsule.write( mGeneratedFacesMask
+        				, "generateFaces"
+		        		, Face.FRONT_BACK.getMask() | Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask() );
         
-        capsule.write( mExtentX, "xExtent", 1 );
-        capsule.write( mExtentY, "yExtent", 1 );
-        capsule.write( mExtentZ, "zExtent", 1 );
+        outCapsule.write( mExtentX, "xExtent", 1 );
+        outCapsule.write( mExtentY, "yExtent", 1 );
+        outCapsule.write( mExtentZ, "zExtent", 1 );
     }
 
 
