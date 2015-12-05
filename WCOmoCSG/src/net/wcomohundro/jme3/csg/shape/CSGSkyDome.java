@@ -90,8 +90,8 @@ public class CSGSkyDome
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGSkyDomeRevision="$Rev: 132 $";
-	public static final String sCSGSkyDomeDate="$Date: 2015-12-01 21:27:59 -0600 (Tue, 01 Dec 2015) $";
+	public static final String sCSGSkyDomeRevision="$Rev$";
+	public static final String sCSGSkyDomeDate="$Date$";
 	
 	/** The standard transform the tilts the mesh 90 degrees */
 	protected static final Transform	sStandardTransform;
