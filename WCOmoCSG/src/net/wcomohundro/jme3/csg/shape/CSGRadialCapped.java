@@ -252,14 +252,14 @@ public abstract class CSGRadialCapped
 	    		    case UNIFORM_LINEAR:
 	    		    	// y runs around the circumference, x runs along z
 	    		    	if ( x < 0.5f ) {
-	    		    		// Northern hemisphere
-	    		    		for( int j = 0; j < 4; j += 1 ) {
-	    		    			calcColors[j] = northEdgeColors[j] + (northSpan[j] * (x * 2.0f));
-	    		    		}
-	    		    	} else if ( x > 0.5f ) {
 	    		    		// Southern hemisphere
 	    		    		for( int j = 0; j < 4; j += 1 ) {
-	    		    			calcColors[j] = southEdgeColors[j] + (southSpan[j] * ((1.0f - x) * 2.0f));
+	    		    			calcColors[j] = southEdgeColors[j] + (southSpan[j] * (x * 2.0f));
+	    		    		}
+	    		    	} else if ( x > 0.5f ) {
+	    		    		// Northern hemisphere
+	    		    		for( int j = 0; j < 4; j += 1 ) {
+	    		    			calcColors[j] = northEdgeColors[j] + (northSpan[j] * ((1.0f - x) * 2.0f));
 	    		    		}	
 	    		    	} else {
 	    		    		// Equator

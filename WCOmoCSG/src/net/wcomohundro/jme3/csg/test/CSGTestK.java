@@ -127,11 +127,12 @@ public class CSGTestK
     	aGeometry.regenerate();
     	rootNode.attachChild( aGeometry );
     	
-    	CSGSkyDome aSky = new CSGSkyDome( "MySky", 100, 3, 8, CSGCylinder.class, assetManager );
+    	Class domeClass = null; // CSGCylinder.class;
     	List<ColorRGBA> colorList = new ArrayList( 2 );
     	colorList.add( new ColorRGBA( 0.1f, 0.1f, 0.45f, 1.0f ) );
     	colorList.add( new ColorRGBA( 0.2f, 0.2f, 0.9f, 1.0f ) );
-    	aSky.applyGradient( colorList );
+    	
+    	CSGSkyDome aSky = new CSGSkyDome( "MySky", 100, 3, 8, domeClass, colorList, assetManager );
     	
 //			= SkyFactory.createSky( assetManager, aTexture, EnvMapType.CubeMap );
 	

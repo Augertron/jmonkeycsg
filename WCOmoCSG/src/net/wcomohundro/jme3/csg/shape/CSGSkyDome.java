@@ -104,10 +104,13 @@ public class CSGSkyDome
 		sStandardTransform = new Transform( aRotation );
 	}
 	
-	/** Basic sphere parameters as needed */
-	protected float		mRadius;
-	protected int		mAxisSamples;
-	protected int		mRadialSamples;
+	/** Basic mesh parameters as needed */
+	protected float				mRadius;
+	protected int				mAxisSamples;
+	protected int				mRadialSamples;
+	/** Gradient colors */
+	protected List<ColorRGBA>	mColors;
+	
 
 	/** Basic null constructor */
 	public CSGSkyDome(
@@ -119,7 +122,7 @@ public class CSGSkyDome
 		String			pName
 	,	AssetManager	pAssetManager
 	) {
-		this( pName, 100, 3, 8, null, pAssetManager );
+		this( pName, 100, 3, 8, null, null, pAssetManager );
 	}
 	/** Constructor on a name and given mesh */
 	public CSGSkyDome(
@@ -137,6 +140,7 @@ public class CSGSkyDome
 	,	int				pAxisSamples
 	,	int				pRadialSamples
 	,	Class			pMeshClass
+	,	List<ColorRGBA>	pGradientColors
 	,	AssetManager	pAssetManager
 	) {
 		super( pName );
@@ -145,6 +149,9 @@ public class CSGSkyDome
 		mAxisSamples = pAxisSamples;
 		mRadialSamples = pRadialSamples;
 		
+		mColors = pGradientColors;
+		
+		// Create the sky
 		createStandardSky( pAssetManager, pMeshClass );
 	}
 	
@@ -203,11 +210,17 @@ public class CSGSkyDome
         setCullHint( Spatial.CullHint.Never );
         setModelBound( new BoundingSphere( Float.POSITIVE_INFINITY, Vector3f.ZERO ) );
         
+        // Apply colors as needed
+        if ( mColors != null ) {
+        	applyGradient( mColors );
+        }
         // Supply a default Material
         if ( (this.material == null) && (pAssetManager != null) ) {
         	// Various things about the material I have been gleaning from SkyFactory
         	Material skyMaterial = new Material( pAssetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
-        	skyMaterial.setBoolean( "VertexColor", true );
+        	if ( mColors != null ) {
+        		skyMaterial.setBoolean( "VertexColor", true );
+        	}
         	skyMaterial.getAdditionalRenderState().setDepthWrite( false );
         	skyMaterial.getAdditionalRenderState().setDepthFunc( TestFunction.Equal );
         	this.material = skyMaterial;
@@ -256,7 +269,10 @@ public class CSGSkyDome
 				localTransform = proxyTransform.getTransform();
 			}
 		}
-		// Create the standard as needed
+        // Any special color processing?
+        mColors = aCapsule.readSavableArrayList( "colorGradient", null );
+
+        // Create the standard as needed
 		createStandardSky( pImporter.getAssetManager(), meshClass );
 		
 		// Anything special for the Material?
@@ -266,12 +282,6 @@ public class CSGSkyDome
         	if ( aParam != null ) {
         		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
         	}
-        }
-        // Any special color processing?
-        List<ColorRGBA> colors = aCapsule.readSavableArrayList( "colorGradient", null );
-        if ( colors != null ) {
-        	// Pass these into the Mesh
-        	applyGradient( colors );
         }
 	}
 	

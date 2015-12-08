@@ -182,7 +182,7 @@ public class CSGTestSceneLoader
 	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 	    
-        cam.setFrustumPerspective( 45f, (float)cam.getWidth() / cam.getHeight(), 0.1f, 100f);
+        cam.setFrustumPerspective( 45f, (float)cam.getWidth() / cam.getHeight(), 0.1f, 250f);
 	    
 	    // Establish the text display
 	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
