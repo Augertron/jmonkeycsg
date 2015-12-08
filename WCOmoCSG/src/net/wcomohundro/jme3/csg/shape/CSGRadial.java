@@ -212,7 +212,7 @@ public abstract class CSGRadial
     @Override
     protected void updateGeometryProlog(
     ) {
-    	CSGRadialContext aContext = getContext();
+    	CSGRadialContext aContext = getContext( true );
     	
     	int southPoleIndex = 0;
     	int northPoleIndex = createGeometry( aContext );
@@ -252,8 +252,8 @@ public abstract class CSGRadial
     ) {
     	// Establish the buffers
         setBuffer( Type.Position, 3, pContext.mPosBuf );
-        setBuffer( Type.Normal, 3, pContext.mNormBuf );
-        setBuffer( Type.TexCoord, 2, pContext.mTexBuf );
+        if ( pContext.mNormBuf != null ) setBuffer( Type.Normal, 3, pContext.mNormBuf );
+        if ( pContext.mTexBuf != null ) setBuffer( Type.TexCoord, 2, pContext.mTexBuf );
 
         // The percentage of each radial sample around the circle
         pContext.mInverseRadialSamples = 1.0f / mRadialSamples;
@@ -359,26 +359,31 @@ public abstract class CSGRadial
 	                				.put( pContext.mPosVector.z );
 	
 	                // What is the normal for this position?
-	                pContext.mNormVector = getRadialNormal( vars.vect4, pContext, aSurface );
-	                pContext.mNormBuf.put( pContext.mNormVector.x )
-	                				.put( pContext.mNormVector.y )
-	                				.put( pContext.mNormVector.z );
-
+	                if ( pContext.mNormBuf != null ) {
+		                pContext.mNormVector = getRadialNormal( vars.vect4, pContext, aSurface );
+		                pContext.mNormBuf.put( pContext.mNormVector.x )
+		                				.put( pContext.mNormVector.y )
+		                				.put( pContext.mNormVector.z );
+	                }
 	                // What texture applies?
-	                pContext.mTexVector = getRadialTexture( vars.vect2d2, pContext, aSurface );            					
-	                pContext.mTexBuf.put( pContext.mTexVector.x )
-	                				.put( pContext.mTexVector.y );
+	                if ( pContext.mTexBuf != null ) {
+		                pContext.mTexVector = getRadialTexture( vars.vect2d2, pContext, aSurface );            					
+		                pContext.mTexBuf.put( pContext.mTexVector.x )
+		                				.put( pContext.mTexVector.y );
+	                }
 	                pContext.mIndex += 1;
 	            }
 	            // Copy the first radial vertex to the end
 	            BufferUtils.copyInternalVector3( pContext.mPosBuf, iSave, pContext.mIndex );
-	            BufferUtils.copyInternalVector3( pContext.mNormBuf, iSave, pContext.mIndex );
-	            
+	            if ( pContext.mNormBuf != null ) {
+	            	BufferUtils.copyInternalVector3( pContext.mNormBuf, iSave, pContext.mIndex );
+	            }
 	            // Special texture processing at the end where pContext.mRadialIndex == mRadialSamples
-                pContext.mTexVector = getRadialTexture( vars.vect2d2, pContext, aSurface );            					
-                pContext.mTexBuf.put( pContext.mTexVector.x )
-            					.put( pContext.mTexVector.y );
-
+	            if ( pContext.mTexBuf != null ) {
+	                pContext.mTexVector = getRadialTexture( vars.vect2d2, pContext, aSurface );            					
+	                pContext.mTexBuf.put( pContext.mTexVector.x )
+	            					.put( pContext.mTexVector.y );
+	            }
 	            pContext.mIndex += 1;
 	            pContext.mZOffset += zOffsetAdjust;
 	        }
@@ -525,6 +530,7 @@ public abstract class CSGRadial
     
     /** FOR SUBCLASS OVERRIDE: allocate the context */
     protected abstract CSGRadialContext getContext(
+    	boolean		pAllocateBuffers
     );
     
     /** FOR SUBCLASS OVERRIDE: fractional speaking, where are we along the z axis (+/-)*/
@@ -761,13 +767,16 @@ abstract class CSGRadialContext
     	int		pAxisSamples
     ,	int		pRadialSamples
     ,	int		pGeneratedFacesMask
+    ,	boolean	pAllocateBuffers
     ) {	
     	mSliceCount = resolveSliceCount( pAxisSamples, pGeneratedFacesMask );
     	mVertCount = resolveVetexCount( mSliceCount, pRadialSamples, pGeneratedFacesMask );
 
-    	mPosBuf = BufferUtils.createVector3Buffer( mVertCount );
-        mNormBuf = BufferUtils.createVector3Buffer( mVertCount );
-        mTexBuf = BufferUtils.createVector2Buffer( mVertCount );
+    	if ( pAllocateBuffers ) {
+	    	mPosBuf = BufferUtils.createVector3Buffer( mVertCount );
+	        mNormBuf = BufferUtils.createVector3Buffer( mVertCount );
+	        mTexBuf = BufferUtils.createVector2Buffer( mVertCount );
+    	}
     }
     
     /** How many slices are needed? */

@@ -29,6 +29,7 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.Savable;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
@@ -369,6 +370,7 @@ if ( true ) {
     /** OVERRIDE: allocate the context */
     @Override
     protected CSGRadialContext getContext(
+    	boolean		pAllocateBuffers
     ) {
         // Allocate buffers for position/normals/texture
     	// We generate an extra vertex around the radial sample where the last
@@ -378,9 +380,12 @@ if ( true ) {
     	
     	// And remember the curve itself could require more AxisSamples than what was requested.
      	// As a side effect of .computeCenters(), the mAxisSamples count may be adjusted.
-		List<Vector3f> centerList = computeCenters();
+    	List<Vector3f> centerList = null;
+    	if ( pAllocateBuffers ) {
+    		centerList = computeCenters();
+    	}
     	CSGPipeContext aContext 
-    		= new CSGPipeContext( mAxisSamples, mRadialSamples, mGeneratedFacesMask, mTextureMode, mScaleSlice );
+    		= new CSGPipeContext( mAxisSamples, mRadialSamples, mGeneratedFacesMask, mTextureMode, mScaleSlice, pAllocateBuffers );
     	aContext.mCenterList = centerList;
     	return( aContext );
     }
@@ -752,6 +757,13 @@ if ( true ) {
 
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
+        
+        // Any special color processing?
+        List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
+        if ( colors != null ) {
+	        // First is the north pole, second is the equator, optional third is the south pole
+	        applyGradient( colors );
+        }
     }
 
 	/////// Implement ConstructiveSolidGeometry
@@ -787,8 +799,9 @@ class CSGPipeContext
     ,	int							pGeneratedFacesMask
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
+    ,	boolean						pAllocateBuffers
     ) {	
-    	super( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pTextureMode, pScaleSlice );
+    	super( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pTextureMode, pScaleSlice, pAllocateBuffers );
     }
     
     /** How many slices are needed? */

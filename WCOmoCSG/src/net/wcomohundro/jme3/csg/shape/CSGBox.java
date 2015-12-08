@@ -26,6 +26,7 @@ package net.wcomohundro.jme3.csg.shape;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGMeshManager;
 import net.wcomohundro.jme3.csg.CSGVersion;
@@ -39,6 +40,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.VertexBuffer;
@@ -73,6 +75,16 @@ public class CSGBox
        18, 17, 16,   19, 18, 16, // top
        22, 21, 20,   23, 22, 20  // bottom
     };
+    protected static final short[] GEOMETRY_INDICES_INVERTED_DATA = {
+        2,  0,  1,    3,  0,  2, // front
+        6,  4,  5,    7,  4,  6, // back
+        
+       10,  8,  9,   11,  8, 10, // left
+       14, 12, 13,   15, 12, 14, // right
+
+       18, 16, 17,   19, 16, 18, // top
+       22, 20, 21,   23, 20, 22  // bottom
+    };
 
     protected static final float[] GEOMETRY_NORMALS_DATA = {
        0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1, // front
@@ -84,6 +96,16 @@ public class CSGBox
        0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0, // top
        0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0  // bottom
    	};
+    protected static final float[] GEOMETRY_NORMALS_INVERTED_DATA = {
+        0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1, // front
+        0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1, // back
+        
+        1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0, // left
+       -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0, // right
+        
+        0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0, // top
+        0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0  // bottom
+    	};
 
    	protected static final float[] GEOMETRY_TEXTURE_DATA = {
        1, 0,   0, 0,   0, 1,   1, 1, // front
@@ -138,7 +160,13 @@ public class CSGBox
     public float getZExtent() { return mExtentZ; }
     public void setZExtent( float pExtent ) { mExtentZ = pExtent; }
     
-    
+    /** Apply gradient vertex colors */
+    @Override
+    public void applyGradient(
+    	List<ColorRGBA>	pColors
+    ) {
+    }
+
     /** Apply the change of geometry */
     @Override
     protected void updateGeometryProlog(
@@ -172,7 +200,15 @@ public class CSGBox
 
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
+        
+        // Any special color processing?
+        List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
+        if ( colors != null ) {
+	        // First is the north pole, second is the equator, optional third is the south pole
+	        applyGradient( colors );
+        }
     }
+    
     /** Preserve this shape */
     @Override
     public void write(
@@ -294,13 +330,19 @@ public class CSGBox
     protected void duUpdateGeometryIndices(
     ) {
         if ( getBuffer( Type.Index ) == null ) {
-            setBuffer( Type.Index, 3, BufferUtils.createShortBuffer( GEOMETRY_INDICES_DATA ));
+            setBuffer( Type.Index
+            			, 3
+            			, BufferUtils.createShortBuffer( (mInverted) ? GEOMETRY_INDICES_INVERTED_DATA
+            													     : GEOMETRY_INDICES_DATA ));
         }
     }
     protected void duUpdateGeometryNormals(
     ) {
         if ( getBuffer(Type.Normal ) == null ) {
-            setBuffer( Type.Normal, 3, BufferUtils.createFloatBuffer( GEOMETRY_NORMALS_DATA ));
+            setBuffer( Type.Normal
+			            , 3
+			            , BufferUtils.createFloatBuffer( (mInverted) ? GEOMETRY_NORMALS_INVERTED_DATA
+			            											 : GEOMETRY_NORMALS_DATA ));
         }
     }
     protected void duUpdateGeometryTextures(

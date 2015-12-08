@@ -32,6 +32,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
@@ -130,6 +131,13 @@ public class CSGSurface
     }
     public void setHeightMap( float[] pHeightMap ) { mHeightData = pHeightMap; }
     
+    /** Apply gradient vertex colors */
+    @Override
+    public void applyGradient(
+    	List<ColorRGBA>	pColors
+    ) {
+    }
+
     /** Rebuilds the surface based on the current set of configuration parameters */
     @Override
     protected void updateGeometryProlog(
@@ -238,6 +246,13 @@ public class CSGSurface
         }
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
+        
+        // Any special color processing?
+        List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
+        if ( colors != null ) {
+	        // First is the north pole, second is the equator, optional third is the south pole
+	        applyGradient( colors );
+        }
     }
     
     /** Service routine that fills the Vertex buffer */

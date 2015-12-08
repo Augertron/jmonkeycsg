@@ -119,6 +119,10 @@ public class CSGSphere
         }
     }
 
+    /** By definition for a sphere, the zExtent matches the radius */
+    @Override
+    public void setRadius( float pRadius ) { mExtentZ = mRadius = pRadius; }
+
     /** Configuration accessors */
     public boolean hasEvenSlices() { return mEvenSlices; }
     public void setEvenSlices( boolean pFlag ) { mEvenSlices = pFlag; }
@@ -126,34 +130,55 @@ public class CSGSphere
     public TextureMode getTextureMode() { return mTextureMode; }
     public void setTextureMode( TextureMode pTextureMode ) { mTextureMode = pTextureMode; }
     
-    /** Apply gradient vertex colors */
+    /** Apply gradient vertex colors:
+     		0 - North Pole
+     		1 - Equator
+     		2 - South Pole
+     */
+    @Override
     public void applyGradient(
-    	ColorRGBA		pPoleColor
-    ,	ColorRGBA		pEquatorColor
+    	List<ColorRGBA>	pColorList
     ) {
+    	float[] northPoleColors = null, southPoleColors = null, equatorColors = null;
+    	
+    	if ( (pColorList.size() > 0) && (pColorList.get(0) != null) ) {
+    		northPoleColors = pColorList.get(0).getColorArray( new float[4] );
+    	}
+    	if ( (pColorList.size() > 1) && (pColorList.get(1) != null) ) {
+    		equatorColors = pColorList.get(1).getColorArray( new float[4] );
+    	}
+    	if ( (pColorList.size() > 2) && (pColorList.get(2) != null) ) {
+    		southPoleColors = pColorList.get(2).getColorArray( new float[4] );
+    	}
+    	if ( southPoleColors == null ) southPoleColors = northPoleColors;
+    	if ( northPoleColors == null ) northPoleColors = southPoleColors;
+    	if ( equatorColors == null ) {
+    		equatorColors = new float[4];
+    		for( int i = 0; i < 4; i += 1 ) {
+    			equatorColors[i] = (southPoleColors[i] + northPoleColors[i]) / 2f;
+    		}
+    	}
     	// Follow the texture buffer
         VertexBuffer vtxBuffer = getBuffer( Type.TexCoord );
         FloatBuffer tcBuffer = resolveTexCoordBuffer( vtxBuffer );
         
         // Prep the range of colors
-        float redSpan = pEquatorColor.getRed() - pPoleColor.getRed();
-        float greenSpan = pEquatorColor.getGreen() - pPoleColor.getGreen();
-        float blueSpan = pEquatorColor.getBlue() - pPoleColor.getBlue();
-        float alphaSpan = pEquatorColor.getAlpha() - pPoleColor.getAlpha();
-        
+        float[] northSpan = new float[4], southSpan = new float[4];
+        for( int i = 0; i < 4; i +=1 ) {
+        	northSpan[i] = equatorColors[i] - northPoleColors[i];
+        	southSpan[i] = equatorColors[i] - southPoleColors[i];
+        }
         // Build the color buffer
         int vertexCount = tcBuffer.limit() / 2;			// x and y per vertex
         FloatBuffer colorBuf = BufferUtils.createFloatBuffer( 4 * vertexCount );
         
         // Generate a color point for each vertex
+        float[] calcColors = new float[4];
 	    for( int i = 0; i < vertexCount; i += 1 ) {
             float x = tcBuffer.get();
             float y = tcBuffer.get();
             
-            float useRed = pPoleColor.getRed();
-            float useGreen = pPoleColor.getGreen();
-            float useBlue = pPoleColor.getBlue();
-            float useAlpha = pPoleColor.getAlpha();
+            float[] useColors = calcColors;
             
             switch( mTextureMode ) {
             case POLAR:
@@ -162,23 +187,32 @@ public class CSGSphere
             case ZAXIS:
             case PROJECTED:
             	// y varies by slice, x by radial point, so only y is of interest
-            	// y ranges from 0 to 1, with 0.5 at the equator
-            	if ( y <= 0.5f ) {
+            	// y ranges from 0 (north) to 1 (south), with 0.5 at the equator
+            	if ( y <= 0.0f ) {
+            		// NorthPole
+            		useColors = northPoleColors;
+            		
+            	} else if ( y >= 1.0f ) {
+            		// SouthPole
+            		useColors = southPoleColors; 
+          		
+            	} else if ( y == 0.5f ) {
+            		useColors = equatorColors;
+            		
+            	} else if ( y < 0.5f ) {
             		// Northern hemisphere
-            		useRed += redSpan * (y * 2.0f);
-            		useGreen += greenSpan * (y * 2.0f);
-            		useBlue += blueSpan * (y * 2.0f);
-            		useAlpha += alphaSpan * (y * 2.0f);
+            		for( int j = 0; j < 4; j += 1 ) {
+            			calcColors[j] = northPoleColors[j] + (northSpan[j] * (y * 2.0f));
+            		}
             	} else {
             		// Southern hemisphere
-            		useRed += redSpan * ((1.0f - y) * 2.0f);
-            		useGreen += greenSpan * ((1.0f - y) * 2.0f);
-            		useBlue += blueSpan * ((1.0f - y) * 2.0f);
-            		useAlpha += alphaSpan * ((1.0f - y) * 2.0f);
+            		for( int j = 0; j < 4; j += 1 ) {
+            			calcColors[j] = southPoleColors[j] + (southSpan[j] * ((1.0f - y) * 2.0f));
+            		}
             	}
             }
-            // Set the color
-            colorBuf.put( useRed ).put( useGreen ).put( useBlue ).put( useAlpha );
+            // Set the color: red / green / blue / alpha
+            colorBuf.put( useColors[0] ).put( useColors[1] ).put( useColors[2] ).put( useColors[3] );
 	    }
 	    // Define the standard color buffer
 	    this.setBuffer( Type.Color, 4, colorBuf );
@@ -191,7 +225,7 @@ public class CSGSphere
     ) {
     	if ( true ) { 
             // Allocate buffers for position/normals/texture
-        	CSGRadialContext aContext = getContext();
+        	CSGRadialContext aContext = getContext( true );
         	
         	// Create all the vertices info
         	int southPoleIndex = 0;
@@ -225,6 +259,7 @@ public class CSGSphere
     /** FOR SUBCLASS OVERRIDE: allocate the context */
     @Override
     protected CSGRadialContext getContext(
+    	boolean		pAllocateBuffers
     ) {
     	// Allocate buffers for position/normals/texture
     	// We generate an extra vertex around the radial sample where the last
@@ -238,7 +273,7 @@ public class CSGSphere
     		mAxisSamples += 1;
     	}
    	 	CSGSphereContext aContext 
-   	 		= new CSGSphereContext( mAxisSamples, mRadialSamples, mGeneratedFacesMask, mRadius, mTextureMode );
+   	 		= new CSGSphereContext( mAxisSamples, mRadialSamples, mGeneratedFacesMask, mRadius, mTextureMode, pAllocateBuffers );
     	 
     	return( aContext );
     }
@@ -476,9 +511,9 @@ public class CSGSphere
         
         // Any special color processing?
         List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
-        if ( (colors != null) && (colors.size() == 2) ) {
-        	// First is the pole, second is the equator
-        	applyGradient( colors.get( 0 ), colors.get( 1 ) );
+        if ( colors != null ) {
+	        // First is the north pole, second is the equator, optional third is the south pole
+	        applyGradient( colors );
         }
     }
     
@@ -508,28 +543,6 @@ public class CSGSphere
 	        aBuffer.clear();
 	        vtxBuffer.updateData( aBuffer );
         }
-    }
-    
-    /** Service routine to resolve an existing TexCoord buffer */
-    protected FloatBuffer resolveTexCoordBuffer(
-    	VertexBuffer	pVertexBuffer
-    ) {
-    	if ( pVertexBuffer == null ) {
-    		pVertexBuffer = getBuffer(Type.TexCoord);
-    	}
-        if ( pVertexBuffer == null ) {
-            throw new IllegalStateException("The mesh has no texture coordinates");
-        }
-        if ( pVertexBuffer.getFormat() != VertexBuffer.Format.Float ) {
-            throw new UnsupportedOperationException("Only float texture coord format is supported");
-        }
-        if ( pVertexBuffer.getNumComponents() != 2 ) {
-            throw new UnsupportedOperationException("Only 2D texture coords are supported");
-        }
-        // Get the data buffer and reset its position info back to zero
-        FloatBuffer aBuffer = (FloatBuffer)pVertexBuffer.getData();
-        aBuffer.clear();
-    	return( aBuffer );
     }
     
 	/////// Implement ConstructiveSolidGeometry
@@ -564,23 +577,11 @@ class CSGSphereContext
     ,	int						pGeneratedFacesMask
     ,	float					pRadius
     ,	CSGSphere.TextureMode	pTextureMode
+    ,	boolean					pAllocateBuffers
     ) {	
-    	// The sphere has RadialSamples (+1 for the overlapping end point) times the number of slices
-    	initializeContext( pAxisSamples, pRadialSamples, pGeneratedFacesMask );	
-    	
+    	initializeContext( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pAllocateBuffers );	
+   	
     	// The rSquared is constant for a given radius and can be calculated here
-    	mRadiusSquared = pRadius * pRadius;
-    }
-    
-    /** Prepare for use by color setter */
-    void initialize(
-    	int						pAxisSamples
-    ,	int						pRadialSamples
-    ,	int						pGeneratedFacesMask
-    ,	float					pRadius    	
-    ) {
-    	mSliceCount = resolveSliceCount( pAxisSamples, pGeneratedFacesMask );
-    	mVertCount = resolveVetexCount( mSliceCount, pRadialSamples, pGeneratedFacesMask );
     	mRadiusSquared = pRadius * pRadius;
     }
     

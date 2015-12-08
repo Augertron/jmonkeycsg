@@ -31,6 +31,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.Savable;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
@@ -44,6 +45,7 @@ import static com.jme3.util.BufferUtils.*;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -120,18 +122,7 @@ public abstract class CSGRadialCapped
 	) {
     	if ( mFaceProperties != null ) {
 			// Determine the face
-	    	Face aFace = Face.SIDES;
-	    	
-    		// If the shape is closed, then we have front and back
-    		if ( (pFaceIndex < mRadialSamples) 
-    				&& Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
-    			// Looks like the SouthPole
-    			aFace = Face.BACK;
-    		} else if ( (pFaceIndex >= mFirstFrontTriangle)  
-    				&& Face.BACK.maskIncludesFace( mGeneratedFacesMask )) {
-    			// Looks like the NorthPole
-    			aFace= Face.FRONT;
-	    	}
+	    	Face aFace = whichFace( pFaceIndex );
 	    	Material aMaterial = resolveFaceMaterial( aFace.getMask() );
 			return( aMaterial );
     	} else {
@@ -147,18 +138,7 @@ public abstract class CSGRadialCapped
 	) {
     	if ( mFaceProperties != null ) {
 			// Determine the face
-	    	Face aFace = Face.SIDES;
-	    	
-    		// If the shape is closed, then we have front and back
-    		if ( (pFaceIndex < mRadialSamples) 
-    				&& Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
-    			// Looks like the SouthPole
-    			aFace = Face.BACK;
-    		} else if ( (pFaceIndex >= mFirstFrontTriangle)  
-    				&& Face.BACK.maskIncludesFace( mGeneratedFacesMask )) {
-    			// Looks like the NorthPole
-    			aFace= Face.FRONT;
-	    	}
+	    	Face aFace = whichFace( pFaceIndex );
 	    	PhysicsControl aPhysics = resolveFacePhysics( aFace.getMask() );
 			return( aPhysics );
     	} else {
@@ -167,13 +147,151 @@ public abstract class CSGRadialCapped
     	}
 	}
 
+    /** Apply gradient vertex colors:
+			0 - Northern Edge
+			1 - Southern Edge
+			2 - Special NorthPole
+			3 - Special SouthPole
+			4 - Special Equator
+	*/
+	@Override
+	public void applyGradient(
+		List<ColorRGBA>	pColorList
+	) {
+    	CSGRadialContext aContext = getContext( false );
+    	int aSliceCount = aContext.resolveSliceCount( mAxisSamples, mGeneratedFacesMask );
+
+    	float[] northEdgeColors = null, southEdgeColors = null, equatorColors = null;
+		float[] northPoleColors = null, southPoleColors = null;
+		
+		int colorIndex = 0;
+		if ( (pColorList.size() > colorIndex) && (pColorList.get(colorIndex) != null) ) {
+			northEdgeColors = pColorList.get(colorIndex).getColorArray( new float[4] );
+		}
+		colorIndex = 1;
+		if ( (pColorList.size() > colorIndex) && (pColorList.get(colorIndex) != null) ) {
+			southEdgeColors = pColorList.get(colorIndex).getColorArray( new float[4] );
+		}
+		colorIndex = 2;
+		if ( (pColorList.size() > colorIndex) && (pColorList.get(colorIndex) != null) ) {
+			northPoleColors = pColorList.get(colorIndex).getColorArray( new float[4] );
+		}
+		colorIndex = 3;
+		if ( (pColorList.size() > colorIndex) && (pColorList.get(colorIndex) != null) ) {
+			southPoleColors = pColorList.get(colorIndex).getColorArray( new float[4] );
+		}
+		colorIndex = 4;
+		if ( (pColorList.size() > colorIndex) && (pColorList.get(colorIndex) != null) ) {
+			equatorColors = pColorList.get(colorIndex).getColorArray( new float[4] );
+		}
+		if ( southEdgeColors == null ) southEdgeColors = northEdgeColors;
+		if ( northEdgeColors == null ) northEdgeColors = southEdgeColors;
+		if ( equatorColors == null ) {
+			equatorColors = new float[4];
+			for( int i = 0; i < 4; i += 1 ) {
+				equatorColors[i] = (southEdgeColors[i] + northEdgeColors[i]) / 2;
+			}
+		}
+		if ( northPoleColors == null ) northPoleColors = northEdgeColors;
+		if ( southPoleColors == null ) southPoleColors = southEdgeColors;
+		
+		// Follow the texture buffer
+		VertexBuffer vtxBuffer = getBuffer( Type.TexCoord );
+		FloatBuffer tcBuffer = resolveTexCoordBuffer( vtxBuffer );
+		
+		// Prep the range of colors
+		float[] northSpan = new float[4], southSpan = new float[4];
+		for( int i = 0; i < 4; i +=1 ) {
+			northSpan[i] = equatorColors[i] - northEdgeColors[i];
+			southSpan[i] = equatorColors[i] - southEdgeColors[i];
+		}
+		// Build the color buffer
+		int vertexCount = tcBuffer.limit() / 2;			// x and y per vertex
+		FloatBuffer colorBuf = BufferUtils.createFloatBuffer( 4 * vertexCount );
+		
+		// Generate a color point for each vertex
+		float[] useColors, calcColors = new float[4];
+        int index = 0;
+        int aRadialCount = mRadialSamples + 1;
+        for( int axisIdx = 0; axisIdx < aSliceCount; axisIdx += 1 ) {
+            Face whichFace = whichFace( axisIdx, aSliceCount, true, true, true );
+            for( int radialIdx = 0; radialIdx < aRadialCount; radialIdx += 1 ) {
+    		    float x = tcBuffer.get();
+    		    float y = tcBuffer.get();
+    		    useColors = calcColors;
+    		    
+	            switch( whichFace ) {
+	            case FRONT:
+	            	useColors = northEdgeColors;
+	            	break;
+	            case BACK:
+	            	useColors = southEdgeColors;
+	            	break;
+	            case SIDES:
+	    		    switch( mTextureMode ) {
+	    		    case FLAT:
+	    		    case UNIFORM:
+	    		    	// x runs around the circumference, y runs along z
+	    		    	if ( y < 0.5f ) {
+	    		    		// Southern hemisphere
+	    		    		for( int j = 0; j < 4; j += 1 ) {
+	    		    			calcColors[j] = southEdgeColors[j] + (southSpan[j] * (y * 2.0f));
+	    		    		}
+	    		    	} else if ( y > 0.5f ) {
+	    		    		// Northern hemisphere
+	    		    		for( int j = 0; j < 4; j += 1 ) {
+	    		    			calcColors[j] = northEdgeColors[j] + (northSpan[j] * ((1.0f - y) * 2.0f));
+	    		    		}	
+	    		    	} else {
+	    		    		// Equator
+	    		    		useColors = equatorColors;
+	    		    	}
+	    		    	break;
+	    		    	
+	    		    case FLAT_LINEAR:
+	    		    case UNIFORM_LINEAR:
+	    		    	// y runs around the circumference, x runs along z
+	    		    	if ( x < 0.5f ) {
+	    		    		// Northern hemisphere
+	    		    		for( int j = 0; j < 4; j += 1 ) {
+	    		    			calcColors[j] = northEdgeColors[j] + (northSpan[j] * (x * 2.0f));
+	    		    		}
+	    		    	} else if ( x > 0.5f ) {
+	    		    		// Southern hemisphere
+	    		    		for( int j = 0; j < 4; j += 1 ) {
+	    		    			calcColors[j] = southEdgeColors[j] + (southSpan[j] * ((1.0f - x) * 2.0f));
+	    		    		}	
+	    		    	} else {
+	    		    		// Equator
+	    		    		useColors = equatorColors;
+	    		    	}
+	    		    	break;
+	    		    }
+	    		    break;
+	            }
+			    // Set the color: red / green / blue / alpha
+			    colorBuf.put( useColors[0] ).put( useColors[1] ).put( useColors[2] ).put( useColors[3] );
+            }
+    	}
+        // Two extra vertices for the centers of the end caps
+        if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
+        	useColors = southPoleColors;
+		    colorBuf.put( useColors[0] ).put( useColors[1] ).put( useColors[2] ).put( useColors[3] );
+        }
+        if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+        	useColors = northPoleColors;
+		    colorBuf.put( useColors[0] ).put( useColors[1] ).put( useColors[2] ).put( useColors[3] );
+        }
+		// Define the standard color buffer
+		this.setBuffer( Type.Color, 4, colorBuf );
+	}
 
     /** Rebuilds the radial based on the current set of configuration parameters */
     @Override
     protected void updateGeometryProlog(
     ) {
         // Allocate buffers for position/normals/texture
-    	CSGRadialContext aContext = getContext();
+    	CSGRadialContext aContext = getContext( true );
     	
     	// Create all the vertices info
     	int southPoleIndex = -1, northPoleIndex = -1;
@@ -248,6 +366,7 @@ public abstract class CSGRadialCapped
         setStatic();
     }
     
+
     /** SUBCLASS MUST PROVIDE: allocate the context */
 //	protected CSGRadialContext getContext();
 
@@ -457,20 +576,13 @@ public abstract class CSGRadialCapped
     	Vector2f	pScaleTexture
     ,	int			pFaceMask
     ) {
+    	CSGRadialContext aContext = getContext( false );
+    	int aSliceCount = aContext.resolveSliceCount( mAxisSamples, mGeneratedFacesMask );
+    	
     	// Operate on the TextureCoordinate buffer
-        VertexBuffer tc = getBuffer(Type.TexCoord);
-        if (tc == null)
-            throw new IllegalStateException("The mesh has no texture coordinates");
-
-        if (tc.getFormat() != VertexBuffer.Format.Float)
-            throw new UnsupportedOperationException("Only float texture coord format is supported");
-
-        if (tc.getNumComponents() != 2)
-            throw new UnsupportedOperationException("Only 2D texture coords are supported");
-
-        FloatBuffer aBuffer = (FloatBuffer)tc.getData();
-        aBuffer.clear();
-        
+        VertexBuffer tc = getBuffer( Type.TexCoord );
+        FloatBuffer aBuffer = this.resolveTexCoordBuffer( tc );
+     
         // What surfaces are we dealing with?
         boolean doBack = (pFaceMask & Face.BACK.getMask()) != 0;
         boolean doFront = (pFaceMask & Face.FRONT.getMask()) != 0;
@@ -481,34 +593,11 @@ public abstract class CSGRadialCapped
         // is no puck with an edge.  Instead, the triangles describe the flat closed face.
         // For that, we will have 2 extra vertices that describe the center of the face.
         int index = 0;
-        int aSliceCount = mAxisSamples;
-        if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
-        	aSliceCount += 1;
-        }
-        if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
-        	aSliceCount += 1;
-        }
         int aRadialCount = mRadialSamples + 1;
         for( int axisCount = 0; axisCount < aSliceCount; axisCount += 1 ) {
-            Face whichFace = Face.NONE;
-            if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) && (axisCount == 0) ) {
-            	// The first slice is the closed bottom
-            	if ( doBack  ) {
-            		whichFace = Face.BACK;
-            	}
-            } else if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) && (axisCount == aSliceCount - 1) ) {
-            	// The last slice is the closed top
-            	if ( doFront ) {
-            		whichFace = Face.FRONT;
-                } 
-            } else {
-            	if ( doSides ) {
-            		// Actively processing the sides
-            		whichFace = Face.SIDES;
-            	}
-            }
+            Face whichFace = whichFace( axisCount, aSliceCount, doBack, doFront, doSides );
             if ( whichFace == Face.NONE ) {
-            	// Nothing is this slice to process
+            	// Nothing in this slice to process
             	index += (2 * aRadialCount);
             } else {
             	for( int i = 0; i < aRadialCount; i += 1 ) {
@@ -517,8 +606,8 @@ public abstract class CSGRadialCapped
             	}
             }
     	}
+        // Two extra vertices for the centers of the end caps
         if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
-        	// Two extra vertices for the centers of the end caps
         	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, doBack );
         }
         if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
@@ -548,6 +637,51 @@ public abstract class CSGRadialCapped
     	return( pIndex );
     }
     
+    /** Service routine to determine the appropriate active face */
+    protected Face whichFace(
+    	int		pAxisIndex
+    ,	int		pSliceCount
+    ,	boolean	pDoBack
+    ,	boolean	pDoFront
+    ,	boolean	pDoSides
+    ) {
+        Face whichFace = Face.NONE;
+        if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) && (pAxisIndex == 0) ) {
+        	// The first slice is the closed bottom
+        	if ( pDoBack  ) {
+        		whichFace = Face.BACK;
+        	}
+        } else if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) && (pAxisIndex == pSliceCount - 1) ) {
+        	// The last slice is the closed top
+        	if ( pDoFront ) {
+        		whichFace = Face.FRONT;
+            } 
+        } else {
+        	if ( pDoSides ) {
+        		// Actively processing the sides
+        		whichFace = Face.SIDES;
+        	}
+        }
+        return( whichFace );
+    }
+    protected Face whichFace(
+    	int		pFaceIndex
+    ) {
+    	Face aFace = Face.SIDES;
+    	
+		// If the shape is closed, then we have front and back
+		if ( (pFaceIndex < mRadialSamples) 
+				&& Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+			// Looks like the SouthPole
+			aFace = Face.BACK;
+		} else if ( (pFaceIndex >= mFirstFrontTriangle)  
+				&& Face.BACK.maskIncludesFace( mGeneratedFacesMask )) {
+			// Looks like the NorthPole
+			aFace= Face.FRONT;
+    	}
+		return( aFace );
+    }
+    
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(
@@ -575,8 +709,9 @@ class CSGRadialCappedContext
     ,	int							pGeneratedFacesMask
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
+    ,	boolean						pAllocateBuffers
     ) {	
-    	initializeContext( pAxisSamples, pRadialSamples, pGeneratedFacesMask );
+    	initializeContext( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pAllocateBuffers );
     	
     	// Account for the span of the texture on the end caps
     	switch( pTextureMode ) {

@@ -93,6 +93,36 @@
 		   		<com.jme3.asset.NonCachingKey name='Models/CSGCylinderScaledList.xml'/>
 		    </assetLoaderKeyList>
 	    </net.wcomohundro.jme3.csg.CSGLinkNode>  
+	    
+	    <!-- A Gradient cylinder -->
+        <com.jme3.scene.Geometry name='GradientCylinder'
+        		materialName='Textures/Debug/VertexColor.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-10.0' y='-5.0'/>
+             </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            	radius='1.1' axisSamples='32' radialSamples='32'>
+            	<colorGradient>
+            		<com.jme3.math.ColorRGBA r='0.1' g='0.1' b='0.1'/>
+            		<com.jme3.math.ColorRGBA r='0.9' g='0.9' b='0.9'/>
+            	</colorGradient>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <net.wcomohundro.jme3.csg.CSGGeometry name='BlueGradientRotatedInvertedCylinder'
+        		materialName='Textures/Debug/VertexColor.xml'>
+            <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+                <translation class='com.jme3.math.Vector3f' x='10.0' y='-10.0'/>
+                <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='-1PI/2' />
+             </csgtransform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            	radius='0.5' radius2='6' zExtent='6' axisSamples='32' radialSamples='32' inverted='true'>
+            	<colorGradient>
+            		<com.jme3.math.ColorRGBA r='0.1' g='0.1' b='0.2'/>
+            		<com.jme3.math.ColorRGBA r='0.2' g='0.2' b='0.9'/>
+            	</colorGradient>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+	    
 <?ignore
 
 		<!-- An inverted cylinder -->

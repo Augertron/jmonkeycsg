@@ -29,6 +29,7 @@ import com.jme3.export.OutputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.Savable;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.math.Vector2f;
@@ -41,6 +42,7 @@ import static com.jme3.util.BufferUtils.*;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -105,6 +107,7 @@ public class CSGCylinder
     /** OVERRIDE: allocate the context */
     @Override
     protected CSGRadialContext getContext(
+    	boolean		pAllocateBuffers
     ) {
         // Allocate buffers for position/normals/texture
     	// We generate an extra vertex around the radial sample where the last
@@ -112,7 +115,7 @@ public class CSGCylinder
 		// And even though the north/south poles are a single point, we need to 
 		// generate different textures and normals for the two EXTRA end slices if closed
     	CSGCylinderContext aContext 
-    		= new CSGCylinderContext( mAxisSamples, mRadialSamples, mGeneratedFacesMask, mTextureMode, mScaleSlice );
+    		= new CSGCylinderContext( mAxisSamples, mRadialSamples, mGeneratedFacesMask, mTextureMode, mScaleSlice, pAllocateBuffers );
 
     	return( aContext );
     }
@@ -212,11 +215,20 @@ public class CSGCylinder
     public void read(
     	JmeImporter		pImporter
     ) throws IOException {
+        InputCapsule inCapsule = pImporter.getCapsule( this );
+
         // Let the super do its thing
         super.read( pImporter );
 
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
+        
+        // Any special color processing?
+        List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
+        if ( colors != null ) {
+	        // First is the north pole, second is the equator, optional third is the south pole
+	        applyGradient( colors );
+        }
     }
 
 	/////// Implement ConstructiveSolidGeometry
@@ -242,8 +254,9 @@ class CSGCylinderContext
     ,	int							pGeneratedFacesMask
     ,	CSGRadialCapped.TextureMode	pTextureMode
     ,	Vector2f					pScaleSlice
+    ,	boolean						pAllocateBuffers
     ) {	
-    	super( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pTextureMode, pScaleSlice );
+    	super( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pTextureMode, pScaleSlice, pAllocateBuffers );
     }
 
 }

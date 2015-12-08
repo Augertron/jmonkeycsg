@@ -31,12 +31,16 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.util.TangentBinormalGenerator;
 
 import java.io.IOException;
+import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -119,7 +123,7 @@ public abstract class CSGMesh
 	/** The list of custom Materials to apply to the various faces */
 	protected List<CSGFaceProperties>	mFaceProperties;
     /** If inverted, then the cylinder is intended to be viewed from the inside */
-    protected boolean 		mInverted;
+    protected boolean 					mInverted;
 	/** The LOD generation values */
 	protected float[]					mLODFactors;
 	/** TangentBinormal generation control */
@@ -174,7 +178,11 @@ public abstract class CSGMesh
 		mGenerateTangentBinormal = pFlag;
 	}
 	
-	
+    /** Apply gradient vertex colors */
+    public abstract void applyGradient(
+    	List<ColorRGBA>	pColorList
+    );
+
 	/** FOR CSGShape PROCESSING: Accessor to the material that applies to the given surface */
 	public Material getMaterial(
 		int					pFaceIndex
@@ -380,6 +388,28 @@ public abstract class CSGMesh
         //////// NOTE NOTE NOTE
         // 			That every CSGShape is expected to callback via readComplete()
         //			to generate the geometry and apply any final fixup
+    }
+    
+    /** Service routine to resolve an existing TexCoord buffer */
+    protected FloatBuffer resolveTexCoordBuffer(
+    	VertexBuffer	pVertexBuffer
+    ) {
+    	if ( pVertexBuffer == null ) {
+    		pVertexBuffer = getBuffer(Type.TexCoord);
+    	}
+        if ( pVertexBuffer == null ) {
+            throw new IllegalStateException("The mesh has no texture coordinates");
+        }
+        if ( pVertexBuffer.getFormat() != VertexBuffer.Format.Float ) {
+            throw new UnsupportedOperationException("Only float texture coord format is supported");
+        }
+        if ( pVertexBuffer.getNumComponents() != 2 ) {
+            throw new UnsupportedOperationException("Only 2D texture coords are supported");
+        }
+        // Get the data buffer and reset its position info back to zero
+        FloatBuffer aBuffer = (FloatBuffer)pVertexBuffer.getData();
+        aBuffer.clear();
+    	return( aBuffer );
     }
     
 	/////// Implement ConstructiveSolidGeometry
