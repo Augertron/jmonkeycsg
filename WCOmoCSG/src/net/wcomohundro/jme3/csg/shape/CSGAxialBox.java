@@ -83,8 +83,8 @@ public class CSGAxialBox
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGAxialBoxRevision="$Rev: 136 $";
-	public static final String sCSGAxialBoxDate="$Date: 2015-12-07 20:51:29 -0600 (Mon, 07 Dec 2015) $";
+	public static final String sCSGAxialBoxRevision="$Rev$";
+	public static final String sCSGAxialBoxDate="$Date$";
 
 	
 	/** The eight vertices that define a box */
