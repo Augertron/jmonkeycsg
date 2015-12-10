@@ -155,8 +155,6 @@ public abstract class CSGRadial
 
     /** The base radius of the surface (which may well match the zExtent) */
     protected float 		mRadius;
-    /** If closed, do the endcaps bulge out or are they flat? (subclass setting only, no accessors) */
-    protected boolean		mFlatEnds;
     /** Per-slice scaling **/
     protected Vector2f		mScaleSlice;
     /** Per-slice rotation across all the slices (the total angle spread across all the slices) */
@@ -204,206 +202,102 @@ public abstract class CSGRadial
     public void setSliceRotation( float pTotalRotation ) { mRotateSlices = pTotalRotation; }
     
     
-    /** Rebuilds the sphere based on the current set of configuration parameters
-     
-****    	THIS IMPLEMENTATION PROVIDES A SAMPLE TO COPY AND APPLY SPECIALIZATIONS IN ANY GIVEN SUBCLASS ****
-****    	DO NOT EXPECT THIS IMPLEMENTATION TO PRODUCE AN APPROPRITE SHAPE							  ****
-     */
+    /** OVERRIDE: ready the coordinates */
     @Override
-    protected void updateGeometryProlog(
+    protected void readyCoordinates(
+    	CSGAxialContext		pContext
     ) {
-    	CSGRadialContext aContext = getContext( true );
-    	
-    	int southPoleIndex = 0;
-    	int northPoleIndex = createGeometry( aContext );
+    	CSGRadialContext aContext = (CSGRadialContext)pContext;
 
-    	// Establish the IndexBuffer which maps the vertices to use
-        VertexBuffer idxBuffer 
-        	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, mFlatEnds );
-        setBuffer( idxBuffer );
-        
-        if ( mLODFactors != null ) {
-        	// Various Levels of Detail, with the zero slot being the master
-        	VertexBuffer[] levels = new VertexBuffer[ mLODFactors.length + 1 ];
-        	levels[0] = idxBuffer;
-        	
-        	// Generate each level
-        	for( int i = 0, j = mLODFactors.length; i < j; i += 1 ) {
-        		idxBuffer 
-            		= createIndices( aContext, mLODFactors[i], southPoleIndex, northPoleIndex, mFlatEnds );
-        		levels[ i + 1 ] = idxBuffer;
-        	}
-        	this.setLodLevels( levels );
-        }
-        // Establish the bounds
-        updateBound();
-        setStatic();
-	}
+    	// The percentage of each radial sample around the circle
+        aContext.mInverseRadialSamples = 1.0f / mRadialSamples;
 
-    /** Generic driver that rebuilds the shape from the current set of configuration parameters.
-     	As a Radial/Axial combination, we are walking along the zAxis, generating a Radial 
-     	set of vertices at each Axial slice, including the front/back end caps as needed.
-     	
-     	"flat" endcaps do not contribute to the height.  "non-flat" endcaps influence the
-     	overall height processing.
-     */
-    protected int createGeometry(
-    	CSGRadialContext	pContext
-    ) {
-    	// Establish the buffers
-        setBuffer( Type.Position, 3, pContext.mPosBuf );
-        if ( pContext.mNormBuf != null ) setBuffer( Type.Normal, 3, pContext.mNormBuf );
-        if ( pContext.mTexBuf != null ) setBuffer( Type.TexCoord, 2, pContext.mTexBuf );
-
-        // The percentage of each radial sample around the circle
-        pContext.mInverseRadialSamples = 1.0f / mRadialSamples;
-        
-        // Compute the percentage of each 'uniform' slice down the zAxis.
-        // Since we are ranging from -zExtent to +zExtent, we consider the unit
-        // length to be 2.
-        // If the end caps are flat, then only the actual samples consume space
-        // along the zAxis.  But if the end caps are not flat, then they consume
-        // zAxis space and must be figured in.
-        pContext.mZAxisUniformPercent = 2.0f;
-        pContext.mIndex = 0;
-    	pContext.mZOffset = 0;
-    	
-        if ( mFlatEnds ) {
-        	// Only samples take up space, not the flat end caps
-        	pContext.mZAxisUniformPercent /= (mAxisSamples -1);
-        } else {
-        	// Every slice, including the non-flat end caps consume space if they
-        	// are in use
-        	int countBias = 1;
-        	if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
-        		// Closed at the back, so account for space along z
-        		countBias -= 1;
-        	} else {
-        		// No back face, so skip the first Z offset
-        		pContext.mZOffset = 1;
-        	}
-        	if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
-        		// Closed at the front, so account for space along z
-        		countBias -= 1;
-        	}
-        	// How far along Z we take with each step
-        	pContext.mZAxisUniformPercent /= (pContext.mSliceCount + countBias );
-        }
         // Generate points on the unit circle to be used in computing the mesh
         // points on a sphere slice.
-        pContext.mCoordList = getRadialCoordinates( mRadialSamples, mFirstRadial );
-
-        // Avoid some object churn by using the thread-specific 'temp' variables
-        TempVars vars = TempVars.get();
-        int southPoleIndex = -1, northPoleIndex = -1;
-        try {
-	        // Iterate down the zAxis
-	        for( int zIndex = 0; zIndex < pContext.mSliceCount; zIndex += 1 ) {
-	        	// If closed, zIndex == 0 is the backface (-1), zIndex == sliceCount-1 is the frontface (1)
-	        	int aSurface = 0;					// On the curve/crust
-	        	int zOffsetAdjust = 1;				// Account for change of z offset
-	        	if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) && (zIndex == 0) ) {
-	        		// Southpole/Backface
-	        		aSurface = -1;
-	        		southPoleIndex = pContext.mIndex;
-	        		
-	        		if ( mFlatEnds ) zOffsetAdjust = 0;
-	        		
-	        	} else if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) && (zIndex == pContext.mSliceCount -1) ) {
-	        		// Northpole/Frontface
-	        		aSurface = 1;
-	        		northPoleIndex = pContext.mIndex;
-	        		
-	        		if ( mFlatEnds ) zOffsetAdjust = 0;
-	        	}
-	        	// Angle based on where we are along the zAxis
-	        	pContext.mAngleFraction
-	        		= FastMath.HALF_PI * ((pContext.mZAxisUniformPercent * (float)pContext.mZOffset) - 1.0f); // in (-pi/2, pi/2)
-	        	pContext.mPolarFraction 
-	        		= (FastMath.HALF_PI - FastMath.abs( pContext.mAngleFraction )) / FastMath.PI;
-
-	            // Position along zAxis as a +/- percentage  (-1 / +1)
-	        	// NOTE that the implementation of getZAxisFraction is free to apply non-uniform
-	        	//		spacing between the slices.
-	        	pContext.mZAxisFraction = getZAxisFraction( pContext, aSurface );
-	            // Absolute position along the zAxis
-	        	pContext.mZAxisAbsolute = mExtentZ * pContext.mZAxisFraction;
-	
-	            // Where is the slice
-	        	pContext.mSliceCenter = getSliceCenter( vars.vect2, pContext, aSurface );
-	        	pContext.mSliceRadius = getSliceRadius( pContext, aSurface );
-	            
-	            // Ready the standard texture for this slice 
-	        	// (this may let you optimize some texture calculations once for the slice
-	        	//  with minor adjustments at each radial point on the slice)
-	        	pContext.mSliceTexture = getSliceTexture( vars.vect2d, pContext, aSurface );
-	        	
-	        	// Any per-slice rotation?
-	        	pContext.mSliceRotator = null;
-	        	if ( mRotateSlices != 0 ) {
-	        		// What rotation should be applied to this position along the z
-	        		float rotateAngle = ((pContext.mZAxisFraction - 1.0f) / -2.0f) * mRotateSlices;
-	        		pContext.mSliceRotator = (new Quaternion()).fromAngleNormalAxis( rotateAngle, Vector3f.UNIT_Z );
-	        	}
-	            // Compute slice vertices with duplication at end point
-	            int iSave = pContext.mIndex;
-	            for( pContext.mRadialIndex = 0; pContext.mRadialIndex < mRadialSamples; pContext.mRadialIndex += 1 ) {
-	                // Where are we radially along the surface?
-	            	pContext.mRadialFraction 
-	            		= pContext.mRadialIndex * pContext.mInverseRadialSamples; // in [0,1)
-
-	                // Where is this vertex?
-	            	pContext.mPosVector = getRadialPosition( vars.vect1, pContext, aSurface );
-	                pContext.mPosBuf.put( pContext.mPosVector.x )
-	                				.put( pContext.mPosVector.y )
-	                				.put( pContext.mPosVector.z );
-	
-	                // What is the normal for this position?
-	                if ( pContext.mNormBuf != null ) {
-		                pContext.mNormVector = getRadialNormal( vars.vect4, pContext, aSurface );
-		                pContext.mNormBuf.put( pContext.mNormVector.x )
-		                				.put( pContext.mNormVector.y )
-		                				.put( pContext.mNormVector.z );
-	                }
-	                // What texture applies?
-	                if ( pContext.mTexBuf != null ) {
-		                pContext.mTexVector = getRadialTexture( vars.vect2d2, pContext, aSurface );            					
-		                pContext.mTexBuf.put( pContext.mTexVector.x )
-		                				.put( pContext.mTexVector.y );
-	                }
-	                pContext.mIndex += 1;
-	            }
-	            // Copy the first radial vertex to the end
-	            BufferUtils.copyInternalVector3( pContext.mPosBuf, iSave, pContext.mIndex );
-	            if ( pContext.mNormBuf != null ) {
-	            	BufferUtils.copyInternalVector3( pContext.mNormBuf, iSave, pContext.mIndex );
-	            }
-	            // Special texture processing at the end where pContext.mRadialIndex == mRadialSamples
-	            if ( pContext.mTexBuf != null ) {
-	                pContext.mTexVector = getRadialTexture( vars.vect2d2, pContext, aSurface );            					
-	                pContext.mTexBuf.put( pContext.mTexVector.x )
-	            					.put( pContext.mTexVector.y );
-	            }
-	            pContext.mIndex += 1;
-	            pContext.mZOffset += zOffsetAdjust;
-	        }
-	        // Apply any smoothing that may be needed
-	        smoothSurface( pContext, vars );
-	        
-        } finally {
-        	// Return the borrowed vectors
-        	vars.release();
-        }
-        return( northPoleIndex );
+        aContext.mCoordList = getRadialCoordinates( mRadialSamples, mFirstRadial );
     }
     
-    /** FOR SUBCLASS OVERRIDE: apply any 'smoothing' needed on the surface */
-    protected void smoothSurface(
-        CSGRadialContext	pContext
+    /** OVERRIDE: where is the center of the given slice */
+    @Override
+    protected Vector3f getSliceCenter(
+    	CSGAxialContext 	pContext
+    ,	int					pSurface
+    ,	Vector3f			pUseVector
     ,	TempVars			pTempVars
     ) {
+    	CSGRadialContext aContext = (CSGRadialContext)pContext;
+    	
+    	// Standard calculation
+    	Vector3f aCenter = super.getSliceCenter( pContext, pSurface, pUseVector, pTempVars );
+    	
+    	// Take this opportunity to compute the radius as well
+    	aContext.mSliceRadius = getSliceRadius( (CSGRadialContext)pContext, pSurface );
+    	
+        // Ready the standard texture for this slice 
+    	// (this may let you optimize some texture calculations once for the slice
+    	//  with minor adjustments at each radial point on the slice)
+    	aContext.mSliceTexture = getSliceTexture( pTempVars.vect2d, aContext, pSurface );
+
+    	return( aCenter );
     }
-  
+
+    /** OVERRIDE: create the elements of a given slice */
+    @Override
+    protected void createSlice(
+        CSGAxialContext 	pContext
+    ,	int					pSurface
+    ,	TempVars			pTempVars
+    ) {
+    	CSGRadialContext aContext = (CSGRadialContext)pContext;
+    	
+    	// Any per-slice rotation?
+    	aContext.mSliceRotator = null;
+    	if ( mRotateSlices != 0 ) {
+    		// What rotation should be applied to this position along the z
+    		float rotateAngle = ((pContext.mZAxisFraction - 1.0f) / -2.0f) * mRotateSlices;
+    		aContext.mSliceRotator = (new Quaternion()).fromAngleNormalAxis( rotateAngle, Vector3f.UNIT_Z );
+    	}
+        // Compute slice vertices with duplication at end point
+        int iSave = pContext.mIndex;
+        for( aContext.mRadialIndex = 0; aContext.mRadialIndex < mRadialSamples; aContext.mRadialIndex += 1 ) {
+            // Where are we radially along the surface?
+        	aContext.mRadialFraction 
+        		= aContext.mRadialIndex * aContext.mInverseRadialSamples; // in [0,1)
+
+            // Where is this vertex?
+        	pContext.mPosVector = getRadialPosition( pTempVars.vect1, aContext, pSurface );
+            pContext.mPosBuf.put( pContext.mPosVector.x )
+            				.put( pContext.mPosVector.y )
+            				.put( pContext.mPosVector.z );
+
+            // What is the normal for this position?
+            if ( pContext.mNormBuf != null ) {
+                pContext.mNormVector = getRadialNormal( pTempVars.vect4, aContext, pSurface );
+                pContext.mNormBuf.put( pContext.mNormVector.x )
+                				.put( pContext.mNormVector.y )
+                				.put( pContext.mNormVector.z );
+            }
+            // What texture applies?
+            if ( pContext.mTexBuf != null ) {
+                pContext.mTexVector = getRadialTexture( pTempVars.vect2d2, aContext, pSurface );            					
+                pContext.mTexBuf.put( pContext.mTexVector.x )
+                				.put( pContext.mTexVector.y );
+            }
+            pContext.mIndex += 1;
+        }
+        // Copy the first radial vertex to the end
+        BufferUtils.copyInternalVector3( pContext.mPosBuf, iSave, pContext.mIndex );
+        if ( pContext.mNormBuf != null ) {
+        	BufferUtils.copyInternalVector3( pContext.mNormBuf, iSave, pContext.mIndex );
+        }
+        // Special texture processing at the end where pContext.mRadialIndex == mRadialSamples
+        if ( pContext.mTexBuf != null ) {
+            pContext.mTexVector = getRadialTexture( pTempVars.vect2d2, aContext, pSurface );            					
+            pContext.mTexBuf.put( pContext.mTexVector.x )
+        					.put( pContext.mTexVector.y );
+        }
+    }
+
     /** Service routine to allocate and fill an index buffer */
     protected VertexBuffer createIndices(
     	CSGRadialContext	pContext
@@ -526,44 +420,6 @@ public abstract class CSGRadial
     	VertexBuffer vtxBuffer = new VertexBuffer( Type.Index );
     	vtxBuffer.setupData( Usage.Dynamic, 3, Format.UnsignedShort, idxBuf );
         return( vtxBuffer );
-    }
-    
-    /** FOR SUBCLASS OVERRIDE: allocate the context */
-    protected abstract CSGRadialContext getContext(
-    	boolean		pAllocateBuffers
-    );
-    
-    /** FOR SUBCLASS OVERRIDE: fractional speaking, where are we along the z axis (+/-)*/
-    protected float getZAxisFraction( 
-    	CSGRadialContext 	pContext
-    ,	int					pSurface
-    ) {
-    	// By default, work even slices
-    	if ( pSurface != 0 ) {
-    		// On an endcap (either +/1 1.0)
-    		return( (float)pSurface );
-    	} else {
-    		// How far along the total length are we?
-    		float zAxisFraction = (pContext.mZAxisUniformPercent * (float)pContext.mZOffset) - 1.0f; // in (-1, 1)
-    		return( zAxisFraction );
-    	}
-    }
-    
-    /** FOR SUBCLASS OVERRIDE: where is the center of the given slice */
-    protected Vector3f getSliceCenter(
-    	Vector3f			pUseVector
-    ,	CSGRadialContext 	pContext
-    ,	int					pSurface
-    ) {
-    	// By default, the center is ON the zAxis at the given absolute z position 
-    	if ( pSurface != 0 ) {
-    		// Sitting on an end cap
-    		pUseVector.set( 0, 0, mExtentZ * (float)pSurface );
-    	} else {
-    		// Follow along on the zAxis
-    		pUseVector.set( 0, 0, pContext.mZAxisAbsolute );
-    	}
-    	return( pUseVector );
     }
     
     /** FOR SUBCLASS OVERRIDE: what is the radius of the Radial at this slice */
@@ -729,145 +585,15 @@ class CSGRadialCoord
 
 /** Helper class for use during the geometry calculations */
 abstract class CSGRadialContext
+	extends CSGAxialContext
 {
-	int 				mSliceCount;			// How many slices are being processed
-	int					mSliceReductionFactor;	// For LOD - multiplier to skip slices
-    int 				mVertCount;				// How many vertices are being generated
-    int					mIndex;					// The current index within the buffers
-    
-    FloatBuffer 		mPosBuf;;				// Position points (3f)
-    FloatBuffer 		mNormBuf;				// Normal points (3f)
-    FloatBuffer 		mTexBuf;				// Texture points (2f)
-    
     float 				mInverseRadialSamples;	// Percentage of each radial
-    float 				mZAxisUniformPercent;	// Percentage of each slice along z (evenly spaced)
     
     CSGRadialCoord[]	mCoordList;				// Sine/Cosine coordinates based on count of radials
     
-    float 				mAngleFraction;			// Distance along z as an angle  (-pi/2 : +pi/2)
-    float 				mPolarFraction;			// Polar representation of z
-    float 				mZAxisFraction;			// Percentage of actual current z (-1.0 : +1.0)
-    float 				mZAxisAbsolute;			// Actual absolute z point
-    
-    Vector3f 			mSliceCenter;			// Center point of the active slice
     float 				mSliceRadius;			// Radius of this slice
-    Vector2f			mSliceTexture;			// Texture base for entire slice
     Quaternion 			mSliceRotator;			// Rotation to be applied to this slice
     
-    int					mZOffset;				// Counter running along the zAxis
     int					mRadialIndex;			// Counter running along the circular radial points
-    float				mRadialFraction;		// Percentage of distance along the radial surface (0.0 : +1.0)
-    
-    Vector3f			mPosVector;				// The position vector of the current radial point
-    Vector3f			mNormVector;			// The normal vector of the current radial point
-    Vector2f			mTexVector;				// The texture vector of the current radial point
-    
-    /** Initialize the context */
-    protected void initializeContext(
-    	int		pAxisSamples
-    ,	int		pRadialSamples
-    ,	int		pGeneratedFacesMask
-    ,	boolean	pAllocateBuffers
-    ) {	
-    	mSliceCount = resolveSliceCount( pAxisSamples, pGeneratedFacesMask );
-    	mVertCount = resolveVetexCount( mSliceCount, pRadialSamples, pGeneratedFacesMask );
-
-    	if ( pAllocateBuffers ) {
-	    	mPosBuf = BufferUtils.createVector3Buffer( mVertCount );
-	        mNormBuf = BufferUtils.createVector3Buffer( mVertCount );
-	        mTexBuf = BufferUtils.createVector2Buffer( mVertCount );
-    	}
-    }
-    
-    /** How many slices are needed? */
-    protected abstract int resolveSliceCount(
-    	int			pAxisSamples
-    ,	int			pGeneratedFacesMask
-    );
-    
-    /** How many vertices are produced? */
-    protected abstract int resolveVetexCount(
-    	int			pSliceCount
-    ,	int			pRadialSamples
-    ,	int			pGeneratedFacesMask
-    );
-    
-    /** Establish the reduction factors for LOD processing, returning the count of triangles 
-     	produced at this level of reduction
-     */
-    int setReductionFactors(
-    	float		pLODFactor
-    ,	int			pAxisSamples
-    ,	int			pRadialSamples
-    ,	int			pGeneratedFacesMask
-    ) {
-    	// Account for reduction to slices and radial points
-    	mSliceReductionFactor = 0;
-    	
-    	// There are 2 triangles for every radial point on every puck,
-        // and there are AxisSamples -1 pucks (1 puck defined by 2 slices)
-    	int useAxisSamples = pAxisSamples;
-    	
-    	if ( pLODFactor > 0.0f ) {
-    		// Reduce the number of slices by 'skipping' past selected slices (every second, every third...)
-    		// while we produce the Index buffer
-    		if ( pLODFactor > 0.5f ) {
-    			// Minimal 'skipping' is every other, so if you want some special LOD, then you get
-    			// a 50% reduction no matter what
-    			pLODFactor = 0.5f;
-    		}
-    		float reducedSliceCount = pAxisSamples * pLODFactor;
-    		mSliceReductionFactor = (int)(pAxisSamples / reducedSliceCount);
-    		
-    		if ( mSliceReductionFactor > 1 ) {
-	    		// Account for final slice
-	    		useAxisSamples = (pAxisSamples / mSliceReductionFactor) + 1;
-	    		if ( (pAxisSamples % mSliceReductionFactor) > 0 ) {
-	    			// Not an even multiple of the 'factor' so we will add an extra short slice to the end
-	    			useAxisSamples += 1;
-	    		}
-    		}
-    	}
-        int triCount = 2 * (useAxisSamples -1) * pRadialSamples;
-        if ( Face.FRONT.maskIncludesFace( pGeneratedFacesMask ) ) {
-        	// If the shape is closed, then there is one triangle for every radial point,
-        	triCount += pRadialSamples;
-        }
-        if ( Face.BACK.maskIncludesFace( pGeneratedFacesMask ) ) {
-        	// If the shape is closed, then there is one triangle for every radial point,
-        	triCount += pRadialSamples;
-        }
-        return( triCount );
-    }
-    
-    /** For a given slice, how many slices to skip to during LOD processing */
-    int nextSliceFactor(
-    	int		pZIndex
-    ,	int		pGeneratedFacesMask
-    ) {
-    	// If closed, zIndex == 0 is the backface (-1), zIndex == sliceCount-2 is the frontface (1)
-    	if ( Face.BACK.maskIncludesFace( pGeneratedFacesMask ) && (pZIndex == 0) ) {
-    		// Southpole/Backface does not reduce
-    		return( 1 );
-    		
-    	} else if ( Face.FRONT.maskIncludesFace( pGeneratedFacesMask ) && (pZIndex == mSliceCount -2) ) {
-    		// Northpole/Frontface does not reduce
-    		return( 1 );
-    	}
-    	if ( mSliceReductionFactor > 1 ) {
-    		// We cannot skip past the very last slice
-    		int closedBias = (Face.FRONT.maskIncludesFace( pGeneratedFacesMask )) ? 2 : 1;
-    		if ( pZIndex + mSliceReductionFactor > mSliceCount - closedBias ) {
-    			// Count of slices left to the last one
-    			return( mSliceCount - pZIndex - closedBias );
-    			
-    		} else {
-    			// Skip some slices
-    			return( mSliceReductionFactor );
-    		}
-    	} else {
-    		// No slices are being ignored
-    		return( 1 );
-    	}
-    }
+    float				mRadialFraction;		// Percentage of distance along the radial surface (0.0 : +1.0) 
 }

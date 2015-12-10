@@ -203,7 +203,7 @@ public class CSGPipe
       */
     @Override
     protected void smoothSurface(
-        CSGRadialContext	pContext
+        CSGAxialContext		pContext
     ,	TempVars			pTempVars
     ) {
     	if ( mSmoothSurface ) {
@@ -393,7 +393,7 @@ if ( true ) {
     /** OVERRIDE: fractional speaking, where are we along the z axis */
     @Override
     protected float getZAxisFraction( 
-    	CSGRadialContext 	pContext
+    	CSGAxialContext 	pContext
     ,	int					pSurface
     ) {
     	// Even though we are following a curve, we treat each slice as if evenly spread
@@ -407,9 +407,10 @@ if ( true ) {
      */
     @Override
     protected Vector3f getSliceCenter(
-    	Vector3f			pUseVector
-    ,	CSGRadialContext 	pContext
+    	CSGAxialContext 	pContext
     ,	int					pSurface
+    ,	Vector3f			pUseVector
+    ,	TempVars			pTempVars
     ) {
     	CSGPipeContext myContext = (CSGPipeContext)pContext;
     	
@@ -432,6 +433,14 @@ if ( true ) {
     		// Along the surface of the pipe (where mZOffset acts like a simple counter)
     		pUseVector.set( myContext.mCenterList.get( lastIndex - pContext.mZOffset ) );
     	}
+    	// Take this opportunity to compute the radius as well
+    	myContext.mSliceRadius = getSliceRadius( (CSGRadialContext)pContext, pSurface );
+    	
+        // Ready the standard texture for this slice 
+    	// (this may let you optimize some texture calculations once for the slice
+    	//  with minor adjustments at each radial point on the slice)
+    	myContext.mSliceTexture = getSliceTexture( pTempVars.vect2d, myContext, pSurface );
+
     	return( pUseVector );
     }
       

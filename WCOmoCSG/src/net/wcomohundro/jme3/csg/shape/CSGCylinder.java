@@ -37,6 +37,7 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.util.BufferUtils;
+import com.jme3.util.TempVars;
 
 import static com.jme3.util.BufferUtils.*;
 
@@ -123,7 +124,7 @@ public class CSGCylinder
     /** OVERRIDE: fractional speaking, where are we along the z axis */
     @Override
     protected float getZAxisFraction( 
-    	CSGRadialContext 	pContext
+    	CSGAxialContext 	pContext
     ,	int					pSurface
     ) {
     	// Standard even slices
@@ -133,12 +134,13 @@ public class CSGCylinder
     /** OVERRIDE: where is the center of the given slice */
     @Override
     protected Vector3f getSliceCenter(
-    	Vector3f			pUseVector
-    ,	CSGRadialContext 	pContext
+    	CSGAxialContext 	pContext
     ,	int					pSurface
+    ,	Vector3f			pUseVector
+    ,	TempVars			pTempVars
     ) {
     	// By default, the center is ON the zAxis at the given absolute z position
-    	return( super.getSliceCenter( pUseVector, pContext, pSurface ) );
+    	return( super.getSliceCenter( pContext, pSurface, pUseVector, pTempVars ) );
     }
       
     /** OVERRIDE: compute the position of a given radial vertex */

@@ -158,7 +158,7 @@ public abstract class CSGRadialCapped
 	public void applyGradient(
 		List<ColorRGBA>	pColorList
 	) {
-    	CSGRadialContext aContext = getContext( false );
+    	CSGAxialContext aContext = getContext( false );
     	int aSliceCount = aContext.resolveSliceCount( mAxisSamples, mGeneratedFacesMask );
 
     	float[] northEdgeColors = null, southEdgeColors = null, equatorColors = null;
@@ -291,7 +291,7 @@ public abstract class CSGRadialCapped
     protected void updateGeometryProlog(
     ) {
         // Allocate buffers for position/normals/texture
-    	CSGRadialContext aContext = getContext( true );
+    	CSGRadialContext aContext = (CSGRadialContext)getContext( true );
     	
     	// Create all the vertices info
     	int southPoleIndex = -1, northPoleIndex = -1;
@@ -307,7 +307,7 @@ public abstract class CSGRadialCapped
             	//aContext.mPosBuf.put( 0 ).put( 0 ).put( -mExtentZ ); // bottom center
             	//aContext.mNormBuf.put( 0 ).put( 0 ).put( -1 * (mInverted ? -1 : 1) );
             	
-            	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, -1 );
+            	aContext.mSliceCenter = getSliceCenter( aContext, -1, vars.vect2, vars );
             	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, -1 );
                 aContext.mPosBuf.put( aContext.mPosVector.x )
                 				.put( aContext.mPosVector.y )
@@ -326,7 +326,7 @@ public abstract class CSGRadialCapped
 	            //aContext.mPosBuf.put( 0).put( 0 ).put( mExtentZ); // top center
 	            //aContext.mNormBuf.put( 0).put( 0 ).put( 1 * (mInverted ? -1 : 1) );
 	        	
-	        	aContext.mSliceCenter = getSliceCenter( vars.vect2, aContext, 1 );
+	        	aContext.mSliceCenter = getSliceCenter( aContext, 1, vars.vect2, vars );
 	        	aContext.mPosVector = getCenterPosition( vars.vect1, aContext, 1 );
 	            aContext.mPosBuf.put( aContext.mPosVector.x )
 	            				.put( aContext.mPosVector.y )
@@ -576,7 +576,7 @@ public abstract class CSGRadialCapped
     	Vector2f	pScaleTexture
     ,	int			pFaceMask
     ) {
-    	CSGRadialContext aContext = getContext( false );
+    	CSGRadialContext aContext = (CSGRadialContext)getContext( false );
     	int aSliceCount = aContext.resolveSliceCount( mAxisSamples, mGeneratedFacesMask );
     	
     	// Operate on the TextureCoordinate buffer

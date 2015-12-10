@@ -223,37 +223,34 @@ public class CSGSphere
     @Override
     protected void updateGeometryProlog(
     ) {
-    	if ( true ) { 
-            // Allocate buffers for position/normals/texture
-        	CSGRadialContext aContext = getContext( true );
-        	
-        	// Create all the vertices info
-        	int southPoleIndex = 0;
-        	int northPoleIndex = createGeometry( aContext );
+        // Allocate buffers for position/normals/texture
+    	CSGRadialContext aContext = getContext( true );
+    	
+    	// Create all the vertices info
+    	int southPoleIndex = 0;
+    	int northPoleIndex = createGeometry( aContext );
 
-            // Multiple, unique poles are provided
-            VertexBuffer idxBuffer 
-	        	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, false );
-	        setBuffer( idxBuffer );
-	        
-	        if ( mLODFactors != null ) {
-	        	// Various Levels of Detail, with the zero slot being the master
-	        	VertexBuffer[] levels = new VertexBuffer[ mLODFactors.length + 1 ];
-	        	levels[0] = idxBuffer;
-	        	
-	        	// Generate each level
-	        	for( int i = 0, j = mLODFactors.length; i < j; i += 1 ) {
-	        		idxBuffer 
-	            		= createIndices( aContext, mLODFactors[i], southPoleIndex, northPoleIndex, false );
-	        		levels[ i + 1 ] = idxBuffer;
-	        	}
-	        	this.setLodLevels( levels );
-	        }
-            // Establish the bounds
-            updateBound();
-            setStatic();
-            return;
-    	}
+        // Multiple, unique poles are provided
+        VertexBuffer idxBuffer 
+        	= createIndices( aContext, 0.0f, southPoleIndex, northPoleIndex, false );
+        setBuffer( idxBuffer );
+        
+        if ( mLODFactors != null ) {
+        	// Various Levels of Detail, with the zero slot being the master
+        	VertexBuffer[] levels = new VertexBuffer[ mLODFactors.length + 1 ];
+        	levels[0] = idxBuffer;
+        	
+        	// Generate each level
+        	for( int i = 0, j = mLODFactors.length; i < j; i += 1 ) {
+        		idxBuffer 
+            		= createIndices( aContext, mLODFactors[i], southPoleIndex, northPoleIndex, false );
+        		levels[ i + 1 ] = idxBuffer;
+        	}
+        	this.setLodLevels( levels );
+        }
+        // Establish the bounds
+        updateBound();
+        setStatic();
     }
     
     /** FOR SUBCLASS OVERRIDE: allocate the context */
@@ -281,7 +278,7 @@ public class CSGSphere
     /** FOR SUBCLASS OVERRIDE: fractional speaking, where are we along the z axis */
     @Override
     protected float getZAxisFraction( 
-    	CSGRadialContext 	pContext
+    	CSGAxialContext 	pContext
     ,	int					pSurface
     ) {
     	float axisFraction;
@@ -303,12 +300,13 @@ public class CSGSphere
     /** OVERRIDE: where is the center of the given slice */
     @Override
     protected Vector3f getSliceCenter(
-    	Vector3f			pUseVector
-    ,	CSGRadialContext 	pContext
+    	CSGAxialContext 	pContext
     ,	int					pSurface
+	,	Vector3f			pUseVector
+	,	TempVars			pTempVars
     ) {
     	// By default, the center is ON the zAxis at the given absolute z position 
-    	return( super.getSliceCenter( pUseVector, pContext, pSurface ) );
+    	return( super.getSliceCenter(  pContext, pSurface, pUseVector, pTempVars ) );
     }
     
     /** OVERRIDE: what is the radius of the Radial at this slice */
@@ -467,6 +465,7 @@ public class CSGSphere
     	//		map once around the globe as a single texture iteration
     	return( pUseVector );
     }
+    
 
     /** Support sphere specific configuration settings */
     @Override

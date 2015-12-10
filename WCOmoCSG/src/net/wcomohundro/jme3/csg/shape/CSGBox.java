@@ -75,16 +75,6 @@ public class CSGBox
        18, 17, 16,   19, 18, 16, // top
        22, 21, 20,   23, 22, 20  // bottom
     };
-    protected static final short[] GEOMETRY_INDICES_INVERTED_DATA = {
-        2,  0,  1,    3,  0,  2, // front
-        6,  4,  5,    7,  4,  6, // back
-        
-       10,  8,  9,   11,  8, 10, // left
-       14, 12, 13,   15, 12, 14, // right
-
-       18, 16, 17,   19, 16, 18, // top
-       22, 20, 21,   23, 20, 22  // bottom
-    };
 
     protected static final float[] GEOMETRY_NORMALS_DATA = {
        0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1, // front
@@ -96,16 +86,6 @@ public class CSGBox
        0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0, // top
        0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0  // bottom
    	};
-    protected static final float[] GEOMETRY_NORMALS_INVERTED_DATA = {
-        0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1, // front
-        0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1, // back
-        
-        1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0, // left
-       -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0, // right
-        
-        0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0, // top
-        0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0  // bottom
-    	};
 
    	protected static final float[] GEOMETRY_TEXTURE_DATA = {
        1, 0,   0, 0,   0, 1,   1, 1, // front
@@ -187,12 +167,7 @@ public class CSGBox
 
         // Let the super do its thing
         super.read( pImporter );
-        if ( mGeneratedFacesMask == 0 ) {
-        	// Default to full box
-        	mGeneratedFacesMask = Face.FRONT_BACK.getMask() 
-        							| Face.LEFT_RIGHT.getMask()
-        							| Face.TOP_BOTTOM.getMask();
-        }
+
         // Basic configuration
         mExtentX = inCapsule.readFloat( "xExtent", 1 );
         mExtentY = inCapsule.readFloat( "yExtent", 1 );
@@ -200,13 +175,6 @@ public class CSGBox
 
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
-        
-        // Any special color processing?
-        List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
-        if ( colors != null ) {
-	        // First is the north pole, second is the equator, optional third is the south pole
-	        applyGradient( colors );
-        }
     }
     
     /** Preserve this shape */
@@ -218,9 +186,6 @@ public class CSGBox
         
     	// Let the super do its thing
         super.write( pExporter );
-        outCapsule.write( mGeneratedFacesMask
-        				, "generateFaces"
-		        		, Face.FRONT_BACK.getMask() | Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask() );
         
         outCapsule.write( mExtentX, "xExtent", 1 );
         outCapsule.write( mExtentY, "yExtent", 1 );
@@ -332,8 +297,7 @@ public class CSGBox
         if ( getBuffer( Type.Index ) == null ) {
             setBuffer( Type.Index
             			, 3
-            			, BufferUtils.createShortBuffer( (mInverted) ? GEOMETRY_INDICES_INVERTED_DATA
-            													     : GEOMETRY_INDICES_DATA ));
+            			, BufferUtils.createShortBuffer( GEOMETRY_INDICES_DATA ));
         }
     }
     protected void duUpdateGeometryNormals(
@@ -341,8 +305,7 @@ public class CSGBox
         if ( getBuffer(Type.Normal ) == null ) {
             setBuffer( Type.Normal
 			            , 3
-			            , BufferUtils.createFloatBuffer( (mInverted) ? GEOMETRY_NORMALS_INVERTED_DATA
-			            											 : GEOMETRY_NORMALS_DATA ));
+			            , BufferUtils.createFloatBuffer( GEOMETRY_NORMALS_DATA ));
         }
     }
     protected void duUpdateGeometryTextures(

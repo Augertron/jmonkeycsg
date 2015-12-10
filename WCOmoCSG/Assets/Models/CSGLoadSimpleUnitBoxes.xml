@@ -54,12 +54,94 @@
         </com.jme3.scene.Geometry>  
         
    		<!-- Rock2 -->
-        <com.jme3.scene.Geometry name='InvertedBox'
+        <com.jme3.scene.Geometry name='BrickBox'
         		materialName='Textures/BrickWall/RedBrick.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='15.0' y='0.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' inverted='true'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'/>
+        </com.jme3.scene.Geometry>  
+        
+        
+        <!-- Normal -->
+        <com.jme3.scene.Geometry name='NormalBox'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox'/>
+        </com.jme3.scene.Geometry>
+        
+        <!-- Wireframe -->
+        <com.jme3.scene.Geometry name='WireframeBox'
+        		materialName='Textures/Debug/Wireframe.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox'/>
+        </com.jme3.scene.Geometry>
+        
+        <!-- Brickwall -->
+        <com.jme3.scene.Geometry name='BrickwallBox'
+        		materialName='Textures/BrickWall/BrickWall.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox'/>
+        </com.jme3.scene.Geometry>
+        
+   		<!-- Rock1 -->
+        <com.jme3.scene.Geometry name='Rock1Box'
+        		materialName='Textures/Rock/Rock1.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='9.0' y='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox'/>
+        </com.jme3.scene.Geometry>  
+        
+   		<!-- Rock2 -->
+        <com.jme3.scene.Geometry name='Rock2Box'
+        		materialName='Textures/Rock/Rock2.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='12.0' y='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox'/>
+        </com.jme3.scene.Geometry>  
+        
+   		<!-- Brick -->
+        <com.jme3.scene.Geometry name='BrickBox'
+        		materialName='Textures/BrickWall/RedBrick.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='15.0' y='-10.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox'/>
+        </com.jme3.scene.Geometry>  
+ 
+   		<!-- Brick Inverted -->
+        <com.jme3.scene.Geometry name='InvertedBox'
+        		materialName='Textures/BrickWall/RedBrick.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='15.0' y='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' inverted='true'/>
+        </com.jme3.scene.Geometry>  
+        
+   		<!-- Brick Open -->
+        <com.jme3.scene.Geometry name='OpenBox'
+        		materialName='Textures/BrickWall/RedBrick.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='18.0' y='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' closed='false'/>
+        </com.jme3.scene.Geometry>  
+ 
+    	<!-- Brick Open Inverted -->
+        <com.jme3.scene.Geometry name='InvertedOpenBox'
+        		materialName='Textures/BrickWall/RedBrick.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='21.0' y='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' closed='false' inverted='true'/>
         </com.jme3.scene.Geometry>  
         
     </children>
