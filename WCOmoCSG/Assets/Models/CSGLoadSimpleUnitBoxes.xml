@@ -144,5 +144,13 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' closed='false' inverted='true'/>
         </com.jme3.scene.Geometry>  
         
+        <com.jme3.scene.Geometry name='NormalInvertedBox'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='-15.0'/>
+            </transform>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' inverted='true'/>
+        </com.jme3.scene.Geometry>
+        
     </children>
 </com.jme3.scene.Node>

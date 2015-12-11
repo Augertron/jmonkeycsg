@@ -170,6 +170,7 @@ public class CSGAxialBox
 	) {
 		super( 1, pExtentZ, true, false );
 		
+		mFlatEnds = true;
 		mExtentX = pExtentX;
 		mExtentY = pExtentY;
 		
@@ -263,9 +264,10 @@ public class CSGAxialBox
                 
                 // The normal is the same for all the vertices of any given face
                 int normalSelector = i * 3;
-                pContext.mNormBuf.put( sNormals[ normalSelector++ ] )
-                				 .put( sNormals[ normalSelector++ ] )
-                				 .put( sNormals[ normalSelector++ ] );
+                float normalFlip = (mInverted) ? -1 : 1;
+                pContext.mNormBuf.put( sNormals[ normalSelector++ ] * normalFlip )
+                				 .put( sNormals[ normalSelector++ ] * normalFlip )
+                				 .put( sNormals[ normalSelector++ ] * normalFlip );
                 
                 // The texture varies per vertex based on the face
                 pContext.mTexBuf.put( sTexture[ textureSelector++ ] )
