@@ -33,10 +33,10 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 ?>
         <!-- A simple union -->
-	    <net.wcomohundro.jme3.csg.CSGGeometry name='TestBlended'
+	    <net.wcomohundro.jme3.csg.CSGGeometry name='BoxInSnake'
         		materialName='Textures/BrickWall/BrickWallRpt.xml' singleMaterial='true' >
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0'/>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0'/>
             </transform>
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
@@ -56,7 +56,7 @@
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
 		<!-- A corridor -->
-	    <net.wcomohundro.jme3.csg.CSGGeometry name='CSGGeometry'
+	    <net.wcomohundro.jme3.csg.CSGGeometry name='Corridor'
         		materialName='Textures/Rock/Rock1Rpt.xml' singleMaterial='true'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='0'/>
@@ -102,6 +102,50 @@
 
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
-
+        
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Archway'
+            	materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <shapes>
+            	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+                  	 		xExtent='0.5' yExtent='0.25' zExtent='0.5'>
+	                	<faceProperties>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.0' scaleY='0.5'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='3.0' scaleY='1.0'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='3.0' scaleY='1.0'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+	                    		materialName='Textures/Rock/Rock1NormalRpt.xml'/>
+	            		</faceProperties>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                  	 		axisSamples='34' closed='true' zExtent='0.5' 
+                  	 		radialSamples='32' radius='0.5' 
+                  	 		firstRadial='10PI/6' textureMode='CAN'>
+                		<faceProperties>
+                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    				face='SIDES' scaleX='3' scaleY='1'/>
+            			</faceProperties>
+                  	</mesh>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+			</shapes>
+          	<!-- Scale to match the transform below 
+                 BUT CSGGeometry DOES NOT YET SUPPORT THIS OPERATION -->
+            <faceProperties>
+            	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.9' scaleY='1.9'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1.9' scaleY='19.9'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.9' scaleY='19.9'/>
+        		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.9' scaleY='19.9'/>
+         	</faceProperties>
+         	<!-- Scale it up -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-10' y='0'/>
+                <xscale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
+            </transform>
+         </net.wcomohundro.jme3.csg.CSGGeometry> 
 	</children>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

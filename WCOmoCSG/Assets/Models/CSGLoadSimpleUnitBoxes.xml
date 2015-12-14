@@ -64,7 +64,7 @@
         
         
         <!-- Normal -->
-        <com.jme3.scene.Geometry name='NormalBox'
+        <com.jme3.scene.Geometry name='NormalAxialBox'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-10.0'/>
@@ -73,7 +73,7 @@
         </com.jme3.scene.Geometry>
         
         <!-- Wireframe -->
-        <com.jme3.scene.Geometry name='WireframeBox'
+        <com.jme3.scene.Geometry name='WireframeAxialBox'
         		materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='-10.0'/>
@@ -82,7 +82,7 @@
         </com.jme3.scene.Geometry>
         
         <!-- Brickwall -->
-        <com.jme3.scene.Geometry name='BrickwallBox'
+        <com.jme3.scene.Geometry name='BrickwallAxialBox'
         		materialName='Textures/BrickWall/BrickWall.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='-10.0'/>
@@ -91,7 +91,7 @@
         </com.jme3.scene.Geometry>
         
    		<!-- Rock1 -->
-        <com.jme3.scene.Geometry name='Rock1Box'
+        <com.jme3.scene.Geometry name='Rock1AxialBox'
         		materialName='Textures/Rock/Rock1.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='9.0' y='-10.0'/>
@@ -100,7 +100,7 @@
         </com.jme3.scene.Geometry>  
         
    		<!-- Rock2 -->
-        <com.jme3.scene.Geometry name='Rock2Box'
+        <com.jme3.scene.Geometry name='Rock2AxialBox'
         		materialName='Textures/Rock/Rock2.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='12.0' y='-10.0'/>
@@ -109,7 +109,7 @@
         </com.jme3.scene.Geometry>  
         
    		<!-- Brick -->
-        <com.jme3.scene.Geometry name='BrickBox'
+        <com.jme3.scene.Geometry name='BrickAxialBox'
         		materialName='Textures/BrickWall/RedBrick.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='15.0' y='-10.0'/>
@@ -118,7 +118,7 @@
         </com.jme3.scene.Geometry>  
  
    		<!-- Brick Inverted -->
-        <com.jme3.scene.Geometry name='InvertedBox'
+        <com.jme3.scene.Geometry name='InvertedAxialBox'
         		materialName='Textures/BrickWall/RedBrick.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='15.0' y='-15.0'/>
@@ -127,7 +127,7 @@
         </com.jme3.scene.Geometry>  
         
    		<!-- Brick Open -->
-        <com.jme3.scene.Geometry name='OpenBox'
+        <com.jme3.scene.Geometry name='OpenAxialBox'
         		materialName='Textures/BrickWall/RedBrick.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='18.0' y='-15.0'/>
@@ -136,7 +136,7 @@
         </com.jme3.scene.Geometry>  
  
     	<!-- Brick Open Inverted -->
-        <com.jme3.scene.Geometry name='InvertedOpenBox'
+        <com.jme3.scene.Geometry name='InvertedOpenAxialBox'
         		materialName='Textures/BrickWall/RedBrick.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='21.0' y='-15.0'/>
@@ -144,7 +144,7 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' closed='false' inverted='true'/>
         </com.jme3.scene.Geometry>  
         
-        <com.jme3.scene.Geometry name='NormalInvertedBox'
+        <com.jme3.scene.Geometry name='NormalInvertedAxialBox'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-15.0'/>

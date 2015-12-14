@@ -62,7 +62,7 @@ import com.jme3.util.TempVars;
  	
  	By definition, a full box has 6 faces, each with 4 corners, for a full 24 vertices.
  	While the cube really only has 8 distinct points, each different face imposes its
- 	own normal/texture to any given point.  So you are force to have 24 vertices
+ 	own normal/texture to any given point.  So you are forced to have 24 vertices
  	even if the positional information may be duplicated.
  	
  	Working from back-to-front, counter clockwise, starting with the lower left
@@ -127,7 +127,7 @@ public class CSGAxialBox
 
     /** The textures: to match the other axial/radial shapes, the texture is applied to
         the sides as if the shape where tilted up to sit on its back surface, and then 
-        the texture is wrapped around it. */
+        the texture is wrapped around it. This matches CSGRadialCapped CAN texture */
    	protected static final float[] sTexture = new float[] {
         0, 0,   1, 0,   1, 1,   0, 1	 // front	4 / 5 / 6 / 7
     ,   0, 0,   1, 0,   1, 1,   0, 1	 // back	0 / 1 / 2 / 3
@@ -236,9 +236,17 @@ public class CSGAxialBox
     ,	TempVars			pTempVars
     ) {
     	int faceMask;
+    	float xBase = 0, yBase = 0, xSpan = 1, ySpan = 1, rlPercent = 0, tbPercent = 0;
+    	
     	if ( pSurface == 0 ) {
     		// Include the 4 faces around the edge
     		faceMask = (Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask()) & mGeneratedFacesMask;
+    		
+    		// Account for span around the perimeter
+    		float perimeter = (2 * 2 * mExtentX) + (2 * 2 * mExtentY);
+    		rlPercent = (mExtentY * 2) / perimeter;
+    		tbPercent = (mExtentX * 2) / perimeter;
+    		
     	} else if ( pSurface < 0 ) {
     		faceMask = Face.BACK.getMask();
     	} else {
@@ -248,6 +256,31 @@ public class CSGAxialBox
     		if ( (faceMask & 1) == 0 ) {
     			// We are not drawing this face
     			continue;
+    		}
+    		// Texture order for the 'sides' is counter clockwise, starting from the right
+    		// ie Right / Top / Left / Bottom
+    		switch( i ) {
+    		case 0:			// FRONT
+    		case 1:			// BACK
+    			xBase = 0;
+    			xSpan = 1;
+    			break;
+    		case 3:			// RIGHT
+    			xBase = 0;
+    			xSpan = rlPercent;
+    			break;
+    		case 4:			// TOP
+    			xBase = rlPercent;
+    			xSpan = tbPercent;
+    			break;
+    		case 2:			// LEFT
+    			xBase = rlPercent + tbPercent;
+    			xSpan = rlPercent;
+    			break;
+    		case 5:			// BOTTOM
+    			xBase = rlPercent + tbPercent + rlPercent;
+    			xSpan = tbPercent;
+    			break;
     		}
     		// Where is this vertex?
     		int vertexSelector = i * 4;			// 4 per face
@@ -270,8 +303,8 @@ public class CSGAxialBox
                 				 .put( sNormals[ normalSelector++ ] * normalFlip );
                 
                 // The texture varies per vertex based on the face
-                pContext.mTexBuf.put( sTexture[ textureSelector++ ] )
-                			    .put( sTexture[ textureSelector++ ] );
+                pContext.mTexBuf.put( xBase + (sTexture[ textureSelector++ ] * xSpan) )
+                			    .put( yBase + (sTexture[ textureSelector++ ] * ySpan) );
     		}
     	}
     }

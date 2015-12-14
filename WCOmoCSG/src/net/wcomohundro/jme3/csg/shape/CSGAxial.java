@@ -52,12 +52,21 @@ import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 
 /** Abstract base class for those 'shapes' that produce their meshes by processing
  	a set of slices along the zAxis.  The span of the processing is determined by
- 	the zExtent.  The shape runs from +zExtent to -zExtent, so the effective 'height'
+ 	the zExtent.  The shape runs from -zExtent to +zExtent, so the effective 'height'
  	of the shape is 2*zExtent.
  	
- 	An axial is considered to be 'closed' if front/back endcaps are generated for the shape
+ 	@see CSGMesh for a discussion of the 'faces' of a shape.  For CSGAxial, 
+ 	'front' and 'back' are the common elements.  The front face is known as the
+ 	northpole, and the back face is known as the southpole.
  	
- 	An 'inverted' axial is designed to be viewed from the inside
+ 	An axial is considered to be 'closed' if front/back endcaps are generated 
+ 	for the shape.  The end caps are either 'flat' (they have no z extent) or not
+ 	(they have a given z extent), as determined by the appropriate subclass.
+ 	
+ 	The structure CSGAxialContext holds all the dynamic elements computed during 
+ 	the iterations along Z, and callback methods determine the details of the shape 
+ 	being generated.  In particular, there are various ways of measuring how far along Z
+ 	the process has gone.
  */
 public abstract class CSGAxial 
 	extends CSGMesh

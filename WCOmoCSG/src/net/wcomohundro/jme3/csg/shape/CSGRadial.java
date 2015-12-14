@@ -65,7 +65,9 @@ import net.wcomohundro.jme3.csg.shape.CSGSphere.TextureMode;
  	
  	.updateGeometryProlog() provides a basic framework of iterating along the zAxis to 
  	produce a center point for each slice, and then iterating radially along the 
- 	circle's surface to produce the vertices.
+ 	circle's surface to produce the vertices.  The sides of the shape are produced by
+ 	triangles spanning from one slice to the next.
+ 	
  	The structure CSGRadialContext holds all the dynamic elements computed during 
  	these iterations, and callback methods determine the details of the shape 
  	being generated.

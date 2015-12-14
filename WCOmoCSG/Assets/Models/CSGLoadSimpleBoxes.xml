@@ -102,7 +102,8 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='5.0' yExtent='1.0' zExtent='1.0'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='5' scaleY='1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='5' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='12' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='12' scaleY='1'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -114,7 +115,8 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='1.0' yExtent='5.0' zExtent='1.0'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='5'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='5' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='12' scaleY='1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='12' scaleY='1'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -125,8 +127,8 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='1.0' yExtent='1.0' zExtent='5.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1' scaleY='5'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='5'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='4' scaleY='5'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='4' scaleY='5'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -139,8 +141,8 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='2.0' yExtent='3.0' zExtent='4.0'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='2' scaleY='3'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='3' scaleY='4'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='2' scaleY='4'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='10' scaleY='4'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='10' scaleY='4'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>

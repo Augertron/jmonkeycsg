@@ -59,10 +59,36 @@ import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
  	
  	Subclasses are expected to determine the placement of the slices
  	
- 	 Configuration Settings:
+ 	Configuration Settings:
  		radius2 - 		radius that applies to the back endcap
  		
  		textureMode -	how to apply the texture to the surfaces
+ 		
+ 	
+ 	For Textures:
+ 		Texture is applied to the flat end caps as if the cap was a cookie cutter 
+ 		applied to the texture. So if you are facing the endcap, then the texture
+ 		0/0 is in the lower left corner.  X increases to the right, Y increases upward,
+ 		and the 1/1 point is the upper right.
+ 		If the UNIFORM option is selected, the endcaps are still flat, but they are
+ 		inherently scaled to match 1:1 the curved surface.  This option may no longer
+ 		be interesting since per-face scaling is now supported.
+ 		
+ 		The texture on the sides is bit more complicated.  One axis will travel around
+ 		the radial circumference, and the other will travel linearly along the edge.
+ 		So you have to pick whether X or Y travels in which direction.
+ 		
+ 		If you tilt the shape up on its back end, then you are looking at something
+ 		like a soup can.  The texture is then treated like the soup can label.  The
+ 		0/0 point is in the lower left.  Y increases upward linearly matching the Z
+ 		extent.  X increases toward the right around the circumference.  This is the
+ 		CAN texture mode.
+ 		
+ 		If you rotate the shape so that the flat back is to the left, and the flat
+ 		front is to the right, then you are looking at the side of a rolling pin.
+ 		Again, the 0/0 point is the lower left.  But now it is X that increases
+ 		linearly as you move from left to right, matching the Z extent.  Y increases
+ 		as you move upward along the circumference.  This the ROLLER texture mode,
 
  */
 public abstract class CSGRadialCapped 
@@ -75,10 +101,18 @@ public abstract class CSGRadialCapped
 
 	/** Special TextureModes that can be applied */
     public enum TextureMode {
+    // Older names before I had really thought much about it
         FLAT			// The texture of the end caps is simply flat
     ,   UNIFORM			// Texture of end caps is flat and uniform in scale to the curved surface
     ,	FLAT_LINEAR		// Flat end caps, curved surface is linear front-to-back
     ,	UNIFORM_LINEAR	// Flat, uniform end caps, curved surface is linear front-to-back
+    
+    // Newer names that are more reflective of what is really going on
+    ,	CAN				// Image the shape rotated to sit on is back surface (like soup can).  
+    					// Then X moves around the circumference, and Y increases upwards on the can
+    ,	ROLLER			// Image the shape rotated so that the back is to left and the front is
+    					// to the right.  Then X increases linearly from left to right, and 
+    					// Y increases along the circumference as you move up.
     }
     
     /** The radius of the back cap */
@@ -231,6 +265,7 @@ public abstract class CSGRadialCapped
 	    		    switch( mTextureMode ) {
 	    		    case FLAT:
 	    		    case UNIFORM:
+	    		    case CAN:
 	    		    	// x runs around the circumference, y runs along z
 	    		    	if ( y < 0.5f ) {
 	    		    		// Southern hemisphere
@@ -250,6 +285,7 @@ public abstract class CSGRadialCapped
 	    		    	
 	    		    case FLAT_LINEAR:
 	    		    case UNIFORM_LINEAR:
+	    		    case ROLLER:
 	    		    	// y runs around the circumference, x runs along z
 	    		    	if ( x < 0.5f ) {
 	    		    		// Southern hemisphere
@@ -455,13 +491,16 @@ public abstract class CSGRadialCapped
             switch( mTextureMode ) {
             case FLAT:
             case UNIFORM:
-            	// Run the texture around the circle
+            case CAN:
+            	// Run x around the circle, y along the z extent
             	pUseVector.set(
             		(mInverted) ? 1.0f - radialFraction : radialFraction
             	,	(myContext.mZAxisUniformPercent * (float)myContext.mZOffset) / 2.0f );                    	
             	break;
-            default:
-            	// Run the texture linearly from front to back
+            case FLAT_LINEAR:
+            case UNIFORM_LINEAR:
+            case ROLLER:
+            	// Run x along the z extent, y around the circle
             	pUseVector.set(
             		(myContext.mZAxisUniformPercent * (float)myContext.mZOffset) / 2.0f
             	,	(mInverted) ? radialFraction : 1.0f - radialFraction );	
@@ -545,7 +584,7 @@ public abstract class CSGRadialCapped
         OutputCapsule outCapsule = pExporter.getCapsule( this );
         outCapsule.write( mGeneratedFacesMask, "generateFaces", Face.SIDES.getMask() | Face.FRONT_BACK.getMask() );
         outCapsule.write( mRadiusBack, "radius2", mRadius );
-        outCapsule.write( mTextureMode, "textureMode", TextureMode.FLAT );
+        outCapsule.write( mTextureMode, "textureMode", TextureMode.CAN );
     }
     @Override
     public void read(
@@ -561,7 +600,7 @@ public abstract class CSGRadialCapped
         }
         // The super will have read 'radius'
         mRadiusBack = inCapsule.readFloat( "radius2", mRadius );
-        mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.FLAT );
+        mTextureMode = inCapsule.readEnum( "textureMode", TextureMode.class, TextureMode.CAN );
 
         // Super processing of zExtent reads to zero to allow us to apply an appropriate default here
         if ( mExtentZ == 0 ) {
