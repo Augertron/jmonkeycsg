@@ -137,7 +137,7 @@ public class CSGShape
 	}
 	
 	/** Handler interface */
-	public interface CSGShapeProcessor {
+	public interface CSGShapeProcessor<CSGEnvironmentT> {
 		
 		/** Connect to a shape */
 		public CSGShapeProcessor setShape(
@@ -154,8 +154,8 @@ public class CSGShape
 		
 		/** Ready a list of shapes for processing */
 		public List<CSGShape> prepareShapeList(
-			List<CSGShape>	pShapeList
-		,	CSGEnvironment	pEnvironment
+			List<CSGShape>		pShapeList
+		,	CSGEnvironmentT		pEnvironment
 		);	
 		
 		/** Add a shape into this one */
@@ -163,7 +163,7 @@ public class CSGShape
 			CSGShape			pOtherShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
-		,	CSGEnvironment		pEnvironment
+		,	CSGEnvironmentT		pEnvironment
 		);
 		
 		/** Subtract a shape from this one */
@@ -171,7 +171,7 @@ public class CSGShape
 			CSGShape			pOtherShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
-		,	CSGEnvironment		pEnvironment
+		,	CSGEnvironmentT		pEnvironment
 		);
 
 		/** Find the intersection with another shape */
@@ -179,7 +179,7 @@ public class CSGShape
 			CSGShape			pOtherShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
-		,	CSGEnvironment		pEnvironment
+		,	CSGEnvironmentT		pEnvironment
 		);
 		
 		/** Find the merge with another shape */
@@ -187,7 +187,7 @@ public class CSGShape
 			CSGShape			pOtherShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
-		,	CSGEnvironment		pEnvironment
+		,	CSGEnvironmentT		pEnvironment
 		);
 		
 		/** Produce the mesh(es) that corresponds to this shape
@@ -198,7 +198,7 @@ public class CSGShape
 			CSGMeshManager		pMeshManager
 		,	boolean				pProduceSubelements
 		,	CSGTempVars			pTempVars
-		,	CSGEnvironment		pEnvironment
+		,	CSGEnvironmentT		pEnvironment
 		);
 
 	}
@@ -301,12 +301,14 @@ public class CSGShape
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Nanoseconds needed to regenerate this shape */
 	protected long						mRegenNS;
+	/** Debug support */
+	protected List<Savable>				mDebug;
 
 	
 	/** Generic constructor */
 	public CSGShape(
 	) {
-		this( (String)null, 0 );
+		this( (String)"CSGShape", 0 );
 	}
 	/** Constructor based on a mesh */
 	public CSGShape(
@@ -322,7 +324,6 @@ public class CSGShape
 	) {
 		super( pShapeName, pMesh );
 		mIsValid = true;
-		mShapeKey = assignInstanceKey( "CSGShape" );
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
 		mSurface = CSGShapeSurface.USE_MESH;
@@ -333,7 +334,6 @@ public class CSGShape
 	) {
 		super( pShapeName );	// no mesh provided
 		mIsValid = true;
-		mShapeKey = "Shape" + ++sInstanceMarker;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;		
 		mSurface = CSGShapeSurface.USE_MESH;
@@ -351,12 +351,13 @@ public class CSGShape
 	/** NOT REALLY PUBLIC/FOR HANDLER USE ONLY - Constructor based on a given handler */
 	public CSGShape(
 		CSGShapeProcessor	pHandler
+	,	String				pShapeName
 	,	int					pOrder
 	,	boolean				pIsValid
 	) {
+		super( pShapeName );
 		mHandler = pHandler.setShape( this );
 		mIsValid = pIsValid;
-		mShapeKey = "Shape" + ++sInstanceMarker;
 		mOrder = pOrder;
 		mSurface = CSGShapeSurface.USE_MESH;
 	}
@@ -450,7 +451,7 @@ public class CSGShape
 			// Empty with no mesh
 			aClone = new CSGShape( this.getName(), this.mOrder );
 		}
-		aClone.mShapeKey = "Shape" + ++sInstanceMarker;
+		aClone.mShapeKey = CSGShape.assignInstanceKey( aClone.name );
 		aClone.setOperator( this.mOperator );
 		aClone.setShapeSurface( this.mSurface );
 //		aClone.setLodLevel( pLODLevel );
@@ -464,7 +465,13 @@ public class CSGShape
 	
 	/** Unique keystring identifying this element */
 	@Override
-	public String getInstanceKey() { return mShapeKey; }
+	public String getInstanceKey(
+	) { 
+		if ( mShapeKey == null ) {
+			mShapeKey = CSGShape.assignInstanceKey( this.name );
+		}
+		return mShapeKey; 
+	}
 	
 	/** The shape knows if it is 'valid' or not */
 	@Override
@@ -697,7 +704,7 @@ public class CSGShape
 	@Override
 	public boolean regenerate(
 	) {
-		return( regenerate( CSGEnvironment.sStandardEnvironment ) );		
+		return( regenerate( CSGEnvironment.resolveEnvironment( null ) ) );		
 	}
 	@Override
 	public boolean regenerate(
@@ -786,6 +793,9 @@ public class CSGShape
 
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
+        
+        // Special debug??
+        mDebug = aCapsule.readSavableArrayList( "debug", null );
 	}
 
 	/** Service routine to use the appropriate representation of this shape */
@@ -803,8 +813,8 @@ public class CSGShape
 				if ( propList != null ) {
 					// The setting on the CSGShape apply to its child mesh
 					for( CSGFaceProperties aProperty : propList ) {
-						if ( aProperty.hasScaleTexture() ) {
-							thisMesh.scaleFaceTextureCoordinates( aProperty.getScaleTexture(), aProperty.getFaceMask() );
+						if ( aProperty.hasTextureScale() ) {
+							thisMesh.scaleFaceTextureCoordinates( aProperty.getTextureScale(), aProperty.getFaceMask() );
 						}
 		        	}
 				}
@@ -812,8 +822,8 @@ public class CSGShape
 				if ( (mParentShape != null) && ((propList = mParentShape.mFaceProperties) != null) ) {
 					// The setting on the parent CSGShape apply to this child mesh
 					for( CSGFaceProperties aProperty : propList ) {
-						if ( aProperty.hasScaleTexture() ) {
-							thisMesh.scaleFaceTextureCoordinates( aProperty.getScaleTexture(), aProperty.getFaceMask() );
+						if ( aProperty.hasTextureScale() ) {
+							thisMesh.scaleFaceTextureCoordinates( aProperty.getTextureScale(), aProperty.getFaceMask() );
 						}
 		        	}
 				}
@@ -889,6 +899,10 @@ public class CSGShape
 				}
 			}
 			// The final product if what is used as the result of the group
+			if ( this.getName() != null ) {
+				// Apply the explicit name of 'this' shape to the resultant blend
+				aProduct.setName( this.getName() );
+			}
 			return( aProduct );
 			
 		} finally {

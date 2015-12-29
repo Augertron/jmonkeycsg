@@ -66,7 +66,7 @@ import com.jme3.util.TempVars;
  	even if the positional information may be duplicated.
  	
  	Working from back-to-front, counter clockwise, starting with the lower left
- 	when facing the surface:
+ 	when facing the surface results in the following vertices:
 
  	             [2]--------[3]
  	            /           /|
@@ -77,6 +77,11 @@ import com.jme3.util.TempVars;
  			 |           | /
  			 |           |/
  			[4]---------[5]
+ 			
+ 	For drawing the faces, standard axial processing starts in the back, moves up 
+ 	the Z, and finishes with the front.  If we also mimic the radial processing of
+ 	starting in the east and moving counter clockwise, we will draw the side faces
+ 	Right, Top, Left, Bottom
  */
 public class CSGAxialBox 
 	extends CSGAxial
@@ -86,6 +91,13 @@ public class CSGAxialBox
 	public static final String sCSGAxialBoxRevision="$Rev$";
 	public static final String sCSGAxialBoxDate="$Date$";
 
+	
+	/** The expected sequence of drawing the faces */
+	protected static final Face[] sFaces = new Face[] {
+		Face.BACK
+	,	Face.RIGHT, Face.TOP, Face.LEFT, Face.BOTTOM
+	,	Face.FRONT
+	};
 	
 	/** The eight vertices that define a box */
 	protected static final float[] sVertices = new float[] {
@@ -102,48 +114,42 @@ public class CSGAxialBox
 	
 	/** The vertices that apply to the faces 
 	    (counter clockwise, facing the surface, starting lower left) */
-	protected static final int[] sFaces = new int[] {
-		4, 5, 6, 7		// front
-	,	0, 1, 2, 3		// back
+	protected static final int[] sFaceVertices = new int[] {
+		0, 1, 2, 3		// back
 	
-	,	1, 4, 7, 2		// left
 	,	5, 0, 3, 6		// right
-	
 	,	7, 6, 3, 2		// top
+	,	1, 4, 7, 2		// left
 	,	1, 0, 5, 4		// bottom
+	
+	,	4, 5, 6, 7		// front
 	};
 	
 	/** The normals, strictly related to the face */
     protected static final float[] sNormals = new float[] {
-    	0,  0,  1	 	// front
-    ,   0,  0, -1	 	// back
+        0,  0, -1	 	// back
        
-    ,  -1,  0,  0	 	// left
-    ,   1,  0,  0	 	// right
-       
+    ,   1,  0,  0	 	// right 
     ,   0,  1,  0	 	// top
+    ,  -1,  0,  0	 	// left
     ,   0, -1,  0	  	// bottom
+    
+	,	0,  0,  1	 	// front
    	};
 
     /** The textures: to match the other axial/radial shapes, the texture is applied to
         the sides as if the shape where tilted up to sit on its back surface, and then 
         the texture is wrapped around it. This matches CSGRadialCapped CAN texture */
    	protected static final float[] sTexture = new float[] {
-        0, 0,   1, 0,   1, 1,   0, 1	 // front	4 / 5 / 6 / 7
-    ,   0, 0,   1, 0,   1, 1,   0, 1	 // back	0 / 1 / 2 / 3
+        0, 0,   1, 0,   1, 1,   0, 1	 // back	0 / 1 / 2 / 3
        
-    ,   1, 0,   1, 1,   0, 1,   0, 0	 // left	1 / 4 / 7 / 2
-    ,   0, 1,   0, 0,   1, 0,   1, 1	 // right	5 / 0 / 3 / 6
-       
+    ,   0, 1,   0, 0,   1, 0,   1, 1	 // right	5 / 0 / 3 / 6      
     ,   1, 1,   0, 1,   0, 0,   1, 0	 // top		7 / 6 / 3 / 2
+    ,   1, 0,   1, 1,   0, 1,   0, 0	 // left	1 / 4 / 7 / 2
     ,   0, 0,   1, 0,   1, 1,   0, 1	 // bottom  1 / 0 / 5 / 4
-   	};
 
-   	/** The order of faces as written axially into the underlying buffers */
-   	protected static final Face[] sFaceBufferOrder = new Face[] {
-   		Face.BACK, Face.LEFT, Face.RIGHT, Face.TOP, Face.BOTTOM, Face.FRONT
+    ,	0, 0,   1, 0,   1, 1,   0, 1	 // front	4 / 5 / 6 / 7
    	};
-   	
    	
 	/** The size of the box (remember to *2 for full width/height/depth) */
     protected float mExtentX, mExtentY;
@@ -235,68 +241,83 @@ public class CSGAxialBox
     ,	int					pSurface
     ,	TempVars			pTempVars
     ) {
-    	int faceMask;
+    	int faceIndex, faceMask;
     	float xBase = 0, yBase = 0, xSpan = 1, ySpan = 1, rlPercent = 0, tbPercent = 0;
     	
-    	if ( pSurface == 0 ) {
-    		// Include the 4 faces around the edge
+    	if ( pSurface < 0 ) {
+    		// BACK
+    		faceIndex = 0;
+    		faceMask = Face.BACK.getMask() & mGeneratedFacesMask;
+    	} else if ( pSurface > 0 ){
+    		// FRONT
+    		faceIndex = sFaces.length -1;
+    		faceMask = Face.FRONT.getMask() & mGeneratedFacesMask;
+    	} else {
+    		// SIDES
+    		faceIndex = 1;
     		faceMask = (Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask()) & mGeneratedFacesMask;
     		
     		// Account for span around the perimeter
     		float perimeter = (2 * 2 * mExtentX) + (2 * 2 * mExtentY);
     		rlPercent = (mExtentY * 2) / perimeter;
     		tbPercent = (mExtentX * 2) / perimeter;
-    		
-    	} else if ( pSurface < 0 ) {
-    		faceMask = Face.BACK.getMask();
-    	} else {
-    		faceMask = Face.FRONT.getMask();
     	}
-    	for( int i = 0; faceMask != 0; i += 1, faceMask >>= 1 ) {
-    		if ( (faceMask & 1) == 0 ) {
+    	// Process the faces in the expected sFaces[] order
+    	for( ; faceIndex < sFaces.length; faceIndex += 1 ) {
+    		Face aFace = sFaces[ faceIndex ];
+    		if ( (faceMask & aFace.getMask()) == 0 ) {
     			// We are not drawing this face
     			continue;
     		}
+    		// Look for adjustment to the origin
+    		Vector2f textureOrigin = this.matchFaceOrigin( aFace.getMask() );
+    		
     		// Texture order for the 'sides' is counter clockwise, starting from the right
     		// ie Right / Top / Left / Bottom
-    		switch( i ) {
-    		case 0:			// FRONT
-    		case 1:			// BACK
+    		switch( aFace ) {
+    		case FRONT:
+    		case BACK:
+    			// Full span
     			xBase = 0;
     			xSpan = 1;
     			break;
-    		case 3:			// RIGHT
-    			xBase = 0;
+    			
+    		case LEFT:
+    		case RIGHT:
+    			// The span is across the left/right face
     			xSpan = rlPercent;
     			break;
-    		case 4:			// TOP
-    			xBase = rlPercent;
-    			xSpan = tbPercent;
-    			break;
-    		case 2:			// LEFT
-    			xBase = rlPercent + tbPercent;
-    			xSpan = rlPercent;
-    			break;
-    		case 5:			// BOTTOM
-    			xBase = rlPercent + tbPercent + rlPercent;
+    			
+    		case TOP:
+    		case BOTTOM:
+    			// The span is across the top/bottom face
     			xSpan = tbPercent;
     			break;
     		}
+    		if ( textureOrigin != null ) {
+    			// Reset the texture origin as specified
+    			if ( !Float.isNaN( textureOrigin.x ) ) {
+    				xBase = textureOrigin.x;
+    			}
+    			if ( !Float.isNaN( textureOrigin.y ) ) {
+    				yBase = textureOrigin.y;
+    			}
+    		}
     		// Where is this vertex?
-    		int vertexSelector = i * 4;			// 4 per face
-    		int textureSelector = i * 4 * 2;	// x/y for 4 per face
+    		int vertexSelector = faceIndex * 4;			// 4 per face
+    		int textureSelector = faceIndex * 4 * 2;	// x/y for 4 per face
     		
     		// We include the 4 vertices, the index buffer will select the 2 sets of 3
     		// to build the proper triangles
     		for( int j = 0; j < 4; j += 1 ) {
     			// Pick the proper vertex positions for the given face
-        		Vector3f aPosition = setPosition( pTempVars.vect1, sFaces[ vertexSelector++ ] );
+        		Vector3f aPosition = setPosition( pTempVars.vect1, sFaceVertices[ vertexSelector++ ] );
                 pContext.mPosBuf.put( aPosition.x )
                                 .put( aPosition.y )
                                 .put( aPosition.z );	
                 
                 // The normal is the same for all the vertices of any given face
-                int normalSelector = i * 3;
+                int normalSelector = faceIndex * 3;
                 float normalFlip = (mInverted) ? -1 : 1;
                 pContext.mNormBuf.put( sNormals[ normalSelector++ ] * normalFlip )
                 				 .put( sNormals[ normalSelector++ ] * normalFlip )
@@ -306,6 +327,8 @@ public class CSGAxialBox
                 pContext.mTexBuf.put( xBase + (sTexture[ textureSelector++ ] * xSpan) )
                 			    .put( yBase + (sTexture[ textureSelector++ ] * ySpan) );
     		}
+    		xBase += xSpan;
+    		if ( xBase > 1.0f ) xBase -= 1.0f;
     	}
     }
     
@@ -337,7 +360,7 @@ public class CSGAxialBox
         
         // Check every face, in the order written into the buffers
         short i0 = 0, i1 = 1, i2 = 2, i3 = 3;
-        for( Face aFace : sFaceBufferOrder ) {
+        for( Face aFace : sFaces ) {
         	if ( aFace.maskIncludesFace( mGeneratedFacesMask ) ) {
         		// This face was written into the buffer
         		if ( mInverted ) {
@@ -430,7 +453,7 @@ public class CSGAxialBox
         
         // Check every face, in the order written into the buffers
         int index = 0;
-        for( Face aFace : sFaceBufferOrder ) {
+        for( Face aFace : sFaces ) {
     		// Each face is defined by 4 x/y points
         	if ( aFace.maskIncludesFace( mGeneratedFacesMask ) ) {
         		// This face exists in the buffer
@@ -459,11 +482,10 @@ public class CSGAxialBox
 	public Material getMaterial(
 		int					pFaceIndex
 	) {
-		// Determine the face, which we know is in the order
-    	//	Front/Back/Left/Right/Top/Bottom, with 2 triangles per face, which matches
-    	//  the bits in Face
-    	int faceMask = 1 << (pFaceIndex / 2);
-    	Material aMaterial = resolveFaceMaterial( faceMask );
+		// Determine the face, which we know is in the sFaces order, with 2 triangles 
+    	// per face
+    	Face aFace = sFaces[ pFaceIndex / 2 ];
+    	Material aMaterial = resolveFaceMaterial( aFace.getMask() );
 		return( aMaterial );
 	}
     

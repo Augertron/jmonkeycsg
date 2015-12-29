@@ -118,7 +118,6 @@ public class CSGNode
 		String	pName
 	) {
 		super( pName );
-		mInstanceKey = CSGShape.assignInstanceKey( "CSGNode" );
 	}
 	
 	/** Is this a valid geometry */
@@ -127,7 +126,13 @@ public class CSGNode
 	
 	/** Unique keystring identifying this element */
 	@Override
-	public String getInstanceKey() { return mInstanceKey; }
+	public String getInstanceKey(
+	) { 
+		if ( mInstanceKey == null ) {
+			mInstanceKey = CSGShape.assignInstanceKey( this.name );
+		}
+		return mInstanceKey; 
+	}
 	
 	/** How long did it take to regenerate this shape */
 	@Override
@@ -221,7 +226,7 @@ public class CSGNode
     @Override
 	public boolean regenerate(
 	) {
-		return( regenerate( (mEnvironment == null) ? CSGEnvironment.sStandardEnvironment : mEnvironment ) );
+		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment ) ) );
 	}
 	@Override
 	public boolean regenerate(

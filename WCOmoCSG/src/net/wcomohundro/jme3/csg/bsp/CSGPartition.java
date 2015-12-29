@@ -122,6 +122,90 @@ public class CSGPartition
 	public static final String sCSGPartitionRevision="$Rev$";
 	public static final String sCSGPartitionDate="$Date$";
 
+	/** Factory level service routine that squeezes out any Vertex from a list that is not
+	 	a 'significant' distance from other vertices in the list. The vertices are assumed
+	 	to be in order, so that 1::2, 2::3, ... N-1::N, N::1
+	 	
+	 	You can also force all the vertices to be explicitly 'projected' onto a given optional plane
+	 	
+	 	@return - the 'eccentricity' of the related vertices, which represents the ratio 
+	 			  of the longest distance between points and the shortest.  So a very large
+	 			  eccentricity represents a rather wrapped set of vertices.
+	 */
+	public static double compressVerticesDbl(
+		List<CSGVertex>		pVertices
+	,	CSGPlaneDbl 		pPlane
+	,	CSGEnvironmentBSP	pEnvironment
+	) {
+		CSGVertex rejectedVertex = null;
+		double minDistance = Double.MAX_VALUE, maxDistance = 0.0;
+		
+		// Check each in the list against its neighbor
+		int lastIndex = pVertices.size() -1;
+		if ( lastIndex <= 0 ) {
+			// Nothing interesting in the list
+			return( 0.0f );
+		}
+		for( int i = 0, j = 1; i <= lastIndex; i += 1 ) {
+			if ( j > lastIndex ) j = 0;		// Loop around to compare the last to the first
+			
+			CSGVertexDbl aVertex = (CSGVertexDbl)pVertices.get( i );
+			if ( aVertex != null ) {
+				CSGVertexDbl otherVertex = (CSGVertexDbl)pVertices.get( j );
+				double aDistance = aVertex.distance( otherVertex );
+				if ( aDistance >= pEnvironment.mEpsilonBetweenPointsDbl ) {
+					// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
+					// 		structure your bound checks accordingly
+					if ( aDistance < minDistance ) minDistance = aDistance;
+					if ( aDistance > maxDistance ) maxDistance = aDistance;
+					
+					if ( pPlane != null ) {
+						// Ensure the given point is actually on the plane
+						Vector3d aPoint = aVertex.getPosition();
+						aDistance = pPlane.pointDistance( aPoint );
+						if ( (aDistance < -pEnvironment.mEpsilonNearZeroDbl) 
+						|| (aDistance > pEnvironment.mEpsilonNearZeroDbl) ) {
+							if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE ) {
+								// Resolve back to the corresponding point on the given plane
+								Vector3d newPoint = pPlane.pointProjection( aPoint, null );
+								if ( DEBUG ) {
+									// Debug check to ensure the new point is really on the plane
+									aDistance = pPlane.pointDistance( newPoint );
+								}
+								// Assume the normal from the original is close enough...
+								aVertex = new CSGVertexDbl( newPoint
+														, aVertex.getNormal()
+														, aVertex.getTextureCoordinate()
+														, null );
+								pVertices.set( i, aVertex );
+							} else {
+								// This point not really on the plane.  Keep it, but track it for debug
+								rejectedVertex = aVertex;
+							}
+						}
+					}
+				} else {
+					// The two vertices are too close to be significant
+					rejectedVertex = aVertex;
+					pVertices.set( j, null );
+					
+					// NOTE that we work with the same i again with the next j
+					i -= 1;
+				}
+				j += 1;
+			}
+		}
+		if ( rejectedVertex != null ) {
+			// We have punted something, so compress out all nulls
+			pVertices.removeAll( CSGVertex.sNullVertexList );
+		}
+		// Look for a shape totally out of bounds
+		double eccentricity = maxDistance / minDistance;
+		return( eccentricity );
+	}
+
+
+	
 	/** Factory level service routine to create appropriate polygon(s), compressing vertices
 	 	and deciding if the polygon is 'worth' constructing.
 	 	
@@ -140,15 +224,15 @@ public class CSGPartition
 	,	List<CSGVertex>		pVertices
 	,	int					pMaterialIndex
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		// Compress out any spurious vertices before we resolve the plane
-		double eccentricity = CSGVertexDbl.compressVertices( pVertices, null, pEnvironment );
+		double eccentricity = compressVerticesDbl( pVertices, null, pEnvironment );
 		
 		if ( pVertices.size() >= 3 ) {
 			// Polygon is based on computed plane, regardless of active mode
 			CSGPlaneDbl aPlane = CSGPlaneDbl.fromVertices( pVertices, pTempVars, pEnvironment );
-			return( addPolygons( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
+			return( addPolygonsDbl( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
 		} else {
 			// Nothing of interest
 			return( 0 );
@@ -158,7 +242,7 @@ public class CSGPartition
 		List<CSGPolygon>	pPolyList
 	,	CSGPolygon			pPolygon
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		CSGPlaneDbl aPlane = (CSGPlaneDbl)pPolygon.getPlane();
 		List<CSGVertex> vertexList = pPolygon.getVertices();
@@ -166,19 +250,19 @@ public class CSGPartition
 		if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FROM_VERTICES ) {
 			// Force the use of the plane from the underlying vertices
 			aPlane = CSGPlaneDbl.fromVertices( vertexList, pTempVars, pEnvironment );
-			return( addPolygons( pPolyList, vertexList, aPlane, pPolygon.getMeshIndex(), pEnvironment ) );
+			return( addPolygonsDbl( pPolyList, vertexList, aPlane, pPolygon.getMeshIndex(), pEnvironment ) );
 		} else {
 			// Use the polygon as given
 			pPolyList.add( pPolygon );
 			return( 1 );
 		}
 	}
-	protected static int addPolygons(
+	protected static int addPolygonsDbl(
 		List<CSGPolygon>	pPolyList
 	,	List<CSGVertex>		pVertices
 	,	CSGPlaneDbl			pPlane
 	,	int					pMaterialIndex
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		int polyCount = 0;
 		
@@ -207,7 +291,89 @@ public class CSGPartition
 		}
 		return( polyCount );
 	}
-	
+
+	/** Factory level service routine that squeezes out any Vertex from a list that is not
+	 	a 'significant' distance from other vertices in the list. The vertices are assumed
+	 	to be in order, so that 1::2, 2::3, ... N-1::N, N::1
+	 	
+	 	You can also force all the vertices to be explicitly 'projected' onto a given optional plane
+	 	
+	 	@return - the 'eccentricity' of the related vertices, which represents the ratio 
+	 			  of the longest distance between points and the shortest.  So a very large
+	 			  eccentricity represents a rather wrapped set of vertices.
+	 */
+	public static float compressVerticesFlt(
+		List<CSGVertex>		pVertices
+	,	CSGPlaneFlt			pPlane
+	,	CSGEnvironmentBSP	pEnvironment
+	) {
+		CSGVertex rejectedVertex = null;
+		float minDistance = Float.MAX_VALUE, maxDistance = 0.0f;
+		
+		// Check each in the list against its neighbor
+		int lastIndex = pVertices.size() -1;
+		if ( lastIndex <= 0 ) {
+			// Nothing interesting in the list
+			return( 0.0f );
+		}
+		for( int i = 0, j = 1; i <= lastIndex; i += 1 ) {
+			if ( j > lastIndex ) j = 0;		// Loop around to compare the last to the first
+			
+			CSGVertexFlt aVertex = (CSGVertexFlt)pVertices.get( i );
+			if ( aVertex != null ) {
+				CSGVertexFlt otherVertex = (CSGVertexFlt)pVertices.get( j );
+				float aDistance = aVertex.distance( otherVertex );
+				if ( aDistance >= pEnvironment.mEpsilonBetweenPointsFlt ) {
+					// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
+					// 		structure your bound checks accordingly
+					if ( aDistance < minDistance ) minDistance = aDistance;
+					if ( aDistance > maxDistance ) maxDistance = aDistance;
+					
+					if ( pPlane != null ) {
+						// Ensure the given point is actually on the plane
+						Vector3f aPoint = aVertex.getPosition();
+						aDistance = pPlane.pointDistance( aPoint );
+						if ( (aDistance < -pEnvironment.mEpsilonNearZeroFlt) 
+						|| (aDistance > pEnvironment.mEpsilonNearZeroFlt) ) {
+							if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE ) {
+								// Resolve back to the corresponding point on the given plane
+								Vector3f newPoint = pPlane.pointProjection( aPoint, null );
+								if ( DEBUG ) {
+									// Debug check to ensure the new point is really on the plane
+									aDistance = pPlane.pointDistance( newPoint );
+								}
+								// Assume the normal from the original is close enough...
+								aVertex = new CSGVertexFlt( newPoint
+														, aVertex.getNormal()
+														, aVertex.getTextureCoordinate()
+														, null );
+								pVertices.set( i, aVertex );
+							} else {
+								// This point not really on the plane.  Keep it, but track it for debug
+								rejectedVertex = aVertex;
+							}
+						}
+					}
+				} else {
+					// The two vertices are too close to be significant
+					rejectedVertex = aVertex;
+					pVertices.set( j, null );
+					
+					// NOTE that we work with the same i again with the next j
+					i -= 1;
+				}
+				j += 1;
+			}
+		}
+		if ( rejectedVertex != null ) {
+			// We have punted something, so compress out all nulls
+			pVertices.removeAll( CSGVertex.sNullVertexList );
+		}
+		// Look for a shape totally out of bounds
+		float eccentricity = maxDistance / minDistance;
+		return( eccentricity );
+	}
+
 	/** Factory level service routine to create appropriate polygon(s), compressing vertices
 	 	and deciding if the polygon is 'worth' constructing.
 	 	
@@ -226,15 +392,15 @@ public class CSGPartition
 	,	List<CSGVertex>		pVertices
 	,	int					pMaterialIndex
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		// Compress out any spurious vertices before we resolve the plane
-		float eccentricity = CSGVertexFlt.compressVertices( pVertices, null, pEnvironment );
+		float eccentricity = compressVerticesFlt( pVertices, null, pEnvironment );
 		
 		if ( pVertices.size() >= 3 ) {
 			// Polygon is based on computed plane, regardless of active mode
 			CSGPlaneFlt aPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
-			return( addPolygons( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
+			return( addPolygonsFlt( pPolyList, pVertices, aPlane, pMaterialIndex, pEnvironment ) );
 		} else {
 			// Nothing of interest
 			return( 0 );
@@ -246,11 +412,11 @@ public class CSGPartition
 	,	CSGPlaneFlt			pPlane
 	,	int					pMaterialIndex
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		if ( (pPlane != null) && pPlane.isValid() ) {
 			// NOTE that compressVertices operates directly on the given list
-			float eccentricity = CSGVertexFlt.compressVertices( pVertices, pPlane, pEnvironment );
+			float eccentricity = compressVerticesFlt( pVertices, pPlane, pEnvironment );
 			if ( pVertices.size() >= 3 ) {
 				// We have enough vertices for a shape
 				// NOTE when debugging, it can be useful to look for odd eccentricty values here....
@@ -258,7 +424,7 @@ public class CSGPartition
 					// Use the plane from the underlying vertices
 					pPlane = CSGPlaneFlt.fromVertices( pVertices, pTempVars, pEnvironment );
 				}
-				return( addPolygons( pPolyList, pVertices, pPlane, pMaterialIndex, pEnvironment ) );
+				return( addPolygonsFlt( pPolyList, pVertices, pPlane, pMaterialIndex, pEnvironment ) );
 			}
 		} else {
 			throw new IllegalArgumentException( pEnvironment.mShapeName + "Incomplete Polygon" );
@@ -266,12 +432,12 @@ public class CSGPartition
 		// We did NOT build anything of value
 		return( 0 );
 	}
-	protected static int addPolygons(
+	protected static int addPolygonsFlt(
 		List<CSGPolygon>	pPolyList
 	,	List<CSGVertex>		pVertices
 	,	CSGPlaneFlt			pPlane
 	,	int					pMaterialIndex
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		int polyCount = 0;
 		
@@ -329,7 +495,6 @@ public class CSGPartition
 	protected static final int SPANNING = 9;
 	
 	
-	
 	/** The parent to this partition, either a CSGShape or another CSGPartition */
 	protected Object			mParent;
 	/** The level in the BSP hierarchy */
@@ -359,7 +524,7 @@ public class CSGPartition
 		CSGPartition		pParentPartition
 	,	int					pMeshIndex
 	,	int					pLevel
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		mParent = pParentPartition;
 		mLevel = pLevel;
@@ -372,7 +537,7 @@ public class CSGPartition
 		CSGShapeBSP			pShape
 	,	List<CSGPolygon>	pPolygons
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		mParent = pShape;
 		mLevel = 1;
@@ -448,7 +613,7 @@ public class CSGPartition
 	public List<CSGPolygon> clipPolygons(
 		List<CSGPolygon>	pPolygons
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP		pEnvironment
 	) {
 		if ( mCorrupted || (mPlane == null) ) {
 			// If corrupted or if we have no effective plane, then everything is retained
@@ -493,7 +658,7 @@ public class CSGPartition
 	public void clipTo(
 		CSGPartition		pOther
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP		pEnvironment
 	) {
 		// Reset the list of polygons that apply based on clipping from the other partition
 		mPolygons = pOther.clipPolygons( mPolygons, pTempVars, pEnvironment );
@@ -525,7 +690,7 @@ public class CSGPartition
 	public boolean buildHierarchy(
 		List<CSGPolygon>	pPolygons
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP		pEnvironment
 	) {
 		boolean aCorruptHierarchy = mCorrupted;
 		
@@ -629,7 +794,7 @@ public class CSGPartition
 	, 	List<CSGPolygon> 	pFront
 	, 	List<CSGPolygon> 	pBack
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		int lostVertexCount;
 		if ( pEnvironment.mDoublePrecision ) {
@@ -661,7 +826,7 @@ public class CSGPartition
 	, 	List<CSGPolygon> 	pFront
 	, 	List<CSGPolygon> 	pBack
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		List<CSGVertex> polygonVertices = pPolygon.getVertices();
 		int vertexCount = polygonVertices.size();
@@ -936,7 +1101,7 @@ public class CSGPartition
 	, 	List<CSGPolygon> 	pFront
 	, 	List<CSGPolygon> 	pBack
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		List<CSGVertex> polygonVertices = pPolygon.getVertices();
 		int vertexCount = polygonVertices.size();

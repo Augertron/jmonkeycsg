@@ -332,7 +332,18 @@ public class CSGPlaneDbl
 	@Override
 	public String toString(
 	) {
-		return( super.toString() + " - " + mSurfaceNormal + "(" + mDot + ")" );
+		return( toString( null ).toString() );
+	}
+	public StringBuilder toString(
+		StringBuilder	pBuffer
+	) {
+		if ( pBuffer == null ) pBuffer = new StringBuilder( 128 );
+		pBuffer.append( "Plane: " )
+				.append( mSurfaceNormal.toString() )
+				.append( " (" )
+				.append( mDot )
+				.append( ")" );
+		return( pBuffer );
 	}
 	
 	/////// Implement ConstructiveSolidGeometry

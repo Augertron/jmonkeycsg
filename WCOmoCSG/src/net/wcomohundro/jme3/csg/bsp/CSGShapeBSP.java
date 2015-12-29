@@ -54,6 +54,7 @@ import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
+import net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -198,15 +199,14 @@ import com.jme3.util.TempVars;
 	
  */
 public class CSGShapeBSP
-	implements CSGShape.CSGShapeProcessor, ConstructiveSolidGeometry
+	implements CSGShape.CSGShapeProcessor<CSGEnvironmentBSP>, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
 	public static final String sCSGShapeBSPRevision="$Rev$";
 	public static final String sCSGShapeBSPDate="$Date$";
 
 	/** Default configuration that applies to BSP processing */
-	public static CSGEnvironment sDefaultEnvironment 
-		= new CSGEnvironment( false, "net.wcomohundro.jme3.csg.bsp.CSGShapeBSP" );
+	public static CSGEnvironmentBSP sDefaultEnvironment = new CSGEnvironmentBSP();
 
 	/** Canned, immutable empty list of polygons */
 	protected static final List<CSGPolygon> sEmptyPolygons = new ArrayList<CSGPolygon>(0);
@@ -217,7 +217,7 @@ public class CSGShapeBSP
 	,	CSGVertex[]			pVertices
 	,	int					pMaterialIndex
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		// NOTE that aPlane comes back null if we lack vertices
 		if ( pEnvironment.mDoublePrecision ) {
@@ -272,8 +272,8 @@ public class CSGShapeBSP
 	/** Ready a list of shapes for processing */
 	@Override
 	public List<CSGShape> prepareShapeList(
-		List<CSGShape>	pShapeList
-	,	CSGEnvironment	pEnvironment
+		List<CSGShape>		pShapeList
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		List<CSGShape> sortedShapes = new ArrayList<>( pShapeList );
 		Collections.sort( sortedShapes, new Comparator<CSGShape>() {
@@ -374,10 +374,10 @@ public class CSGShapeBSP
 	
 	/** Accessor to the list of polygons */
 	protected List<CSGPolygon> getPolygons(
-		CSGMeshManager	pMaterialManager
+		CSGMeshManager		pMaterialManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) { 
 		if ( mPolygons.isEmpty() && (mShape.getMesh() != null) ) {
 			// Generate the polygons
@@ -395,9 +395,9 @@ public class CSGShapeBSP
 	@Override
 	public CSGShape union(
 		CSGShape			pOther
-	,	CSGMeshManager	pMaterialManager
+	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
 		CSGPartition a = new CSGPartition( this
@@ -418,7 +418,7 @@ public class CSGShapeBSP
 
 		CSGShapeBSP aHandler = new CSGShapeBSP( null, a.allPolygons( null ) );
 		aHandler.setCorrupt( a, b );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), aHandler.isValid() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getName(), mShape.getOrder(), aHandler.isValid() );
 		return( aShape );
 	}
 	
@@ -426,9 +426,9 @@ public class CSGShapeBSP
 	@Override
 	public CSGShape difference(
 		CSGShape			pOther
-	,	CSGMeshManager	pMaterialManager
+	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
 		CSGPartition a = new CSGPartition( this
@@ -451,7 +451,7 @@ public class CSGShapeBSP
 
 		CSGShapeBSP aHandler = new CSGShapeBSP( null, a.allPolygons( null ) );
 		aHandler.setCorrupt( a, b );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), aHandler.isValid() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getName(), mShape.getOrder(), aHandler.isValid() );
         return( aShape );
 	}
 
@@ -459,9 +459,9 @@ public class CSGShapeBSP
 	@Override
 	public CSGShape intersection(
 		CSGShape			pOther
-	,	CSGMeshManager	pMaterialManager
+	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
 		List<CSGPolygon> thisList = this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
@@ -475,9 +475,9 @@ public class CSGShapeBSP
 	@Override
 	public CSGShape merge(
 		CSGShape			pOther
-	,	CSGMeshManager	pMaterialManager
+	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
 		List<CSGPolygon> thisList = this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
@@ -494,7 +494,7 @@ public class CSGShapeBSP
 	,	CSGMeshManager		pMeshManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {
 		// Convert the mesh in to appropriate polygons
 	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
@@ -605,7 +605,7 @@ public class CSGShapeBSP
 		CSGMeshManager		pMeshManager
 	,	boolean				pProduceSubelements
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentBSP	pEnvironment
 	) {	
 		List<CSGPolygon> aPolyList = getPolygons( pMeshManager, 0, pTempVars, pEnvironment );
 		int anEstimateVertexCount = aPolyList.size() * 3;

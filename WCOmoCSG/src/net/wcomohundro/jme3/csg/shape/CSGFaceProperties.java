@@ -109,7 +109,8 @@ public class CSGFaceProperties
 	/** A custom material that applies to the face(s) */
 	protected Material			mMaterial;
 	/** A custom texture scaling that applies to the face(s) */
-	protected Vector2f			mScaleTexture;
+	protected Vector2f			mTextureScale;
+	protected Vector2f			mTextureOrigin;
 	/** A custom Physics that applies to the face(s) */
 	protected PhysicsControl	mPhysics;
 	
@@ -121,12 +122,14 @@ public class CSGFaceProperties
 	public CSGFaceProperties(
 		Face			pFace
 	,	Material		pMaterial
-	,	Vector2f		pScaleTexture
+	,	Vector2f		pTextureScale
+	,	Vector2f		pTextureOrigin
 	,	PhysicsControl	pPhysics
 	) {
 		mFaceMask = pFace.getMask();
 		mMaterial = pMaterial;
-		mScaleTexture = pScaleTexture;
+		mTextureScale = pTextureScale;
+		mTextureOrigin = pTextureOrigin;
 		mPhysics = pPhysics;
 	}
 	
@@ -148,8 +151,12 @@ public class CSGFaceProperties
 	public Material getMaterial() { return mMaterial; }
 	
 	/** Accessor to the TextureScaling property */
-	public boolean hasScaleTexture() { return( mScaleTexture != null ); }
-	public Vector2f getScaleTexture() { return mScaleTexture; }
+	public boolean hasTextureScale() { return( mTextureScale != null ); }
+	public Vector2f getTextureScale() { return mTextureScale; }
+	
+	/** Accessor to the TextureOrigin property */
+	public boolean hasTextureOrigin() { return( mTextureOrigin != null ); }
+	public Vector2f getTextureOrigin() { return mTextureOrigin; }
 	
 	/** Accessor to the Physics property */
 	public boolean hasPhysics() { return( mPhysics != null ); }
@@ -186,13 +193,23 @@ public class CSGFaceProperties
             mMaterial = (Material)aCapsule.readSavable( "material", null );
         }
         // Look for scaling
-        mScaleTexture = (Vector2f)aCapsule.readSavable( "scaleTexture", null );
-        if ( mScaleTexture == null ) {
+        mTextureScale = (Vector2f)aCapsule.readSavable( "textureScale", null );
+        if ( mTextureScale == null ) {
         	// Look for simple attributes
         	float scaleX = CSGEnvironment.readPiValue( aCapsule, "scaleX", 1f );
         	float scaleY = CSGEnvironment.readPiValue( aCapsule, "scaleY", 1f );
         	if ( (scaleX != 1f) || (scaleY != 1f) ) {
-        		mScaleTexture = new Vector2f( scaleX, scaleY );
+        		mTextureScale = new Vector2f( scaleX, scaleY );
+        	}
+        }
+        // Look for origin
+        mTextureOrigin = (Vector2f)aCapsule.readSavable( "textureOrigin", null );
+        if ( mTextureOrigin == null ) {
+        	// Look for simple attributes
+        	float originX = CSGEnvironment.readPiValue( aCapsule, "originX", 1f );
+        	float originY = CSGEnvironment.readPiValue( aCapsule, "originY", 1f );
+        	if ( (originX != 1f) || (originY != 1f) ) {
+        		mTextureOrigin = new Vector2f( originX, originY );
         	}
         }
         // Look for physics
@@ -215,11 +232,14 @@ public class CSGFaceProperties
         
         aCapsule.write( mMaterial, "material", null );
         
-        if ( mScaleTexture != null ) {
-        	aCapsule.write( mScaleTexture.getX(), "scaleX", 1f );
-        	aCapsule.write( mScaleTexture.getY(), "scaleY", 1f );
+        if ( mTextureScale != null ) {
+        	aCapsule.write( mTextureScale.getX(), "scaleX", 1f );
+        	aCapsule.write( mTextureScale.getY(), "scaleY", 1f );
         }
-        
+        if ( mTextureOrigin != null ) {
+        	aCapsule.write( mTextureOrigin.getX(), "originX", 1f );
+        	aCapsule.write( mTextureOrigin.getY(), "originY", 1f );
+        }
         // For now, physics is too complicated to be captured by a write()
 	}
 	

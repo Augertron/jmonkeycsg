@@ -64,7 +64,7 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  	
  	It is possible, therefore, to configure the CSGEnvironment via the XML load mechanism.
  */
-public class CSGEnvironment 
+public class CSGEnvironment<ShapeProcessorT> 
 	implements ConstructiveSolidGeometry, Savable 
 {
 	/** Version tracking support */
@@ -79,7 +79,19 @@ public class CSGEnvironment
 	 		we do NOT declare this global as 'final' so that the default can be dynamically
 	 		modified at run time
 	 */
-	public static CSGEnvironment sStandardEnvironment = new CSGEnvironment();
+	public static CSGEnvironment sStandardEnvironment = null;
+	public static CSGEnvironment resolveEnvironment(
+		CSGEnvironment	pEnvironment
+	) {
+		if ( sStandardEnvironment == null ) {
+			// First time initialization of the standard
+			if ( pEnvironment == null ) {
+				pEnvironment = new net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB();
+			}
+			sStandardEnvironment = pEnvironment;
+		}
+		return( (pEnvironment == null) ? sStandardEnvironment : pEnvironment );
+	}
 
 	
 	/** Java 1.8 equivalent to check if a double is finite */
@@ -228,106 +240,34 @@ public class CSGEnvironment
 	/** EPSILON - meaningful minimal distance between points */
 	public double		mEpsilonBetweenPointsDbl;
 	public float		mEpsilonBetweenPointsFlt;
-	/** EPSILON - meaningful maximal distance between points */
-	public double		mEpsilonMaxBetweenPoints;
 
 	/** Type of 'shape processor' to operate with */
 	public Class		mShapeClass;
-
-	//////////////////////////////// BSP SPECIFIC PROCESSING ///////////////////////////////
-	/** Maximum depth allowed on BSP recursion processing */
-	public int			mBSPLimit;
-	/** Limit a polygon to be a triangle */
-	public boolean		mPolygonTriangleOnly;
-	/** How to process a polygon and its plane */
-	public CSGPolygon.CSGPolygonPlaneMode	mPolygonPlaneMode;
-	
-	/** Which polygon's plane is used to seed a partition */
-	public double		mPartitionSeedPlane;
 	
 	
-	/** Null constructor produces the 'standards' */
-	public CSGEnvironment(
-	) {
-		this( true, "net.wcomohundro.jme3.csg.iob.CSGShapeIOB" );
-	}
-	public CSGEnvironment(
+	/** Constructor based on the 'standards' */
+	protected CSGEnvironment(
 		boolean		pDoublePrecision
-	) {
-		this( pDoublePrecision
-			, (pDoublePrecision) 
-				? "net.wcomohundro.jme3.csg.iob.CSGShapeIOB"
-				: "net.wcomohundro.jme3.csg.bsp.CSGShapeBSP" );
-	}
-	public CSGEnvironment(
-		boolean		pDoublePrecision
-	,	String		pHandlerClassName
+	,	Class		pHandlerClass
+	,	double		pEpsilonNearZeroDbl
+	,	double		pEpsilonBetweenPointsDbl
+	,	double		pEpsilonOnPlaneDbl
+	,	float		pEpsilonNearZeroFlt
+	,	float		pEpsilonBetweenPointsFlt
+	,	float		pEpsilonOnPlaneFlt
 	) {
 		mShapeName = "";
 		mDoublePrecision = pDoublePrecision;
-		try {
-			mShapeClass = Class.forName( pHandlerClassName );
-		} catch( ClassNotFoundException ex ) {
-			CSGEnvironment.sLogger.log( Level.SEVERE, "No Handler Class:" + ex, ex );
-		}
+		mShapeClass = pHandlerClass;
 		mStructuralDebug = DEBUG;
-		mBSPLimit = (mDoublePrecision) ? BSP_HIERARCHY_DEEP_LIMIT : BSP_HIERARCHY_LIMIT;
 		
-		mEpsilonNearZeroDbl = EPSILON_NEAR_ZERO_DBL;
-		mEpsilonNearZeroFlt = EPSILON_NEAR_ZERO_FLT;
-		
-		mEpsilonBetweenPointsDbl = EPSILON_BETWEEN_POINTS_DBL;
-		mEpsilonBetweenPointsFlt = EPSILON_BETWEEN_POINTS_FLT;
-		
-		mEpsilonOnPlaneDbl = EPSILON_ONPLANE_DBL;
-		mEpsilonOnPlaneFlt = EPSILON_ONPLANE_FLT;
-		
-		mEpsilonMaxBetweenPoints = EPSILON_BETWEEN_POINTS_MAX;
-		
-		mPolygonTriangleOnly = LIMIT_TO_TRIANGLES;
-		mPolygonPlaneMode = CSGPolygonPlaneMode.USE_GIVEN;
+		mEpsilonNearZeroDbl = pEpsilonNearZeroDbl;
+		mEpsilonOnPlaneDbl = pEpsilonOnPlaneDbl;		
+		mEpsilonBetweenPointsDbl = pEpsilonBetweenPointsDbl;
 
-		mPartitionSeedPlane = PARTITION_SEED_PLANE;
-	}
-	
-	/** Constructor based on final configuration */
-	public CSGEnvironment(
-		String							pShapeName
-	,	boolean							pStructuralDebug
-	,	boolean							pDoublePrecision
-	,	Class							pShapeClass
-	,	int								pBSPLimit
-	,	double							pEpsilonNearZero
-	,	double							pEpsilonOnPlane
-	,	double							pEpsilonBetweenPoints
-	,	double							pEpsilonMaxBetweenPoints
-	,	boolean							pPolygonTriangleOnly
-	,	CSGPolygon.CSGPolygonPlaneMode	pPolygonPlaneMode
-	,	double							pPartitionSeedPlane
-	) {
-		mShapeName = pShapeName;
-		
-		mDoublePrecision = pDoublePrecision;
-		mStructuralDebug = pStructuralDebug;
-		mShapeClass = pShapeClass;
-		
-		mBSPLimit = pBSPLimit;
-		
-		if ( mDoublePrecision ) {
-			mEpsilonNearZeroDbl = pEpsilonNearZero;
-			mEpsilonOnPlaneDbl = pEpsilonOnPlane;		
-			mEpsilonBetweenPointsDbl = pEpsilonBetweenPoints;
-		} else {
-			mEpsilonNearZeroFlt = (float)pEpsilonNearZero;
-			mEpsilonOnPlaneFlt = (float)pEpsilonOnPlane;		
-			mEpsilonBetweenPointsFlt = (float)pEpsilonBetweenPoints;
-		}
-		mEpsilonMaxBetweenPoints = pEpsilonMaxBetweenPoints;
-		
-		mPolygonTriangleOnly = pPolygonTriangleOnly;
-		mPolygonPlaneMode = pPolygonPlaneMode;
-		
-		mPartitionSeedPlane = pPartitionSeedPlane;
+		mEpsilonNearZeroFlt = pEpsilonNearZeroFlt;
+		mEpsilonOnPlaneFlt = pEpsilonOnPlaneFlt;		
+		mEpsilonBetweenPointsFlt = pEpsilonBetweenPointsFlt;
 	}
 	
 	/** Build an appropriate shape processor */
@@ -340,6 +280,72 @@ public class CSGEnvironment
 			sLogger.log( Level.SEVERE, "Failed to create handler: " + ex, ex );
 		}
 		return( aHandler );
+	}
+	
+	/** Debug support for confirming a vertex */
+	public boolean confirmVertex(
+		CSGVertexFlt	pVertex
+	) {
+		// This is more a spot customize a check for something going wrong in a given test case
+		float maxBetweenPoints = 10000f;
+		float maxTexCoord = 1000f;
+		
+		// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
+		//		false comparisons
+		if ( !(
+			   (Math.abs( pVertex.mPosition.x ) < maxBetweenPoints ) 
+			&& (Math.abs( pVertex.mPosition.y ) < maxBetweenPoints ) 
+			&& (Math.abs( pVertex.mPosition.z ) < maxBetweenPoints )
+			) ) {
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pVertex.mPosition );
+			return( false );
+		}
+		// Upon further research, I am not seeing a requirement for the normal to be a unit vector
+		double normalLength = pVertex.mNormal.length();
+		if ( !(normalLength != 0.0f) ) {
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + pVertex.mNormal + ", " + normalLength );
+			return( false );
+		}
+		if ( !(
+			   (Math.abs( pVertex.mTextureCoordinate.x ) <= maxTexCoord ) 
+			&& (Math.abs( pVertex.mTextureCoordinate.y ) <= maxTexCoord )
+			) ) {
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + pVertex.mTextureCoordinate );
+			return( false );
+		}
+		return( true );
+	}
+	public boolean confirmVertex(
+		CSGVertexDbl	pVertex
+	) {
+		// This is more a spot customize a check for something going wrong in a given test case
+		double maxBetweenPoints = 10000;
+		double maxTexCoord = 1000;
+		
+		// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
+		//		false comparisons
+		if ( !(
+			   (Math.abs( pVertex.mPosition.x ) < maxBetweenPoints ) 
+			&& (Math.abs( pVertex.mPosition.y ) < maxBetweenPoints ) 
+			&& (Math.abs( pVertex.mPosition.z ) < maxBetweenPoints )
+			) ) {
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pVertex.mPosition );
+			return( false );
+		}
+		// Upon further research, I am not seeing a requirement for the normal to be a unit vector
+		double normalLength = pVertex.mNormal.length();
+		if ( !(normalLength != 0.0f) ) {
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + pVertex.mNormal + ", " + normalLength );
+			return( false );
+		}
+		if ( !(
+			   (Math.abs( pVertex.mTextureCoordinate.x ) <= maxTexCoord ) 
+			&& (Math.abs( pVertex.mTextureCoordinate.y ) <= maxTexCoord )
+			) ) {
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + pVertex.mTextureCoordinate );
+			return( false );
+		}
+		return( true );
 	}
 	
 	/** Support the persistence of this Environment */
@@ -355,27 +361,6 @@ public class CSGEnvironment
 								?	"net.wcomohundro.jme3.csg.iob.CSGShapeIOB"
 								:	"net.wcomohundro.jme3.csg.bsp.CSGShapeBSP";
 		aCapsule.write( mShapeClass.getName(), "shapeClass", shapeClassName );
-		
-
-		if ( mDoublePrecision ) {
-			aCapsule.write( mEpsilonNearZeroDbl, "epsilonNearZero", EPSILON_NEAR_ZERO_DBL );
-			aCapsule.write( mEpsilonBetweenPointsDbl, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_DBL );
-			aCapsule.write( mEpsilonOnPlaneDbl, "epsilonOnPlane", EPSILON_ONPLANE_DBL );
-			
-			aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_DEEP_LIMIT );
-		} else {
-			aCapsule.write( mEpsilonNearZeroFlt, "epsilonNearZero", EPSILON_NEAR_ZERO_FLT );
-			aCapsule.write( mEpsilonBetweenPointsFlt, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
-			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
-
-			aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_LIMIT );
-		}
-		aCapsule.write( mEpsilonMaxBetweenPoints, "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
-		
-		aCapsule.write( mPolygonTriangleOnly, "polygonTriangleOnly", LIMIT_TO_TRIANGLES );
-		aCapsule.write( mPolygonPlaneMode, "polygonPlaneMode", CSGPolygonPlaneMode.USE_GIVEN );
-		
-		aCapsule.write( mPartitionSeedPlane, "partitionSeedPlane", PARTITION_SEED_PLANE );
 	}
 	
 	@Override
@@ -395,26 +380,6 @@ public class CSGEnvironment
 		} catch( ClassNotFoundException ex ) {
 			sLogger.log( Level.SEVERE, "Invalid ShapeHandler: " + ex, ex );
 		}
-		
-		if ( mDoublePrecision ) {
-			mEpsilonNearZeroDbl = aCapsule.readDouble( "epsilonNearZero", EPSILON_NEAR_ZERO_DBL );
-			mEpsilonBetweenPointsDbl = aCapsule.readDouble( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_DBL );
-			mEpsilonOnPlaneDbl = aCapsule.readDouble( "epsilonOnPlane", EPSILON_ONPLANE_DBL );
-			
-			mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_DEEP_LIMIT );
-		} else {
-			mEpsilonNearZeroFlt = aCapsule.readFloat( "epsilonNearZero", EPSILON_NEAR_ZERO_FLT );
-			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
-			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
-			
-			mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_LIMIT );
-		}
-		mEpsilonMaxBetweenPoints = aCapsule.readDouble( "epsilonMaxBetweenPoints", EPSILON_BETWEEN_POINTS_MAX );
-		
-		mPolygonTriangleOnly = aCapsule.readBoolean( "polygonTriangleOnly", LIMIT_TO_TRIANGLES );
-		mPolygonPlaneMode = aCapsule.readEnum( "polygonPlaneMode", CSGPolygonPlaneMode.class, CSGPolygonPlaneMode.USE_GIVEN );
-
-		mPartitionSeedPlane = aCapsule.readDouble( "partitionSeedPlane", PARTITION_SEED_PLANE );	
 	}
 
 	/////// Implement ConstructiveSolidGeometry
@@ -428,7 +393,6 @@ public class CSGEnvironment
 														, pBuffer );
 		aBuffer.append( "\tDouble Precision: " ).append( this.mDoublePrecision ).append( "\n" );
 		aBuffer.append( "\tStructural Debug: " ).append( this.mStructuralDebug ).append( "\n" );
-		aBuffer.append( "\tBSPLimit: " ).append( this.mBSPLimit ).append( "\n" );
 		if ( this.mDoublePrecision ) {
 			aBuffer.append( "\tEpsilon Near Zero: " ).append( this.mEpsilonNearZeroDbl ).append( "\n" );
 			aBuffer.append( "\tEpsilon On Plane: " ).append( this.mEpsilonOnPlaneDbl ).append( "\n" );
@@ -438,7 +402,6 @@ public class CSGEnvironment
 			aBuffer.append( "\tEpsilon On Plane: " ).append( this.mEpsilonOnPlaneFlt ).append( "\n" );
 			aBuffer.append( "\tEpsilon Between Points: " ).append( this.mEpsilonBetweenPointsFlt ).append( "\n" );
 		}
-		aBuffer.append( "\tPolygon Plane Mode: " ).append( this.mPolygonPlaneMode ).append( "\n" );
 		return( aBuffer );
 	}
 

@@ -147,8 +147,9 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
 		(new CSGPipe()).getVersion( aBuffer );
 		(new CSGSplineGenerator()).getVersion( aBuffer );
 		
-		pEnvironment.getVersion( aBuffer );
-		
+		if ( pEnvironment != null ) {
+			pEnvironment.getVersion( aBuffer );
+		}
 		pLogger.log( Level.CONFIG, aBuffer.toString() );
 	}
 	

@@ -262,13 +262,32 @@ public abstract class CSGMesh
 			for( CSGFaceProperties aProperty : mFaceProperties ) {
 				if ( aProperty.appliesToFace( pFaceBit ) ) {
 					// Use this one if it has a scale
-					Vector2f aScale = aProperty.getScaleTexture();
-					if ( aScale != null ) {
-						return( aScale );
+					if ( aProperty.hasTextureScale() ) {
+						return( aProperty.getTextureScale() );
 					}
 					// NOTE that we could match a property based on the bitmask, but if
 					//		it has no scale, we will keep looking.  This lets us use
 					//		separate definitions for scale versus material versus physics
+				}
+			}
+		}
+		return( null );
+	}
+	protected Vector2f matchFaceOrigin(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one if it has a scale
+					if ( aProperty.hasTextureOrigin() ) {
+						return( aProperty.getTextureOrigin() );
+					}
+					// NOTE that we could match a property based on the bitmask, but if
+					//		it has no origin, we will keep looking.  This lets us use
+					//		separate definitions for origin versus material versus physics
 				}
 			}
 		}
@@ -326,8 +345,8 @@ public abstract class CSGMesh
 		// Apply any scaling now
 		if ( mFaceProperties != null ) {
 			for( CSGFaceProperties aProperty : mFaceProperties ) {
-				if ( aProperty.hasScaleTexture() ) {
-					this.scaleFaceTextureCoordinates( aProperty.getScaleTexture(), aProperty.getFaceMask() );
+				if ( aProperty.hasTextureScale() ) {
+					this.scaleFaceTextureCoordinates( aProperty.getTextureScale(), aProperty.getFaceMask() );
 				}
         	}
         }

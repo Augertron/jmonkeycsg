@@ -150,36 +150,6 @@ public interface ConstructiveSolidGeometry
 	/** ASSERT style debugging flag */
 	public static final boolean DEBUG = false;
 	
-	/** Force polygons to simple triangles only */
-	public static final boolean LIMIT_TO_TRIANGLES = false;
-	
-	/** Deepest split when processing BSP hierarchy */
-	public static final int BSP_HIERARCHY_LIMIT = 1024;
-	public static final int BSP_HIERARCHY_DEEP_LIMIT = 4096;
-	
-	/** When selecting the plane used to define a partition, use the Nth polygon */
-	public static final double PARTITION_SEED_PLANE = 0.5;
-	
-	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
-	// Tolerance to decide if a given point in 'on' a plane
-	public static final float EPSILON_ONPLANE_FLT = 1.0e-5f;
-	public static final double EPSILON_ONPLANE_DBL = 1.0e-7;
-	// Tolerance to determine if two points are close enough to be considered the same point
-	public static final float EPSILON_BETWEEN_POINTS_FLT = 5.0e-7f;
-	public static final double EPSILON_BETWEEN_POINTS_DBL = 1.0e-8;
-	// Tolerance if a given value is near enough to zero to be treated as zero
-	public static final float EPSILON_NEAR_ZERO_FLT = 5.0e-7f;
-	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-10;
-	
-	// NOTE that '5E-15' may cause points on a plane to report problems.  In other words,
-	//		when near_zero gets this small, the precision errors cause points on a plane to
-	//		NOT look like they are on the plane, even when those points were used to create the
-	//		plane.....
-	
-	
-	/** Define a 'tolerance' for when two points are so far apart, it is ridiculous to consider it */
-	public static final double EPSILON_BETWEEN_POINTS_MAX = 1e+3;
-	
 	/** Supported actions applied to the CSGShapes */
 	public static enum CSGOperator
 	{

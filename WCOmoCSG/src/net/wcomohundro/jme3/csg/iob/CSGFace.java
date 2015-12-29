@@ -284,15 +284,23 @@ public class CSGFace
 		
 		if ( pConfirmVertices
 		&& (CSGEnvironment
-				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
+				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
 			|| CSGEnvironment
-				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
+				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
 			|| CSGEnvironment
-				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )) ) {
+				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )) ) {
 			// Not a meaningful face, do not bother with checking the plane
 			return;
 		}
 		mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
+		
+if ( false && pEnvironment.mStructuralDebug ) {
+	if ( (pV1.getPosition().z - 0.4f > pEnvironment.mEpsilonBetweenPointsDbl) 
+	||   (pV2.getPosition().z - 0.4f > pEnvironment.mEpsilonBetweenPointsDbl)
+	||   (pV3.getPosition().z - 0.4f > pEnvironment.mEpsilonBetweenPointsDbl) ) {
+		System.out.println( this.toString() );
+	}
+}
 	}
 	
 	/** Clones the face object */
@@ -351,7 +359,20 @@ public class CSGFace
 	@Override
 	public String toString(
 	) {
-		return( "Face:\t" + v1().toString() + "\n\t" + v2().toString() + "\n\t" + v3().toString() );
+		StringBuilder aBuffer = new StringBuilder( 256 );
+		aBuffer.append( "Face:\t" )
+				.append( v1().toString() )
+				.append( "\n\t" )
+				.append( v2().toString() )
+				.append( "\n\t" )
+				.append( v3().toString() );
+		if ( mPlane == null ) {
+			aBuffer.append( "\n\t INVALID PLANE" );
+		} else {
+			aBuffer.append( "\n\t" );
+			mPlane.toString( aBuffer );
+		}
+		return( aBuffer.toString() );
 	}
 	
 	/**

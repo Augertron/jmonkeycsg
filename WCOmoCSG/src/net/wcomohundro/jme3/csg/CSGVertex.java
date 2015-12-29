@@ -70,9 +70,9 @@ public abstract class CSGVertex<VectorT>
 	public static final String sCSGVertexDate="$Date$";
 	
 	/** Static empty list of vertices */
-	protected static final List<CSGVertex> sEmptyVertices = new ArrayList<CSGVertex>(0);
+	public static final List<CSGVertex> sEmptyVertices = new ArrayList<CSGVertex>(0);
 	/** Quick access to a NULL in a list of Vertices */
-	protected static final List<CSGVertex> sNullVertexList = Collections.singletonList( null );
+	public static final List<CSGVertex> sNullVertexList = Collections.singletonList( null );
 
 	
 	/** Factory construction of appropriate vertex */

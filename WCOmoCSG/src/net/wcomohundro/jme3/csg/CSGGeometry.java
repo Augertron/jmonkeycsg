@@ -127,7 +127,6 @@ public class CSGGeometry
 		String	pName
 	) {
 		super( pName );
-		mInstanceKey = CSGShape.assignInstanceKey( "CSGGeometry" );
 	}
 	/** Constructor on a name and given mesh */
 	public CSGGeometry(
@@ -138,9 +137,15 @@ public class CSGGeometry
 		mInstanceKey = CSGShape.assignInstanceKey( "CSGGeometry" );
 	}
 	
-	/** Unique instance identifier */
+	/** Unique keystring identifying this element */
 	@Override
-	public String getInstanceKey() { return mInstanceKey; }
+	public String getInstanceKey(
+	) { 
+		if ( mInstanceKey == null ) {
+			mInstanceKey = CSGShape.assignInstanceKey( this.name );
+		}
+		return mInstanceKey; 
+	}
 	
 	/** Is this a valid geometry */
 	@Override
@@ -274,7 +279,7 @@ public class CSGGeometry
 	@Override
 	public boolean regenerate(
 	) {
-		return( regenerate( (mEnvironment == null) ? CSGEnvironment.sStandardEnvironment : mEnvironment ) );
+		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment ) ) );
 	}
 	@Override
 	public boolean regenerate(

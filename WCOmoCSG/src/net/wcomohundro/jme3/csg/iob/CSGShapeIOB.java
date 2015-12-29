@@ -119,15 +119,14 @@ import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 	The boolean operation is the collection of the appropriate faces from the two solids.
 */
 public class CSGShapeIOB 
-	implements CSGShape.CSGShapeProcessor, ConstructiveSolidGeometry
+	implements CSGShape.CSGShapeProcessor<CSGEnvironmentIOB>, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
 	public static final String sCSGShapeIOBRevision="$Rev$";
 	public static final String sCSGShapeIOBDate="$Date$";
 	
 	/** Default configuration that applies to IOB processing */
-	public static CSGEnvironment sDefaultEnvironment 
-		= new CSGEnvironment( true, "net.wcomohundro.jme3.csg.iob.CSGShapeIOB");
+	public static CSGEnvironmentIOB sDefaultEnvironment = new CSGEnvironmentIOB();
 
 	/** Canned, immutable empty list of faces */
 	protected static final List<CSGFace> sEmptyFaces = new ArrayList<CSGFace>(0);
@@ -157,8 +156,8 @@ public class CSGShapeIOB
 	/** Ready a list of shapes for processing */
 	@Override
 	public List<CSGShape> prepareShapeList(
-		List<CSGShape>	pShapeList
-	,	CSGEnvironment	pEnvironment
+		List<CSGShape>		pShapeList
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		List<CSGShape> sortedShapes = new ArrayList<>( pShapeList );
 		Collections.sort( sortedShapes, new Comparator<CSGShape>() {
@@ -203,7 +202,7 @@ public class CSGShapeIOB
 		CSGMeshManager		pMaterialManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentIOB	pEnvironment
 	) { 
 		Mesh aMesh;
 		if ( mFaces.isEmpty() && ((aMesh = mShape.getMesh()) != null) ) {
@@ -224,7 +223,7 @@ public class CSGShapeIOB
 		CSGShape			pOther
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
@@ -236,12 +235,15 @@ public class CSGShapeIOB
 		CSGSolid otherSolid = new CSGSolid( otherFaceList );
 		
 		List<CSGFace> newFaceList
-			= composeSolid( thisSolid, otherSolid, false
+			= composeSolid( pOther, thisSolid, otherSolid, false
 							,	CSGFaceStatus.OUTSIDE, CSGFaceStatus.SAME, CSGFaceStatus.OUTSIDE
 							,	pTempVars, pEnvironment );
 		
 		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), this.mShape.isValid() && pOther.isValid() );
+		CSGShape aShape = new CSGShape( aHandler
+										, this.mShape.getName()
+										, this.mShape.getOrder()
+										, this.mShape.isValid() && pOther.isValid() );
 		return( aShape );
 	}
 
@@ -251,7 +253,7 @@ public class CSGShapeIOB
 		CSGShape			pOther
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
@@ -263,12 +265,15 @@ public class CSGShapeIOB
 		CSGSolid otherSolid = new CSGSolid( otherFaceList );
 		
 		List<CSGFace> newFaceList
-			= composeSolid( thisSolid, otherSolid, true
+			= composeSolid( pOther, thisSolid, otherSolid, true
 							,	CSGFaceStatus.OUTSIDE, CSGFaceStatus.OPPOSITE, CSGFaceStatus.INSIDE
 							,	pTempVars, pEnvironment );
 		
 		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), this.mShape.isValid() && pOther.isValid() );
+		CSGShape aShape = new CSGShape( aHandler
+										, this.mShape.getName()
+										, this.mShape.getOrder()
+										, this.mShape.isValid() && pOther.isValid() );
 		return( aShape );
 	}
 
@@ -278,7 +283,7 @@ public class CSGShapeIOB
 		CSGShape			pOther
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
@@ -290,12 +295,15 @@ public class CSGShapeIOB
 		CSGSolid otherSolid = new CSGSolid( otherFaceList );
 		
 		List<CSGFace> newFaceList
-			= composeSolid( thisSolid, otherSolid, false
+			= composeSolid( pOther, thisSolid, otherSolid, false
 							,	CSGFaceStatus.INSIDE, CSGFaceStatus.SAME, CSGFaceStatus.INSIDE
 							,	pTempVars, pEnvironment );
 
 		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getOrder(), this.mShape.isValid() && pOther.isValid() );
+		CSGShape aShape = new CSGShape( aHandler
+										, this.mShape.getName()
+										, this.mShape.getOrder()
+										, this.mShape.isValid() && pOther.isValid() );
 		return( aShape );
 	}
 	
@@ -305,7 +313,7 @@ public class CSGShapeIOB
 		CSGShape			pOther
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		// This is a simple addition of all the 'other' faces into this face list
 		if ( this.mShape.isValid() ) {
@@ -333,7 +341,7 @@ public class CSGShapeIOB
 	,	CSGMeshManager		pMeshManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		// Convert the mesh in to appropriate polygons
 	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
@@ -493,7 +501,7 @@ public class CSGShapeIOB
 		CSGMeshManager		pMeshManager
 	,	boolean				pProduceSubelements
 	,	CSGTempVars			pTempVars
-	,	CSGEnvironment		pEnvironment
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		List<CSGFace> aFaceList = getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		int anEstimateVertexCount = aFaceList.size() * 3;
@@ -577,14 +585,15 @@ public class CSGShapeIOB
 	 	@param pFaceStatus3   - status expected for the second solid faces
 	 */
 	protected List<CSGFace> composeSolid(
-		CSGSolid		pSolidA
-	,	CSGSolid		pSolidB
-	,	boolean			pInvertInteriorB
-	,	CSGFaceStatus	pFaceStatus1
-	, 	CSGFaceStatus 	pFaceStatus2
-	, 	CSGFaceStatus	pFaceStatus3
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGShape			pOtherShape
+	,	CSGSolid			pSolidA
+	,	CSGSolid			pSolidB
+	,	boolean				pInvertInteriorB
+	,	CSGFaceStatus		pFaceStatus1
+	, 	CSGFaceStatus 		pFaceStatus2
+	, 	CSGFaceStatus		pFaceStatus3
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		List<CSGFace> newFaceList = new ArrayList();
 		

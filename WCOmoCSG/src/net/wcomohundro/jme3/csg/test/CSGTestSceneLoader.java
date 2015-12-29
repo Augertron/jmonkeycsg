@@ -44,6 +44,7 @@ import com.jme3.asset.NonCachingKey;
 import com.jme3.asset.plugins.ClasspathLocator;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.export.Savable;
 import com.jme3.export.xml.XMLImporter;
@@ -57,6 +58,7 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
+import com.jme3.math.Triangle;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.Filter;
@@ -291,9 +293,18 @@ public class CSGTestSceneLoader
                 	
                 } else if ( pName.equals( "wireframe" ) ) {
                 	// Report on the click
-                	mWireframe = resolveSelectedGeometry();
-                	if ( mWireframe != null ) {
-                		mWireframe.getMaterial().getAdditionalRenderState().setWireframe( true );
+                	CollisionResult aCollision = resolveSelectedCollision();
+                	if ( aCollision != null ) {
+	                	mWireframe = aCollision.getGeometry();
+	                	mWireframe.getMaterial().getAdditionalRenderState().setWireframe( true );
+	                	
+	                	Triangle aTriangle = aCollision.getTriangle( null );
+	                	StringBuilder aBuffer = new StringBuilder( 128 );
+	                	aBuffer.append( aTriangle.get1() ).append( " / " )
+	                		.append( aTriangle.get2() ).append( " / " )
+	                		.append( aTriangle.get3() );
+	                	mPostText.push( aBuffer.toString() );
+	                	mRefreshText = true;
                 	}
                 } else if ( pName.equals( "video" ) ) {
                 	// Toggle the video capture
@@ -317,6 +328,9 @@ public class CSGTestSceneLoader
             		if ( mWireframe != null ) {
                 		mWireframe.getMaterial().getAdditionalRenderState().setWireframe( false );            			
             			mWireframe = null;
+            			
+                		if ( !mPostText.isEmpty() ) mPostText.pop();
+                		mRefreshText = true;
             		}
             	}
             }
@@ -352,9 +366,13 @@ public class CSGTestSceneLoader
     }
     protected Geometry resolveSelectedGeometry(
     ) {
-    	// Cast a ray in the direction of the camera and see what gets hit
-        CollisionResults results = new CollisionResults();
-        
+    	CollisionResult aCollision = resolveSelectedCollision();
+    	return( (aCollision == null) ? null : aCollision.getGeometry() );
+    }
+    protected CollisionResult resolveSelectedCollision(
+    ) {
+    	CollisionResults results = new CollisionResults();
+    	
         // To pick what the camera is directly looking at
         //Ray aRay = new Ray( cam.getLocation(), cam.getDirection() );
          
@@ -368,8 +386,7 @@ public class CSGTestSceneLoader
         if ( mLastScene != null ) {
 	        mLastScene.collideWith( aRay, results );
 	        if ( results.size() > 0 ) {
-	        	Geometry selectedItem = results.getClosestCollision().getGeometry();
-	        	return( selectedItem );
+	        	return( results.getClosestCollision() );
 	        }
         }
     	return( null );

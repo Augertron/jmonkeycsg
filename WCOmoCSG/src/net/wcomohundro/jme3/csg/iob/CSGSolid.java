@@ -112,15 +112,12 @@ public class CSGSolid
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		// Use the 'on plane' epsilon to determine if the points are so close that no meaningful
-		// face will be built.
-		// We expect the 'on plane' epsilon to be a bit larger than the 'between points' epsilon
 		if ( CSGEnvironment
-				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
+				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
 		|| CSGEnvironment
-				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonOnPlaneDbl )
+				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
 		|| CSGEnvironment
-				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonOnPlaneDbl ) ) {
+				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 			// The face is too small to be pertinent, so if another face is added, 
 			// just overuse the given slot
 			return( pFaceIndex );

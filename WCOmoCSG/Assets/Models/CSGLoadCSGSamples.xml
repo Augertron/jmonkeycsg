@@ -17,8 +17,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
             </transform>
-		    <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' id='CSGEnvironmentIOB'
-		    		doublePrecision='true' shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB' />
+		    <csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB' id='CSGEnvironmentIOB' />
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
@@ -74,8 +73,7 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='0.0'/>
             </transform>
-		    <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' id='CSGEnvironmentIOB'
-		    		doublePrecision='true' shapeClass='net.wcomohundro.jme3.csg.iob.CSGShapeIOB' />
+		    <csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB' id='CSGEnvironmentIOB' />
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box'
                 		materialName='Textures/BrickWall/BrickWall.xml'>

@@ -68,90 +68,6 @@ public class CSGVertexFlt
 	public static final String sCSGVertexFltDate="$Date$";
 		
 	
-	/** Factory level service routine that squeezes out any Vertex from a list that is not
-	 	a 'significant' distance from other vertices in the list. The vertices are assumed
-	 	to be in order, so that 1::2, 2::3, ... N-1::N, N::1
-	 	
-	 	You can also force all the vertices to be explicitly 'projected' onto a given optional plane
-	 	
-	 	@return - the 'eccentricity' of the related vertices, which represents the ratio 
-	 			  of the longest distance between points and the shortest.  So a very large
-	 			  eccentricity represents a rather wrapped set of vertices.
-	 */
-	public static float compressVertices(
-		List<CSGVertex>		pVertices
-	,	CSGPlaneFlt			pPlane
-	,	CSGEnvironment		pEnvironment
-	) {
-		CSGVertex rejectedVertex = null;
-		float minDistance = Float.MAX_VALUE, maxDistance = 0.0f;
-		
-		// Check each in the list against its neighbor
-		int lastIndex = pVertices.size() -1;
-		if ( lastIndex <= 0 ) {
-			// Nothing interesting in the list
-			return( 0.0f );
-		}
-		for( int i = 0, j = 1; i <= lastIndex; i += 1 ) {
-			if ( j > lastIndex ) j = 0;		// Loop around to compare the last to the first
-			
-			CSGVertexFlt aVertex = (CSGVertexFlt)pVertices.get( i );
-			if ( aVertex != null ) {
-				CSGVertexFlt otherVertex = (CSGVertexFlt)pVertices.get( j );
-				float aDistance = aVertex.distance( otherVertex );
-				if ( (aDistance >= pEnvironment.mEpsilonBetweenPointsFlt) 
-				&& (aDistance <= pEnvironment.mEpsilonMaxBetweenPoints) ) {
-					// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
-					// 		structure your bound checks accordingly
-					if ( aDistance < minDistance ) minDistance = aDistance;
-					if ( aDistance > maxDistance ) maxDistance = aDistance;
-					
-					if ( pPlane != null ) {
-						// Ensure the given point is actually on the plane
-						Vector3f aPoint = aVertex.getPosition();
-						aDistance = pPlane.pointDistance( aPoint );
-						if ( (aDistance < -pEnvironment.mEpsilonNearZeroFlt) 
-						|| (aDistance > pEnvironment.mEpsilonNearZeroFlt) ) {
-							if ( pEnvironment.mPolygonPlaneMode == CSGPolygonPlaneMode.FORCE_TO_PLANE ) {
-								// Resolve back to the corresponding point on the given plane
-								Vector3f newPoint = pPlane.pointProjection( aPoint, null );
-								if ( DEBUG ) {
-									// Debug check to ensure the new point is really on the plane
-									aDistance = pPlane.pointDistance( newPoint );
-								}
-								// Assume the normal from the original is close enough...
-								aVertex = new CSGVertexFlt( newPoint
-														, aVertex.getNormal()
-														, aVertex.getTextureCoordinate()
-														, null );
-								pVertices.set( i, aVertex );
-							} else {
-								// This point not really on the plane.  Keep it, but track it for debug
-								rejectedVertex = aVertex;
-							}
-						}
-					}
-				} else {
-					// The two vertices are too close (or super far apart) to be significant
-					rejectedVertex = aVertex;
-					pVertices.set( j, null );
-					
-					// NOTE that we work with the same i again with the next j
-					i -= 1;
-				}
-				j += 1;
-			}
-		}
-		if ( rejectedVertex != null ) {
-			// We have punted something, so compress out all nulls
-			pVertices.removeAll( sNullVertexList );
-		}
-		// Look for a shape totally out of bounds
-		float eccentricity = maxDistance / minDistance;
-		return( eccentricity );
-	}
-
-	
 	/** Standard null constructor */
 	public CSGVertexFlt(
 	) {
@@ -173,31 +89,13 @@ public class CSGVertexFlt
 	,	CSGEnvironment	pEnvironment
 	) {
 		// Use what was given
-		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
-			//		false comparisons
-			if ( !(
-			   (Math.abs( pPosition.x ) < pEnvironment.mEpsilonMaxBetweenPoints ) 
-			&& (Math.abs( pPosition.y ) < pEnvironment.mEpsilonMaxBetweenPoints ) 
-			&& (Math.abs( pPosition.z ) < pEnvironment.mEpsilonMaxBetweenPoints )
-			) ) {
-				CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pPosition );
-			}
-			// Upon further research, I am not seeing a requirement for the normal to be a unit vector
-			float normalLength = pNormal.length();
-			if ( !(normalLength != 0.0f) ) {
-				CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + pNormal + ", " + pNormal.length() );
-			}
-			if ( !(
-			   (Math.abs( pTextureCoordinate.x ) <= pEnvironment.mEpsilonMaxBetweenPoints ) 
-			&& (Math.abs( pTextureCoordinate.y ) <= pEnvironment.mEpsilonMaxBetweenPoints )
-			) ) {
-				CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + pTextureCoordinate );
-			}
-		}
 		mPosition = pPosition;
 		mNormal = pNormal;
 		mTextureCoordinate = pTextureCoordinate;
+		
+		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
+			pEnvironment.confirmVertex( this );
+		}
 	}
 	
 	/** Make a copy */

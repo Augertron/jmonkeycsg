@@ -13,11 +13,11 @@
                 <translation class='com.jme3.math.Vector3f' z='-5.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
-            		textureMode='FLAT'>
+            		axisSamples='32' closed='true' zExtent='1.5' radialSamples='32' radius='1.1'
+            		textureMode='CAN'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.1PI' scaleY='1.5'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='3' scaleY='1.5'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -27,11 +27,11 @@
                 <translation class='com.jme3.math.Vector3f' z='-10.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
-            		textureMode='FLAT_LINEAR'>
+            		axisSamples='32' closed='true' zExtent='1.5' radialSamples='32' radius='1.1'
+            		textureMode='ROLLER'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5' scaleY='2.2PI'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5' scaleY='3'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -41,11 +41,11 @@
                 <translation class='com.jme3.math.Vector3f' z='-15.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
-            		textureMode='FLAT' inverted='true'>
+            		axisSamples='32' closed='true' zExtent='1.5' radialSamples='32' radius='1.1'
+            		textureMode='CAN' inverted='true'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5PI' scaleY='1.1'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='3' scaleY='1.5'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -55,11 +55,11 @@
                 <translation class='com.jme3.math.Vector3f' z='-20.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		axisSamples='32' closed='true' height='1.5' radialSamples='32' radius='1.1'
-            		textureMode='FLAT_LINEAR' inverted='true'>
+            		axisSamples='32' closed='true' zExtent='1.5' radialSamples='32' radius='1.1'
+            		textureMode='ROLLER' inverted='true'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.1' scaleY='1.1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.1' scaleY='1.5PI'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5' scaleY='3'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
@@ -71,10 +71,10 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
             		closed='true' axisSamples='2' radialSamples='4' firstRadial='PI/4' radius='1.4' zExtent='1'
-            		textureMode='FLAT_LINEAR'>
+            		textureMode='ROLLER'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.4' scaleY='1.4'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.4' scaleY='1PI'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1' scaleY='3'/>
             	</faceProperties>
             </mesh> 
         </com.jme3.scene.Geometry>
@@ -84,10 +84,10 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
             		closed='true' axisSamples='2' radialSamples='3' firstRadial='PI/2' radius='1.4' zExtent='1'
-            		textureMode='FLAT'>
+            		textureMode='CAN'>
                 <faceProperties>
                     <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.4' scaleY='1.4'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1PI' scaleY='1.4'/>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='1.4'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>

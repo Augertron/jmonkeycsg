@@ -146,8 +146,8 @@ public class CSGSurface
     	Vector2f texScale = Vector2f.UNIT_XY;
 		if ( mFaceProperties != null ) {
 			for( CSGFaceProperties aProperty : mFaceProperties ) {
-				if ( aProperty.appliesToFace( Face.SURFACE ) && aProperty.hasScaleTexture()) {
-					texScale = aProperty.getScaleTexture();
+				if ( aProperty.appliesToFace( Face.SURFACE ) && aProperty.hasTextureScale()) {
+					texScale = aProperty.getTextureScale();
 				}
         	}
         }
