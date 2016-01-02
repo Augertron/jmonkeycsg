@@ -92,8 +92,7 @@ public class CSGPlaneDbl
 			double bDistance = aPlane.pointDistance( pB );
 			double cDistance = aPlane.pointDistance( pC );
 			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonNearZeroDbl ) {
-				CSGEnvironment.sLogger.log( Level.SEVERE
-				, pEnvironment.mShapeName + "Points NOT on plane: " + aPlane );				
+				pEnvironment.log( Level.SEVERE, "Points NOT on plane: " + aPlane );				
 			}
 		}
 		return( aPlane );
@@ -168,8 +167,7 @@ public class CSGPlaneDbl
 			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroDbl)
 			&& CSGEnvironment.isFinite( pDot )
 			) ) {
-				CSGEnvironment.sLogger.log( Level.SEVERE
-				, pEnvironment.mShapeName + "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
+				pEnvironment.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
 				pDot =  Double.NaN;
 			}
 		}
@@ -278,8 +276,7 @@ public class CSGPlaneDbl
 				Vector3d pointOnPlane = this.pointProjection( intersection, null );
 				intersection = pointOnPlane;
 				
-				CSGEnvironment.sLogger.log( Level.WARNING
-				, pEnvironment.mShapeName + "line intersect failed: "+ confirmDistance );
+				pEnvironment.log( Level.WARNING, "Line intersect failed: "+ confirmDistance );
 			}
 		}
 		return( intersection );

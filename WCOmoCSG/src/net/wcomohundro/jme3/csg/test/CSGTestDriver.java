@@ -38,7 +38,9 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 
+import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
@@ -51,6 +53,9 @@ public class CSGTestDriver
 					+ System.getProperty( "java.util.logging.config.file" )
 					+ "/" + System.getProperty( "java.util.logging.config.class" ) );
 		CSGVersion.reportVersion();
+		
+//		Vector3d aVector = new Vector3d( -0.5, -4.371139e-8, 0 );
+//		CSGEnvironment.rationalizeVector( aVector, 20 );
 		
 	    SimpleApplication app;
 	    

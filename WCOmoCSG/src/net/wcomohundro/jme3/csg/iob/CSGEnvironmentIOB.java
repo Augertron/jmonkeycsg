@@ -54,16 +54,13 @@ public class CSGEnvironmentIOB
 	// Tolerance if a given value is near enough to zero to be treated as zero
 	public static final float EPSILON_NEAR_ZERO_FLT = 1.0e-7f;
 	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-10;
+	// Tolerance of difference between magnitudes between two doubles
+	public static final int EPSILON_MAGNITUDE_RANGE = 22;
 	
 	// NOTE that '5E-15' may cause points on a plane to report problems.  In other words,
 	//		when near_zero gets this small, the precision errors cause points on a plane to
 	//		NOT look like they are on the plane, even when those points were used to create the
 	//		plane.....
-	
-	
-	/** Define a 'tolerance' for when two points are so far apart, it is ridiculous to consider it */
-	public static final double EPSILON_BETWEEN_POINTS_MAX = 1e+3;
-	
 	
 	/** Null constructor produces the 'standard' */
 	public CSGEnvironmentIOB(
@@ -75,7 +72,8 @@ public class CSGEnvironmentIOB
 		,	EPSILON_ONPLANE_DBL
 		,	EPSILON_NEAR_ZERO_FLT
 		,	EPSILON_BETWEEN_POINTS_FLT
-		,	EPSILON_ONPLANE_FLT );
+		,	EPSILON_ONPLANE_FLT
+		,	EPSILON_MAGNITUDE_RANGE );
 	}
 	
 	/** Support the persistence of this Environment */
@@ -97,6 +95,7 @@ public class CSGEnvironmentIOB
 			aCapsule.write( mEpsilonBetweenPointsFlt, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		aCapsule.write( mEpsilonMagnitudeRange, "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
 	}
 	
 	@Override
@@ -115,6 +114,7 @@ public class CSGEnvironmentIOB
 			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		mEpsilonMagnitudeRange = aCapsule.readInt( "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
 	}
 
 

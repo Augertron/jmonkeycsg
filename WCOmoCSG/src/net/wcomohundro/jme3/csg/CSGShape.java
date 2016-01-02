@@ -704,7 +704,7 @@ public class CSGShape
 	@Override
 	public boolean regenerate(
 	) {
-		return( regenerate( CSGEnvironment.resolveEnvironment( null ) ) );		
+		return( regenerate( CSGEnvironment.resolveEnvironment( null, this ) ) );		
 	}
 	@Override
 	public boolean regenerate(

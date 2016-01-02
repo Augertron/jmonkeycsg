@@ -93,6 +93,10 @@ public class CSGRay
 		pResult = vA2minusA1.mult( nA / d, pResult );
 		pResult.addLocal( pLineAPoint1 );
 		
+		if ( pEnvironment.mRationalizeValues ) {
+			// Confirm that the magnitudes of the resultant point are rational
+			CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
+		}
 		if ( pEnvironment.mStructuralDebug ) {
 			// Confirm the intersection
 			Vector3d nBCrossBA = vA2minusA1.cross( vA1minusB1, pTempVars.vectd5 );
@@ -100,7 +104,9 @@ public class CSGRay
 			
 			Vector3d bZero = vB2minusB1.multLocal( nB / d );
 			bZero.addLocal( pLineBPoint1 );
-			
+			if ( pEnvironment.mRationalizeValues ) {
+				CSGEnvironment.rationalizeVector( bZero, pEnvironment.mEpsilonMagnitudeRange );
+			}
 			if ( !CSGEnvironment.equalVector3d( pResult, bZero, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 				throw new IllegalArgumentException( "Lines do not intersect" );
 			}
@@ -172,6 +178,10 @@ public class CSGRay
 				mOrigin.x = (d2*normalFace1.y - d1*normalFace2.y)/mDirection.z;
 				mOrigin.y = (d1*normalFace2.x - d2*normalFace1.x)/mDirection.z;
 				mOrigin.z = 0;
+			}
+			if ( pEnvironment.mRationalizeValues ) {
+				// Confirm that the magnitudes of the resultant point are rational
+				CSGEnvironment.rationalizeVector( mOrigin, pEnvironment.mEpsilonMagnitudeRange );
 			}
 		} else {
 			throw new IllegalArgumentException( "Ray built from parallel faces" );
@@ -255,6 +265,11 @@ public class CSGRay
 		// Construct a new position based on what we know 
 		pResult = mDirection.mult( t, pResult );
 		pResult.addLocal( mOrigin );
+		
+		if ( pEnvironment.mRationalizeValues ) {
+			// Confirm that the magnitudes of the resultant point are rational
+			CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
+		}
 		return( pResult );
 	}
 	
@@ -305,6 +320,11 @@ public class CSGRay
 			double t = -numerator/denominator;
 			pResult = mDirection.mult( t, pResult );
 			pResult.addLocal( mOrigin );
+			
+			if ( pEnvironment.mRationalizeValues ) {
+				// Confirm that the magnitudes of the resultant point are rational
+				CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
+			}
 			return pResult;
 		}
 	}

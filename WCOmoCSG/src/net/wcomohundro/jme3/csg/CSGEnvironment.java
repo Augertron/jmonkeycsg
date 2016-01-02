@@ -65,7 +65,7 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
  	It is possible, therefore, to configure the CSGEnvironment via the XML load mechanism.
  */
 public class CSGEnvironment<ShapeProcessorT> 
-	implements ConstructiveSolidGeometry, Savable 
+	implements ConstructiveSolidGeometry, Savable, Cloneable
 {
 	/** Version tracking support */
 	public static final String sCSGEnvironmentRevision="$Rev$";
@@ -82,15 +82,43 @@ public class CSGEnvironment<ShapeProcessorT>
 	public static CSGEnvironment sStandardEnvironment = null;
 	public static CSGEnvironment resolveEnvironment(
 		CSGEnvironment	pEnvironment
+	,	Spatial			pForSpatial
 	) {
-		if ( sStandardEnvironment == null ) {
-			// First time initialization of the standard
-			if ( pEnvironment == null ) {
-				pEnvironment = new net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB();
+		if ( pEnvironment != null ) {
+			// Use environment provided
+			if ( sStandardEnvironment == null ) {
+				// First time initialization of the standard
+				sStandardEnvironment = pEnvironment.clone( null );
 			}
+		} else if ( sStandardEnvironment == null ) {
+			// First time initialization of the standard
+			pEnvironment = new net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB();
 			sStandardEnvironment = pEnvironment;
+		} else {
+			// Use the standard
+			pEnvironment = sStandardEnvironment;
 		}
-		return( (pEnvironment == null) ? sStandardEnvironment : pEnvironment );
+		if ( pForSpatial != null ) {
+			if ( !pForSpatial.equals( pEnvironment.mShape ) ) {
+				// Clone a copy with the given spatial
+				pEnvironment = pEnvironment.clone( pForSpatial );
+			}
+		}
+		return( pEnvironment );
+	}
+	
+	/** Clone a copy with a given spatial */
+	public CSGEnvironment clone(
+		Spatial		pShape
+	) {
+		CSGEnvironment aCopy = null;
+		try {
+			aCopy = (CSGEnvironment)this.clone();
+			aCopy.mShape = pShape;
+			
+		} catch( CloneNotSupportedException willNotHappen ) {
+		}
+		return( aCopy );
 	}
 
 	
@@ -173,6 +201,31 @@ public class CSGEnvironment<ShapeProcessorT>
 		return( true );
 	}
 	
+	/** Service routine to 'rationalize' a vector to keep all its components within the same
+	 	scale.  In other words, to have x,y,z values like 0.5, 0.4, 0.000000000001 with
+	 	wildly varying orders of magnitude is rather silly.
+	 */
+	public static Vector3d rationalizeVector(
+		Vector3d	pVector
+	,	int			pMagnitudeRange
+	) {
+		// NOTE that by definition, the getExponent() of zero is MIN_EXPONENT-1, which
+		//		actually works out quite fine for comparisons
+		int magX = Math.getExponent( pVector.x );
+		int magY = Math.getExponent( pVector.y );
+		int magZ = Math.getExponent( pVector.z );
+		if ( Math.abs( magX - magY ) > pMagnitudeRange ) {
+			if ( magX > magY ) pVector.y = 0; else pVector.x = 0;
+		}
+		if ( Math.abs( magY - magZ ) > pMagnitudeRange ) {
+			if ( magY > magZ ) pVector.z = 0; else pVector.y = 0;
+		}
+		if ( Math.abs( magZ - magX ) > pMagnitudeRange ) {
+			if ( magZ > magX ) pVector.x = 0; else pVector.z = 0;
+		}
+		return( pVector );
+	}
+	
 	/** Service routine to interpret a Savable.read() float value that can take the form
 			xxxPI/yyy
 		that supports fractional values of PI
@@ -223,67 +276,8 @@ public class CSGEnvironment<ShapeProcessorT>
 		return( aFloatValue );
 	}
 
-	
-	/** Shape this environment applies to */
-	public String		mShapeName;
-	/** Is structural debug on or off */
-	public boolean		mStructuralDebug;
-	/** Control flag to process in double precision */
-	public boolean 		mDoublePrecision;
-	
-	/** EPSILON - near to zero */
-	public double		mEpsilonNearZeroDbl;
-	public float		mEpsilonNearZeroFlt;
-	/** EPSILON - distance to plane */
-	public double		mEpsilonOnPlaneDbl;
-	public float		mEpsilonOnPlaneFlt;
-	/** EPSILON - meaningful minimal distance between points */
-	public double		mEpsilonBetweenPointsDbl;
-	public float		mEpsilonBetweenPointsFlt;
-
-	/** Type of 'shape processor' to operate with */
-	public Class		mShapeClass;
-	
-	
-	/** Constructor based on the 'standards' */
-	protected CSGEnvironment(
-		boolean		pDoublePrecision
-	,	Class		pHandlerClass
-	,	double		pEpsilonNearZeroDbl
-	,	double		pEpsilonBetweenPointsDbl
-	,	double		pEpsilonOnPlaneDbl
-	,	float		pEpsilonNearZeroFlt
-	,	float		pEpsilonBetweenPointsFlt
-	,	float		pEpsilonOnPlaneFlt
-	) {
-		mShapeName = "";
-		mDoublePrecision = pDoublePrecision;
-		mShapeClass = pHandlerClass;
-		mStructuralDebug = DEBUG;
-		
-		mEpsilonNearZeroDbl = pEpsilonNearZeroDbl;
-		mEpsilonOnPlaneDbl = pEpsilonOnPlaneDbl;		
-		mEpsilonBetweenPointsDbl = pEpsilonBetweenPointsDbl;
-
-		mEpsilonNearZeroFlt = pEpsilonNearZeroFlt;
-		mEpsilonOnPlaneFlt = pEpsilonOnPlaneFlt;		
-		mEpsilonBetweenPointsFlt = pEpsilonBetweenPointsFlt;
-	}
-	
-	/** Build an appropriate shape processor */
-	public CSGShape.CSGShapeProcessor resolveShapeProcessor(
-	) {
-		CSGShape.CSGShapeProcessor aHandler = null;
-		if ( mShapeClass != null ) try {
-			aHandler = (CSGShape.CSGShapeProcessor)mShapeClass.newInstance();
-		} catch( Exception ex ) {
-			sLogger.log( Level.SEVERE, "Failed to create handler: " + ex, ex );
-		}
-		return( aHandler );
-	}
-	
 	/** Debug support for confirming a vertex */
-	public boolean confirmVertex(
+	public static boolean confirmVertex(
 		CSGVertexFlt	pVertex
 	) {
 		// This is more a spot customize a check for something going wrong in a given test case
@@ -315,7 +309,7 @@ public class CSGEnvironment<ShapeProcessorT>
 		}
 		return( true );
 	}
-	public boolean confirmVertex(
+	public static boolean confirmVertex(
 		CSGVertexDbl	pVertex
 	) {
 		// This is more a spot customize a check for something going wrong in a given test case
@@ -348,6 +342,94 @@ public class CSGEnvironment<ShapeProcessorT>
 		return( true );
 	}
 	
+	
+	/** Shape this environment applies to */
+	public Spatial		mShape;
+	/** Is value (Vector/Vertex) rationalization on or off */
+	public boolean		mRationalizeValues;
+	/** Is structural debug on or off */
+	public boolean		mStructuralDebug;
+	/** Control flag to process in double precision */
+	public boolean 		mDoublePrecision;
+	
+	/** EPSILON - near to zero */
+	public double		mEpsilonNearZeroDbl;
+	public float		mEpsilonNearZeroFlt;
+	/** EPSILON - distance to plane */
+	public double		mEpsilonOnPlaneDbl;
+	public float		mEpsilonOnPlaneFlt;
+	/** EPSILON - meaningful minimal distance between points */
+	public double		mEpsilonBetweenPointsDbl;
+	public float		mEpsilonBetweenPointsFlt;
+	/** EPSILON - meaningful range of magnitudes between two floating point numbers */
+	public int			mEpsilonMagnitudeRange;
+
+	/** Type of 'shape processor' to operate with */
+	public Class		mShapeClass;
+	
+	
+	/** Constructor based on the 'standards' */
+	protected CSGEnvironment(
+		boolean		pDoublePrecision
+	,	Class		pHandlerClass
+	,	double		pEpsilonNearZeroDbl
+	,	double		pEpsilonBetweenPointsDbl
+	,	double		pEpsilonOnPlaneDbl
+	,	float		pEpsilonNearZeroFlt
+	,	float		pEpsilonBetweenPointsFlt
+	,	float		pEpsilonOnPlaneFlt
+	,	int			pEpsilonMagnitudeRange
+	) {
+		mShape = null;
+		mDoublePrecision = pDoublePrecision;
+		mShapeClass = pHandlerClass;
+		mStructuralDebug = DEBUG;
+		mRationalizeValues = true;
+		
+		mEpsilonNearZeroDbl = pEpsilonNearZeroDbl;
+		mEpsilonOnPlaneDbl = pEpsilonOnPlaneDbl;		
+		mEpsilonBetweenPointsDbl = pEpsilonBetweenPointsDbl;
+
+		mEpsilonNearZeroFlt = pEpsilonNearZeroFlt;
+		mEpsilonOnPlaneFlt = pEpsilonOnPlaneFlt;		
+		mEpsilonBetweenPointsFlt = pEpsilonBetweenPointsFlt;
+		
+		mEpsilonMagnitudeRange = pEpsilonMagnitudeRange;
+	}
+	
+	/** Log a message */
+	public void log(
+		Level		pLogLevel
+	,	String		pMessage
+	) {
+		if ( this.mShape != null ) {
+			pMessage = this.mShape.getName() + ": " + pMessage;
+		}
+		sLogger.log( pLogLevel, pMessage );
+	}
+	
+	/** Build a standard exception */
+	public IllegalArgumentException exception( 
+		String		pMessage
+	) {
+		if ( this.mShape != null ) {
+			pMessage = this.mShape.getName() + ": " + pMessage;
+		}
+		return( new IllegalArgumentException( pMessage ) );
+	}
+	
+	/** Build an appropriate shape processor */
+	public CSGShape.CSGShapeProcessor resolveShapeProcessor(
+	) {
+		CSGShape.CSGShapeProcessor aHandler = null;
+		if ( mShapeClass != null ) try {
+			aHandler = (CSGShape.CSGShapeProcessor)mShapeClass.newInstance();
+		} catch( Exception ex ) {
+			sLogger.log( Level.SEVERE, "Failed to create handler: " + ex, ex );
+		}
+		return( aHandler );
+	}
+	
 	/** Support the persistence of this Environment */
 	@Override
 	public void write(
@@ -356,11 +438,8 @@ public class CSGEnvironment<ShapeProcessorT>
 		// Save the configuration options
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mDoublePrecision, "doublePrecision", false );
+		aCapsule.write( mRationalizeValues, "rationalizeValues", true );
 		aCapsule.write( mStructuralDebug, "structuralDebug", false );
-		String shapeClassName = (mDoublePrecision)
-								?	"net.wcomohundro.jme3.csg.iob.CSGShapeIOB"
-								:	"net.wcomohundro.jme3.csg.bsp.CSGShapeBSP";
-		aCapsule.write( mShapeClass.getName(), "shapeClass", shapeClassName );
 	}
 	
 	@Override
@@ -369,17 +448,8 @@ public class CSGEnvironment<ShapeProcessorT>
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mDoublePrecision = aCapsule.readBoolean( "doublePrecision", true );
+		mRationalizeValues = aCapsule.readBoolean( "rationalizeValues", true );
 		mStructuralDebug = aCapsule.readBoolean( "structuralDebug", DEBUG );
-		
-		String shapeClassName = (mDoublePrecision)
-								?	"net.wcomohundro.jme3.csg.iob.CSGShapeIOB"
-								:	"net.wcomohundro.jme3.csg.bsp.CSGShapeBSP";
-		shapeClassName = aCapsule.readString( "shapeClass", shapeClassName );
-		try {
-			mShapeClass = Class.forName( shapeClassName );
-		} catch( ClassNotFoundException ex ) {
-			sLogger.log( Level.SEVERE, "Invalid ShapeHandler: " + ex, ex );
-		}
 	}
 
 	/////// Implement ConstructiveSolidGeometry

@@ -90,13 +90,21 @@ public class CSGVertexDbl
 	,	Vector2f		pTextureCoordinate
 	,	CSGEnvironment	pEnvironment
 	) {
+		this( pPosition, pNormal, pTextureCoordinate, (pEnvironment != null) && pEnvironment.mStructuralDebug );
+	}
+	public CSGVertexDbl(
+		Vector3d		pPosition
+	,	Vector3d		pNormal
+	,	Vector2f		pTextureCoordinate
+	,	boolean			pConfirmVertex
+	) {
 		// Use what was given
 		mPosition = pPosition;
 		mNormal = pNormal;
 		mTextureCoordinate = pTextureCoordinate;
 		
-		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			pEnvironment.confirmVertex( this );
+		if ( pConfirmVertex ) {
+			CSGEnvironment.confirmVertex( this );
 		}
 	}
 	
@@ -118,11 +126,11 @@ public class CSGVertexDbl
 		Vector3d		pPosition
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
+	,	CSGEnvironment	pEnvironment
 	) {
 		return( new CSGVertexDbl( pPosition, pNormal, pTextureCoordinate, null ) );
 	}
 		
-	
 	/** Access as Floats */
 	@Override
 	public Vector3f getPositionFlt(
@@ -166,12 +174,11 @@ public class CSGVertexDbl
 					pTempVars.vect2d.set( pOther.getTextureCoordinate() )
 						.subtractLocal( this.mTextureCoordinate ).multLocal( (float)pPercentage ) );
 			
-			aVertex = this.sibling( pNewPosition, newNormal, newTextureCoordinate );
+			aVertex = this.sibling( pNewPosition, newNormal, newTextureCoordinate, pEnvironment );
 		}
 		if ( aVertex == null ) {
 			// Not a percentage we can deal with
-			CSGEnvironment.sLogger.log( Level.SEVERE
-			, pEnvironment.mShapeName + "unexpected percentage: " + pPercentage );
+			pEnvironment.log( Level.SEVERE, "Unexpected interpolate %: " + pPercentage );
 		}
 		return( aVertex );
 	}

@@ -69,11 +69,11 @@ public class CSGVertexIOB
 
 	/** Factory construction of appropriate vertex */
 	public static CSGVertexIOB makeVertex(
-		Vector3f		pPosition
-	,	Vector3f		pNormal
-	,	Vector2f		pTextureCoordinate
-	,	Transform		pTransform
-	,	CSGEnvironment	pEnvironment
+		Vector3f			pPosition
+	,	Vector3f			pNormal
+	,	Vector2f			pTextureCoordinate
+	,	Transform			pTransform
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		CSGVertexIOB aVertex;
 		
@@ -85,6 +85,7 @@ public class CSGVertexIOB
 			// The texture does not budge
 			pTextureCoordinate = pTextureCoordinate;
 		}
+		// NOTE that we are starting from 'float' precision, but working in 'double' hereafter
 		Vector3d aPosition = new Vector3d( pPosition.x, pPosition.y, pPosition.z );
 		Vector3d aNormal = new Vector3d( pNormal.x, pNormal.y, pNormal.z );
 		aVertex = new CSGVertexIOB( aPosition, aNormal, pTextureCoordinate, CSGVertexStatus.UNKNOWN, pEnvironment );
@@ -117,6 +118,12 @@ public class CSGVertexIOB
 	) {
 		super( pPosition, pNormal, pTextureCoordinate, pEnvironment );
 		mStatus = pStatus;
+		
+		if ( pEnvironment.mRationalizeValues ) {
+			// NOTE if you do NOT rationalize the position vector, you can get some
+			//		strange artifacts (probably due to 'near zero' processing)
+			CSGEnvironment.rationalizeVector( mPosition, pEnvironment.mEpsilonMagnitudeRange );
+		}
 	}
 	/** Constructor based on a new position along a line between two given vertices */
 	public CSGVertexIOB(
@@ -126,11 +133,14 @@ public class CSGVertexIOB
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		mPosition = pNewPosition;
-		mNormal = new Vector3d();
-		mTextureCoordinate = new Vector2f();
+		super( pNewPosition, new Vector3d(), new Vector2f(), false );
 		mStatus = CSGVertexStatus.UNKNOWN;
 		
+		if ( pEnvironment.mRationalizeValues ) {
+			// NOTE if you do NOT rationalize the position vector, you can get some
+			//		strange artifacts (probably due to 'near zero' processing)
+			CSGEnvironment.rationalizeVector( mPosition, pEnvironment.mEpsilonMagnitudeRange );
+		}
 		double d1 = pVertexA.getPosition().distance( pNewPosition );
 		double d2 = pVertexB.getPosition().distance( pNewPosition );
 		double percent = d1 / (d1 + d2);
@@ -184,7 +194,21 @@ public class CSGVertexIOB
 		Vector3d		pPosition
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
+	,	CSGEnvironment	pEnvironment
 	) {
+		if ( !pEnvironment.mDoublePrecision ) {
+			// IOB processing is inherently 'double', but if we mark it 'float', then 
+			// adjust the given values to match single precision only
+			float xValue = (float)pPosition.x;
+			float yValue = (float)pPosition.y;
+			float zValue = (float)pPosition.z;
+			pPosition.set( xValue, yValue, zValue );
+			
+			xValue = (float)pNormal.x;
+			yValue = (float)pNormal.y;
+			zValue = (float)pNormal.z;
+			pNormal.set( xValue, yValue, zValue );
+		}
 		return( new CSGVertexIOB( pPosition, pNormal, pTextureCoordinate, null ) );
 	}
 

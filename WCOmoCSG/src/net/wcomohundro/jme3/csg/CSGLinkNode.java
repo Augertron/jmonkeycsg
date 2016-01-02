@@ -58,6 +58,8 @@ import com.jme3.scene.control.Control;
  		<csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CommonCSGEnvironment'/>
  		
  	Likewise, you can define/reference a common material.
+ 	
+ 	The 'library' items can also be used to define reference names
  		
  	This node also can act as a collection of independent CSGSpatials, triggering a single
  	regeneration of all CSG elements within itself.

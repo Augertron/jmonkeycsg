@@ -159,8 +159,7 @@ public class CSGPlaneFlt
 			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroFlt)
 			&& CSGEnvironment.isFinite( pDot )
 			) ) {
-				CSGEnvironment.sLogger.log( Level.SEVERE
-				, pEnvironment.mShapeName + "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
+				pEnvironment.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
 				pDot =  Float.NaN;
 			}
 		}
@@ -262,8 +261,7 @@ public class CSGPlaneFlt
 				Vector3f pointOnPlane = this.pointProjection( intersection, null );
 				intersection = pointOnPlane;
 				
-				CSGEnvironment.sLogger.log( Level.WARNING
-				, pEnvironment.mShapeName + "line intersect failed: "+ confirmDistance );
+				pEnvironment.log( Level.WARNING, "Line intersect failed: "+ confirmDistance );
 			}
 		}
 		return( intersection );

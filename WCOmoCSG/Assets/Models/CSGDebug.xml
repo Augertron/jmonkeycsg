@@ -1,5 +1,10 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+	<csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB'
+		doublePrecision='true' structuralDebug='false' rationalizeValues='true'
+		epsilonNearZero='1.0e-10' epsilonBetweenPoints='1.0e-7' epsilonOnPlane='1.0e-7'
+		epsilonMagnitudeRange='20' />
+		
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>

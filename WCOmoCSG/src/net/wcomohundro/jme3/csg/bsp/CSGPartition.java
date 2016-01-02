@@ -427,7 +427,7 @@ public class CSGPartition
 				return( addPolygonsFlt( pPolyList, pVertices, pPlane, pMaterialIndex, pEnvironment ) );
 			}
 		} else {
-			throw new IllegalArgumentException( pEnvironment.mShapeName + "Incomplete Polygon" );
+			throw pEnvironment.exception( "Incomplete BSP Polygon" );
 		}
 		// We did NOT build anything of value
 		return( 0 );
@@ -699,8 +699,7 @@ public class CSGPartition
 		}
 		if ( mLevel > pEnvironment.mBSPLimit ) {
 			// This is probably an error in the algorithm, but I have not yet found the true cause.
-			CSGEnvironment.sLogger.log( Level.WARNING
-			,   pEnvironment.mShapeName + "CSGPartition.buildHierarchy - too deep: " + mLevel );
+			pEnvironment.log( Level.WARNING, "CSGPartition.buildHierarchy - too deep: " + mLevel );
 			mPolygons.addAll( pPolygons );
 			return( mCorrupted = true );
 		}
@@ -886,19 +885,16 @@ public class CSGPartition
 					polygonType |= type;
 					polygonTypes[i] = type;
 				} else {
-					CSGEnvironment.sLogger.log( Level.SEVERE
-					, pEnvironment.mShapeName + "Bogus Vertex: " + aVertexPosition );					
+					pEnvironment.log( Level.SEVERE, "Bogus Vertex: " + aVertexPosition );					
 				}
 			}
 			if ( pEnvironment.mStructuralDebug && (polygonPlane == pPlane) && (polygonType != COPLANAR) ) {
-				CSGEnvironment.sLogger.log( Level.SEVERE
-				, pEnvironment.mShapeName + "Bogus polygon plane[" + pHierarchyLevel + "] " + polygonType );				
+				pEnvironment.log( Level.SEVERE, "Bogus polygon plane[" + pHierarchyLevel + "] " + polygonType );				
 			}
 		}
 		switch( polygonType ) {
 		default:
-			CSGEnvironment.sLogger.log( Level.SEVERE
-			, pEnvironment.mShapeName + "Bogus polygon split[" + pHierarchyLevel + "] " + polygonType );
+			pEnvironment.log( Level.SEVERE, "Bogus polygon split[" + pHierarchyLevel + "] " + polygonType );
 			return( vertexCount );
 
 		case SAMEPLANE:
@@ -914,8 +910,7 @@ public class CSGPartition
 			int coplaneCount
 				= addPolygonDbl( coplaneList, pPolygon, pTempVars, pEnvironment );
 			if ( coplaneCount < 1 ) {
-				CSGEnvironment.sLogger.log( Level.WARNING
-				, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
+				pEnvironment.log( Level.WARNING, "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 				return( vertexCount );
 			}
 			break;
@@ -1064,8 +1059,7 @@ public class CSGPartition
 					coplaneCount
 						= addPolygonDbl( coplaneList, pPolygon, pTempVars, pEnvironment );
 					if ( coplaneCount < 1 ) {
-						CSGEnvironment.sLogger.log( Level.WARNING
-						, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
+						pEnvironment.log( Level.WARNING, "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 						return( vertexCount );
 					}
 				} else if ( !beforeVertices.isEmpty() ) {
@@ -1073,8 +1067,7 @@ public class CSGPartition
 					// @todo - investigate further if we need to retain this polygon in front or just drop it
 					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
 					//coplaneList.add( pPolygon );		// Just adding the full poly to the plane does not work
-					CSGEnvironment.sLogger.log( Level.INFO
-					, pEnvironment.mShapeName + "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
+					pEnvironment.log( Level.INFO, "Discarding front vertices: " + beforeVertices.size() + "/" + vertexCount );
 					return( vertexCount - beforeVertices.size() );
 				}
 			} else if ( (behindCount == 0) && !behindVertices.isEmpty() ) {
@@ -1082,8 +1075,7 @@ public class CSGPartition
 				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
 				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
 				//coplaneList.add( pPolygon );			// Just adding the full poly to the plane does not work
-				CSGEnvironment.sLogger.log( Level.INFO
-				, pEnvironment.mShapeName + "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
+				pEnvironment.log( Level.INFO, "Discarding back vertices: "+ behindVertices.size() + "/" + vertexCount );
 				return( vertexCount - behindVertices.size() );
 			}
 			break;
@@ -1150,8 +1142,7 @@ public class CSGPartition
 					polygonType |= type;
 					polygonTypes[i] = type;
 				} else {
-					CSGEnvironment.sLogger.log( Level.SEVERE
-					, pEnvironment.mShapeName + "Bogus Vertex: " + aVertexPosition );					
+					pEnvironment.log( Level.SEVERE, "Bogus Vertex: " + aVertexPosition );					
 				}
 			}
 		}
@@ -1172,8 +1163,7 @@ public class CSGPartition
 											, pTempVars
 											, pEnvironment );
 			if ( coplaneCount < 1 ) {
-				CSGEnvironment.sLogger.log( Level.WARNING
-				, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
+				pEnvironment.log( Level.WARNING, "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 				return( vertexCount );
 			}
 			break;
@@ -1329,11 +1319,9 @@ public class CSGPartition
 															, pPolygon.getMeshIndex()
 														    , pTempVars, pEnvironment );
 					if ( coplaneCount > 0 ) {
-						CSGEnvironment.sLogger.log( Level.INFO
-						, pEnvironment.mShapeName + "Coopting planar vertices[" + pHierarchyLevel + "] " + vertexCount );
+						pEnvironment.log( Level.INFO, "Coopting planar vertices[" + pHierarchyLevel + "] " + vertexCount );
 					} else {
-						CSGEnvironment.sLogger.log( Level.WARNING
-						, pEnvironment.mShapeName + "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
+						pEnvironment.log( Level.WARNING, "Bogus COPLANAR polygon[" + pHierarchyLevel + "] " + pPolygon );
 						return( vertexCount );
 					}
 				} else if ( !beforeVertices.isEmpty() ) {
@@ -1341,8 +1329,7 @@ public class CSGPartition
 					// @todo - investigate further if we need to retain this polygon in front or just drop it
 					//pFront.add( pPolygon );		// Just adding the full poly to the front does NOT work
 					//coplaneList.add( pPolygon );		// Just adding the full poly to the plane does not work
-					CSGEnvironment.sLogger.log( Level.INFO
-					, pEnvironment.mShapeName + "Discarding front vertices[" + pHierarchyLevel + "] " + beforeVertices.size() + "/" + vertexCount );
+					pEnvironment.log( Level.INFO, "Discarding front vertices[" + pHierarchyLevel + "] " + beforeVertices.size() + "/" + vertexCount );
 					return( vertexCount - beforeVertices.size() );
 				}
 			} else if ( (behindCount == 0) && !behindVertices.isEmpty() ) {
@@ -1350,8 +1337,7 @@ public class CSGPartition
 				// @todo - investigate further if we need to retain this polygon in back, or if we just drop it
 				//pBack.add( pPolygon );			// Just adding the full poly to the back does NOT work
 				//coplaneList.add( pPolygon );			// Just adding the full poly to the plane does not work
-				CSGEnvironment.sLogger.log( Level.INFO
-				, pEnvironment.mShapeName + "Discarding back vertices[" + pHierarchyLevel + "] " + behindVertices.size() + "/" + vertexCount );
+				pEnvironment.log( Level.INFO, "Discarding back vertices[" + pHierarchyLevel + "] " + behindVertices.size() + "/" + vertexCount );
 				return( vertexCount - behindVertices.size() );
 			}
 			break;

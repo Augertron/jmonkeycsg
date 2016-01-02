@@ -226,7 +226,7 @@ public class CSGNode
     @Override
 	public boolean regenerate(
 	) {
-		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment ) ) );
+		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
 	public boolean regenerate(
@@ -283,6 +283,12 @@ public class CSGNode
     	AssetManager aManager = pImporter.getAssetManager();
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 
+        // Any custom environment that could influence subsequent processing?
+        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
+        if ( mEnvironment != null ) {
+        	// Incorporate this name AND define the standard as needed
+        	mEnvironment = CSGEnvironment.resolveEnvironment( mEnvironment, this );
+        }
 		// Let the super do its thing
 		super.read( pImporter );
 		
@@ -334,10 +340,6 @@ public class CSGNode
 
         // Any physics?
         mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
-
-        // Any custom environment?
-        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
-        if ( mEnvironment != null ) mEnvironment.mShapeName = this.getName() + ": ";
 
 		// Individual CSGSpatials will regenerate as part of read(), so now scan the list
 		// looking for any oddness.

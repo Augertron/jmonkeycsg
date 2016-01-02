@@ -65,14 +65,15 @@ public class CSGEnvironmentBSP
 	public static final float EPSILON_NEAR_ZERO_FLT = 5.0e-7f;
 	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-10;
 	
+	// Tolerance of difference between magnitudes between two doubles
+	public static final int EPSILON_MAGNITUDE_RANGE = 22;
+
+	
 	// NOTE that '5E-15' may cause points on a plane to report problems.  In other words,
 	//		when near_zero gets this small, the precision errors cause points on a plane to
 	//		NOT look like they are on the plane, even when those points were used to create the
 	//		plane.....
-	
-	
-	/** Define a 'tolerance' for when two points are so far apart, it is ridiculous to consider it */
-	public static final double EPSILON_BETWEEN_POINTS_MAX = 1e+3;
+
 	
 
 	//////////////////////////////// BSP SPECIFIC PROCESSING ///////////////////////////////
@@ -102,7 +103,8 @@ public class CSGEnvironmentBSP
 		,	EPSILON_ONPLANE_DBL
 		,	EPSILON_NEAR_ZERO_FLT
 		,	EPSILON_BETWEEN_POINTS_FLT
-		,	EPSILON_ONPLANE_FLT );
+		,	EPSILON_ONPLANE_FLT
+		,	EPSILON_MAGNITUDE_RANGE );
 
 		mBSPLimit = (mDoublePrecision) ? BSP_HIERARCHY_DEEP_LIMIT : BSP_HIERARCHY_LIMIT;
 				
@@ -123,13 +125,15 @@ public class CSGEnvironmentBSP
 	,	double							pEpsilonOnPlane
 	,	double							pEpsilonBetweenPoints
 	,	double							pEpsilonMaxBetweenPoints
+	,	int								pEpsilonMagnitudeRange
 	,	boolean							pPolygonTriangleOnly
 	,	CSGPolygon.CSGPolygonPlaneMode	pPolygonPlaneMode
 	,	double							pPartitionSeedPlane
 	) {
 		this( pDoublePrecision );
 		
-		mShapeName = pShapeName;
+		mShape = null;
+		mRationalizeValues = true;
 		mStructuralDebug = pStructuralDebug;
 		mShapeClass = pShapeClass;
 		
@@ -144,6 +148,8 @@ public class CSGEnvironmentBSP
 			mEpsilonOnPlaneFlt = (float)pEpsilonOnPlane;		
 			mEpsilonBetweenPointsFlt = (float)pEpsilonBetweenPoints;
 		}
+		mEpsilonMagnitudeRange = pEpsilonMagnitudeRange;
+		
 		mPolygonTriangleOnly = pPolygonTriangleOnly;
 		mPolygonPlaneMode = pPolygonPlaneMode;
 		
@@ -168,6 +174,8 @@ public class CSGEnvironmentBSP
 			aCapsule.write( mEpsilonBetweenPointsFlt, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		aCapsule.write( mEpsilonMagnitudeRange, "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
+
 		if ( mDoublePrecision ) {
 			aCapsule.write( mBSPLimit, "bspLimit", BSP_HIERARCHY_DEEP_LIMIT );
 		} else {
@@ -194,6 +202,8 @@ public class CSGEnvironmentBSP
 			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		mEpsilonMagnitudeRange = aCapsule.readInt( "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
+
 		if ( mDoublePrecision ) {
 			mBSPLimit = aCapsule.readInt( "bspLimit", BSP_HIERARCHY_DEEP_LIMIT );
 		} else {

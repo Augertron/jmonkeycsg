@@ -94,7 +94,7 @@ public class CSGVertexFlt
 		mTextureCoordinate = pTextureCoordinate;
 		
 		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			pEnvironment.confirmVertex( this );
+			CSGEnvironment.confirmVertex( this );
 		}
 	}
 	
@@ -152,8 +152,7 @@ public class CSGVertexFlt
 		}
 		if ( aVertex == null ) {
 			// Not a percentage we can deal with
-			CSGEnvironment.sLogger.log( Level.SEVERE
-			, pEnvironment.mShapeName + "unexpected percentage: " + pPercentage );
+			pEnvironment.log( Level.SEVERE, "Unexpected interpolate %: " + pPercentage );
 		}
 		return( aVertex );
 	}

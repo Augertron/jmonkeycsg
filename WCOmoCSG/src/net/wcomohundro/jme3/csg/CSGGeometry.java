@@ -279,7 +279,7 @@ public class CSGGeometry
 	@Override
 	public boolean regenerate(
 	) {
-		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment ) ) );
+		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
 	public boolean regenerate(
@@ -459,8 +459,10 @@ public class CSGGeometry
 
         // Any custom environment?
         mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
-        if ( mEnvironment != null ) mEnvironment.mShapeName = this.getName() + ": ";
-        
+        if ( mEnvironment != null ) {
+        	// Incorporate this name AND define the standard as needed
+        	mEnvironment = CSGEnvironment.resolveEnvironment( mEnvironment, this );
+        }
 		// Rebuild based on the shapes just loaded
 		mIsValid = regenerate();
 		
