@@ -206,8 +206,8 @@ public class CSGFaceProperties
         mTextureOrigin = (Vector2f)aCapsule.readSavable( "textureOrigin", null );
         if ( mTextureOrigin == null ) {
         	// Look for simple attributes
-        	float originX = CSGEnvironment.readPiValue( aCapsule, "originX", 1f );
-        	float originY = CSGEnvironment.readPiValue( aCapsule, "originY", 1f );
+        	float originX = CSGEnvironment.readPiValue( aCapsule, "originX", 0f );
+        	float originY = CSGEnvironment.readPiValue( aCapsule, "originY", 0f );
         	if ( (originX != 1f) || (originY != 1f) ) {
         		mTextureOrigin = new Vector2f( originX, originY );
         	}
@@ -237,8 +237,8 @@ public class CSGFaceProperties
         	aCapsule.write( mTextureScale.getY(), "scaleY", 1f );
         }
         if ( mTextureOrigin != null ) {
-        	aCapsule.write( mTextureOrigin.getX(), "originX", 1f );
-        	aCapsule.write( mTextureOrigin.getY(), "originY", 1f );
+        	aCapsule.write( mTextureOrigin.getX(), "originX", 0f );
+        	aCapsule.write( mTextureOrigin.getY(), "originY", 0f );
         }
         // For now, physics is too complicated to be captured by a write()
 	}

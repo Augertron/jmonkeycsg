@@ -60,7 +60,7 @@ import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
  	northpole, and the back face is known as the southpole.
  	
  	An axial is considered to be 'closed' if front/back endcaps are generated 
- 	for the shape.  The end caps are either 'flat' (they have no z extent) or not
+ 	for the shape.  The end caps are either 'flat' (they have zero z extent) or not
  	(they have a given z extent), as determined by the appropriate subclass.
  	
  	The structure CSGAxialContext holds all the dynamic elements computed during 

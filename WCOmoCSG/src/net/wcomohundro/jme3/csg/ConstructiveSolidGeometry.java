@@ -32,6 +32,7 @@ package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -170,6 +171,9 @@ public interface ConstructiveSolidGeometry
 		/** Is this a valid element */
 		public boolean isValid();	
 		
+		/** This there an active parent to this element */
+		public CSGElement getParentElement();
+		
 		/** Unique keystring identifying this element */
 		public String getInstanceKey();
 		
@@ -201,6 +205,10 @@ public interface ConstructiveSolidGeometry
 			PhysicsSpace		pPhysicsSpace
 		,	Node				pRoot
 		);
+		
+		/** Accessor to Face oriented properties */
+		public boolean hasFaceProperties();
+		public List<CSGFaceProperties>	getFaceProperties();
 		
 		/** Action to generate the mesh based on the given shapes */
 		public boolean regenerate();

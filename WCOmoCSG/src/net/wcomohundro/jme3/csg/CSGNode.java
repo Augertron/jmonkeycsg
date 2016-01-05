@@ -41,6 +41,7 @@ import java.util.Queue;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.math.CSGTransform;
 
 import com.jme3.asset.AssetInfo;
@@ -93,19 +94,21 @@ public class CSGNode
 
 	
 	/** Unique identifier */
-	protected String			mInstanceKey;
+	protected String					mInstanceKey;
 	/** The master material */
-    protected Material 			mMaterial;
+    protected Material 					mMaterial;
     /** Template transform control to apply to lights */
-    protected Control			mLightControl;
+    protected Control					mLightControl;
 	/** Physics that applies to this shape */
-	protected PhysicsControl	mPhysics;
+	protected PhysicsControl			mPhysics;
+	/** The list of custom Propertes to apply to the various faces of the interior components */
+	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Is this a valid geometry */
-	protected boolean			mIsValid;
+	protected boolean					mIsValid;
 	/** Shape regeneration time */
-	protected long				mRegenNS;
+	protected long						mRegenNS;
 	/** Processing environment to apply */
-	protected CSGEnvironment	mEnvironment;
+	protected CSGEnvironment			mEnvironment;
 
 	
 	/** Basic null constructor */
@@ -123,6 +126,17 @@ public class CSGNode
 	/** Is this a valid geometry */
 	@Override
 	public boolean isValid() { return mIsValid; }
+	
+	/** Is there an active parent to this element? */
+	@Override
+	public CSGElement getParentElement(
+	) {
+		if ( this.parent instanceof CSGElement ) {
+			return( (CSGElement)this.parent );
+		} else {
+			return( null );
+		}
+	}
 	
 	/** Unique keystring identifying this element */
 	@Override
@@ -221,6 +235,13 @@ public class CSGNode
     ) {
     	mPhysics = pPhysics;
     }
+    
+	/** Accessor to Face oriented properties */
+	@Override
+	public boolean hasFaceProperties() { return( (mFaceProperties != null) && !mFaceProperties.isEmpty() ); }
+	@Override
+	public List<CSGFaceProperties>	getFaceProperties() { return mFaceProperties; }
+
 
 	/** Action to generate the mesh based on the given shapes */
     @Override
@@ -274,6 +295,7 @@ public class CSGNode
 		if ( mEnvironment != null ) {
 			aCapsule.write( mEnvironment, "csgEnvironment", null );
 		}
+		aCapsule.writeSavableArrayList( (ArrayList)mFaceProperties, "faceProperties", null );
 	}
 	
 	@Override
@@ -340,6 +362,9 @@ public class CSGNode
 
         // Any physics?
         mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
+        
+        // Look for possible face properties to apply to interior mesh/subgroup
+        mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
 
 		// Individual CSGSpatials will regenerate as part of read(), so now scan the list
 		// looking for any oddness.

@@ -228,6 +228,8 @@ public class CSGGeonode
 				// Operate on each shape in turn, blending it into the common
 				CSGShape aProduct = null;
 				for( CSGShape aShape : sortedShapes ) {
+					aShape.setParentElement( this );
+
 					// Apply the operator
 					switch( aShape.getOperator() ) {
 					case UNION:

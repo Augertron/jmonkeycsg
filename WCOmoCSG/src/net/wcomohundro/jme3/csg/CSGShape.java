@@ -293,8 +293,8 @@ public class CSGShape
 	protected CSGShapeSurface			mSurface;
 	/** If this shape represents a group of blended shapes, these are the subshapes */
 	protected List<CSGShape>			mSubShapes;
-	/** If this shape is a subshape within another shape, this is the parent shape */
-	protected CSGShape					mParentShape;
+	/** If this shape is a subshape within another element, this is the parent element */
+	protected CSGElement				mParentElement;
 	/** Physics that applies to this shape */
 	protected PhysicsControl			mPhysics;
 	/** The list of custom Propertes to apply to the various faces of the interior components */
@@ -489,8 +489,21 @@ public class CSGShape
 	}
 	
 	/** Accessor to the parent shape */
-	public CSGShape getParentShape() { return mParentShape; }
-	public void setParentShape( CSGShape pParent ) { mParentShape = pParent; }
+	@Override
+	public CSGElement getParentElement(
+	) { 
+		if ( mParentElement != null ) {
+			// By definition, the active parent shape is the parent element
+			return mParentElement; 
+		} else if ( this.parent instanceof CSGElement ) {
+			// Looks like the parent Node can handle Element duties
+			return (CSGElement)this.parent;
+		} else {
+			// No active parent
+			return( null );
+		}
+	}
+	public void setParentElement( CSGElement pParent ) { mParentElement = pParent; }
 	
 	/** Ready a list of shapes for processing */
 	public List<CSGShape> prepareShapeList(
@@ -534,9 +547,9 @@ public class CSGShape
 			// Not really a transform
 			aTransform = null;
 		}
-		// If we are a subshape, then the parent's transform applies as well
-		if ( mParentShape != null ) {
-			Transform parentTransform = mParentShape.getCSGTransform();
+		// If we are a subshape of a SHAPE, then the parent's transform applies as well
+		if ( mParentElement instanceof CSGShape ) {
+			Transform parentTransform = ((CSGShape)mParentElement).getCSGTransform();
 			if ( parentTransform != null ) {
 				// The parent transform must be incorporated
 				if ( aTransform == null ) {
@@ -584,6 +597,13 @@ public class CSGShape
 	) {
 		// Shapes really play no part in the final 'world'
 	}
+	
+	/** Accessor to Face oriented properties */
+	@Override
+	public boolean hasFaceProperties() { return( (mFaceProperties != null) && !mFaceProperties.isEmpty() ); }
+	@Override
+	public List<CSGFaceProperties>	getFaceProperties() { return mFaceProperties; }
+
 	
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
@@ -805,6 +825,7 @@ public class CSGShape
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( mSubShapes == null ) {
+			// This shape is represented directly by a mesh.
 			// If we have face properties here at the Shape level, apply scaling now
 			if ( mesh instanceof CSGMesh ) {
 				// We are wrapping around a Mesh that supports per-face texture scale
@@ -819,17 +840,22 @@ public class CSGShape
 		        	}
 				}
 				// If this shape is part of a subgroup within a parent, apply the parent settings
-				if ( (mParentShape != null) && ((propList = mParentShape.mFaceProperties) != null) ) {
-					// The setting on the parent CSGShape apply to this child mesh
-					for( CSGFaceProperties aProperty : propList ) {
-						if ( aProperty.hasTextureScale() ) {
-							thisMesh.scaleFaceTextureCoordinates( aProperty.getTextureScale(), aProperty.getFaceMask() );
-						}
-		        	}
+				CSGElement parentElement = this.getParentElement();
+				while( parentElement != null ) {
+					if ( (propList = parentElement.getFaceProperties()) != null ) {
+						// The setting on the parent apply to this child mesh
+						for( CSGFaceProperties aProperty : propList ) {
+							if ( aProperty.hasTextureScale() ) {
+								thisMesh.scaleFaceTextureCoordinates( aProperty.getTextureScale(), aProperty.getFaceMask() );
+							}
+			        	}
+					}
+					parentElement = parentElement.getParentElement();
 				}
 			}
 			return( this );
 		} else {
+			// This shape acts as a blending parent of the given subshapes
 			return( regenerateShape( mSubShapes, pMeshManager, pTempVars, pEnvironment ) );
 		}
 	}
@@ -850,7 +876,7 @@ public class CSGShape
 			// Operate on each shape in turn, blending it into the common
 			CSGShape aProduct = null;
 			for( CSGShape aShape : sortedShapes ) {
-				aShape.setParentShape( this );
+				aShape.setParentElement( this );
 				
 				// Apply the operator
 				switch( aShape.getOperator() ) {

@@ -112,14 +112,24 @@ public class CSGAxialBox
 	,	 -1,  1,  1		// left, top, front			[7]
 	};
 	
-	/** The vertices that apply to the faces 
-	    (counter clockwise, facing the surface, starting lower left) */
-	protected static final int[] sFaceVertices = new int[] {
+	/** The vertices that apply to the faces (mimics ROLLER texture) */
+	protected static final int[] sRollerFaceVertices = new int[] {
 		0, 1, 2, 3		// back
 	
 	,	5, 0, 3, 6		// right
 	,	7, 6, 3, 2		// top
 	,	1, 4, 7, 2		// left
+	,	1, 0, 5, 4		// bottom
+	
+	,	4, 5, 6, 7		// front
+	};
+	/** The vertices that apply to the faces (mimics CAN texture) */
+	protected static final int[] sCanFaceVertices = new int[] {
+		0, 1, 2, 3		// back
+	
+	,	0, 3, 6, 5		// right
+	,	3, 2, 7, 6 		// top
+	,	2, 1, 4, 7		// left
 	,	1, 0, 5, 4		// bottom
 	
 	,	4, 5, 6, 7		// front
@@ -137,15 +147,26 @@ public class CSGAxialBox
 	,	0,  0,  1	 	// front
    	};
 
-    /** The textures: to match the other axial/radial shapes, the texture is applied to
-        the sides as if the shape where tilted up to sit on its back surface, and then 
-        the texture is wrapped around it. This matches CSGRadialCapped CAN texture */
-   	protected static final float[] sTexture = new float[] {
+    /** The textures: to match the other axial/radial shapes **/
+   	protected static final float[] sRollerTexture = new float[] {
         0, 0,   1, 0,   1, 1,   0, 1	 // back	0 / 1 / 2 / 3
-       
+        
     ,   0, 1,   0, 0,   1, 0,   1, 1	 // right	5 / 0 / 3 / 6      
     ,   1, 1,   0, 1,   0, 0,   1, 0	 // top		7 / 6 / 3 / 2
     ,   1, 0,   1, 1,   0, 1,   0, 0	 // left	1 / 4 / 7 / 2
+    ,   0, 0,   1, 0,   1, 1,   0, 1	 // bottom  1 / 0 / 5 / 4
+
+    ,	0, 0,   1, 0,   1, 1,   0, 1	 // front	4 / 5 / 6 / 7
+   	};
+    /** This texture is applied to the sides as if the shape where tilted up to
+        sit on its back surface, and then the texture is wrapped around it. 
+        This matches CSGRadialCapped CAN texture */
+   	protected static final float[] sCanTexture = new float[] {
+        0, 0,   1, 0,   1, 1,   0, 1	 // back	0 / 1 / 2 / 3
+
+    ,   0, 0,   1, 0,   1, 1,   0, 1	 // right   0 / 3 / 6 / 5      
+    ,   0, 0,   1, 0,   1, 1,   0, 1	 // top		3 / 2 / 7 / 6 
+    ,   0, 0,   1, 0,   1, 1,   0, 1	 // left	2 / 1 / 4 / 7
     ,   0, 0,   1, 0,   1, 1,   0, 1	 // bottom  1 / 0 / 5 / 4
 
     ,	0, 0,   1, 0,   1, 1,   0, 1	 // front	4 / 5 / 6 / 7
@@ -311,7 +332,7 @@ public class CSGAxialBox
     		// to build the proper triangles
     		for( int j = 0; j < 4; j += 1 ) {
     			// Pick the proper vertex positions for the given face
-        		Vector3f aPosition = setPosition( pTempVars.vect1, sFaceVertices[ vertexSelector++ ] );
+        		Vector3f aPosition = setPosition( pTempVars.vect1, sCanFaceVertices[ vertexSelector++ ] );
                 pContext.mPosBuf.put( aPosition.x )
                                 .put( aPosition.y )
                                 .put( aPosition.z );	
@@ -324,8 +345,11 @@ public class CSGAxialBox
                 				 .put( sNormals[ normalSelector++ ] * normalFlip );
                 
                 // The texture varies per vertex based on the face
-                pContext.mTexBuf.put( xBase + (sTexture[ textureSelector++ ] * xSpan) )
-                			    .put( yBase + (sTexture[ textureSelector++ ] * ySpan) );
+                Vector2f aTexture = pTempVars.vect2d;
+                aTexture.set( xBase + (sCanTexture[ textureSelector++ ] * xSpan)
+                			,	yBase + (sCanTexture[ textureSelector++ ] * ySpan) );
+                pContext.mTexBuf.put( aTexture.x )
+                			    .put( aTexture.y );
     		}
     		xBase += xSpan;
     		if ( xBase > 1.0f ) xBase -= 1.0f;

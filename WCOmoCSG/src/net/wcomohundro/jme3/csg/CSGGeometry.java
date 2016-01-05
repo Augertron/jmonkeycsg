@@ -66,6 +66,8 @@ import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.TempVars;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
 import net.wcomohundro.jme3.math.CSGTransform;
 
@@ -100,21 +102,23 @@ public class CSGGeometry
 
 	
 	/** Unique identifier */
-	protected String			mInstanceKey;
+	protected String					mInstanceKey;
 	/** The list of child shapes (each annotated with an action as it is added) */
-	protected List<CSGShape>	mShapes;
+	protected List<CSGShape>			mShapes;
 	/** Template of light control to apply transforms */
-	protected Control			mLightControl;
+	protected Control					mLightControl;
 	/** Physics that applies to this shape */
-	protected PhysicsControl	mPhysics;
+	protected PhysicsControl			mPhysics;
+	/** The list of custom Propertes to apply to the various faces of the interior components */
+	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Processing environment to apply */
-	protected CSGEnvironment	mEnvironment;
+	protected CSGEnvironment			mEnvironment;
 	/** Is this a valid geometry */
-	protected boolean			mIsValid;
+	protected boolean					mIsValid;
 	/** How long did it take to regenerate this shape (nanoseconds) */
-	protected long				mRegenNS;
+	protected long						mRegenNS;
 	/** Control flag for the special 'debug' mode */
-	protected boolean			mDebugMesh;
+	protected boolean					mDebugMesh;
 	
 
 	/** Basic null constructor */
@@ -151,6 +155,16 @@ public class CSGGeometry
 	@Override
 	public boolean isValid() { return mIsValid; }
 	
+	/** Is there an active parent to this element? */
+	@Override
+	public CSGElement getParentElement(
+	) {
+		if ( this.parent instanceof CSGElement ) {
+			return( (CSGElement)this.parent );
+		} else {
+			return( null );
+		}
+	}
 
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
@@ -184,6 +198,12 @@ public class CSGGeometry
     		CSGPlaceholderCollisionShape.applyPhysics( pPhysicsSpace, mPhysics, this, pRoot );
     	}
     }
+    
+	/** Accessor to Face oriented properties */
+	@Override
+	public boolean hasFaceProperties() { return( (mFaceProperties != null) && !mFaceProperties.isEmpty() ); }
+	@Override
+	public List<CSGFaceProperties>	getFaceProperties() { return mFaceProperties; }
 	
 	/** How long did it take to regenerate this shape */
 	@Override
@@ -301,6 +321,8 @@ public class CSGGeometry
 				// Operate on each shape in turn, blending it into the common
 				CSGShape aProduct = null;
 				for( CSGShape aShape : sortedShapes ) {
+					aShape.setParentElement( this );
+
 					// Apply the operator
 					switch( aShape.getOperator() ) {
 					case UNION:
@@ -398,6 +420,7 @@ public class CSGGeometry
 		if ( mEnvironment != null ) {
 			aCapsule.write( mEnvironment, "csgEnvironment", null );
 		}
+		aCapsule.writeSavableArrayList( (ArrayList)mFaceProperties, "faceProperties", null );
 	}
 	
 	@Override
@@ -463,6 +486,9 @@ public class CSGGeometry
         	// Incorporate this name AND define the standard as needed
         	mEnvironment = CSGEnvironment.resolveEnvironment( mEnvironment, this );
         }
+        // Look for possible face properties to apply to interior mesh/subgroup
+        mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
+        
 		// Rebuild based on the shapes just loaded
 		mIsValid = regenerate();
 		
