@@ -15,7 +15,8 @@
 	<children>
         <!-- An Archway -->
         <net.wcomohundro.jme3.csg.CSGGeometry name='Archway'
-            	materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            	materialName='Textures/Debug/NumberedBoxes.xml'>
+            	<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml'-->
             <shapes>
             	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
                   	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
@@ -25,8 +26,11 @@
 	                	<faceProperties>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 	                    		scaleX='1.0' scaleY='0.5'/>
+	                    	<!-- The max X must align with 1.0 (or 3.0 for this scaleX), so when the
+	                    	     parent scale of 1.5 is applied, the max X really must be 2/3.  Since
+	                    	     the side is 1/6 , we end up with 2/3 minus 1/6, which is 1/2 -->
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-	                    		scaleX='3.0' scaleY='1.0' originX='0.833333333'/>
+	                    		scaleX='3.0' scaleY='1.0' originX='0.5' kkkoriginX='0.833333333'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 	                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
@@ -52,21 +56,22 @@
               	</net.wcomohundro.jme3.csg.CSGShape>
 			</shapes>
             <faceProperties>
-            	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.0' scaleY='1.0'/>
-                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1.0' scaleY='2.0'/>
-                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.0' scaleY='2.0'/>
-        		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.0' scaleY='2.0'/>
+            	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.5' scaleY='1.5'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1.5' scaleY='3.0'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.5' scaleY='3.0'/>
+        		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.5' scaleY='3.0'/>
          	</faceProperties>
          	<!-- Scale it up -->
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-5' y='0'/>
-                <scale class='com.jme3.math.Vector3f' x='1.0' y='1.0' z='2.0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.5' y='1.5' z='3.0'/>
             </transform>
          </net.wcomohundro.jme3.csg.CSGGeometry> 
  
-        <!-- An Archway at 1.5 -->
+        <!-- An Archway at 1.5 in Z, 1.0 in X,Y -->
         <net.wcomohundro.jme3.csg.CSGGeometry name='OneFiveScaledArchway'
-            	materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            	materialName='Textures/Debug/NumberedBoxes.xml'>
+            	<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml'-->
             <shapes>
             	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
                   	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
@@ -254,8 +259,11 @@
 			                	<faceProperties>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 			                    		scaleX='1.0' scaleY='0.5'/>
+	                    	<!-- The max X must align with 1.0 (or 3.0 for this scaleX), so when the
+	                    	     parent scale of 1.5 is applied, the max X really must be 2/3.  Since
+	                    	     the side is 1/6 , we end up with 2/3 minus 1/6, which is 1/2 -->
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-			                    		scaleX='3.0' scaleY='1.0' originX='0.833333333'/>
+			                    		scaleX='3.0' scaleY='1.0' originX='0.5' kkkoriginX='0.833333333'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 			                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 

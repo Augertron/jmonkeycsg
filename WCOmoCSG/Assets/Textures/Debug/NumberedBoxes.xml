@@ -1,0 +1,22 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<material class='com.jme3.material.Material' material_def='Common/MatDefs/Light/Lighting.j3md'>
+	<parameters>
+	    <MapEntry key='Shininess'>
+	        <Savable class='com.jme3.material.MatParam' name='Shininess' value_float='2.0' varType='Float'/>
+	    </MapEntry>
+	    <MapEntry key='DiffuseMap'>
+	        <Savable class='com.jme3.material.MatParamTexture' name='DiffuseMap' texture_unit='0' varType='Texture2D'>
+	            <value_savable class='com.jme3.texture.Texture2D' 
+	            		minificationFilter='Trilinear' 
+	            		name='Textures/Debug/NumberedBoxes.jpg' 
+	            		wrapS='Repeat' wrapT='Repeat'
+	            		reference_ID='com.jme3.texture.Texture2D@11147789'>
+	                <key class='com.jme3.asset.TextureKey' 
+	                	generate_mips='true' 
+	                	name='Textures/Debug/NumberedBoxes.jpg'/>
+	            </value_savable>
+	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@11147789'/>
+	        </Savable>
+	    </MapEntry>
+	</parameters>
+</material>
