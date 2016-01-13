@@ -26,11 +26,8 @@
 	                	<faceProperties>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 	                    		scaleX='1.0' scaleY='0.5'/>
-	                    	<!-- The max X must align with 1.0 (or 3.0 for this scaleX), so when the
-	                    	     parent scale of 1.5 is applied, the max X really must be 2/3.  Since
-	                    	     the side is 1/6 , we end up with 2/3 minus 1/6, which is 1/2 -->
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-	                    		scaleX='3.0' scaleY='1.0' originX='0.5' kkkoriginX='0.833333333'/>
+	                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 	                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
@@ -82,7 +79,7 @@
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 	                    		scaleX='1.0' scaleY='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-	                    		scaleX='3.0' scaleY='1.0' originX='0.833333333'/>
+	                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 	                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
@@ -133,7 +130,7 @@
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 	                    		scaleX='1.0' scaleY='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-	                    		scaleX='3.0' scaleY='1.0' originX='0.833333333'/>
+	                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 	                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
@@ -191,7 +188,7 @@
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 			                    		scaleX='1.0' scaleY='0.5'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-			                    		scaleX='3.0' scaleY='1.0' originX='0.833333333'/>
+			                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 			                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
@@ -259,11 +256,11 @@
 			                	<faceProperties>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 			                    		scaleX='1.0' scaleY='0.5'/>
-	                    	<!-- The max X must align with 1.0 (or 3.0 for this scaleX), so when the
-	                    	     parent scale of 1.5 is applied, the max X really must be 2/3.  Since
-	                    	     the side is 1/6 , we end up with 2/3 minus 1/6, which is 1/2 -->
+	                    	<!-- The RIGHT face must end at 1, since the cylinder will be starting there
+	                    		 at 0.  Likewise, the LEFT face must start at 0.5, since we are matching
+	                    		 half way around the cylinder -->
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-			                    		scaleX='3.0' scaleY='1.0' originX='0.5' kkkoriginX='0.833333333'/>
+			                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 			                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 

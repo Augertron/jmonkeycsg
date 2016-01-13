@@ -131,10 +131,10 @@ public abstract class CSGAxial
 ****    	THIS IMPLEMENTATION PROVIDES A SAMPLE TO COPY AND APPLY SPECIALIZATIONS IN ANY GIVEN SUBCLASS ****
 ****    	DO NOT EXPECT THIS IMPLEMENTATION TO PRODUCE AN APPROPRITE SHAPE							  ****
      */
+    /*****
     @Override
     protected void updateGeometryProlog(
     ) {
-/*****
     	CSGAxialContext aContext = getContext( true );
     	
     	int southPoleIndex = 0;
@@ -161,8 +161,8 @@ public abstract class CSGAxial
         // Establish the bounds
         updateBound();
         setStatic();
-*****/
 	}
+*****/
     
         
     /** Generic driver that rebuilds the shape from the current set of configuration parameters.

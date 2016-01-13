@@ -138,6 +138,13 @@ public abstract class CSGRadialCapped
         mExtentZ = pZExtent;			// This will override the default setting from the radius
         mTextureMode = pTextureMode;
     }
+    
+	/** Accessor to the full range of faces supported by this mesh */
+	@Override
+	public int getSupportedFacesMask(
+	) {
+		return( Face.FRONT_BACK.getMask() | Face.SIDES.getMask() );
+	}
 
     /** Configuration accessors */
     public float getRadiusFront() { return mRadius; }
@@ -582,7 +589,6 @@ public abstract class CSGRadialCapped
     	super.write( pExporter );
     	
         OutputCapsule outCapsule = pExporter.getCapsule( this );
-        outCapsule.write( mGeneratedFacesMask, "generateFaces", Face.SIDES.getMask() | Face.FRONT_BACK.getMask() );
         outCapsule.write( mRadiusBack, "radius2", mRadius );
         outCapsule.write( mTextureMode, "textureMode", TextureMode.CAN );
     }
@@ -595,7 +601,8 @@ public abstract class CSGRadialCapped
         // Let the super do its thing
         super.read( pImporter );
         if ( mGeneratedFacesMask == 0 ) {
-        	mGeneratedFacesMask = Face.SIDES.getMask();
+        	// Default to full faces with possible explicit open/closed
+        	mGeneratedFacesMask = this.getSupportedFacesMask();
         	setClosed( inCapsule.readBoolean( "closed", true ) );
         }
         // The super will have read 'radius'

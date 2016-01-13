@@ -118,6 +118,13 @@ public class CSGSphere
     		this.updateGeometry();
         }
     }
+    
+	/** Accessor to the full range of faces supported by this mesh */
+	@Override
+	public int getSupportedFacesMask(
+	) {
+		return( Face.FRONT_BACK.getMask() | Face.SURFACE.getMask() );
+	}
 
     /** By definition for a sphere, the zExtent matches the radius */
     @Override
@@ -475,7 +482,6 @@ public class CSGSphere
     	super.write( pExporter );
     	
         OutputCapsule outCapsule = pExporter.getCapsule( this );
-        outCapsule.write( mGeneratedFacesMask, "generateFaces", Face.SURFACE.getMask() | Face.FRONT_BACK.getMask() );
         outCapsule.write( mEvenSlices, "useEvenSlices", false );
         outCapsule.write( mTextureMode, "textureMode", TextureMode.ZAXIS );
     }
@@ -488,7 +494,8 @@ public class CSGSphere
 
         InputCapsule inCapsule = pImporter.getCapsule( this );
         if ( mGeneratedFacesMask == 0 ) {
-        	mGeneratedFacesMask = Face.SURFACE.getMask();
+        	// Default to full faces with possible explicit open/closed
+        	mGeneratedFacesMask = this.getSupportedFacesMask();
         	setClosed( inCapsule.readBoolean( "closed", true ) );
         }        
         mEvenSlices = inCapsule.readBoolean( "useEvenSlices", false );

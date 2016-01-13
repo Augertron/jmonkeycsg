@@ -26,11 +26,14 @@
 package net.wcomohundro.jme3.csg.shape;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.bullet.control.PhysicsControl;
@@ -78,6 +81,10 @@ public class CSGFaceProperties
 , 		SIDES(64)
 , 		SURFACE(128)
 ;
+		private static Face[] sSingleMasks = new Face[] {
+			Face.FRONT, Face.BACK, Face.LEFT, Face.RIGHT, Face.TOP, Face.BOTTOM, Face.SIDES, Face.SURFACE
+		};
+		
 		private int		mMask;
 		private Face( int pValue ) { mMask = pValue; }
 
@@ -92,6 +99,7 @@ public class CSGFaceProperties
 		) {
 			return( (pFaceMask & this.mMask) == this.mMask );
 		}
+		
 		public static Face matchMask(
 			int		pFaceMask
 		) {
@@ -102,6 +110,40 @@ public class CSGFaceProperties
 			}
 			return( null );
 		}
+		public static Face matchMaskIndex(
+			int		pFaceIndex
+		) {
+			return( sSingleMasks[ pFaceIndex ] );
+		}
+	}
+	
+	/** An iterable across a bitmask of faces */
+	public static FaceMask getIterableFaceMask(
+		int		pFaceMask
+	) {
+		return new FaceMask( pFaceMask );
+	}
+	
+	/** Service routine to resolve the scale that applies to a given face */
+	public static Vector2f resolveTextureScale(
+		CSGElement		pElement
+	,	int				pFaceMask
+	) {
+		Vector2f texScale = null;
+		while( pElement != null ) {
+			List<CSGFaceProperties> propList = pElement.getFaceProperties();
+			if ( propList != null ) {
+				// Check every property in turn
+				for( CSGFaceProperties aProperty : propList ) {
+					if ( aProperty.appliesToFace( pFaceMask ) 
+					&& aProperty.hasTextureScale() ) {
+						texScale = aProperty.getTextureScale( texScale );
+					}
+	        	}
+			}
+			pElement = pElement.getParentElement();
+		}
+		return( texScale );
 	}
 
 	/** The bitmask of 'faces' these properties apply to */
@@ -111,6 +153,7 @@ public class CSGFaceProperties
 	/** A custom texture scaling that applies to the face(s) */
 	protected Vector2f			mTextureScale;
 	protected Vector2f			mTextureOrigin;
+	protected Vector2f			mTextureTerminus;
 	/** A custom Physics that applies to the face(s) */
 	protected PhysicsControl	mPhysics;
 	
@@ -124,12 +167,19 @@ public class CSGFaceProperties
 	,	Material		pMaterial
 	,	Vector2f		pTextureScale
 	,	Vector2f		pTextureOrigin
+	,	boolean			pAsTextureTerminus
 	,	PhysicsControl	pPhysics
 	) {
 		mFaceMask = pFace.getMask();
 		mMaterial = pMaterial;
 		mTextureScale = pTextureScale;
-		mTextureOrigin = pTextureOrigin;
+		if ( pAsTextureTerminus ) {
+			// Define the END point of the texture, not the start
+			mTextureTerminus = pTextureOrigin;
+		} else {
+			// Explicit start point of the texture
+			mTextureOrigin = pTextureOrigin;
+		}
 		mPhysics = pPhysics;
 	}
 	
@@ -153,11 +203,27 @@ public class CSGFaceProperties
 	/** Accessor to the TextureScaling property */
 	public boolean hasTextureScale() { return( mTextureScale != null ); }
 	public Vector2f getTextureScale() { return mTextureScale; }
+	public Vector2f getTextureScale(
+		Vector2f 	pBlendWith
+	) {
+		if ( pBlendWith == null ) {
+			return( mTextureScale );
+		} else if ( mTextureScale == null ) {
+			return( pBlendWith );
+		} else {
+			return( pBlendWith.clone().multLocal( mTextureScale ) );
+		}
+	}
 	
 	/** Accessor to the TextureOrigin property */
 	public boolean hasTextureOrigin() { return( mTextureOrigin != null ); }
 	public Vector2f getTextureOrigin() { return mTextureOrigin; }
-	
+
+	/** Accessor to the TextureTerminus property */
+	public boolean hasTextureTerminus() { return( mTextureTerminus != null ); }
+	public Vector2f getTextureTerminus() { return mTextureTerminus; }
+
+
 	/** Accessor to the Physics property */
 	public boolean hasPhysics() { return( mPhysics != null ); }
 	public PhysicsControl getPhysics() { return mPhysics; }
@@ -202,7 +268,9 @@ public class CSGFaceProperties
         		mTextureScale = new Vector2f( scaleX, scaleY );
         	}
         }
-        // Look for origin
+        // Look for origin/terminus
+        // NOTE that we allow for both specifications on the assumption that one
+        //		applies to X and the other to Y
         mTextureOrigin = (Vector2f)aCapsule.readSavable( "textureOrigin", null );
         if ( mTextureOrigin == null ) {
         	// Look for simple attributes
@@ -210,6 +278,15 @@ public class CSGFaceProperties
         	float originY = CSGEnvironment.readPiValue( aCapsule, "originY", Float.NaN );
         	if ( !Float.isNaN( originX ) || !Float.isNaN( originY ) ) {
         		mTextureOrigin = new Vector2f( originX, originY );
+        	}
+        }
+        mTextureTerminus = (Vector2f)aCapsule.readSavable( "textureTerminus", null );
+        if ( mTextureTerminus == null ) {
+        	// Look for simple attributes
+        	float terminusX = CSGEnvironment.readPiValue( aCapsule, "terminusX", Float.NaN );
+        	float terminusY = CSGEnvironment.readPiValue( aCapsule, "terminusY", Float.NaN );
+        	if ( !Float.isNaN( terminusX ) || !Float.isNaN( terminusY ) ) {
+        		mTextureTerminus = new Vector2f( terminusX, terminusY );
         	}
         }
         // Look for physics
@@ -240,6 +317,10 @@ public class CSGFaceProperties
         	aCapsule.write( mTextureOrigin.getX(), "originX", Float.NaN );
         	aCapsule.write( mTextureOrigin.getY(), "originY", Float.NaN );
         }
+        if ( mTextureTerminus != null ) {
+        	aCapsule.write( mTextureTerminus.getX(), "terminusX", Float.NaN );
+        	aCapsule.write( mTextureTerminus.getY(), "terminusY", Float.NaN );
+        }
         // For now, physics is too complicated to be captured by a write()
 	}
 	
@@ -254,4 +335,64 @@ public class CSGFaceProperties
 													, pBuffer ) );
 	}
 
+}
+
+/** Helper class that manages a MASK of faces */
+class FaceMask
+	implements Iterable
+{
+	/** The bitmask of faces */
+	protected int		mFaceMask;
+	
+	/** Constructor based on a mask */
+	public FaceMask(
+		int		pFaceMask
+	) {
+		mFaceMask = pFaceMask;
+	}
+	/** Make it Iterable */
+	@Override
+	public Iterator<CSGFaceProperties.Face> iterator(
+	) {
+		return new FaceMaskIterator();
+	}
+	
+	/** The iterator, slaved to its outer mFaceMask */
+	class FaceMaskIterator 
+		implements Iterator<CSGFaceProperties.Face>
+	{
+		/** Where are we in the iteration */
+		protected int	mMask;
+		protected int	mIndex;
+		
+		/** Standard null constructor */
+		public FaceMaskIterator(
+		) {
+			mMask = 0x01;
+			mIndex = 0;
+		}
+		
+		/** Implement the iterator */
+		@Override
+		public boolean hasNext(
+		) {
+			return( mMask <= mFaceMask );
+		}
+
+		@Override
+		public CSGFaceProperties.Face next(
+		) {
+			CSGFaceProperties.Face aFace = CSGFaceProperties.Face.matchMaskIndex( mIndex );
+			mMask <<= 1;
+			mIndex += 1;
+			return aFace;
+		}
+
+		@Override
+		public void remove(
+		) {
+			// Not currently supported
+		}
+		
+	}
 }

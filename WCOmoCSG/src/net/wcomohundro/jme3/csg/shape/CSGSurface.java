@@ -106,6 +106,13 @@ public class CSGSurface
         }
 	}
 	
+	/** Accessor to the full range of faces supported by this mesh */
+	@Override
+	public int getSupportedFacesMask(
+	) {
+		return( Face.SURFACE.getMask() );
+	}
+
 	/** Accessors to the extents */
     public int getExtent() { return mExtent; }
     public void setExtent( int pExtent ) { mExtent = pExtent; }

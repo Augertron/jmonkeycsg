@@ -136,6 +136,9 @@ public abstract class CSGMesh
 		return( this );
 	}
 	
+	/** Accessor to the full range of faces supported by this mesh */
+	public abstract int getSupportedFacesMask();
+	
 	/** Accessor to the bitmask of faces being generated */
 	public int getGeneratedFacesMask() { return mGeneratedFacesMask; }
 	public void setGeneratedFacesMask(
@@ -293,6 +296,26 @@ public abstract class CSGMesh
 		}
 		return( null );
 	}
+	protected Vector2f matchFaceTerminus(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one if it has a scale
+					if ( aProperty.hasTextureTerminus() ) {
+						return( aProperty.getTextureTerminus() );
+					}
+					// NOTE that we could match a property based on the bitmask, but if
+					//		it has no origin, we will keep looking.  This lets us use
+					//		separate definitions for origin versus material versus physics
+				}
+			}
+		}
+		return( null );
+	}
 	protected PhysicsControl matchFacePhysics(
 		int			pFaceBit
 	) {
@@ -339,7 +362,7 @@ public abstract class CSGMesh
 		updateGeometryEpilog();
 	}
 	/** FOR SUBCLASS OVERRIDE **/
-	protected void updateGeometryProlog() {}
+	protected abstract void updateGeometryProlog();
 	protected void updateGeometryEpilog(
 	) {
 		// Apply any scaling now
@@ -377,8 +400,7 @@ public abstract class CSGMesh
         outCapsule.write( this.getMode(), "mode", Mode.Triangles );
 
         // Extended attributes
-        //	NOTE that be design, we do NOT write the generatedFacesMask at this level, since
-        //		 we do not know an appropriate default.  Subclasses can choose to write it or not
+        outCapsule.write( mGeneratedFacesMask, "generateFaces",  this.getSupportedFacesMask() );
         outCapsule.writeSavableArrayList( (ArrayList)mFaceProperties, "faceProperties", null );
         outCapsule.write( mLODFactors, "lodFactors", null );
         outCapsule.write( mInverted, "inverted", false );
@@ -398,7 +420,7 @@ public abstract class CSGMesh
         this.setMode( inCapsule.readEnum( "mode", Mode.class, Mode.Triangles ) );
         
         // Extended attributes
-        mGeneratedFacesMask = inCapsule.readInt( "generateFaces", 0 );
+        mGeneratedFacesMask = inCapsule.readInt( "generateFaces", 0 );	// Subclasses must check for zero
         mFaceProperties = inCapsule.readSavableArrayList( "faceProperties", null );
         mLODFactors = inCapsule.readFloatArray( "lodFactors", null );
         mInverted = inCapsule.readBoolean( "inverted", mInverted );

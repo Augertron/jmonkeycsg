@@ -47,6 +47,7 @@ import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 import net.wcomohundro.jme3.csg.shape.CSGBox;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
 import net.wcomohundro.jme3.csg.shape.CSGSphere;
 import net.wcomohundro.jme3.math.CSGTransform;
@@ -830,27 +831,16 @@ public class CSGShape
 			if ( mesh instanceof CSGMesh ) {
 				// We are wrapping around a Mesh that supports per-face texture scale
 				CSGMesh thisMesh = (CSGMesh)mesh;
-				List<CSGFaceProperties> propList = mFaceProperties;
-				if ( propList != null ) {
-					// The setting on the CSGShape apply to its child mesh
-					for( CSGFaceProperties aProperty : propList ) {
-						if ( aProperty.hasTextureScale() ) {
-							thisMesh.scaleFaceTextureCoordinates( aProperty.getTextureScale(), aProperty.getFaceMask() );
-						}
+				
+				// Apply every scaling that is appropriate to the faces supported by the
+				// underlying mesh.
+				Iterable<Face> faceList = CSGFaceProperties.getIterableFaceMask( thisMesh.getSupportedFacesMask() );
+				for( Face aFace : faceList ) {
+					// What scaling applies?
+					Vector2f texScale = CSGFaceProperties.resolveTextureScale( this, aFace.getMask() );
+					if ( texScale != null ) {
+						thisMesh.scaleFaceTextureCoordinates( texScale, aFace.getMask() );
 		        	}
-				}
-				// If this shape is part of a subgroup within a parent, apply the parent settings
-				CSGElement parentElement = this.getParentElement();
-				while( parentElement != null ) {
-					if ( (propList = parentElement.getFaceProperties()) != null ) {
-						// The setting on the parent apply to this child mesh
-						for( CSGFaceProperties aProperty : propList ) {
-							if ( aProperty.hasTextureScale() ) {
-								thisMesh.scaleFaceTextureCoordinates( aProperty.getTextureScale(), aProperty.getFaceMask() );
-							}
-			        	}
-					}
-					parentElement = parentElement.getParentElement();
 				}
 			}
 			return( this );

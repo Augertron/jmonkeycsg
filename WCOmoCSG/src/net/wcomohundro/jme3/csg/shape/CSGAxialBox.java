@@ -206,6 +206,13 @@ public class CSGAxialBox
         }
 	}
 	
+	/** Accessor to the full range of faces supported by this mesh */
+	@Override
+	public int getSupportedFacesMask(
+	) {
+		return( Face.FRONT_BACK.getMask() | Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask() );
+	}
+	
 	/** Accessors to the extents */
     public float getXExtent() { return mExtentX; }
     public void setXExtent( float pExtent ) { mExtentX = pExtent; }
@@ -286,12 +293,14 @@ public class CSGAxialBox
     	// Process the faces in the expected sFaces[] order
     	for( ; faceIndex < sFaces.length; faceIndex += 1 ) {
     		Face aFace = sFaces[ faceIndex ];
-    		if ( (faceMask & aFace.getMask()) == 0 ) {
+    		int faceBit = aFace.getMask();
+    		if ( (faceMask & faceBit) == 0 ) {
     			// We are not drawing this face
     			continue;
     		}
     		// Look for adjustment to the origin
-    		Vector2f textureOrigin = this.matchFaceOrigin( aFace.getMask() );
+    		Vector2f textureOrigin = this.matchFaceOrigin( faceBit );
+    		Vector2f textureTerminus = this.matchFaceTerminus( faceBit );
     		
     		// Texture order for the 'sides' is counter clockwise, starting from the right
     		// ie Right / Top / Left / Bottom
@@ -322,6 +331,15 @@ public class CSGAxialBox
     			}
     			if ( !Float.isNaN( textureOrigin.y ) ) {
     				yBase = textureOrigin.y;
+    			}
+    		}
+    		if ( textureTerminus != null ) {
+    			// Reset the texture origin as specified
+    			if ( !Float.isNaN( textureTerminus.x ) ) {
+    				xBase = textureTerminus.x - xSpan;
+    			}
+    			if ( !Float.isNaN( textureTerminus.y ) ) {
+    				yBase = textureTerminus.y - ySpan;
     			}
     		}
     		// Where is this vertex?
@@ -423,8 +441,8 @@ public class CSGAxialBox
         if ( mExtentZ == 0 ) mExtentZ = 1.0f;
 
         if ( mGeneratedFacesMask == 0 ) {
-        	// Default to full box
-        	mGeneratedFacesMask = Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask();
+        	// Default to full face set, along with explicit open/closed
+        	mGeneratedFacesMask = this.getSupportedFacesMask();
             setClosed( inCapsule.readBoolean( "closed", true ) );     
         }
         // Standard trigger of updateGeometry() to build the shape 
@@ -449,10 +467,6 @@ public class CSGAxialBox
         super.write( pExporter );
         outCapsule.write( mExtentX, "xExtent", 1 );
         outCapsule.write( mExtentY, "yExtent", 1 );       
-        
-        outCapsule.write( mGeneratedFacesMask
-        				, "generateFaces"
-		        		, Face.FRONT_BACK.getMask() | Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask() );
     }
 
 
@@ -482,13 +496,35 @@ public class CSGAxialBox
         	if ( aFace.maskIncludesFace( mGeneratedFacesMask ) ) {
         		// This face exists in the buffer
         		if ( aFace.maskIncludesFace( pFaceMask ) ) {
+        			// Look for special 'terminus' processing
+        			float biasX = 0, biasY = 0;
+        			Vector2f textureTerminus = this.matchFaceTerminus( aFace.getMask() );
+        			if ( textureTerminus != null ) {
+        				// If the texture was positioned based on its terminus rather than
+        				// its origin, then a bias must be introduced to keep the terminus
+        				// point constant after scaling.  Therefore:
+        				//		(terminus * scale) - bias = terminus
+        				//		bias = (terminus * scale) - terminus
+        				// and each point is determined by
+        				//		newPoint = (oldPoint * scale) - bias
+            			// Reset the texture origin as specified
+            			if ( !Float.isNaN( textureTerminus.x ) ) {
+            				biasX = (textureTerminus.x * pScaleTexture.x) - textureTerminus.x;
+            			}
+            			if ( !Float.isNaN( textureTerminus.y ) ) {
+            				biasY = (textureTerminus.y * pScaleTexture.y) - textureTerminus.y;
+            			}
+        			}
         			// This face must be scaled, touch all four vertices
             		for( int i = 0; i < 4; i += 1 ) {
             			float x = aBuffer.get( index  );
             			float y = aBuffer.get( index + 1 );
 
                         x *= pScaleTexture.x;
+                        x -= biasX;
+                        
                         y *= pScaleTexture.y;
+                        y -= biasY;
                         aBuffer.put( index++, x ).put( index++, y);
             		}
         		} else {

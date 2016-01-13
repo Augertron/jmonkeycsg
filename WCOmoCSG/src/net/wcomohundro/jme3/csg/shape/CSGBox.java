@@ -130,6 +130,13 @@ public class CSGBox
         }
 	}
 	
+	/** Accessor to the full range of faces supported by this mesh */
+	@Override
+	public int getSupportedFacesMask(
+	) {
+		return( Face.FRONT_BACK.getMask() | Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask() );
+	}
+
 	/** Accessors to the extents */
     public float getXExtent() { return mExtentX; }
     public void setXExtent( float pExtent ) { mExtentX = pExtent; }
