@@ -211,8 +211,8 @@ public interface ConstructiveSolidGeometry
 		public List<CSGFaceProperties>	getFaceProperties();
 		
 		/** Action to generate the mesh based on the given shapes */
-		public boolean regenerate();
-		public boolean regenerate(
+		public CSGShape regenerate();
+		public CSGShape regenerate(
 			CSGEnvironment		pEnvironment
 		);
 		/** How long did it take to build this shape */
@@ -247,7 +247,8 @@ public interface ConstructiveSolidGeometry
 		,	CSGOperator	pOperator
 		);
 		
-		/** Remove a shape from this geometry */
+		/** Remove shape from this geometry */
+		public void removeAllShapes();
 		public void removeShape(
 			CSGShape	pShape
 		);

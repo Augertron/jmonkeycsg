@@ -245,31 +245,36 @@ public class CSGNode
 
 	/** Action to generate the mesh based on the given shapes */
     @Override
-	public boolean regenerate(
+	public CSGShape regenerate(
 	) {
 		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
-	public boolean regenerate(
+	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
 	) {
-		// Operate on all CSG elements defined within this node
+		// Operate on all CSG elements defined within this node, returning the last
 		// NOTE that we only detect first level children -- but you can always nest by
 		//		using deeper levels of this class.
+		CSGShape lastValidShape = null;
 		mIsValid = true;
 		for( Spatial aSpatial : this.getChildren() ) {
 			if ( aSpatial instanceof CSGElement ) {
 				// Trigger the regeneration
 				CSGElement csgSpatial = (CSGElement)aSpatial;
-				csgSpatial.regenerate( pEnvironment );
+				CSGShape aShape = csgSpatial.regenerate( pEnvironment );
 				
 				mRegenNS += csgSpatial.getShapeRegenerationNS();
-				if ( !csgSpatial.isValid() ) {
+				if ( csgSpatial.isValid() ) {
+					// Remember the last valid shape
+					lastValidShape = aShape;
+				} else {
+					// If any child shape is invalid, then this shape is invalid
 					mIsValid = false;
 				}
 			}
 		}
-		return( this.isValid() );
+		return( lastValidShape );
 	}
 	
 	/** Support the persistence of this Node */

@@ -189,6 +189,8 @@ public class CSGGeonode
 	
 	/** Remove a shape from this geometry */
 	@Override
+	public void removeAllShapes() { mShapes = null; };
+	@Override
 	public void removeShape(
 		CSGShape	pShape
 	) {
@@ -209,7 +211,7 @@ public class CSGGeonode
     
 	/** Action to generate the mesh based on the given shapes */
 	@Override
-	public boolean regenerate(
+	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
 	) {
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
@@ -300,11 +302,13 @@ public class CSGGeonode
 							this.attachChild( aSpatial );
 						}
 					}
-					// Return true if we have a valid product
-					return( mIsValid = aProduct.isValid() );
+					// Return the product if it is valid
+					if ( mIsValid = aProduct.isValid() ) {
+						return( aProduct );
+					}
 				} else {
 					// Nothing produced
-					return( mIsValid = false );
+					mIsValid = false;
 				}
 			} finally {
 				tempVars.release();
@@ -312,8 +316,10 @@ public class CSGGeonode
 			}
 		} else {
 			// Nothing interesting
-			return( mIsValid = false );
+			mIsValid = false;
 		}
+		// Fall out to here only if nothing was generated
+		return( null );
 	}
 	
     /** Updates the bounding volume of the mesh. Should be called when the
@@ -419,9 +425,8 @@ public class CSGGeonode
 				localTransform = proxyTransform.getTransform();
 			}
 		}
-		// Rebuild based on the shapes just loaded
-		mIsValid = regenerate();
-		
+		// Rebuild based on the shapes just loaded, which sets the mValid status
+		regenerate();
 		if ( mIsValid ) {
 	        // TangentBinormalGenerator directive
 	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );

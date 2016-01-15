@@ -248,6 +248,8 @@ public class CSGGeometry
 	
 	/** Remove a shape from this geometry */
 	@Override
+	public void removeAllShapes() { mShapes = null; }
+	@Override
 	public void removeShape(
 		CSGShape	pShape
 	) {
@@ -297,12 +299,12 @@ public class CSGGeometry
 	
 	/** Action to generate the mesh based on the given shapes */
 	@Override
-	public boolean regenerate(
+	public CSGShape regenerate(
 	) {
 		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
-	public boolean regenerate(
+	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
 	) {
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
@@ -376,11 +378,13 @@ public class CSGGeometry
 					aProduct.toMesh( meshManager, false, tempVars, pEnvironment );
 					this.setMesh( meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
 
-					// Return true if we have a valid product
-					return( mIsValid = aProduct.isValid() );
+					// Return the final shape if we have a valid product
+					if ( mIsValid = aProduct.isValid() ) {
+						return( aProduct );
+					}
 				} else {
 					// Nothing interesting produced
-					return( mIsValid = false );
+					mIsValid = false;
 				}
 			} finally {
 				tempVars.release();
@@ -389,12 +393,14 @@ public class CSGGeometry
 		} else if ( this.mesh instanceof CSGMesh ) {
 			// If in 'debug' mode, look for a possible delegate
 			this.mesh = ((CSGMesh)this.mesh).resolveMesh( mDebugMesh );
-			return( true );
+			mIsValid = true;
 			
 		} else {
 			// Could be just a mesh
-			return( mIsValid = (this.mesh != null) );
+			mIsValid = (this.mesh != null);
 		}
+		// Fall out to here only if no final Shape was produced
+		return( null );
 	}
 
 	/** Support the persistence of this Geometry */
@@ -489,8 +495,8 @@ public class CSGGeometry
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
         
-		// Rebuild based on the shapes just loaded
-		mIsValid = regenerate();
+		// Rebuild based on the shapes just loaded (which also sets mValid)
+		regenerate();
 		
 		if ( mIsValid ) {
 	        // TangentBinormalGenerator directive

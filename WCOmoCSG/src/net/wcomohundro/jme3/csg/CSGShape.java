@@ -723,19 +723,19 @@ public class CSGShape
 	 		I am not too sure if this is at all meaningful, but we need it anyway for CSGElement
 	 */
 	@Override
-	public boolean regenerate(
+	public CSGShape regenerate(
 	) {
 		return( regenerate( CSGEnvironment.resolveEnvironment( null, this ) ) );		
 	}
 	@Override
-	public boolean regenerate(
+	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
 	) {
 		CSGTempVars tempVars = CSGTempVars.get();
 		CSGMeshManager meshManager = new CSGMeshManager( this, false );
 		try {
 			CSGShape aShape = regenerateShape( mSubShapes, meshManager, tempVars, pEnvironment );
-			return( true );
+			return( aShape );
 		} finally {
 			tempVars.release();
 		}
