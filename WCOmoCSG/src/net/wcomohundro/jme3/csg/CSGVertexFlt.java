@@ -145,7 +145,7 @@ public class CSGVertexFlt
 			// What is its texture?
 			Vector2f newTextureCoordinate 
 				= this.mTextureCoordinate.add( 
-					pTempVars.vect2d.set( pOther.getTextureCoordinate() )
+					pTempVars.vect2d1.set( pOther.getTextureCoordinate() )
 						.subtractLocal( this.mTextureCoordinate ).multLocal( pPercentage ) );
 			
 			aVertex = new CSGVertexFlt( pNewPosition, newNormal, newTextureCoordinate );

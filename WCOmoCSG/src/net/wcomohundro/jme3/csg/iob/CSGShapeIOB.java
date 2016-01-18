@@ -183,8 +183,13 @@ public class CSGShapeIOB
 	@Override
 	public CSGShapeProcessor refresh(
 	) {
-		// Ensure we start with an empty list of faces
-		mFaces.clear();
+		if ( mShape.isBooleanBlend() ) {
+			// The shape is a result of a prior blend, so retain the faces
+		} else {
+			// Ensure we start with an empty list of faces, which will be rebuilt
+			// from the underlying mesh/subshapes
+			mFaces.clear();
+		}
 		return( this );
 	}
 
@@ -193,7 +198,15 @@ public class CSGShapeIOB
 	public CSGShape.CSGShapeProcessor clone(
 		CSGShape	pForShape
 	) {
-		return( new CSGShapeIOB( pForShape, sEmptyFaces ) );
+		CSGShapeIOB aHandler = new CSGShapeIOB( pForShape, sEmptyFaces );
+		if ( pForShape.isBooleanBlend() ) {
+			// The shape is the result of a prior blend, so retain its faces
+			aHandler.mFaces = new ArrayList( this.mFaces.size() );
+			aHandler.mFaces.addAll( this.mFaces );
+		} else {
+			// Assume the faces are rebuilt from scratch
+		}
+		return( aHandler );
 	}
 
 	

@@ -352,6 +352,77 @@ public abstract class CSGMesh
 		PhysicsControl aPhysics = matchFacePhysics( pFaceBit );
 		return( aPhysics );
 	}
+	
+    /** Resolve an appropriate base/span for texture processing.
+	 	The given pResultBase and pResultSpan vectors will be set to the appropriate 
+	 	origin and length to use.
+	 	
+	 	The calculation starts with the values in pBase and pSpan.  These apply unless
+	 	values are found in the Origin/Terminus parameters.
+	 	
+	 	Both Origin and Terminus can be null, which means no override is used.  Within
+	 	a non-null origin/terminus vector, the value itself can be NaN to indicate that
+	 	no override applies to that particular value.
+	 	
+	 	If origin is defined, then the origin value is set into ResultBase.  If terminus is
+	 	defined, then the terminus value minus the Span value is set into ResultBase.
+	 	If both origin and terminus are defined, then the origin value is set into
+	 	ResultBase, and the (terminus - origin) value is set into ResultSpan.
+	 */
+	protected void resolveTextureCoord(
+		Vector2f	pResultBase
+	,	Vector2f	pResultSpan
+	,	Vector2f	pBase
+	,	Vector2f	pSpan
+	,	Vector2f	pTextureOrigin
+	,	Vector2f	pTextureTerminus
+	,	Vector2f	pTemp
+	) {
+		float originOverrideX = (pTextureOrigin == null) ? Float.NaN : pTextureOrigin.x;
+		float terminusOverrideX = (pTextureTerminus == null) ? Float.NaN : pTextureTerminus.x;
+		resolveTextureCoord( pTemp, pBase.x, pSpan.x, originOverrideX, terminusOverrideX );
+		pResultBase.setX( pTemp.x );
+		pResultSpan.setX( pTemp.y );
+		
+		float originOverrideY = (pTextureOrigin == null) ? Float.NaN : pTextureOrigin.y;
+		float terminusOverrideY = (pTextureTerminus == null) ? Float.NaN : pTextureTerminus.y;
+		resolveTextureCoord( pTemp, pBase.y, pSpan.y, originOverrideY, terminusOverrideY );
+		pResultBase.setY( pTemp.x );
+		pResultSpan.setY( pTemp.y );
+	}
+	protected void resolveTextureCoord(
+		Vector2f	pResult
+	,	float		pBase
+	,	float		pSpan
+	,	float		pTextureOrigin
+	,	float		pTextureTerminus
+	) {    	
+		// pResult.x is the 'base', pResult.y is the 'span'
+		if ( Float.isNaN( pTextureOrigin ) ) {
+			// No explicit origin override
+			if ( Float.isNaN( pTextureTerminus ) ) {
+				// Nothing overridden, use the givens
+				pResult.setX( pBase );
+				pResult.setY( pSpan );
+			} else {
+				// Work from explicit terminus only
+				pResult.setX( pTextureTerminus - pSpan );
+				pResult.setY( pSpan );
+			}
+		} else {
+			// We have an explicit origin
+			if ( Float.isNaN( pTextureTerminus ) ) {
+				// No explicit terminus
+				pResult.setX( pTextureOrigin );
+				pResult.setY( pSpan );
+			} else {
+				// Work from explicit origin and terminus 
+				pResult.setX( pTextureOrigin );
+				pResult.setY( pTextureTerminus - pTextureOrigin );
+			}
+		}
+	}
+
 		
 	/** Every CSGMesh is expected to be able to rebuild itself from its fundamental
 	 	configuration parameters.

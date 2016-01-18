@@ -44,6 +44,7 @@ import static com.jme3.util.BufferUtils.*;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 
+import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
@@ -214,8 +215,8 @@ public abstract class CSGAxial
 	    // Pregenerate any points that can be used repeatedly in the process.
 	    readyCoordinates( pContext );
 	
-	    // Avoid some object churn by using the thread-specific 'temp' variables
-	    TempVars vars = TempVars.get();
+	    // Avoid some object churn by using 'temp' variables
+	    CSGTempVars vars = CSGTempVars.get();
 	    int southPoleIndex = -1, northPoleIndex = -1;
 	    try {
 	        // Iterate down the zAxis
@@ -254,6 +255,7 @@ public abstract class CSGAxial
 	        	pContext.mSliceCenter = getSliceCenter( pContext, aSurface, vars.vect2, vars );
 	            	        	
 	        	// Process all the points on the slice
+	        	pContext.prepareForSlice( this, aSurface, vars );
 	        	createSlice( pContext, aSurface, vars );
 	        	
 	            pContext.mIndex += 1;
@@ -301,7 +303,7 @@ public abstract class CSGAxial
     	CSGAxialContext 	pContext
     ,	int					pSurface
 	,	Vector3f			pUseVector
-    ,	TempVars 			pTempVars
+    ,	CSGTempVars 		pTempVars
     ) {
     	// By default, the center is ON the zAxis at the given absolute z position 
     	if ( pSurface != 0 ) {
@@ -318,14 +320,14 @@ public abstract class CSGAxial
     protected abstract void createSlice(
         CSGAxialContext 	pContext
     ,	int					pSurface
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     );
 
     
     /** FOR SUBCLASS OVERRIDE: apply any 'smoothing' needed on the surface */
     protected void smoothSurface(
     	CSGAxialContext		pContext
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     ) {
     }
     
@@ -431,7 +433,16 @@ abstract class CSGAxialContext
     ,	int			pRadialSamples
     ,	int			pGeneratedFacesMask
     );
-    
+
+
+    /** FOR SUBCLASS OVERRIDE: prepare this context for a given slice */
+    public void prepareForSlice(
+    	CSGAxial			pElement
+    ,	int					pSurface
+    ,	CSGTempVars			pTempVars
+    ) {
+    }
+
     /** Establish the reduction factors for LOD processing, returning the count of triangles 
      	produced at this level of reduction
      */

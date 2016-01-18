@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.List;
 
+import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGRadialCapped.TextureMode;
@@ -137,7 +138,7 @@ public class CSGCylinder
     	CSGAxialContext 	pContext
     ,	int					pSurface
     ,	Vector3f			pUseVector
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     ) {
     	// By default, the center is ON the zAxis at the given absolute z position
     	return( super.getSliceCenter( pContext, pSurface, pUseVector, pTempVars ) );

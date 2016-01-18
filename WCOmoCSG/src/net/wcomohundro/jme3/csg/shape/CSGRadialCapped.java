@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.List;
 
+import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
@@ -102,10 +103,10 @@ public abstract class CSGRadialCapped
 	/** Special TextureModes that can be applied */
     public enum TextureMode {
     // Older names before I had really thought much about it
-        FLAT			// The texture of the end caps is simply flat
-    ,   UNIFORM			// Texture of end caps is flat and uniform in scale to the curved surface
-    ,	FLAT_LINEAR		// Flat end caps, curved surface is linear front-to-back
-    ,	UNIFORM_LINEAR	// Flat, uniform end caps, curved surface is linear front-to-back
+    	@Deprecated FLAT			// The texture of the end caps is simply flat
+    ,   @Deprecated UNIFORM			// Texture of end caps is flat and uniform in scale to the curved surface
+    ,	@Deprecated FLAT_LINEAR		// Flat end caps, curved surface is linear front-to-back
+    ,	@Deprecated UNIFORM_LINEAR	// Flat, uniform end caps, curved surface is linear front-to-back
     
     // Newer names that are more reflective of what is really going on
     ,	CAN				// Image the shape rotated to sit on is back surface (like soup can).  
@@ -340,7 +341,7 @@ public abstract class CSGRadialCapped
     	int southPoleIndex = -1, northPoleIndex = -1;
     	createGeometry( aContext );
     	
-        TempVars vars = TempVars.get(); 
+        CSGTempVars vars = CSGTempVars.get(); 
         try {
         	// Two extra vertices for the centers of the end caps
     		// If the shape is closed, then we have front and back
@@ -465,24 +466,33 @@ public abstract class CSGRadialCapped
     ) {
     	CSGRadialCappedContext myContext = (CSGRadialCappedContext)pContext;
 
-        // Apply scaling ONLY to the end caps so that we retain the cookie-cutout style
-    	// of texture without screwing up the curved crust.  Scaling is reflected in the
-    	// EndcapTextureBias
     	if ( pSurface < 0 ) {
         	// Map the texture to the bottom cap (facing the other way, right to left)
-    		// NOTE no scaling of the end caps
         	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
-    		pUseVector.set(
-    			0.5f - ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBiasX)
-			,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBiasY) );
+        	pUseVector.set(
+        		(myContext.mTextureSpan.x / 2.0f)
+        			-	(aCoord.mCosine / (myContext.mTextureSpan.x * 2.0f))
+        			+	myContext.mTextureOrigin.x
+        	,	(myContext.mTextureSpan.y / 2.0f)
+					+	(aCoord.mSine / (myContext.mTextureSpan.y * 2.0f))
+					+	myContext.mTextureOrigin.y );
+//    		pUseVector.set(
+//    			0.5f - ((aCoord.mCosine / 2.0f) /** * myContext.mEndcapTextureBiasX **/)
+//			,	0.5f + ((aCoord.mSine / 2.0f) /** * myContext.mEndcapTextureBiasY **/) );
     		
     	} else if ( pSurface > 0 ) {
         	// Map the texture to the top cap (simple left to right)
-    		// NOTE no scaling of the end caps
         	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
-    		pUseVector.set(
-        		0.5f + ((aCoord.mCosine / 2.0f) * myContext.mEndcapTextureBiasX)
-    		,	0.5f + ((aCoord.mSine / 2.0f) * myContext.mEndcapTextureBiasY) );
+        	pUseVector.set(
+            		(myContext.mTextureSpan.x / 2.0f)
+            			+	(aCoord.mCosine / (myContext.mTextureSpan.x * 2.0f))
+            			+	myContext.mTextureOrigin.x
+            	,	(myContext.mTextureSpan.y / 2.0f)
+    					+	(aCoord.mSine / (myContext.mTextureSpan.y * 2.0f))
+    					+	myContext.mTextureOrigin.y );
+//    		pUseVector.set(
+//        		0.5f + ((aCoord.mCosine / 2.0f) /** * myContext.mEndcapTextureBiasX **/)
+//    		,	0.5f + ((aCoord.mSine / 2.0f) /** * myContext.mEndcapTextureBiasY **/) );
     	
     	} else {
         	// Map the texture along the curved crust/surface
@@ -745,8 +755,11 @@ class CSGRadialCappedContext
 	extends CSGRadialContext
 {
     Vector3f[] 	mRadialNormals;			// Helper for the normals on each slice
-    float		mEndcapTextureBiasX;
-    float		mEndcapTextureBiasY;
+    
+    Vector2f	mTextureOrigin;			// Texture coordinate helpers
+    Vector2f	mTextureSpan;
+    Face		mTextureFace;
+    
 	
     /** Initialize the context */
     CSGRadialCappedContext(
@@ -759,21 +772,25 @@ class CSGRadialCappedContext
     ) {	
     	initializeContext( pAxisSamples, pRadialSamples, pGeneratedFacesMask, pAllocateBuffers );
     	
+    	mTextureOrigin = new Vector2f( 0, 0 );
+    	mTextureSpan = new Vector2f( 1, 1 );
+    	mTextureFace = Face.NONE;
+    	
     	// Account for the span of the texture on the end caps
     	switch( pTextureMode ) {
 	    case UNIFORM:
 	    case UNIFORM_LINEAR:
 	    	// UNIFORM end caps are inherently scaled so match the texture scaling of the curved surface
-	    	mEndcapTextureBiasX = mEndcapTextureBiasY = FastMath.INV_PI;
+	    	//mEndcapTextureBiasX = mEndcapTextureBiasY = FastMath.INV_PI;
 	    	break;
 	    default:
 	    	// Simple FLAT end caps act like a circular cookie-cutter applied on the texture
-	    	mEndcapTextureBiasX = mEndcapTextureBiasY = 1.0f;
+	    	//mEndcapTextureBiasX = mEndcapTextureBiasY = 1.0f;
 	    	break;
 	    }
     	if ( pScaleSlice != null ) {
-    		mEndcapTextureBiasX *= pScaleSlice.x;
-    		mEndcapTextureBiasY *= pScaleSlice.y;
+    		//mEndcapTextureBiasX *= pScaleSlice.x;
+    		//mEndcapTextureBiasY *= pScaleSlice.y;
     	}
 
     }
@@ -814,5 +831,47 @@ class CSGRadialCappedContext
     	}
     	return( vertCount );
     }
+    
+    /** OVERRIDE: prepare this context for a given slice */
+    @Override
+    public void prepareForSlice(
+        CSGAxial			pElement
+    ,	int					pSurface
+    ,	CSGTempVars			pTempVars
+    ) {
+    	if ( pSurface < 0 ) {
+        	// Map the texture to the bottom cap (facing the other way, right to left)
+    		resolveTextureCoordinates( pElement, Face.BACK, pTempVars );
+    		
+    	} else if ( pSurface > 0 ) {
+        	// Map the texture to the top cap (simple left to right)
+    		resolveTextureCoordinates( pElement, Face.FRONT, pTempVars );
+    		
+    	} else {
+        	// Map the texture along the curved sides
+    		resolveTextureCoordinates( pElement, Face.SIDES, pTempVars );
+    	}
+    }
 
+    /** Figure out adjustments to the texture */
+    protected void resolveTextureCoordinates(
+        CSGAxial		pElement
+    ,	Face			pFace
+    ,	CSGTempVars		pTempVars
+    ) {
+    	if ( pFace != mTextureFace ) {
+    		// Look for per-face based customizations
+    		int faceBit = pFace.getMask();
+    		Vector2f textureOrigin = pElement.matchFaceOrigin( faceBit );
+    		Vector2f textureTerminus = pElement.matchFaceTerminus( faceBit );
+    		
+    		// All sides span by default from 0,0 to 1,1
+			pElement.resolveTextureCoord( mTextureOrigin, mTextureSpan
+										, Vector2f.ZERO, Vector2f.UNIT_XY
+										, textureOrigin, textureTerminus
+										, pTempVars.vect2d5 );
+
+	    	mTextureFace = pFace;
+    	}
+    }
 }

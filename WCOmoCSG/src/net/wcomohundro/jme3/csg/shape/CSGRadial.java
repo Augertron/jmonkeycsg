@@ -48,6 +48,7 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
@@ -225,7 +226,7 @@ public abstract class CSGRadial
     	CSGAxialContext 	pContext
     ,	int					pSurface
     ,	Vector3f			pUseVector
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     ) {
     	CSGRadialContext aContext = (CSGRadialContext)pContext;
     	
@@ -238,7 +239,7 @@ public abstract class CSGRadial
         // Ready the standard texture for this slice 
     	// (this may let you optimize some texture calculations once for the slice
     	//  with minor adjustments at each radial point on the slice)
-    	aContext.mSliceTexture = getSliceTexture( pTempVars.vect2d, aContext, pSurface );
+    	aContext.mSliceTexture = getSliceTexture( pTempVars.vect2d1, aContext, pSurface );
 
     	return( aCenter );
     }
@@ -248,7 +249,7 @@ public abstract class CSGRadial
     protected void createSlice(
         CSGAxialContext 	pContext
     ,	int					pSurface
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     ) {
     	CSGRadialContext aContext = (CSGRadialContext)pContext;
     	

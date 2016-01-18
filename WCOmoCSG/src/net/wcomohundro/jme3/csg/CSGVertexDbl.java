@@ -171,7 +171,7 @@ public class CSGVertexDbl
 			// What is its texture?
 			Vector2f newTextureCoordinate 
 				= this.mTextureCoordinate.add( 
-					pTempVars.vect2d.set( pOther.getTextureCoordinate() )
+					pTempVars.vect2d1.set( pOther.getTextureCoordinate() )
 						.subtractLocal( this.mTextureCoordinate ).multLocal( (float)pPercentage ) );
 			
 			aVertex = this.sibling( pNewPosition, newNormal, newTextureCoordinate, pEnvironment );

@@ -49,6 +49,7 @@ import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.ArrayList;
 
+import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGPlane;
@@ -204,7 +205,7 @@ public class CSGPipe
     @Override
     protected void smoothSurface(
         CSGAxialContext		pContext
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     ) {
     	if ( mSmoothSurface ) {
     		// Scan the surface, looking for crumple points where radial points on one slice
@@ -242,12 +243,12 @@ public class CSGPipe
     ,	int				pScanDirection
     ,	int				pOffset3f
     ,	int				pOffset2f
-    ,	TempVars		pTempVars
+    ,	CSGTempVars		pTempVars
     ) {
     	Vector3f checkPosition = pTempVars.vect1;
     	Vector3f basePosition = pTempVars.vect2;
     	Vector3f baseNormal = pTempVars.vect3;
-    	Vector2f baseTexture = pTempVars.vect2d;
+    	Vector2f baseTexture = pTempVars.vect2d1;
 
     	// We check all points against the Plane of the base
     	CSGPlaneFlt basePlane = pContext.mSlicePlanes.get( pBaseIndex );
@@ -410,7 +411,7 @@ if ( true ) {
     	CSGAxialContext 	pContext
     ,	int					pSurface
     ,	Vector3f			pUseVector
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     ) {
     	CSGPipeContext myContext = (CSGPipeContext)pContext;
     	
@@ -439,7 +440,7 @@ if ( true ) {
         // Ready the standard texture for this slice 
     	// (this may let you optimize some texture calculations once for the slice
     	//  with minor adjustments at each radial point on the slice)
-    	myContext.mSliceTexture = getSliceTexture( pTempVars.vect2d, myContext, pSurface );
+    	myContext.mSliceTexture = getSliceTexture( pTempVars.vect2d1, myContext, pSurface );
 
     	return( pUseVector );
     }

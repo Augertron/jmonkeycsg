@@ -30,6 +30,7 @@ import java.nio.ShortBuffer;
 import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGMeshManager;
+import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
@@ -267,10 +268,13 @@ public class CSGAxialBox
     protected void createSlice(
         CSGAxialContext 	pContext
     ,	int					pSurface
-    ,	TempVars			pTempVars
+    ,	CSGTempVars			pTempVars
     ) {
     	int faceIndex, faceMask;
-    	float xBase = 0, yBase = 0, xSpan = 1, ySpan = 1, rlPercent = 0, tbPercent = 0;
+    	Vector2f baseTex = pTempVars.vect2d1;
+    	Vector2f spanTex = pTempVars.vect2d2;
+    	Vector2f spanRL = pTempVars.vect2d3;
+    	Vector2f spanTB = pTempVars.vect2d4;
     	
     	if ( pSurface < 0 ) {
     		// BACK
@@ -287,8 +291,8 @@ public class CSGAxialBox
     		
     		// Account for span around the perimeter
     		float perimeter = (2 * 2 * mExtentX) + (2 * 2 * mExtentY);
-    		rlPercent = (mExtentY * 2) / perimeter;
-    		tbPercent = (mExtentX * 2) / perimeter;
+    		spanRL.set( (mExtentY * 2) / perimeter, 1 );
+    		spanTB.set( (mExtentX * 2) / perimeter, 1 );
     	}
     	// Process the faces in the expected sFaces[] order
     	for( ; faceIndex < sFaces.length; faceIndex += 1 ) {
@@ -307,40 +311,30 @@ public class CSGAxialBox
     		switch( aFace ) {
     		case FRONT:
     		case BACK:
-    			// Full span
-    			xBase = 0;
-    			xSpan = 1;
+    			// Full span from zero to one
+    			resolveTextureCoord( baseTex, spanTex
+    								, Vector2f.ZERO, Vector2f.UNIT_XY
+    								, textureOrigin, textureTerminus
+    								, pTempVars.vect2d5 );
     			break;
     			
     		case LEFT:
     		case RIGHT:
     			// The span is across the left/right face
-    			xSpan = rlPercent;
+    			resolveTextureCoord( baseTex, spanTex
+									, baseTex, spanRL
+									, textureOrigin, textureTerminus
+									, pTempVars.vect2d5 );
     			break;
     			
     		case TOP:
     		case BOTTOM:
     			// The span is across the top/bottom face
-    			xSpan = tbPercent;
+    			resolveTextureCoord( baseTex, spanTex
+									, baseTex, spanTB
+									, textureOrigin, textureTerminus
+									, pTempVars.vect2d5 );
     			break;
-    		}
-    		if ( textureOrigin != null ) {
-    			// Reset the texture origin as specified
-    			if ( !Float.isNaN( textureOrigin.x ) ) {
-    				xBase = textureOrigin.x;
-    			}
-    			if ( !Float.isNaN( textureOrigin.y ) ) {
-    				yBase = textureOrigin.y;
-    			}
-    		}
-    		if ( textureTerminus != null ) {
-    			// Reset the texture origin as specified
-    			if ( !Float.isNaN( textureTerminus.x ) ) {
-    				xBase = textureTerminus.x - xSpan;
-    			}
-    			if ( !Float.isNaN( textureTerminus.y ) ) {
-    				yBase = textureTerminus.y - ySpan;
-    			}
     		}
     		// Where is this vertex?
     		int vertexSelector = faceIndex * 4;			// 4 per face
@@ -363,14 +357,13 @@ public class CSGAxialBox
                 				 .put( sNormals[ normalSelector++ ] * normalFlip );
                 
                 // The texture varies per vertex based on the face
-                Vector2f aTexture = pTempVars.vect2d;
-                aTexture.set( xBase + (sCanTexture[ textureSelector++ ] * xSpan)
-                			,	yBase + (sCanTexture[ textureSelector++ ] * ySpan) );
+                Vector2f aTexture = pTempVars.vect2d5;
+                aTexture.set( baseTex.x + (sCanTexture[ textureSelector++ ] * spanTex.x)
+                			, baseTex.y + (sCanTexture[ textureSelector++ ] * spanTex.y) );
                 pContext.mTexBuf.put( aTexture.x )
                 			    .put( aTexture.y );
     		}
-    		xBase += xSpan;
-    		if ( xBase > 1.0f ) xBase -= 1.0f;
+    		baseTex.x += spanTex.x;
     	}
     }
     

@@ -163,7 +163,7 @@ public class CSGVertexIOB
 		// What is its texture?
 		mTextureCoordinate.set( pVertexA.getTextureCoordinate() );
 		
-		Vector2f otherTexCoord = pTempVars.vect2d.set( pVertexB.getTextureCoordinate() );
+		Vector2f otherTexCoord = pTempVars.vect2d1.set( pVertexB.getTextureCoordinate() );
 		mTextureCoordinate.addLocal( 
 			otherTexCoord.subtractLocal( pVertexA.getTextureCoordinate() ).multLocal( (float)percent ) );
 	}

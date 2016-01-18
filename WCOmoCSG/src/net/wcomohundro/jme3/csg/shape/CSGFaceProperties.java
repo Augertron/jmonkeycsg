@@ -53,6 +53,34 @@ import com.jme3.math.Vector2f;
  	1)	Texture scaling to apply to the face
  	2)	Custom material to apply to the face
  	3)	Custom physics to apply to the face
+ 	
+ 	For texture management, semi-independent options exist for basic scale, origin override,
+ 	and terminus override. Origin and Terminus are applied during face construction.  A typical 
+ 	face has its texture origin starting at 0,0 and then spanning to 1,1.  Multiple faces may be
+	treated as unified whole in some circumstances (@see CSGAxialBox), but all face
+	textures start at some origin, and run for some span.
+	
+	 	Scaling is just that, a multiplier applied to the various texture coordinates of a given
+	 	face.  
+	 	
+	 	An explicit Origin overrides the normal 0,0 starting point.  This allows the texture for
+	 	a face to start at some given bias, which could be useful for faces from multiple shapes 
+	 	that are positioned to align on a common texture.
+	 	
+	 	An explicit Terminus overrides the normal 1,1 ending point.  This is useful for those
+	 	faces whose ending point must align with some other shape's starting point. In this case, 
+	 	the origin is calculated backwards accounting for a given span.  In particular, scaling
+	 	accommodates an explicit Terminus so that the end coordinate remains fixed even if a 
+	 	scaling multiplier is used.
+	 	
+	 	If both the Origin and Terminus are supplied, the Terminus remains fixed in terms of scaling,
+	 	and the span is dynamically calculated to account for the given origin.
+	 	
+	 A list of CSGFaceProperties is supported at the CSGElement level.  Such a list may have
+	 multiple definitions applying to the same face, so that one specification selects the
+	 material while another selects the physics/texture processing.
+	 Since a CSGElement can link back to its parent, it is possible to walk back through a
+	 higherarchy to resolve all the texture processing that applies.
  */
 public class CSGFaceProperties 
 	implements Savable, ConstructiveSolidGeometry

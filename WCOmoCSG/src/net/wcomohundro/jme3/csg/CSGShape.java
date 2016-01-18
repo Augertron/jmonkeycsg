@@ -111,6 +111,11 @@ import com.jme3.util.TempVars;
  	parent group, and all the Node's children are added as subshapes.  In either case,
  	the Spatial's Material is retained, along with its transform.
  	
+ 	So a CSGShape is based on 1) a Mesh,  2) a set of subshapes,  3) a boolean blend
+ 	In the case of a 'clone' or a 'prepare' as part of regeneration, cases 1 & 2 reset the
+ 	generated set polygons back to empty and rebuild from scratch.  For case 3, regeneration
+ 	is using the result of a previous blend, so the polygons must be retained.
+ 	
  	The boolean processing is based on either:
  	
  	1)	BinarySpacePartitioning - where the polygons of a shape are sorted into front/back
@@ -411,6 +416,12 @@ public class CSGShape
 			}
 		}
 	}
+	
+	/** Where did this shape come from? */
+	public boolean isBooleanBlend(
+	) {
+		return( (this.mesh == null) && (this.mSubShapes == null) );
+	}
 		
 	/** Ensure this shape is ready to be blended --
 	 		In particular, assume that the Mesh underlying this shape may have been 
@@ -418,7 +429,7 @@ public class CSGShape
 	 */
 	public CSGShape refresh(
 	) {
-		if ( this.mHandler != null ) this.mHandler.refresh();
+		if ( (this.mHandler != null) ) this.mHandler.refresh();
 		return( this );
 	}
 	
