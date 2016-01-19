@@ -207,6 +207,21 @@ public class CSGAxialBox
         }
 	}
 	
+	/** OVERRIDE to interpret SIDES */
+	public void setFaceProperties(
+		List<CSGFaceProperties>		pPropertyList
+	) {
+		super.setFaceProperties( pPropertyList );
+		if ( mFaceProperties != null ) {
+			for( CSGFaceProperties aProperties : mFaceProperties ) {
+				// SIDES is meaningless, it is really LEFT/RIGHT/TOP/BOTTOM
+				if ( aProperties.getFaceMask() == Face.SIDES.getMask() ) {
+					aProperties.setFaceMask( Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask() );
+				}
+			}
+		}
+	}
+	
 	/** Accessor to the full range of faces supported by this mesh */
 	@Override
 	public int getSupportedFacesMask(
@@ -302,10 +317,6 @@ public class CSGAxialBox
     			// We are not drawing this face
     			continue;
     		}
-    		// Look for adjustment to the origin
-    		Vector2f textureOrigin = this.matchFaceOrigin( faceBit );
-    		Vector2f textureTerminus = this.matchFaceTerminus( faceBit );
-    		
     		// Texture order for the 'sides' is counter clockwise, starting from the right
     		// ie Right / Top / Left / Bottom
     		switch( aFace ) {
@@ -314,7 +325,7 @@ public class CSGAxialBox
     			// Full span from zero to one
     			resolveTextureCoord( baseTex, spanTex
     								, Vector2f.ZERO, Vector2f.UNIT_XY
-    								, textureOrigin, textureTerminus
+    								, faceBit
     								, pTempVars.vect2d5 );
     			break;
     			
@@ -323,7 +334,7 @@ public class CSGAxialBox
     			// The span is across the left/right face
     			resolveTextureCoord( baseTex, spanTex
 									, baseTex, spanRL
-									, textureOrigin, textureTerminus
+									, faceBit
 									, pTempVars.vect2d5 );
     			break;
     			
@@ -332,7 +343,7 @@ public class CSGAxialBox
     			// The span is across the top/bottom face
     			resolveTextureCoord( baseTex, spanTex
 									, baseTex, spanTB
-									, textureOrigin, textureTerminus
+									, faceBit
 									, pTempVars.vect2d5 );
     			break;
     		}

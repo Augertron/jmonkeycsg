@@ -8,7 +8,7 @@
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
         </com.jme3.scene.Geometry>
         
-        <com.jme3.scene.Geometry name='FlatCylinder1.1x1.5' >
+        <com.jme3.scene.Geometry name='CanCylinder1.1x1.5' >
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' z='-5.0'/>
             </transform>
@@ -22,7 +22,7 @@
             </mesh>
         </com.jme3.scene.Geometry>
         
-        <com.jme3.scene.Geometry name='LinearCylinder1.1x1.5' >
+        <com.jme3.scene.Geometry name='RollerCylinder1.1x1.5' >
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' z='-10.0'/>
             </transform>
@@ -36,7 +36,7 @@
             </mesh>
         </com.jme3.scene.Geometry>
         
-        <com.jme3.scene.Geometry name='InvertedFlatCylinder1.1x1.5' >
+        <com.jme3.scene.Geometry name='InvertedCanCylinder1.1x1.5' >
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' z='-15.0'/>
             </transform>
@@ -50,7 +50,7 @@
             </mesh>
         </com.jme3.scene.Geometry>
         
-        <com.jme3.scene.Geometry name='InvertedLinearCylinder1.1x1.5' >
+        <com.jme3.scene.Geometry name='InvertedRollerCylinder1.1x1.5' >
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' z='-20.0'/>
             </transform>
@@ -65,7 +65,7 @@
         </com.jme3.scene.Geometry>
         
         <!-- Closed, degenerate cylinder (more like a cube/triangle) -->
-        <com.jme3.scene.Geometry name='DegenerateCubeCylinderLinear'>	
+        <com.jme3.scene.Geometry name='DegenerateCubeRollerCylinder'>	
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' z='-25.0'/>
             </transform>
@@ -78,7 +78,7 @@
             	</faceProperties>
             </mesh> 
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='DegenerateTriangleCylinderFlat'>	
+        <com.jme3.scene.Geometry name='DegenerateTriangleCanCylinder'>	
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' z='-30.0'/>
             </transform>

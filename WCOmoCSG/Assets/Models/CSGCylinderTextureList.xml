@@ -1,58 +1,58 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <net.wcomohundro.jme3.csg.CSGLinkNode name='CylinderTexture'>
 	<children>
-        <com.jme3.scene.Geometry name='CylinderFlat'>
+        <com.jme3.scene.Geometry name='CylinderCan'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='0.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='FLAT'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='CAN'/>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='CylinderUniform'>
+        <com.jme3.scene.Geometry name='CylinderCan2'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='-5.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='UNIFORM'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='CAN'/>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='CylinderFlatLinear'>
+        <com.jme3.scene.Geometry name='CylinderRoller'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='-10.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='FLAT_LINEAR'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='ROLLER'/>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='CylinderUniformLinear'>
+        <com.jme3.scene.Geometry name='CylinderRoller2'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='-15.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='UNIFORM_LINEAR'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='ROLLER'/>
         </com.jme3.scene.Geometry>
         
-        <com.jme3.scene.Geometry name='CylinderFlatInverted'>
+        <com.jme3.scene.Geometry name='CylinderCanInverted'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='-20.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='FLAT' inverted='true'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='CAN' inverted='true'/>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='CylinderFlatLinearInverted'>
+        <com.jme3.scene.Geometry name='CylinderRollerInverted'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='-25.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='FLAT_LINEAR' inverted='true'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'  textureMode='ROLLER' inverted='true'/>
         </com.jme3.scene.Geometry>    
         
 
-        <com.jme3.scene.Geometry name='TwistedCylinderFlat'>
+        <com.jme3.scene.Geometry name='TwistedCylinderCan'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='-30.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		twist='PI/2' scaleSliceY='0.5' textureMode='FLAT'/>
+            		twist='PI/2' scaleSliceY='0.5' textureMode='CAN'/>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='TwistedCylinderFlatLinear'>
+        <com.jme3.scene.Geometry name='TwistedCylinderRoller'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' y='-6.0' z='-35.0'/>
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-            		twist='PI/2' scaleSliceY='0.5' textureMode='FLAT_LINEAR'/>
+            		twist='PI/2' scaleSliceY='0.5' textureMode='ROLLER'/>
         </com.jme3.scene.Geometry>
         
         <!-- Samples of texture butted up against itself to see how it tiles -->

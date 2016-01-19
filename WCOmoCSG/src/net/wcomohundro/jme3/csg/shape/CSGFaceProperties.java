@@ -55,10 +55,10 @@ import com.jme3.math.Vector2f;
  	3)	Custom physics to apply to the face
  	
  	For texture management, semi-independent options exist for basic scale, origin override,
- 	and terminus override. Origin and Terminus are applied during face construction.  A typical 
- 	face has its texture origin starting at 0,0 and then spanning to 1,1.  Multiple faces may be
-	treated as unified whole in some circumstances (@see CSGAxialBox), but all face
-	textures start at some origin, and run for some span.
+ 	span override, and terminus override. Origin, Span and Terminus are applied during face 
+ 	construction.  A typical face has its texture origin starting at 0,0 and then spanning to 1,1.  
+ 	Multiple faces may be treated as unified whole in some circumstances (@see CSGAxialBox), but 
+ 	all face textures start at some origin, and run for some span.
 	
 	 	Scaling is just that, a multiplier applied to the various texture coordinates of a given
 	 	face.  
@@ -67,10 +67,12 @@ import com.jme3.math.Vector2f;
 	 	a face to start at some given bias, which could be useful for faces from multiple shapes 
 	 	that are positioned to align on a common texture.
 	 	
-	 	An explicit Terminus overrides the normal 1,1 ending point.  This is useful for those
-	 	faces whose ending point must align with some other shape's starting point. In this case, 
-	 	the origin is calculated backwards accounting for a given span.  In particular, scaling
-	 	accommodates an explicit Terminus so that the end coordinate remains fixed even if a 
+	 	An explicit Span overrides the normal 1,1 span length.
+	 	
+	 	An explicit Terminus overrides the normal ending point (Origin + Span).  This is useful 
+	 	for those faces whose ending point must align with some other shape's starting point. In 
+	 	this case, the origin is calculated backwards accounting for a given span.  In particular, 
+	 	scaling accommodates an explicit Terminus so that the end coordinate remains fixed even if a 
 	 	scaling multiplier is used.
 	 	
 	 	If both the Origin and Terminus are supplied, the Terminus remains fixed in terms of scaling,
@@ -181,6 +183,7 @@ public class CSGFaceProperties
 	/** A custom texture scaling that applies to the face(s) */
 	protected Vector2f			mTextureScale;
 	protected Vector2f			mTextureOrigin;
+	protected Vector2f			mTextureSpan;
 	protected Vector2f			mTextureTerminus;
 	/** A custom Physics that applies to the face(s) */
 	protected PhysicsControl	mPhysics;
@@ -196,6 +199,7 @@ public class CSGFaceProperties
 	,	Vector2f		pTextureScale
 	,	Vector2f		pTextureOrigin
 	,	boolean			pAsTextureTerminus
+	,	Vector2f		pTextureSpan
 	,	PhysicsControl	pPhysics
 	) {
 		mFaceMask = pFace.getMask();
@@ -208,11 +212,13 @@ public class CSGFaceProperties
 			// Explicit start point of the texture
 			mTextureOrigin = pTextureOrigin;
 		}
+		mTextureSpan = pTextureSpan;
 		mPhysics = pPhysics;
 	}
 	
 	/** Accessor to the mask */
 	public int getFaceMask() { return mFaceMask; }
+	public void setFaceMask( int pFaceMask ) { mFaceMask = pFaceMask; }
 	public boolean appliesToFace(
 		int		pFaceBit
 	) {
@@ -246,6 +252,10 @@ public class CSGFaceProperties
 	/** Accessor to the TextureOrigin property */
 	public boolean hasTextureOrigin() { return( mTextureOrigin != null ); }
 	public Vector2f getTextureOrigin() { return mTextureOrigin; }
+
+	/** Accessor to the TextureSpan property */
+	public boolean hasTextureSpan() { return( mTextureSpan != null ); }
+	public Vector2f getTextureSpan() { return mTextureSpan; }
 
 	/** Accessor to the TextureTerminus property */
 	public boolean hasTextureTerminus() { return( mTextureTerminus != null ); }
@@ -296,7 +306,7 @@ public class CSGFaceProperties
         		mTextureScale = new Vector2f( scaleX, scaleY );
         	}
         }
-        // Look for origin/terminus
+        // Look for origin/span/terminus
         // NOTE that we allow for both specifications on the assumption that one
         //		applies to X and the other to Y
         mTextureOrigin = (Vector2f)aCapsule.readSavable( "textureOrigin", null );
@@ -306,6 +316,15 @@ public class CSGFaceProperties
         	float originY = CSGEnvironment.readPiValue( aCapsule, "originY", Float.NaN );
         	if ( !Float.isNaN( originX ) || !Float.isNaN( originY ) ) {
         		mTextureOrigin = new Vector2f( originX, originY );
+        	}
+        }
+        mTextureSpan = (Vector2f)aCapsule.readSavable( "textureSpan", null );
+        if ( mTextureSpan == null ) {
+        	// Look for simple attributes
+        	float originX = CSGEnvironment.readPiValue( aCapsule, "spanX", Float.NaN );
+        	float originY = CSGEnvironment.readPiValue( aCapsule, "spanY", Float.NaN );
+        	if ( !Float.isNaN( originX ) || !Float.isNaN( originY ) ) {
+        		mTextureSpan = new Vector2f( originX, originY );
         	}
         }
         mTextureTerminus = (Vector2f)aCapsule.readSavable( "textureTerminus", null );
@@ -344,6 +363,10 @@ public class CSGFaceProperties
         if ( mTextureOrigin != null ) {
         	aCapsule.write( mTextureOrigin.getX(), "originX", Float.NaN );
         	aCapsule.write( mTextureOrigin.getY(), "originY", Float.NaN );
+        }
+        if ( mTextureSpan != null ) {
+        	aCapsule.write( mTextureSpan.getX(), "spanX", Float.NaN );
+        	aCapsule.write( mTextureSpan.getY(), "spanY", Float.NaN );
         }
         if ( mTextureTerminus != null ) {
         	aCapsule.write( mTextureTerminus.getX(), "terminusX", Float.NaN );

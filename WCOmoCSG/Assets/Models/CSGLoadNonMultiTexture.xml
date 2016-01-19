@@ -116,7 +116,7 @@
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 	                    		scaleX='1.0' scaleY='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-	                    		scaleX='3.0' scaleY='1.0' originX='0.833333333'/>
+	                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 	                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
@@ -141,8 +141,6 @@
                   	</mesh>
               	</net.wcomohundro.jme3.csg.CSGShape>
 			</shapes>
-          	<!-- Scale to match the transform below 
-                 BUT CSGGeometry DOES NOT YET SUPPORT THIS OPERATION -->
             <faceProperties>
             	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.9' scaleY='1.9'/>
                 <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1.9' scaleY='19.9'/>
@@ -152,7 +150,7 @@
          	<!-- Scale it up -->
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10' y='0'/>
-                <xscale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
+                <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
             </transform>
          </net.wcomohundro.jme3.csg.CSGGeometry> 
          
@@ -176,7 +174,7 @@
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
 			                    		scaleX='1.0' scaleY='0.5'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
-			                    		scaleX='3.0' scaleY='1.0' originX='0.833333333'/>
+			                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
 			                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
 			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 

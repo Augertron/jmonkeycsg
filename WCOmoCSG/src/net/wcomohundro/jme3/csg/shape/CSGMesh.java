@@ -296,6 +296,26 @@ public abstract class CSGMesh
 		}
 		return( null );
 	}
+	protected Vector2f matchFaceSpan(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one if it has a scale
+					if ( aProperty.hasTextureSpan() ) {
+						return( aProperty.getTextureSpan() );
+					}
+					// NOTE that we could match a property based on the bitmask, but if
+					//		it has no origin, we will keep looking.  This lets us use
+					//		separate definitions for origin versus material versus physics
+				}
+			}
+		}
+		return( null );
+	}
 	protected Vector2f matchFaceTerminus(
 		int			pFaceBit
 	) {
@@ -374,51 +394,59 @@ public abstract class CSGMesh
 	,	Vector2f	pResultSpan
 	,	Vector2f	pBase
 	,	Vector2f	pSpan
-	,	Vector2f	pTextureOrigin
-	,	Vector2f	pTextureTerminus
+	,	int			pFaceMask
 	,	Vector2f	pTemp
 	) {
-		float originOverrideX = (pTextureOrigin == null) ? Float.NaN : pTextureOrigin.x;
-		float terminusOverrideX = (pTextureTerminus == null) ? Float.NaN : pTextureTerminus.x;
-		resolveTextureCoord( pTemp, pBase.x, pSpan.x, originOverrideX, terminusOverrideX );
+		// Look for adjustment to the origin
+		Vector2f textureOrigin = this.matchFaceOrigin( pFaceMask );
+		Vector2f textureSpan = this.matchFaceSpan( pFaceMask );
+		Vector2f textureTerminus = this.matchFaceTerminus( pFaceMask );
+		
+		float originOverrideX = (textureOrigin == null) ? Float.NaN : textureOrigin.x;
+		float spanOverrideX = (textureSpan == null) ? Float.NaN : textureSpan.x;
+		float terminusOverrideX = (textureTerminus == null) ? Float.NaN : textureTerminus.x;
+		resolveTextureCoord( pTemp, pBase.x, pSpan.x, originOverrideX, spanOverrideX, terminusOverrideX );
 		pResultBase.setX( pTemp.x );
 		pResultSpan.setX( pTemp.y );
 		
-		float originOverrideY = (pTextureOrigin == null) ? Float.NaN : pTextureOrigin.y;
-		float terminusOverrideY = (pTextureTerminus == null) ? Float.NaN : pTextureTerminus.y;
-		resolveTextureCoord( pTemp, pBase.y, pSpan.y, originOverrideY, terminusOverrideY );
+		float originOverrideY = (textureOrigin == null) ? Float.NaN : textureOrigin.y;
+		float spanOverrideY = (textureSpan == null) ? Float.NaN : textureSpan.x;
+		float terminusOverrideY = (textureTerminus == null) ? Float.NaN : textureTerminus.y;
+		resolveTextureCoord( pTemp, pBase.y, pSpan.y, originOverrideY, spanOverrideY, terminusOverrideY );
 		pResultBase.setY( pTemp.x );
 		pResultSpan.setY( pTemp.y );
 	}
 	protected void resolveTextureCoord(
 		Vector2f	pResult
 	,	float		pBase
-	,	float		pSpan
-	,	float		pTextureOrigin
-	,	float		pTextureTerminus
+	,	float		pDefaultSpan
+	,	float		pOverrideOrigin
+	,	float		pOverrideSpan
+	,	float		pOverrideTerminus
 	) {    	
 		// pResult.x is the 'base', pResult.y is the 'span'
-		if ( Float.isNaN( pTextureOrigin ) ) {
+		float useSpan = (Float.isNaN( pOverrideSpan )) ? pDefaultSpan : pOverrideSpan;
+		if ( Float.isNaN( pOverrideOrigin ) ) {
 			// No explicit origin override
-			if ( Float.isNaN( pTextureTerminus ) ) {
+			if ( Float.isNaN( pOverrideTerminus ) ) {
 				// Nothing overridden, use the givens
 				pResult.setX( pBase );
-				pResult.setY( pSpan );
+				pResult.setY( useSpan );
 			} else {
 				// Work from explicit terminus only
-				pResult.setX( pTextureTerminus - pSpan );
-				pResult.setY( pSpan );
+				pResult.setX( pOverrideTerminus - useSpan );
+				pResult.setY( useSpan );
 			}
 		} else {
-			// We have an explicit origin
-			if ( Float.isNaN( pTextureTerminus ) ) {
+			// We have an override origin
+			if ( Float.isNaN( pOverrideTerminus ) ) {
 				// No explicit terminus
-				pResult.setX( pTextureOrigin );
-				pResult.setY( pSpan );
+				pResult.setX( pOverrideOrigin );
+				pResult.setY( useSpan );
 			} else {
 				// Work from explicit origin and terminus 
-				pResult.setX( pTextureOrigin );
-				pResult.setY( pTextureTerminus - pTextureOrigin );
+				pResult.setX( pOverrideOrigin );
+				pResult.setY( pOverrideTerminus - pOverrideOrigin );
 			}
 		}
 	}
@@ -492,7 +520,7 @@ public abstract class CSGMesh
         
         // Extended attributes
         mGeneratedFacesMask = inCapsule.readInt( "generateFaces", 0 );	// Subclasses must check for zero
-        mFaceProperties = inCapsule.readSavableArrayList( "faceProperties", null );
+        setFaceProperties( inCapsule.readSavableArrayList( "faceProperties", null ) );
         mLODFactors = inCapsule.readFloatArray( "lodFactors", null );
         mInverted = inCapsule.readBoolean( "inverted", mInverted );
         mGenerateTangentBinormal = inCapsule.readBoolean( "generateTangentBinormal", false );

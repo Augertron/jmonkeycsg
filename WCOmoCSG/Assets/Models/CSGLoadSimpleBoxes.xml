@@ -79,7 +79,7 @@
         
     	<!-- Just a cube with a texture -->
         <com.jme3.scene.Geometry name='ABoxAxial'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-5.0' z='-20'/>
             </transform>

@@ -860,15 +860,10 @@ class CSGRadialCappedContext
     ,	CSGTempVars		pTempVars
     ) {
     	if ( pFace != mTextureFace ) {
-    		// Look for per-face based customizations
-    		int faceBit = pFace.getMask();
-    		Vector2f textureOrigin = pElement.matchFaceOrigin( faceBit );
-    		Vector2f textureTerminus = pElement.matchFaceTerminus( faceBit );
-    		
     		// All sides span by default from 0,0 to 1,1
 			pElement.resolveTextureCoord( mTextureOrigin, mTextureSpan
 										, Vector2f.ZERO, Vector2f.UNIT_XY
-										, textureOrigin, textureTerminus
+										, pFace.getMask()
 										, pTempVars.vect2d5 );
 
 	    	mTextureFace = pFace;
