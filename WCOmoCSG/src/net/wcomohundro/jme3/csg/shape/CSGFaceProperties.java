@@ -321,10 +321,10 @@ public class CSGFaceProperties
         mTextureSpan = (Vector2f)aCapsule.readSavable( "textureSpan", null );
         if ( mTextureSpan == null ) {
         	// Look for simple attributes
-        	float originX = CSGEnvironment.readPiValue( aCapsule, "spanX", Float.NaN );
-        	float originY = CSGEnvironment.readPiValue( aCapsule, "spanY", Float.NaN );
-        	if ( !Float.isNaN( originX ) || !Float.isNaN( originY ) ) {
-        		mTextureSpan = new Vector2f( originX, originY );
+        	float spanX = CSGEnvironment.readPiValue( aCapsule, "spanX", Float.NaN );
+        	float spanY = CSGEnvironment.readPiValue( aCapsule, "spanY", Float.NaN );
+        	if ( !Float.isNaN( spanX ) || !Float.isNaN( spanY ) ) {
+        		mTextureSpan = new Vector2f( spanX, spanY );
         	}
         }
         mTextureTerminus = (Vector2f)aCapsule.readSavable( "textureTerminus", null );

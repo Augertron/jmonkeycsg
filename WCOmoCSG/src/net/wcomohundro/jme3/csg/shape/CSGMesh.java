@@ -410,7 +410,7 @@ public abstract class CSGMesh
 		pResultSpan.setX( pTemp.y );
 		
 		float originOverrideY = (textureOrigin == null) ? Float.NaN : textureOrigin.y;
-		float spanOverrideY = (textureSpan == null) ? Float.NaN : textureSpan.x;
+		float spanOverrideY = (textureSpan == null) ? Float.NaN : textureSpan.y;
 		float terminusOverrideY = (textureTerminus == null) ? Float.NaN : textureTerminus.y;
 		resolveTextureCoord( pTemp, pBase.y, pSpan.y, originOverrideY, spanOverrideY, terminusOverrideY );
 		pResultBase.setY( pTemp.x );

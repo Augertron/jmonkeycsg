@@ -335,7 +335,7 @@ public abstract class CSGRadialCapped
     protected void updateGeometryProlog(
     ) {
         // Allocate buffers for position/normals/texture
-    	CSGRadialContext aContext = (CSGRadialContext)getContext( true );
+    	CSGRadialCappedContext aContext = (CSGRadialCappedContext)getContext( true );
     	
     	// Create all the vertices info
     	int southPoleIndex = -1, northPoleIndex = -1;
@@ -362,7 +362,11 @@ public abstract class CSGRadialCapped
                 				.put( aContext.mNormVector.y )
                 				.put( aContext.mNormVector.z );
 
-                aContext.mTexBuf.put( 0.5f ).put( 0.5f );
+        		aContext.resolveTextureCoordinates( this, Face.BACK, vars );
+        		Vector2f textureCenter = vars.vect2d5.set( 0.5f, 0.5f );
+        		textureCenter.multLocal( aContext.mTextureSpan );
+        		textureCenter.addLocal( aContext.mTextureOrigin );
+                aContext.mTexBuf.put( textureCenter.x ).put( textureCenter.y );
     		}
     		if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
     			// Include the front/north pole
@@ -381,7 +385,11 @@ public abstract class CSGRadialCapped
 	            				.put( aContext.mNormVector.y )
 	            				.put( aContext.mNormVector.z );
 	
-	            aContext.mTexBuf.put( 0.5f ).put( 0.5f );
+        		aContext.resolveTextureCoordinates( this, Face.FRONT, vars );
+        		Vector2f textureCenter = vars.vect2d5.set( 0.5f, 0.5f );
+        		textureCenter.multLocal( aContext.mTextureSpan );
+        		textureCenter.addLocal( aContext.mTextureOrigin );
+                aContext.mTexBuf.put( textureCenter.x ).put( textureCenter.y );
     		}
         } finally {
         	// Return the borrowed vectors
@@ -469,30 +477,16 @@ public abstract class CSGRadialCapped
     	if ( pSurface < 0 ) {
         	// Map the texture to the bottom cap (facing the other way, right to left)
         	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
-        	pUseVector.set(
-        		(myContext.mTextureSpan.x / 2.0f)
-        			-	(aCoord.mCosine / (myContext.mTextureSpan.x * 2.0f))
-        			+	myContext.mTextureOrigin.x
-        	,	(myContext.mTextureSpan.y / 2.0f)
-					+	(aCoord.mSine / (myContext.mTextureSpan.y * 2.0f))
-					+	myContext.mTextureOrigin.y );
-//    		pUseVector.set(
-//    			0.5f - ((aCoord.mCosine / 2.0f) /** * myContext.mEndcapTextureBiasX **/)
-//			,	0.5f + ((aCoord.mSine / 2.0f) /** * myContext.mEndcapTextureBiasY **/) );
+    		pUseVector.set(
+    			0.5f - ((aCoord.mCosine / 2.0f) /** * myContext.mEndcapTextureBiasX **/)
+			,	0.5f + ((aCoord.mSine / 2.0f) /** * myContext.mEndcapTextureBiasY **/) );
     		
     	} else if ( pSurface > 0 ) {
         	// Map the texture to the top cap (simple left to right)
         	CSGRadialCoord aCoord = pContext.mCoordList[ pContext.mRadialIndex ];
-        	pUseVector.set(
-            		(myContext.mTextureSpan.x / 2.0f)
-            			+	(aCoord.mCosine / (myContext.mTextureSpan.x * 2.0f))
-            			+	myContext.mTextureOrigin.x
-            	,	(myContext.mTextureSpan.y / 2.0f)
-    					+	(aCoord.mSine / (myContext.mTextureSpan.y * 2.0f))
-    					+	myContext.mTextureOrigin.y );
-//    		pUseVector.set(
-//        		0.5f + ((aCoord.mCosine / 2.0f) /** * myContext.mEndcapTextureBiasX **/)
-//    		,	0.5f + ((aCoord.mSine / 2.0f) /** * myContext.mEndcapTextureBiasY **/) );
+    		pUseVector.set(
+        		0.5f + ((aCoord.mCosine / 2.0f) /** * myContext.mEndcapTextureBiasX **/)
+    		,	0.5f + ((aCoord.mSine / 2.0f) /** * myContext.mEndcapTextureBiasY **/) );
     	
     	} else {
         	// Map the texture along the curved crust/surface
@@ -524,7 +518,9 @@ public abstract class CSGRadialCapped
             	break;
             }
     	}
-
+    	// The SPAN acts as scaling, and the ORIGIN is a simple bias
+    	pUseVector.multLocal( myContext.mTextureSpan );
+    	pUseVector.addLocal( myContext.mTextureOrigin );
     	return( pUseVector );
     }
     
@@ -644,30 +640,53 @@ public abstract class CSGRadialCapped
         boolean doFront = (pFaceMask & Face.FRONT.getMask()) != 0;
         boolean doSides = (pFaceMask & Face.SIDES.getMask()) != 0;
         
-        // If closed, we will generate 2 extra slices, one for top and one for bottom
-        // Vertices are generated in a standard way for the these special slices, but there
-        // is no puck with an edge.  Instead, the triangles describe the flat closed face.
-        // For that, we will have 2 extra vertices that describe the center of the face.
-        int index = 0;
-        int aRadialCount = mRadialSamples + 1;
-        for( int axisCount = 0; axisCount < aSliceCount; axisCount += 1 ) {
-            Face whichFace = whichFace( axisCount, aSliceCount, doBack, doFront, doSides );
-            if ( whichFace == Face.NONE ) {
-            	// Nothing in this slice to process
-            	index += (2 * aRadialCount);
-            } else {
-            	for( int i = 0; i < aRadialCount; i += 1 ) {
-            		// Scale these points
-            		index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, true );
+        if ( doBack || doFront || doSides ) {
+        	CSGTempVars vars = CSGTempVars.get();
+        	Vector2f textureOrigin = vars.vect2d1;
+        	Vector2f textureSpan = vars.vect2d2;
+        	try {
+                // If closed, we will generate 2 extra slices, one for top and one for bottom
+                // Vertices are generated in a standard way for the these special slices, but there
+                // is no puck with an edge.  Instead, the triangles describe the flat closed face.
+                // For that, we will have 2 extra vertices that describe the center of the face.
+                int index = 0;
+                int aRadialCount = mRadialSamples + 1;
+                for( int axisCount = 0; axisCount < aSliceCount; axisCount += 1 ) {
+                    Face whichFace = whichFace( axisCount, aSliceCount, doBack, doFront, doSides );
+                    if ( whichFace == Face.NONE ) {
+                    	// Nothing in this slice to process
+                    	index += (2 * aRadialCount);
+                    } else {
+                    	// Scale all the radial points
+            			resolveTextureCoord( textureOrigin, textureSpan
+			        						, Vector2f.ZERO, Vector2f.UNIT_XY
+			        						, whichFace.getMask()
+			        						, vars.vect2d5 );
+
+                    	for( int i = 0; i < aRadialCount; i += 1 ) {
+                    		// Scale these points
+                    		index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, textureOrigin, true );
+                    	}
+                    }
             	}
-            }
-    	}
-        // Two extra vertices for the centers of the end caps
-        if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
-        	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, doBack );
-        }
-        if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
-        	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, doFront );
+                // Two extra vertices for the centers of the end caps
+                if ( Face.BACK.maskIncludesFace( mGeneratedFacesMask ) ) {
+        			resolveTextureCoord( textureOrigin, textureSpan
+			    						, Vector2f.ZERO, Vector2f.UNIT_XY
+			    						, Face.BACK.getMask()
+			    						, vars.vect2d5 );
+                	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, textureOrigin, doBack );
+                }
+                if ( Face.FRONT.maskIncludesFace( mGeneratedFacesMask ) ) {
+        			resolveTextureCoord( textureOrigin, textureSpan
+			    						, Vector2f.ZERO, Vector2f.UNIT_XY
+			    						, Face.FRONT.getMask()
+			    						, vars.vect2d5 );
+                	index = applyScale( index, aBuffer, pScaleTexture.x, pScaleTexture.y, textureOrigin, doFront );
+                }
+        	} finally {
+        		vars.release();
+        	}
         }
     	aBuffer.clear();
         tc.updateData( aBuffer );
@@ -678,14 +697,17 @@ public abstract class CSGRadialCapped
     ,	FloatBuffer pBuffer
 	,	float		pX
 	,	float		pY
+	,	Vector2f	pTextureOrigin
     ,	boolean		pApplyScale
     ) {
     	if ( pApplyScale ) {
 			float x = pBuffer.get( pIndex  );
 			float y = pBuffer.get( pIndex + 1 );
 
-            x *= pX;
-            y *= pY;
+			x -= pTextureOrigin.x; y -= pTextureOrigin.y;
+            x *= pX; y *= pY;
+			x += pTextureOrigin.x * pX; y += pTextureOrigin.y * pY;
+            
             pBuffer.put( pIndex++, x ).put( pIndex++, y );        		
     	} else {
     		pIndex += 2;
@@ -854,7 +876,7 @@ class CSGRadialCappedContext
     }
 
     /** Figure out adjustments to the texture */
-    protected void resolveTextureCoordinates(
+    public void resolveTextureCoordinates(
         CSGAxial		pElement
     ,	Face			pFace
     ,	CSGTempVars		pTempVars

@@ -1,0 +1,393 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+	<csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB'
+		doublePrecision='true' structuralDebug='false' rationalizeValues='true'
+		epsilonNearZero='1.0e-10' epsilonBetweenPoints='1.0e-7' epsilonOnPlane='1.0e-7'
+		epsilonMagnitudeRange='22' />
+		
+    <lights class='com.jme3.light.LightList'>
+        <lights size='1'>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        </lights>
+    </lights>
+	<children>
+        <net.wcomohundro.jme3.csg.CSGGeometry name='DieCubeUnscaled'
+            	materialName='Textures/Debug/NumberedBoxes.xml'>
+            	<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml'-->
+            <shapes>
+            	<net.wcomohundro.jme3.csg.CSGShape name='OuterCube' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='RoundedCorners' operator='INTERSECTION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+                  			radius='1.675' axisSamples='32' radialSamples='32'>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='PipA' operator='DIFFERENCE'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                  	 		axisSamples='9' closed='true' zExtent='0.2' 
+                  	 		radialSamples='32' radius='0.25' textureMode='CAN'>
+                		<faceProperties>
+                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    				face='SIDES' scaleX='3' scaleY='1'/>
+                    		<!-- For DIFFERENCE, we are seeing the inverted Front face from the Back, etc -->
+                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    				face='FRONT_BACK'
+                    				spanX='-0.25' spanY='0.25' originX='-0.375' originY='0.375'/>
+            			</faceProperties>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='0' z='-1.0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='BumpA' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                  	 		axisSamples='9' closed='true' zExtent='0.2' 
+                  	 		radialSamples='32' radius='0.25' textureMode='CAN'>
+                		<faceProperties>
+			           		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+			           				face='SIDES' scaleX='3' scaleY='1'/>
+			           		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+			           				face='FRONT_BACK'
+			           				spanX='0.25' spanY='0.25' originX='0.625' originY='0.625'/>
+            			</faceProperties>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='-0.5' y='0.5' z='-1.0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+			</shapes>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='0'/>
+            </transform>
+         </net.wcomohundro.jme3.csg.CSGGeometry> 
+         
+        <net.wcomohundro.jme3.csg.CSGGeometry name='DieCubeScaled'
+            	materialName='Textures/Debug/NumberedBoxes.xml'>
+            	<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml'-->
+            <shapes>
+            	<net.wcomohundro.jme3.csg.CSGShape name='OuterCube' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGBox'>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='RoundedCorners' operator='INTERSECTION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
+                  			radius='1.675' axisSamples='32' radialSamples='32'>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='PipA' operator='DIFFERENCE'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                  	 		axisSamples='9' closed='true' zExtent='0.2' 
+                  	 		radialSamples='32' radius='0.25' textureMode='CAN'>
+                		<faceProperties>
+                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    				face='SIDES' scaleX='3' scaleY='1'/>
+                    		<!-- For DIFFERENCE, we are seeing the inverted Front face from the Back, etc -->
+                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    				face='FRONT_BACK'
+                    				spanX='-0.25' spanY='0.25' originX='-0.04' originY='0.375'/>
+            			</faceProperties>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='0' z='-1.0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='BumpA' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                  	 		axisSamples='9' closed='true' zExtent='0.2' 
+                  	 		radialSamples='32' radius='0.25' textureMode='CAN'>
+                		<faceProperties>
+			           		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+			           				face='SIDES' scaleX='3' scaleY='1'/>
+			           		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+			           				face='FRONT_BACK'
+			           				spanX='0.25' spanY='0.25' originX='0.625' originY='0.625'/>
+            			</faceProperties>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='-0.5' y='0.5' z='-1.0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+			</shapes>
+       		<faceProperties>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    	faceMask='63' scaleX='1.5' scaleY='1.5'/>
+   			</faceProperties>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-5' y='0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.5' y='1.5' z='1.5'/>
+            </transform>
+         </net.wcomohundro.jme3.csg.CSGGeometry> 
+<?ignore
+        <!-- An Archway at 1.5 in Z, 1.0 in X,Y -->
+        <net.wcomohundro.jme3.csg.CSGGeometry name='OneFiveScaledArchway'
+            	materialName='Textures/Debug/NumberedBoxes.xml'>
+            	<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml'-->
+            <shapes>
+            	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+                  	 		xExtent='0.5' yExtent='0.25' zExtent='0.5'>
+                  	 	<!-- Use the texture origin to match the box pattern to the span 
+                  	         of the arch below -->
+	                	<faceProperties>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+	                    		scaleX='1.0' scaleY='0.5'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
+	                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
+	                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+	                    		scaleX='3.0' scaleY='1.0'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+	                    		materialName='Textures/Rock/Rock1NormalRpt.xml'/>
+	            		</faceProperties>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                  	 		axisSamples='5' closed='true' zExtent='0.5' 
+                  	 		radialSamples='8' radius='0.5' 
+                  	 		firstRadial='0PI' textureMode='CAN'>
+                		<faceProperties>
+                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    				face='SIDES' scaleX='3' scaleY='1'/>
+            			</faceProperties>
+                  	</mesh>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+			</shapes>
+            <faceProperties>
+            	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.0' scaleY='1.0'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1.0' scaleY='1.5'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.0' scaleY='1.5'/>
+        		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.0' scaleY='1.5'/>
+         	</faceProperties>
+         	<!-- Scale it up -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-5' y='0' z='3.0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.0' y='1.0' z='1.5'/>
+            </transform>
+         </net.wcomohundro.jme3.csg.CSGGeometry> 
+         
+        <!-- Another Archway -->
+        <net.wcomohundro.jme3.csg.CSGGeometry name='UnscaledArchway'
+            	materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <shapes>
+            	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+                  	 		xExtent='0.5' yExtent='0.25' zExtent='0.5'>
+                  	 	<!-- Use the texture origin to match the box pattern to the span 
+                  	         of the arch below -->
+	                	<faceProperties>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+	                    		scaleX='1.0' scaleY='0.5'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
+	                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
+	                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+	                    		scaleX='3.0' scaleY='1.0'/>
+	                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+	                    		materialName='Textures/Rock/Rock1NormalRpt.xml'/>
+	            		</faceProperties>
+                  	</mesh>
+                  	<transform class='com.jme3.math.Transform'>
+                      	<translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+                  	</transform>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+            	<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                  	 		axisSamples='5' closed='true' zExtent='0.5' 
+                  	 		radialSamples='8' radius='0.5' 
+                  	 		firstRadial='0PI' textureMode='CAN'>
+                		<faceProperties>
+                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+                    				face='SIDES' scaleX='3' scaleY='1'/>
+            			</faceProperties>
+                  	</mesh>
+              	</net.wcomohundro.jme3.csg.CSGShape>
+			</shapes>
+            <faceProperties>
+            	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.0' scaleY='1.0'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1.0' scaleY='1.0'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.0' scaleY='1.0'/>
+        		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.0' scaleY='1.0'/>
+         	</faceProperties>
+         	<!-- Scale it up -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-5' y='0' z='-3.0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.0' y='1.0' z='1.0'/>
+            </transform>
+        </net.wcomohundro.jme3.csg.CSGGeometry> 
+         
+        <!-- An Interior Archway -->
+        <net.wcomohundro.jme3.csg.CSGGeometry name='InteriorArchway'
+            	materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <shapes>
+              	<net.wcomohundro.jme3.csg.CSGShape name='ExteriorBox'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                  				xExtent='1.2' yExtent='1.2' zExtent='0.8'>
+                    </mesh>
+		    	</net.wcomohundro.jme3.csg.CSGShape>
+             	<net.wcomohundro.jme3.csg.CSGShape name='InteriorArchway' operator='DIFFERENCE'>
+             		<shapes>
+		            	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom'>
+		                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+		                  	 		xExtent='0.5' yExtent='0.25' zExtent='0.5' closed='true'>
+		                  	 	<!-- Use the texture origin to match the box pattern to the span 
+		                  	         of the arch below -->
+			                	<faceProperties>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+			                    		scaleX='1.0' scaleY='0.5'/>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
+			                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
+			                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+			                    		scaleX='3.0' scaleY='1.0'/>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+			                    		materialName='Textures/Rock/Rock1NormalRpt.xml'/>
+			            		</faceProperties>
+		                  	</mesh>
+		                  	<transform class='com.jme3.math.Transform'>
+		                      	<translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+		                  	</transform>
+		              	</net.wcomohundro.jme3.csg.CSGShape>
+		            	<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+		                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+		                  	 		axisSamples='3' closed='true' zExtent='0.5' 
+		                  	 		radialSamples='8' radius='0.5' 
+		                  	 		firstRadial='0PI' textureMode='CAN'>
+		                		<faceProperties>
+		                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+		                    				face='SIDES' scaleX='3' scaleY='1'/>
+		            			</faceProperties>
+		                  	</mesh>
+		              	</net.wcomohundro.jme3.csg.CSGShape>
+		           	</shapes>
+		            <!-- Scale to match the transform below -->
+	                <faceProperties>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+	                    		scaleX='1' scaleY='1'/>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' 
+	                    		scaleX='1' scaleY='1.9'/>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+	                    		scaleX='1' scaleY='1.9'/>
+				        <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' 
+				        		scaleX='1' scaleY='1.9'/>
+	            	</faceProperties>
+	            	<!-- Scale to match the exterior box -->
+                 	<transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='1' y='1' z='1.9'/>
+                    </transform>
+		       </net.wcomohundro.jme3.csg.CSGShape>
+			</shapes>
+         	<!-- Scale it up -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-15' y='0'/>
+                <xscale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
+            </transform>
+         </net.wcomohundro.jme3.csg.CSGGeometry> 
+         
+        <!-- Another Interior Archway -->
+        <net.wcomohundro.jme3.csg.CSGGeometry name='InteriorArchway2'
+            	materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+            <shapes>
+              	<net.wcomohundro.jme3.csg.CSGShape name='ExteriorBox'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                  				xExtent='1.2' yExtent='1.2' zExtent='0.8'>
+                    </mesh>
+		    	</net.wcomohundro.jme3.csg.CSGShape>
+             	<net.wcomohundro.jme3.csg.CSGShape name='InteriorArchway' operator='DIFFERENCE'>
+             		<shapes>
+		            	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom'>
+		                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+		                  	 		xExtent='0.5' yExtent='0.25' zExtent='0.5' closed='true'>
+		                  	 	<!-- Use the texture origin to match the box pattern to the span 
+		                  	         of the arch below -->
+			                	<faceProperties>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+			                    		scaleX='1.0' scaleY='0.5'/>
+	                    	<!-- The RIGHT face must end at 1, since the cylinder will be starting there
+	                    		 at 0.  Likewise, the LEFT face must start at 0.5, since we are matching
+	                    		 half way around the cylinder -->
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
+			                    		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
+			                    		scaleX='3.0' scaleY='1.0' originX='0.5'/>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+			                    		scaleX='3.0' scaleY='1.0'/>
+			                    	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+			                    		materialName='Textures/Rock/Rock1NormalRpt.xml'/>
+			            		</faceProperties>
+		                  	</mesh>
+		                  	<transform class='com.jme3.math.Transform'>
+		                      	<translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+		                  	</transform>
+		              	</net.wcomohundro.jme3.csg.CSGShape>
+		            	<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+		                  	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+		                  	 		axisSamples='3' closed='true' zExtent='0.5' 
+		                  	 		radialSamples='32' radius='0.5' 
+		                  	 		firstRadial='0PI' textureMode='CAN'>
+		                		<faceProperties>
+		                    		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+		                    				face='SIDES' scaleX='3' scaleY='1'/>
+		            			</faceProperties>
+		                  	</mesh>
+		              	</net.wcomohundro.jme3.csg.CSGShape>
+		           	</shapes>
+		            <!-- Scale to match the transform below -->
+	                <faceProperties>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+	                    		scaleX='1' scaleY='1'/>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' 
+	                    		scaleX='1' scaleY='1.9'/>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+	                    		scaleX='1' scaleY='1.9'/>
+				        <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' 
+				        		scaleX='1' scaleY='1.9'/>
+	            	</faceProperties>
+	            	<!-- Scale to match the exterior box -->
+                 	<transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='1' y='1' z='1.9'/>
+                    </transform>
+		       </net.wcomohundro.jme3.csg.CSGShape>
+			</shapes>
+         	<!-- Scale it up -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-15' y='0' z='-6.0'/>
+                <scale class='com.jme3.math.Vector3f' x='1.50' y='1.50' z='3.0'/>
+            </transform>
+            <faceProperties>
+            	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+                   		scaleX='1.5' scaleY='1.5'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' 
+                   		scaleX='1.5' scaleY='3.0'/>
+                <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+                   		scaleX='1.5' scaleY='3.0'/>
+		        <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' 
+		        		scaleX='1.5' scaleY='3.0'/>
+           	</faceProperties>
+            
+         </net.wcomohundro.jme3.csg.CSGGeometry> 
+?>
+	</children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>
