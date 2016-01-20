@@ -3,7 +3,7 @@
 //Models/CSGLoadEnvironmentBSP.xml
 
 Models/CSGDice.xml
-//Models/CSGDebug.xml
+Models/CSGDebug.xml
 
 //Lights/ShadowPointLight.xml
 //Lights/ShadowDirectionalLight.xml

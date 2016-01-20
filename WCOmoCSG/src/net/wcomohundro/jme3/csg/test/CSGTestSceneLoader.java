@@ -86,7 +86,7 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 
 /** Base application that can "load" scenes via the XML asset loader */
 public class CSGTestSceneLoader 
-	extends SimpleApplication 
+	extends CSGTestSceneBase 
 	implements Runnable
 {
 	public static void main(
@@ -107,30 +107,12 @@ public class CSGTestSceneLoader
 	protected List<String>		mSceneList;
 	/** Which scene is currently being viewed */
 	protected int				mSceneIndex;
-	/** Scene loader thread */
-	protected Thread			mLoaderThread;
 	/** Which scene is currently being loaded */
 	protected String			mLoadingScene;
 	/** Background loaded scene */
 	protected Spatial			mLoadedSpatial;
-	protected Spatial			mLastScene;
 	protected String			mNullSceneMsg;
-	/** Spot for a bit of text */
-	protected BitmapText		mTextDisplay;
-	/** String to post */
-	protected Stack<String>		mPostText;
-	protected boolean			mRefreshText;
-	/** Active item for wireframe display */
-	protected Geometry			mWireframe;
-    /** Prepared Physics Environment, using jBullet */
-    protected BulletAppState    mPhysicsState;
-	/** Capture file path */
-	protected String			mCapturePath;
-	/** Video capture */
-	protected AppState			mVideoCapture;
-	/** Image capture */
-	protected AppState			mImageCapture;
-	
+
 
 	/** Args are expected to tell us what to load */
 	public CSGTestSceneLoader(
@@ -152,20 +134,9 @@ public class CSGTestSceneLoader
 	) {
 		super( pInitialStates );
 		
-		mPostText = new Stack();
-		
 		// Initialize the scene list
 		mSceneList = new ArrayList();
 		mNullSceneMsg = "";
-		
-		// Default capture path for video and image
-		mCapturePath = "C:/Temp/JME3/";
-
-		// Start the background thread that loads the scenes
-		mLoaderThread = new Thread( null, this, "SceneLoader" );
-		mLoaderThread.setPriority( Thread.MIN_PRIORITY );
-		mLoaderThread.setDaemon( true );
-		mLoaderThread.start();
 	}
 	
     @Override
@@ -174,35 +145,16 @@ public class CSGTestSceneLoader
     	// Standard init
 	    commonApplicationInit();
 	    
-        // Load the scene, leveraging the XMLImporter
-	    loadScene();
     }
-    /** FOR POSSIBLE SUBCLASS OVERRIDE */
+    /** OVERRIDE: to load the first scene */
+    @Override
     protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
-        cam.setFrustumPerspective( 45f, (float)cam.getWidth() / cam.getHeight(), 0.1f, 250f);
-	    
-	    // Establish the text display
-	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
-	    
-	    // Support Sceen shots
-	    if ( mCapturePath != null ) {
-	    	mImageCapture = new ScreenshotAppState( mCapturePath );
-	    	this.stateManager.attach( mImageCapture );
-	    }
-        // Ready interaction
-        createListeners();
+    	// Do the standard setup
+		super.commonApplicationInit();   	
         
-        // Register the XML handlers
-        File aDir = new File( "./Assets" );
-        if ( aDir.isDirectory() ) {
-        	assetManager.registerLocator( "./Assets", FileLocator.class );
-        }
-        assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );    	
+        // Load the scene, leveraging the XMLImporter
+	    loadScene();
     }
     
     /** Service routine to load the scene */
@@ -231,35 +183,20 @@ public class CSGTestSceneLoader
     }
     
     /** Service routine to activate the interactive listeners */
-    protected ActionListener createListeners(
+    @Override
+    protected void createListeners(
     ) {
+    	super.createListeners();
+    	
         inputManager.addMapping( "nextScene"
         ,   new KeyTrigger( KeyInput.KEY_RETURN ) );
         inputManager.addMapping( "priorScene"
         ,   new KeyTrigger( KeyInput.KEY_BACKSLASH ) );
-        inputManager.addMapping( "video"
-        ,   new KeyTrigger( KeyInput.KEY_R ) );
-        inputManager.addMapping( "pickItem"
-        ,   new MouseButtonTrigger( MouseInput.BUTTON_RIGHT ) );
-        inputManager.addMapping( "wireframe"
-        ,   new MouseButtonTrigger( 3 ) );
-        inputManager.addMapping( "wireframe"
-        ,   new MouseButtonTrigger( 4 ) );
         
-        ActionListener aListener = createActionListener(); 
+        ActionListener aListener = new CSGTestActionListener(); 
         inputManager.addListener( aListener, "nextScene" );
         inputManager.addListener( aListener, "priorScene" );
-        inputManager.addListener( aListener, "pickItem" );
-        inputManager.addListener( aListener, "wireframe" );
-        
-        if ( mCapturePath != null ) {
-        	inputManager.addListener( aListener, "video" );
-        }
-        return( aListener );
     }
-    /** FOR POSSIBLE SUBCLASS OVERRIDE: */
-    protected ActionListener createActionListener() { return new CSGTestActionListener(); }
-    
     /** Inner helper class that processes user input */
     protected class CSGTestActionListener
     	implements ActionListener
@@ -285,54 +222,8 @@ public class CSGTestSceneLoader
                     
                     // And load it
             	    loadScene();
-            	    
-                } else if ( pName.equals( "pickItem" ) ) {
-                	// Report on the click
-                	mPostText.push( resolveSelectedItem() );
-                	mRefreshText = true;
-                	
-                } else if ( pName.equals( "wireframe" ) ) {
-                	// Report on the click
-                	CollisionResult aCollision = resolveSelectedCollision();
-                	if ( aCollision != null ) {
-	                	mWireframe = aCollision.getGeometry();
-	                	mWireframe.getMaterial().getAdditionalRenderState().setWireframe( true );
-	                	
-	                	Triangle aTriangle = aCollision.getTriangle( null );
-	                	StringBuilder aBuffer = new StringBuilder( 128 );
-	                	aBuffer.append( aTriangle.get1() ).append( " / " )
-	                		.append( aTriangle.get2() ).append( " / " )
-	                		.append( aTriangle.get3() );
-	                	mPostText.push( aBuffer.toString() );
-	                	mRefreshText = true;
-                	}
-                } else if ( pName.equals( "video" ) ) {
-                	// Toggle the video capture
-                	if ( mVideoCapture == null ) {
-                    	CSGTestDriver.postText( CSGTestSceneLoader.this, mTextDisplay, "Recording" );
-
-                    	mVideoCapture = new VideoRecorderAppState( new File( mCapturePath + "CSGCapture.mpeg" ));
-                		stateManager.attach( mVideoCapture );
-                	} else {
-                		stateManager.detach( mVideoCapture );
-                		mVideoCapture = null;
-                    	CSGTestDriver.postText( CSGTestSceneLoader.this, mTextDisplay, "Recording Complete" );
-                	}
-                }
+                }  
             } else {
-            	if ( pName.equals( "pickItem" ) ) {
-            		if ( !mPostText.isEmpty() ) mPostText.pop();
-            		mRefreshText = true;
-            		
-            	} else if ( pName.equals( "wireframe" ) ) {
-            		if ( mWireframe != null ) {
-                		mWireframe.getMaterial().getAdditionalRenderState().setWireframe( false );            			
-            			mWireframe = null;
-            			
-                		if ( !mPostText.isEmpty() ) mPostText.pop();
-                		mRefreshText = true;
-            		}
-            	}
             }
         }
     }
@@ -342,11 +233,6 @@ public class CSGTestSceneLoader
     ) {
     	super.update();
     	
-    	if ( mRefreshText ) {
-    		String aMessage = (mPostText.isEmpty()) ? "" : mPostText.peek();
-        	CSGTestDriver.postText( this, mTextDisplay, aMessage );    			
-        	mRefreshText = false;
-    	}
     	if ( mLoadedSpatial != null ) {
     		rootNode.attachChild( mLoadedSpatial );
     		mLastScene = mLoadedSpatial;
@@ -354,44 +240,6 @@ public class CSGTestSceneLoader
     	}
     }
     
-    /** What is the user looking at? */
-    protected String resolveSelectedItem(
-    ) {
-    	String itemName = "...nothiing...";
-    	Geometry picked = resolveSelectedGeometry();
-    	if ( picked != null ) {
-    		itemName = picked.getName();
-    	}
-    	return( itemName );
-    }
-    protected Geometry resolveSelectedGeometry(
-    ) {
-    	CollisionResult aCollision = resolveSelectedCollision();
-    	return( (aCollision == null) ? null : aCollision.getGeometry() );
-    }
-    protected CollisionResult resolveSelectedCollision(
-    ) {
-    	CollisionResults results = new CollisionResults();
-    	
-        // To pick what the camera is directly looking at
-        //Ray aRay = new Ray( cam.getLocation(), cam.getDirection() );
-         
-        // To pick what the mouse is over
-        Vector2f click2d = inputManager.getCursorPosition();
-        Vector3f click3d = cam.getWorldCoordinates( new Vector2f(click2d.x, click2d.y), 0f).clone();
-        Vector3f dir = cam.getWorldCoordinates(new Vector2f(click2d.x, click2d.y), 1f).subtractLocal(click3d).normalizeLocal();
-        Ray aRay = new Ray( click3d, dir );
-        
-        // What all was selected
-        if ( mLastScene != null ) {
-	        mLastScene.collideWith( aRay, results );
-	        if ( results.size() > 0 ) {
-	        	return( results.getClosestCollision() );
-	        }
-        }
-    	return( null );
-    }
-
     /////////////////////// Implement Runnable ////////////////
     public void run(
     ) {

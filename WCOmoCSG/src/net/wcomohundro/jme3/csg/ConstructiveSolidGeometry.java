@@ -52,6 +52,7 @@ import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Constructive solid geometry (CSG) (formerly called computational binary solid geometry) is a 
@@ -168,6 +169,9 @@ public interface ConstructiveSolidGeometry
 	 */
 	public interface CSGElement 
 	{		
+		/** Return the JME aspect of this element */
+		public Spatial asSpatial();
+		
 		/** Is this a valid element */
 		public boolean isValid();	
 		
@@ -252,6 +256,14 @@ public interface ConstructiveSolidGeometry
 		public void removeShape(
 			CSGShape	pShape
 		);
+		
+		/** You can 'defer' all scene update operations if you want to regenerate on a
+		 	background thread and then apply scene changes in the jme update thread.
+		 	If you set the defer control flag to 'true', then you must call 
+		 	applySceneChages() after regenerate(), typically on different threads.
+		 */
+		public void deferSceneChanges( boolean pFlag );
+		public void applySceneChanges();
 	}
 
 	/** Version tracking support 

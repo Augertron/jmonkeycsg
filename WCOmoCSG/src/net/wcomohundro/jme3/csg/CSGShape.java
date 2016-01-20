@@ -368,6 +368,10 @@ public class CSGShape
 		mSurface = CSGShapeSurface.USE_MESH;
 	}
 	
+	/** Return the JME aspect of this element */
+	@Override
+	public Spatial asSpatial() { return this; }
+
 	/** Accessor to the shape surface in use */
 	public CSGShapeSurface getShapeSurface() { return mSurface; }
 	public void setShapeSurface(

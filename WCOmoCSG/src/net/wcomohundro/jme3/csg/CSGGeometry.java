@@ -115,6 +115,9 @@ public class CSGGeometry
 	protected CSGEnvironment			mEnvironment;
 	/** Is this a valid geometry */
 	protected boolean					mIsValid;
+	/** Management of the generated meshes */
+	protected CSGMeshManager			mMeshManager;
+	protected boolean					mDeferSceneChanges;
 	/** How long did it take to regenerate this shape (nanoseconds) */
 	protected long						mRegenNS;
 	/** Control flag for the special 'debug' mode */
@@ -141,6 +144,10 @@ public class CSGGeometry
 		mInstanceKey = CSGShape.assignInstanceKey( "CSGGeometry" );
 	}
 	
+	/** Return the JME aspect of this element */
+	@Override
+	public Spatial asSpatial() { return this; }
+
 	/** Unique keystring identifying this element */
 	@Override
 	public String getInstanceKey(
@@ -248,7 +255,7 @@ public class CSGGeometry
 	
 	/** Remove a shape from this geometry */
 	@Override
-	public void removeAllShapes() { mShapes = null; }
+	public void removeAllShapes() { mShapes = null; mRegenNS = 0; }
 	@Override
 	public void removeShape(
 		CSGShape	pShape
@@ -297,6 +304,26 @@ public class CSGGeometry
 		return( worldBound );
 	}
 	
+	/** Control when the scene changes are applied */
+	@Override
+	public void deferSceneChanges( boolean pFlag ) { mDeferSceneChanges = pFlag; }
+	@Override
+	public synchronized void applySceneChanges(
+	) {
+		applySceneChanges( mMeshManager );
+	}
+	protected void applySceneChanges(
+		CSGMeshManager	pMeshManager
+	) {
+		if ( pMeshManager != null ) {
+			// Apply the scene updates now
+			this.setMesh( pMeshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
+
+			// Any deferred changes are complete now
+			mMeshManager = null;
+		}
+	}
+
 	/** Action to generate the mesh based on the given shapes */
 	@Override
 	public CSGShape regenerate(
@@ -307,8 +334,10 @@ public class CSGGeometry
 	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
 	) {
+		mRegenNS = 0;
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
-			// Time the construction 
+			// Time the construction
+			mRegenNS = -1;						// Flag REGEN in progress
 			long startTimer = System.nanoTime();
 			
 			// The mesh manager does not do much for a single mesh
@@ -376,10 +405,16 @@ public class CSGGeometry
 					// The meshManager will retain the generated meshes and can provide
 					// any given mesh based on its index.  For a singleton, we want the master.
 					aProduct.toMesh( meshManager, false, tempVars, pEnvironment );
-					this.setMesh( meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
 
 					// Return the final shape if we have a valid product
 					if ( mIsValid = aProduct.isValid() ) {
+						if ( mDeferSceneChanges ) synchronized( this ) {
+							// Update the scene later
+							mMeshManager = meshManager;
+						} else {
+							// Update the scene NOW
+							applySceneChanges( meshManager );
+						}
 						return( aProduct );
 					}
 				} else {

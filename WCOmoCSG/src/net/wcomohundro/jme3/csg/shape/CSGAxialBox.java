@@ -493,49 +493,56 @@ public class CSGAxialBox
         FloatBuffer aBuffer = (FloatBuffer)tc.getData();
         aBuffer.clear();
         
-        // Check every face, in the order written into the buffers
-        int index = 0;
-        for( Face aFace : sFaces ) {
-    		// Each face is defined by 4 x/y points
-        	if ( aFace.maskIncludesFace( mGeneratedFacesMask ) ) {
-        		// This face exists in the buffer
-        		if ( aFace.maskIncludesFace( pFaceMask ) ) {
-        			// Look for special 'terminus' processing
-        			float biasX = 0, biasY = 0;
-        			Vector2f textureTerminus = this.matchFaceTerminus( aFace.getMask() );
-        			if ( textureTerminus != null ) {
-        				// If the texture was positioned based on its terminus rather than
-        				// its origin, then a bias must be introduced to keep the terminus
-        				// point constant after scaling.  Therefore:
-        				//		(terminus * scale) - bias = terminus
-        				//		bias = (terminus * scale) - terminus
-        				// and each point is determined by
-        				//		newPoint = (oldPoint * scale) - bias
-            			// Reset the texture origin as specified
-            			if ( !Float.isNaN( textureTerminus.x ) ) {
-            				biasX = (textureTerminus.x * pScaleTexture.x) - textureTerminus.x;
-            			}
-            			if ( !Float.isNaN( textureTerminus.y ) ) {
-            				biasY = (textureTerminus.y * pScaleTexture.y) - textureTerminus.y;
-            			}
-        			}
-        			// This face must be scaled, touch all four vertices
-            		for( int i = 0; i < 4; i += 1 ) {
-            			float x = aBuffer.get( index  );
-            			float y = aBuffer.get( index + 1 );
-
-                        x *= pScaleTexture.x;
-                        x -= biasX;
-                        
-                        y *= pScaleTexture.y;
-                        y -= biasY;
-                        aBuffer.put( index++, x ).put( index++, y);
-            		}
-        		} else {
-        			// Skip this face
-        			index += 8;
-        		}
-        	}
+        CSGTempVars vars = CSGTempVars.get();
+//        Vector2f textureOrigin = vars.vect2d1;
+//        Vector2f textureSpan = vars.vect2d2;
+        try {
+	        // Check every face, in the order written into the buffers
+	        int index = 0;
+	        for( Face aFace : sFaces ) {
+	    		// Each face is defined by 4 x/y points
+	        	if ( aFace.maskIncludesFace( mGeneratedFacesMask ) ) {
+	        		// This face exists in the buffer
+	        		if ( aFace.maskIncludesFace( pFaceMask ) ) {
+	        			// Look for special 'terminus' processing
+	        			float biasX = 0, biasY = 0;	
+	        			Vector2f textureTerminus = this.matchFaceTerminus( aFace.getMask() );
+	        			if ( textureTerminus != null ) {
+	        				// If the texture was positioned based on its terminus rather than
+	        				// its origin, then a bias must be introduced to keep the terminus
+	        				// point constant after scaling.  Therefore:
+	        				//		(terminus * scale) - bias = terminus
+	        				//		bias = (terminus * scale) - terminus
+	        				// and each point is determined by
+	        				//		newPoint = (oldPoint * scale) - bias
+	            			// Reset the texture origin as specified
+	            			if ( !Float.isNaN( textureTerminus.x ) ) {
+	            				biasX = (textureTerminus.x * pScaleTexture.x) - textureTerminus.x;
+	            			}
+	            			if ( !Float.isNaN( textureTerminus.y ) ) {
+	            				biasY = (textureTerminus.y * pScaleTexture.y) - textureTerminus.y;
+	            			}
+	        			}
+	        			// This face must be scaled, touch all four vertices
+	            		for( int i = 0; i < 4; i += 1 ) {
+	            			float x = aBuffer.get( index  );
+	            			float y = aBuffer.get( index + 1 );
+	
+	                        x *= pScaleTexture.x;
+	                        x -= biasX;
+	                        
+	                        y *= pScaleTexture.y;
+	                        y -= biasY;
+	                        aBuffer.put( index++, x ).put( index++, y);
+	            		}
+	        		} else {
+	        			// Skip this face
+	        			index += 8;
+	        		}
+	        	}
+	        }
+        } finally {
+        	vars.release();
         }
     	aBuffer.clear();
         tc.updateData( aBuffer );

@@ -107,6 +107,9 @@ public class CSGGeonode
 	protected List<CSGShape>	mShapes;
 	/** Geometry has a variable for LOD level, but Spatial does not */
 	protected int				mLODLevel;
+	/** Management of the generated meshes */
+	protected CSGMeshManager	mMeshManager;
+	protected boolean			mDeferSceneChanges;
 
 	
 	/** Basic null constructor */
@@ -127,6 +130,8 @@ public class CSGGeonode
 	/** Access to the MasterGeometry that defines the overall shape */
 	public Geometry getMasterGeometry() { return mMasterGeometry; }
 	
+	/** Access to the single material control */
+	public void forceSingleMaterial( boolean pFlag ) { mForceSingleMaterial = pFlag; }
 	
     /** If physics is active for the shape, connect it all up now */
     @Override
@@ -189,7 +194,7 @@ public class CSGGeonode
 	
 	/** Remove a shape from this geometry */
 	@Override
-	public void removeAllShapes() { mShapes = null; };
+	public void removeAllShapes() { mShapes = null; mRegenNS = 0; };
 	@Override
 	public void removeShape(
 		CSGShape	pShape
@@ -208,14 +213,47 @@ public class CSGGeonode
     ) {
     	mLODLevel = pLODLevel;
     }
-    
+
+	/** Control when the scene changes are applied */
+	@Override
+	public void deferSceneChanges( boolean pFlag ) { mDeferSceneChanges = pFlag; }
+	@Override
+	public synchronized void applySceneChanges(
+	) {
+		applySceneChanges( mMeshManager );
+	}
+	protected void applySceneChanges(
+		CSGMeshManager	pMeshManager
+	) {
+		if ( pMeshManager != null ) {
+			// Apply the scene updates now
+			this.detachAllChildren();		// Start with a fresh list of children
+			
+			if ( pMeshManager.getMeshCount() == 0 ) {
+				// Singleton element, where the master becomes our only child
+				this.attachChild( mMasterGeometry );
+				
+			} else {
+				// Multiple elements
+				// 	NOTE that we only attach the independent child meshes, not the master itself
+				for( Spatial aSpatial : pMeshManager.getSpatials( this.getName(), mLightControl ) ) {
+					this.attachChild( aSpatial );
+				}
+			}
+			// Any deferred changes are complete now
+			mMeshManager = null;
+		}
+	}
+
 	/** Action to generate the mesh based on the given shapes */
 	@Override
 	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
 	) {
+		mRegenNS = 0;
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction operation
+			mRegenNS = -1;
 			long startTimer = System.nanoTime();
 			
 			// Prepare for custom materials
@@ -291,19 +329,15 @@ public class CSGGeonode
 						= new CSGGeometry( this.getName(), meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
 					mMasterGeometry.setMaterial( mMaterial.clone() );
 					
-					if ( meshManager.getMeshCount() == 0 ) {
-						// Singleton element, where the master becomes our only child
-						this.attachChild( mMasterGeometry );
-						
-					} else {
-						// Multiple elements
-						// 	NOTE that we only attach the independent child meshes, not the master itself
-						for( Spatial aSpatial : meshManager.getSpatials( this.getName(), mLightControl ) ) {
-							this.attachChild( aSpatial );
-						}
-					}
 					// Return the product if it is valid
 					if ( mIsValid = aProduct.isValid() ) {
+						if ( mDeferSceneChanges ) synchronized( this ) {
+							// Update the scene later
+							mMeshManager = meshManager;
+						} else {
+							// Update the scene NOW
+							applySceneChanges( meshManager );
+						}
 						return( aProduct );
 					}
 				} else {

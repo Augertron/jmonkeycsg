@@ -84,6 +84,13 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 public class CSGTestE 
 	extends CSGTestSceneLoader 
 {
+	public static void main(
+		String[] 	pArgs
+	) {
+	    SimpleApplication app = new CSGTestE( pArgs );		    
+	    app.start();
+	}
+
 	/** Default list of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
 

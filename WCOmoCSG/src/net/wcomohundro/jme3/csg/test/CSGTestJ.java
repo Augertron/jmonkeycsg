@@ -50,7 +50,7 @@ import net.wcomohundro.jme3.csg.shape.*;
  		Run dynamic animation
  */
 public class CSGTestJ 
-	extends SimpleApplication 
+	extends CSGTestSceneBase
 {
 	public static void main(
 		String[] 	pArgs
@@ -63,10 +63,7 @@ public class CSGTestJ
 	protected int			mUpdateCounter;
 	protected CSGShape		mShape1, mShape2;
 	protected CSGGeometry 	mCSGBlend;
-	/** Video capture */
-	protected AppState		mVideo;
 
-	
 	public CSGTestJ(
 	) {
 		//super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
@@ -74,15 +71,10 @@ public class CSGTestJ
 	}
 	
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
-        /** Ready interaction */
-        createListeners();
-	    
+		super.commonApplicationInit();    
+		
 	    Mesh mesh1 = new Box( 1, 1, 1 );
 	    //Mesh mesh2 = new Box( 0.5f, 2f, 0.5f );
 	    //Mesh mesh2 = new CSGCylinder( 32, 32, 0.5f, 1.5f );
@@ -103,6 +95,9 @@ public class CSGTestJ
 	    mCSGBlend.addShape( mShape1 );
 	    mCSGBlend.intersectShape( mShape2 );
 	    mCSGBlend.regenerate();
+	    
+	    // Make the blend clickable
+	    mLastScene = mCSGBlend;
     }
 
     protected CSGShape attachShape( 
@@ -136,37 +131,6 @@ public class CSGTestJ
             mCSGBlend.regenerate();
             mUpdateCounter = 0;
         }
-    }
-    
-    /** Service routine to activate the interactive listeners */
-    protected void createListeners(
-    ) {
-    	final SimpleApplication thisApp = this;
-    	
-        inputManager.addMapping( "video"
-        ,   new KeyTrigger( KeyInput.KEY_R ) );
-        
-        ActionListener aListener = new ActionListener() {
-            public void onAction(
-                String      pName
-            ,   boolean     pKeyPressed
-            ,   float       pTimePerFrame
-            ) {
-                if ( pKeyPressed ) {
-                    if ( pName.equals( "video" ) ) {
-                    	// Toggle the video capture
-                    	if ( mVideo == null ) {
-                    		mVideo = new VideoRecorderAppState( new File( "C:/Temp/JME3/CSGTestJ.mpeg" ));
-                    		stateManager.attach( mVideo );
-                    	} else {
-                    		stateManager.detach( mVideo );
-                    		mVideo = null;
-                    	}
-                    }
-                }
-            }
-        };  
-        inputManager.addListener( aListener, "video" );
     }
 
 }

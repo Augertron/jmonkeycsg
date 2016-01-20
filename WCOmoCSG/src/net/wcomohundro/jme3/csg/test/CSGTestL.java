@@ -33,27 +33,42 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.app.state.AppState;
 import com.jme3.app.state.VideoRecorderAppState;
+import com.jme3.asset.NonCachingKey;
 import com.jme3.font.BitmapText;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.Light;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.post.Filter;
+import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.SceneProcessor;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.shadow.DirectionalLightShadowRenderer;
+import com.jme3.shadow.PointLightShadowFilter;
+import com.jme3.shadow.PointLightShadowRenderer;
 
+import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGGeometry;
+import net.wcomohundro.jme3.csg.CSGGeonode;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.CSGVersion;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 import net.wcomohundro.jme3.csg.shape.*;
 
 /** Simple test of the CSG support 
- 		Run progressive animation
+ 		Run progressive regeneration
  */
 public class CSGTestL 
-	extends SimpleApplication 
+	extends CSGTestSceneBase
+	implements Runnable
 {
 	public static void main(
 		String[] 	pArgs
@@ -65,13 +80,10 @@ public class CSGTestL
 	/** Dynamic shapes */
 	protected int			mUpdateCounter;
 	protected CSGShape		mShape1, mShape2, mShapePrior;
-	protected CSGGeometry 	mCSGBlend;
-	/** Spot for a bit of text */
-	protected BitmapText	mTextDisplay;
-	/** Video capture */
-	protected AppState		mVideo;
+	protected CSGSpatial 	mCSGBlend;
+	/** Flag controlling the rebuilding process */
+	protected boolean		mActionActive;
 
-	
 	public CSGTestL(
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
@@ -79,18 +91,12 @@ public class CSGTestL
 	}
 	
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
-	    // Establish the text display
-	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
-    	CSGTestDriver.postText( this, mTextDisplay, "<SPC> to add a cylinder" );
-
-	    /** Ready interaction */
-        createListeners();     
+		super.commonApplicationInit();    
+		
+		this.mPostText.push( "<SPC> to add a cylinder, QWASDZ to move, <ESC> to exit" );
+		this.mRefreshText = true;
 
 	    Mesh mesh1 = new Box( 1, 1, 1 );
 	    mShape1 = new CSGShape( "ABox", mesh1 );
@@ -99,32 +105,46 @@ public class CSGTestL
 	    //Mesh mesh2 = new CSGCylinder( 32, 32, 0.5f, 1.5f );
 	    Mesh mesh2 = new CSGCylinder( 16, 16, 0.5f, 1.5f );
 	    mShape2 = new CSGShape( "ACylinder", mesh2 );
-	    
-	    mCSGBlend = new CSGGeometry( "ABlend" );
-	    mCSGBlend.setMaterial( new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" ) );
-	    rootNode.attachChild( mCSGBlend );
+	    if ( true ) {
+	    	Material mat1 = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
+	    	mat1.setColor( "Color", ColorRGBA.Yellow );
+	    	mShape2.setMaterial( mat1 );
+	    }
+	    mCSGBlend = new CSGGeonode( "ABlend" ); // new CSGGeometry( "ABlend" );
+	    mCSGBlend.setDefaultMaterial( new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" ) );
+	    ((CSGGeonode)mCSGBlend).forceSingleMaterial( true );
+	    rootNode.attachChild( mCSGBlend.asSpatial() );
 	    
 	    mCSGBlend.addShape( mShape1 );
 	    mShapePrior = mCSGBlend.regenerate();
+	    
+	    // The blend is the scene, and we will regenerating on a background thread
+	    mCSGBlend.deferSceneChanges( true );
+	    mLastScene = mCSGBlend.asSpatial();
     }
 
     @Override
     public void simpleUpdate(
     	float tpf
     ) {
+    	super.simpleUpdate( tpf );
+    	
     	mUpdateCounter += 1;
         if ( mUpdateCounter == 10 ) {
         	mShape2.rotate( tpf, tpf, tpf );
             mUpdateCounter = 0;
         }
+        // Apply any deferred changes now
+        mCSGBlend.applySceneChanges();
     }
     
     /** Service routine to activate the interactive listeners */
+    @Override
     protected void createListeners(
     ) {
-    	final SimpleApplication thisApp = this;
+    	super.createListeners();
     	
-        inputManager.addMapping( "video", new KeyTrigger( KeyInput.KEY_R ) );
+    	final SimpleApplication thisApp = this;
         inputManager.addMapping( "blend", new KeyTrigger( KeyInput.KEY_SPACE ) );
         
         ActionListener aListener = new ActionListener() {
@@ -134,28 +154,50 @@ public class CSGTestL
             ,   float       pTimePerFrame
             ) {
                 if ( pKeyPressed ) {
-                    if ( pName.equals( "video" ) ) {
-                    	// Toggle the video capture
-                    	if ( mVideo == null ) {
-                    		mVideo = new VideoRecorderAppState( new File( "C:/Temp/JME3/CSGTestJ.mpeg" ));
-                    		stateManager.attach( mVideo );
-                    	} else {
-                    		stateManager.detach( mVideo );
-                    		mVideo = null;
-                    	}
-                    } else if ( pName.equals( "blend" ) ) {
-                    	// Blend another shape into the prior result
-                    	mCSGBlend.removeAllShapes();
-                    	mCSGBlend.addShape( mShapePrior );
-                    	
-                    	mCSGBlend.addShape( mShape2 );
-                	    mShapePrior = mCSGBlend.regenerate();
+                    if ( pName.equals( "blend" ) ) {
+                	    addCylinder();
                     }
                 }
             }
         };  
-        inputManager.addListener( aListener, "video" );
         inputManager.addListener( aListener, "blend" );
+    }
+    
+    /** Service routine to add another cylinder */
+    protected void addCylinder(
+    ) {
+        // Confirm we are NOT in the middle of a regen
+    	if ( !mActionActive ) synchronized( this ) {
+    		mActionActive = true;
+    		CSGTestDriver.postText( this, mTextDisplay, "** Rebuilding Shape" );
+    		this.notifyAll();
+    	}
+    }
+
+    /////////////////////// Implement Runnable ////////////////
+    public void run(
+    ) {
+    	boolean isActive = true;
+    	while( isActive ) {
+    		synchronized( this ) {
+	    		if ( !mActionActive ) try {
+	    			this.wait();
+	    		} catch( InterruptedException ex ) {
+	    			isActive = false;
+	    			break;
+	    		}
+    		}
+        	// Blend another shape into the prior result
+        	mCSGBlend.removeAllShapes();
+        	mCSGBlend.addShape( mShapePrior );
+        	
+        	mCSGBlend.addShape( mShape2 );
+    	    mShapePrior = mCSGBlend.regenerate();
+    	    
+    	    mPostText.push( "Rebuilt in " + (mCSGBlend.getShapeRegenerationNS() / 1000000) + "ms" );
+    		mRefreshText = true;
+    		mActionActive = false;
+    	}
     }
 
 }

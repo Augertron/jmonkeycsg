@@ -123,6 +123,10 @@ public class CSGNode
 		super( pName );
 	}
 	
+	/** Return the JME aspect of this element */
+	@Override
+	public Spatial asSpatial() { return this; }
+
 	/** Is this a valid geometry */
 	@Override
 	public boolean isValid() { return mIsValid; }
@@ -253,6 +257,9 @@ public class CSGNode
 	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
 	) {
+		mRegenNS = -1;
+		long totalNS = 0;
+
 		// Operate on all CSG elements defined within this node, returning the last
 		// NOTE that we only detect first level children -- but you can always nest by
 		//		using deeper levels of this class.
@@ -264,7 +271,7 @@ public class CSGNode
 				CSGElement csgSpatial = (CSGElement)aSpatial;
 				CSGShape aShape = csgSpatial.regenerate( pEnvironment );
 				
-				mRegenNS += csgSpatial.getShapeRegenerationNS();
+				totalNS += csgSpatial.getShapeRegenerationNS();
 				if ( csgSpatial.isValid() ) {
 					// Remember the last valid shape
 					lastValidShape = aShape;
@@ -274,6 +281,7 @@ public class CSGNode
 				}
 			}
 		}
+		mRegenNS = totalNS;
 		return( lastValidShape );
 	}
 	

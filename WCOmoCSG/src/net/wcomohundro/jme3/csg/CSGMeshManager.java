@@ -273,6 +273,11 @@ public class CSGMeshManager
 		AssetKey materialKey = null;
 		if ( (pMaterial != null) && !mForceSingleMaterial ) {
 			materialKey = pMaterial.getKey();
+			if ( materialKey == null ) {
+				// We have a special material without a particular loader name,
+				// and we need something unique
+				materialKey = new AssetKey( CSGShape.assignInstanceKey( "Material" ) );
+			}
 		}
 		StringBuilder aBuffer = new StringBuilder( 128 );
 		if ( pLightListKey != null ) {
