@@ -310,18 +310,19 @@ public class CSGGeometry
 	@Override
 	public synchronized void applySceneChanges(
 	) {
-		applySceneChanges( mMeshManager );
+		if ( mMeshManager != null ) {
+			// Apply the previously generated changes
+			applySceneChanges( mMeshManager );
+			
+			// Any deferred changes are complete now
+			mMeshManager = null;
+		}
 	}
 	protected void applySceneChanges(
 		CSGMeshManager	pMeshManager
 	) {
-		if ( pMeshManager != null ) {
-			// Apply the scene updates now
-			this.setMesh( pMeshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
-
-			// Any deferred changes are complete now
-			mMeshManager = null;
-		}
+		// Apply the scene updates now
+		this.setMesh( pMeshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
 	}
 
 	/** Action to generate the mesh based on the given shapes */

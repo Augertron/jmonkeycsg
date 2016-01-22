@@ -220,30 +220,32 @@ public class CSGGeonode
 	@Override
 	public synchronized void applySceneChanges(
 	) {
-		applySceneChanges( mMeshManager );
+		if ( mMeshManager != null ) {
+			// Apply the previously generated changes
+			applySceneChanges( mMeshManager );
+			
+			// Any deferred changes are complete now
+			mMeshManager = null;
+		}
 	}
 	protected void applySceneChanges(
 		CSGMeshManager	pMeshManager
 	) {
-		if ( pMeshManager != null ) {
-			// Apply the scene updates now
-			this.detachAllChildren();		// Start with a fresh list of children
+		// Apply the scene updates now
+		this.detachAllChildren();		// Start with a fresh list of children
+		
+		if ( pMeshManager.getMeshCount() == 0 ) {
+			// Singleton element, where the master becomes our only child
+			this.attachChild( mMasterGeometry );
 			
-			if ( pMeshManager.getMeshCount() == 0 ) {
-				// Singleton element, where the master becomes our only child
-				this.attachChild( mMasterGeometry );
-				
-			} else {
-				// Multiple elements
-				for( Spatial aSpatial : pMeshManager.getSpatials( this.getName(), mLightControl ) ) {
-					this.attachChild( aSpatial );
-				}
-				// NOTE that we only attach the independent child meshes, not the master itself
-				//	This means we could have positioning issues if the CSGGeonode moves and we 
-				//	then use mMasterGeometry for other processing, like collision detection
+		} else {
+			// Multiple elements
+			for( Spatial aSpatial : pMeshManager.getSpatials( this.getName(), mLightControl ) ) {
+				this.attachChild( aSpatial );
 			}
-			// Any deferred changes are complete now
-			mMeshManager = null;
+			// NOTE that we only attach the independent child meshes, not the master itself
+			//	This means we could have positioning issues if the CSGGeonode moves and we 
+			//	then use mMasterGeometry for other processing, like collision detection
 		}
 	}
 
