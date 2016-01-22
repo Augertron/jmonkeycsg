@@ -41,6 +41,7 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.Light;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.post.Filter;
 import com.jme3.post.FilterPostProcessor;
@@ -82,7 +83,7 @@ public class CSGTestL
 	protected CSGShape		mShape1, mShape2, mShapePrior;
 	protected CSGSpatial 	mCSGBlend;
 	/** Flag controlling the rebuilding process */
-	protected boolean		mActionActive;
+	protected int			mAction;
 
 	public CSGTestL(
 	) {
@@ -109,7 +110,7 @@ public class CSGTestL
 	    mat1.setColor( "Color", ColorRGBA.Yellow );
 	    mShape2.setMaterial( mat1 );
 
-	    if ( true ) {
+	    if ( false ) {
 	    	// Exercise multiple materials
 	    	mCSGBlend = new CSGGeonode( "ABlend" ); 
 		    ((CSGGeonode)mCSGBlend).forceSingleMaterial( false );
@@ -136,8 +137,18 @@ public class CSGTestL
     	
     	mUpdateCounter += 1;
         if ( mUpdateCounter == 10 ) {
-        	mShape2.rotate( tpf, tpf, tpf );
-            mUpdateCounter = 0;
+        	if ( mCSGBlend.getShapeRegenerationNS() >= 0 ) synchronized( mShape2 ) {
+	        	// NOTE NOTE NOTE
+	        	//	when I applied the rotation to mShape2 without being synchronized with the
+	        	//	background regeneration() call, holes were left in the solid.  I am thinking
+	        	// 	that some of the faces were built with one set of transform values and others
+	        	//	were built with a different transform, which left a gap in the cylinder itself.
+        		//  But we do NOT want to synchronize if the regeneration is in progress, since that
+        		// 	will block the user interaction.  Negative getShapeRegenerationNS() means
+        		//	that regeneration is active.
+	        	mShape2.rotate( tpf, tpf, tpf );
+        	}
+	        mUpdateCounter = 0;
         }
         // Apply any deferred changes now
         mCSGBlend.applySceneChanges();
@@ -150,7 +161,8 @@ public class CSGTestL
     	super.createListeners();
     	
     	final SimpleApplication thisApp = this;
-        inputManager.addMapping( "blend", new KeyTrigger( KeyInput.KEY_SPACE ) );
+        inputManager.addMapping( "union", new KeyTrigger( KeyInput.KEY_SPACE ) );
+        inputManager.addMapping( "difference", new KeyTrigger( KeyInput.KEY_BACK ) );
         
         ActionListener aListener = new ActionListener() {
             public void onAction(
@@ -159,21 +171,25 @@ public class CSGTestL
             ,   float       pTimePerFrame
             ) {
                 if ( pKeyPressed ) {
-                    if ( pName.equals( "blend" ) ) {
-                	    addCylinder();
+                    if ( pName.equals( "union" ) ) {
+                	    blendCylinder( 1 );
+                    } else if ( pName.equals( "difference" ) ) {
+                    	blendCylinder( -1 );
                     }
                 }
             }
         };  
-        inputManager.addListener( aListener, "blend" );
+        inputManager.addListener( aListener, "union" );
+        inputManager.addListener( aListener, "difference" );
     }
     
-    /** Service routine to add another cylinder */
-    protected void addCylinder(
+    /** Service routine to blend another cylinder */
+    protected void blendCylinder(
+    	int		pAction
     ) {
         // Confirm we are NOT in the middle of a regen
-    	if ( !mActionActive ) synchronized( this ) {
-    		mActionActive = true;
+    	if ( mAction == 0 ) synchronized( this ) {
+    		mAction = pAction;
     		CSGTestDriver.postText( this, mTextDisplay, "** Rebuilding Shape" );
     		this.notifyAll();
     	}
@@ -185,7 +201,7 @@ public class CSGTestL
     	boolean isActive = true;
     	while( isActive ) {
     		synchronized( this ) {
-	    		if ( !mActionActive ) try {
+	    		if ( mAction == 0 ) try {
 	    			this.wait();
 	    		} catch( InterruptedException ex ) {
 	    			isActive = false;
@@ -196,12 +212,22 @@ public class CSGTestL
         	mCSGBlend.removeAllShapes();
         	mCSGBlend.addShape( mShapePrior );
         	
-        	mCSGBlend.addShape( mShape2 );
-    	    mShapePrior = mCSGBlend.regenerate();
-    	    
+    	    Quaternion aRotation = mShape2.getLocalRotation();
+//    	    aRotation = new Quaternion( 0.3172266f, 0.3172328f, 0.31623194f, 0.83590096f );
+//    	    mShape2.rotate( aRotation );
+    	    if ( mAction > 0 ) {
+    	    	mCSGBlend.addShape( mShape2 );
+    	    } else if ( mAction < 0 ) {
+    	    	mCSGBlend.subtractShape( mShape2 );
+    	    }
+        	synchronized( mShape2 ) {
+        		mShapePrior = mCSGBlend.regenerate();
+        	}
+    	    //mPostText.push( "Rotation: " + aRotation );
     	    mPostText.push( "Rebuilt in " + (mCSGBlend.getShapeRegenerationNS() / 1000000) + "ms" );
+    	    
     		mRefreshText = true;
-    		mActionActive = false;
+    		mAction = 0;
     	}
     }
 

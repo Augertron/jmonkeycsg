@@ -219,7 +219,8 @@ public interface ConstructiveSolidGeometry
 		public CSGShape regenerate(
 			CSGEnvironment		pEnvironment
 		);
-		/** How long did it take to build this shape */
+		/** How long did it take to build the last shape 
+		 		NOTE that a negative value means that regeneration is actively processing  */
 		public long getShapeRegenerationNS();
 	}
 	
