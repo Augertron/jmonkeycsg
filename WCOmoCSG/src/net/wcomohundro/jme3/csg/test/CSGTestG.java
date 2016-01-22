@@ -26,6 +26,7 @@ package net.wcomohundro.jme3.csg.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.FlyCamAppState;
@@ -71,8 +72,15 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 
 /** Zap the LevelOfDetail */
 public class CSGTestG 
-	extends SimpleApplication 
+	extends CSGTestSceneLoader 
 {
+	public static void main(
+		String[] 	pArgs
+	) {
+	    SimpleApplication app = new CSGTestG();		    
+	    app.start();
+	}
+
 	/** List of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
 		null
@@ -80,39 +88,14 @@ public class CSGTestG
 	,	"Models/CSGLoadLOD.xml"
 
 	};
-	
-	/** Which scene is currently being viewed */
-	protected int				mSceneIndex;
-	/** Spot for a bit of text */
-	protected BitmapText		mTextDisplay;
 
 	public CSGTestG(
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		mSceneList = Arrays.asList( sSceneList );
+		mNullSceneMsg = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> for LOD, <ESC> to exit";
 	}
-    @Override
-    public void simpleInitApp(
-    ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
-	    // Establish the text display
-	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
-
-       /** Ready interaction */
-        createListeners();
-        
-        /** Load the scene, leveraging the XMLImporter */
-        assetManager.registerLocator( "./Assets", FileLocator.class );
-        assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
-	    
-	    Spatial aScene = loadScene();
-	    if ( aScene != null ) {
-	    	rootNode.attachChild( aScene );
-	    }
-    }
-    
+	   
     /** Handle update customizations */
     @Override
     public void simpleUpdate(
@@ -125,25 +108,6 @@ public class CSGTestG
     public void simpleRender(
         RenderManager   pRenderManager
     ) {
-    }
-
-    /** Service routine to load the scene */
-    protected Spatial loadScene(
-    ) {
-    	// For now, rely on a FilterKey which does not support caching
-    	Object aNode = null;
-    	String sceneName = sSceneList[ mSceneIndex ];
-    	if ( sceneName != null ) try {
-    		// For testing, suppress any caching
-	    	NonCachingKey aKey = new NonCachingKey( sceneName );
-	    	aNode = assetManager.loadAsset( aKey );
-    	} catch( Exception ex ) {
-    		sceneName += " ***Load Scene Failed: " + ex;
-		} else {
-			sceneName = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> for LOD, <ESC> to exit";
-		}
-    	CSGTestDriver.postText( this, mTextDisplay, sceneName );
-    	return( (aNode instanceof Spatial) ? (Spatial)aNode : null );
     }
     
     /** Service routine to adjust the level of detail */
@@ -167,10 +131,10 @@ public class CSGTestG
     }
     
     /** Service routine to activate the interactive listeners */
+    @Override
     protected void createListeners(
     ) {
-        inputManager.addMapping( "nextScene"
-        ,   new KeyTrigger( KeyInput.KEY_RETURN ) );
+    	super.createListeners();
         
         inputManager.addMapping( "lod"
         ,   new KeyTrigger( KeyInput.KEY_SPACE ) );
@@ -182,26 +146,12 @@ public class CSGTestG
             ,   float       pTimePerFrame
             ) {
                 if ( pKeyPressed ) {
-                    if ( pName.equals( "nextScene" ) ) {
-                        // Remove the old scene
-                        rootNode.detachAllChildren();
-                        
-                        // Select next scene
-                        mSceneIndex += 1;
-                        if ( mSceneIndex >= sSceneList.length ) mSceneIndex = 0;
-                        
-                        // And load it
-                	    Spatial aScene = loadScene();
-                	    if ( aScene != null ) {
-                	    	rootNode.attachChild( aScene );
-                	    }
-                    } else if ( pName.equals( "lod" ) ) {
+                    if ( pName.equals( "lod" ) ) {
                     	adjustLOD( rootNode );
                     }
                 }
             }
         };  
-        inputManager.addListener( aListener, "nextScene" );
         inputManager.addListener( aListener, "lod" );
     }
 

@@ -35,7 +35,10 @@ import net.wcomohundro.jme3.csg.shape.CSGBox;
 import net.wcomohundro.jme3.csg.shape.CSGCylinder;
 import net.wcomohundro.jme3.csg.shape.CSGSkyDome;
 
+import com.jme3.app.DebugKeysAppState;
+import com.jme3.app.FlyCamAppState;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.StatsAppState;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.TestFunction;
 import com.jme3.math.ColorRGBA;
@@ -56,8 +59,15 @@ import com.jme3.util.TangentBinormalGenerator;
  		Blend with a 2D surface rather than a 3D solid
  */
 public class CSGTestK 
-	extends SimpleApplication 
+	extends CSGTestSceneBase 
 {
+	public static void main(
+		String[] 	pArgs
+	) {
+	    SimpleApplication app = new CSGTestK();		    
+	    app.start();
+	}
+
 	protected static Vector4f[][] sControlPoints = {
 		{ new Vector4f( -10, 0, -10, 1 ), new Vector4f( 0, 0, -10, 1 ), new Vector4f( 10, 0, -10, 1 ) }	
 	,	{ new Vector4f( -10, 0,   0, 1 ), new Vector4f( 0, 0,   0, 1 ), new Vector4f( 10, 0,   0, 1 ) }	
@@ -68,21 +78,21 @@ public class CSGTestK
 	,	{ 1, 1, 1 }
 	};
 	
-	public static void main(
-		String[] 	pArgs
+
+	public CSGTestK(
 	) {
-	    SimpleApplication app = new CSGTestK();		    
-	    app.start();
+		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		//super( new FlyCamAppState() );
 	}
 
-
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
+		super.commonApplicationInit();    
+		
+		this.mPostText.push( "QWASDZ to move, <ESC> to exit" );
+		this.mRefreshText = true;
+
     	CSGGeometry aGeometry = new CSGGeometry( "AScene" );
         Material aMaterial = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
         aMaterial.getAdditionalRenderState().setWireframe( true );

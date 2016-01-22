@@ -55,7 +55,7 @@ import net.wcomohundro.jme3.csg.shape.CSGCylinder;
  		Blend together cubes and cylinders
  */
 public class CSGTestB 
-	extends SimpleApplication 
+	extends CSGTestSceneBase 
 {
 	public static void main(
 		String[] 	pArgs
@@ -67,15 +67,24 @@ public class CSGTestB
 	/** Simple unique name **/
 	protected int	mShapeCounter;
 
+	public CSGTestB(
+	) {
+		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		//super( new FlyCamAppState() );
+	}
+
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
+		super.commonApplicationInit();    
+		
+		this.mPostText.push( "QWASDZ to move, <ESC> to exit" );
+		this.mRefreshText = true;
 	    
 	    // Long cylinder that pokes out of the cube
-    	Spatial aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
+    	Spatial aGeometry;
+
+    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
     	aGeometry.move( -3f, 0, 0f );
     	rootNode.attachChild( aGeometry );
     	
@@ -130,6 +139,7 @@ public class CSGTestB
     	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.SKIP, false );
     	aGeometry.move( -3f, 0f, 5f );
     	rootNode.attachChild( aGeometry );
+
     	// Just the cylinder
     	aGeometry = buildShape( CSGGeonode.CSGOperator.SKIP, 2.5f, CSGGeonode.CSGOperator.UNION, true );
     	aGeometry.move( 3f, 0f, 5f );
@@ -147,7 +157,7 @@ public class CSGTestB
 	    // Basic material for the CSG
         Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
 
-    	CSGGeonode aGeometry = new CSGGeonode();
+    	CSGGeonode aGeometry = new CSGGeonode( "Blend-" + mShapeCounter );
     	aGeometry.setMaterial( mat_csg );
 
     	CSGShape aCube 

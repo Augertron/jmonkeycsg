@@ -105,14 +105,19 @@ public class CSGTestL
 	    //Mesh mesh2 = new CSGCylinder( 32, 32, 0.5f, 1.5f );
 	    Mesh mesh2 = new CSGCylinder( 16, 16, 0.5f, 1.5f );
 	    mShape2 = new CSGShape( "ACylinder", mesh2 );
+	    Material mat1 = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
+	    mat1.setColor( "Color", ColorRGBA.Yellow );
+	    mShape2.setMaterial( mat1 );
+
 	    if ( true ) {
-	    	Material mat1 = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
-	    	mat1.setColor( "Color", ColorRGBA.Yellow );
-	    	mShape2.setMaterial( mat1 );
+	    	// Exercise multiple materials
+	    	mCSGBlend = new CSGGeonode( "ABlend" ); 
+		    ((CSGGeonode)mCSGBlend).forceSingleMaterial( false );
+	    } else {
+	    	// Single material only
+	    	mCSGBlend = new CSGGeometry( "ABlend" );	    	
 	    }
-	    mCSGBlend = new CSGGeonode( "ABlend" ); // new CSGGeometry( "ABlend" );
 	    mCSGBlend.setDefaultMaterial( new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" ) );
-	    ((CSGGeonode)mCSGBlend).forceSingleMaterial( true );
 	    rootNode.attachChild( mCSGBlend.asSpatial() );
 	    
 	    mCSGBlend.addShape( mShape1 );

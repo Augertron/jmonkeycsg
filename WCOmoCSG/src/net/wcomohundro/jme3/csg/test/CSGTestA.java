@@ -25,7 +25,10 @@
 package net.wcomohundro.jme3.csg.test;
 
 
+import com.jme3.app.DebugKeysAppState;
+import com.jme3.app.FlyCamAppState;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.StatsAppState;
 import com.jme3.material.Material;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
@@ -39,7 +42,7 @@ import net.wcomohundro.jme3.csg.shape.*;
  		Checks UNION / DIFFERENCE / INTERSECTION / SKIP for simple Cube/Sphere
  */
 public class CSGTestA 
-	extends SimpleApplication 
+	extends CSGTestSceneBase
 {
 	public static void main(
 		String[] 	pArgs
@@ -50,74 +53,90 @@ public class CSGTestA
 
 	/** Simple unique name **/
 	protected int	mShapeCounter;
+	
+	public CSGTestA(
+	) {
+		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		//super( new FlyCamAppState() );
+	}
 
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
+		super.commonApplicationInit();    
+		
+		this.mPostText.push( "QWASDZ to move, <ESC> to exit" );
+		this.mRefreshText = true;
 	    
     	CSGGeometry aGeometry;
 	
     	// Start with the cube, add the sphere
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.SKIP
+    	aGeometry = buildShape( "Cube+Sphere"
+    							,	CSGGeometry.CSGOperator.SKIP
     							,	CSGGeometry.CSGOperator.UNION
     							,	CSGGeometry.CSGOperator.UNION );
     	aGeometry.move( -3f, 0f, 0f );
     	rootNode.attachChild( aGeometry );
 
     	// Start with the cube, substract the sphere
-    	aGeometry = buildShape(  CSGGeometry.CSGOperator.SKIP
+    	aGeometry = buildShape(  "Cube-Sphere"
+    							,	CSGGeometry.CSGOperator.SKIP
 								,	CSGGeometry.CSGOperator.UNION
 								,	CSGGeometry.CSGOperator.DIFFERENCE );
     	aGeometry.move( 0f, 0f, 0f );
     	rootNode.attachChild( aGeometry );
     	
     	// Start with the cube, intersect the sphere
-    	aGeometry = buildShape(  CSGGeometry.CSGOperator.SKIP
+    	aGeometry = buildShape(  "Cube^Sphere"
+								,	CSGGeometry.CSGOperator.SKIP
 								,	CSGGeometry.CSGOperator.UNION
 								,	CSGGeometry.CSGOperator.INTERSECTION );
     	aGeometry.move( 3f, 0f, 0f );
     	rootNode.attachChild( aGeometry );
 
     	// Start with the sphere, add the cube
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
-						,	CSGGeometry.CSGOperator.UNION
-						,	CSGGeometry.CSGOperator.SKIP );
+    	aGeometry = buildShape( "Sphere+Cube"
+								,	CSGGeometry.CSGOperator.UNION
+								,	CSGGeometry.CSGOperator.UNION
+								,	CSGGeometry.CSGOperator.SKIP );
 		aGeometry.move( -3f, 0f, -5f );
 		rootNode.attachChild( aGeometry );
 		
 		// Start with the sphere, remove the cube
-		aGeometry = buildShape(  CSGGeometry.CSGOperator.UNION
-						,	CSGGeometry.CSGOperator.DIFFERENCE
-						,	CSGGeometry.CSGOperator.SKIP );
+		aGeometry = buildShape(  "Sphere-Cube"
+								,	CSGGeometry.CSGOperator.UNION
+								,	CSGGeometry.CSGOperator.DIFFERENCE
+								,	CSGGeometry.CSGOperator.SKIP );
 		aGeometry.move( 0f, 0f, -5f );
 		rootNode.attachChild( aGeometry );
 		
 		// Start with the sphere, intersect the cube
-		aGeometry = buildShape(  CSGGeometry.CSGOperator.UNION
-						,	CSGGeometry.CSGOperator.INTERSECTION
-						,	CSGGeometry.CSGOperator.SKIP );
+		aGeometry = buildShape(  "Sphere^Cube"
+								,	CSGGeometry.CSGOperator.UNION
+								,	CSGGeometry.CSGOperator.INTERSECTION
+								,	CSGGeometry.CSGOperator.SKIP );
 		aGeometry.move( 3f, 0f, -5f );
 		rootNode.attachChild( aGeometry );
 
     	// Just the cube
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.SKIP
+    	aGeometry = buildShape( "Cube"
+								,	CSGGeometry.CSGOperator.SKIP
     							,	CSGGeometry.CSGOperator.UNION 
     							,	CSGGeometry.CSGOperator.SKIP );
     	aGeometry.move( -3f, 0f, 5f );
     	rootNode.attachChild( aGeometry );
     	
     	// Just the sphere
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
+    	aGeometry = buildShape( "Sphere"
+								,	CSGGeometry.CSGOperator.UNION
     							,	CSGGeometry.CSGOperator.SKIP 
     							,	CSGGeometry.CSGOperator.SKIP );
     	aGeometry.move( 3f, 0f, 5f );
     	rootNode.attachChild( aGeometry );
 
     	// Start with the sphere, subtract the cube, intersect with the sphere
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
+    	aGeometry = buildShape( "Sphere-Cube^Sphere"
+								,	CSGGeometry.CSGOperator.UNION
     							,	CSGGeometry.CSGOperator.DIFFERENCE 
     							,	CSGGeometry.CSGOperator.INTERSECTION );
     	aGeometry.move( 0f, 0f, -10f );
@@ -126,7 +145,8 @@ public class CSGTestA
     }
 
     protected CSGGeometry buildShape(
-        CSGGeometry.CSGOperator		pOperator1
+    	String						pName
+    ,   CSGGeometry.CSGOperator		pOperator1
     ,	CSGGeometry.CSGOperator		pOperator2
     ,	CSGGeometry.CSGOperator		pOperator3
     ) {
@@ -135,7 +155,7 @@ public class CSGTestA
 	    // Basic material for the CSG
         Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
 
-    	CSGGeometry aGeometry = new CSGGeometry();
+    	CSGGeometry aGeometry = new CSGGeometry( pName );
     	aGeometry.setMaterial( mat_csg );
 
     	CSGShape aSphere = new CSGShape( "SphereA-" + mShapeCounter, new CSGSphere( 32, 32, 1.3f ) );

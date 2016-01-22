@@ -100,7 +100,7 @@ public class CSGGeonode
 
 	
 	/** The master geometry/mesh that describes the overall shape */
-	protected Geometry			mMasterGeometry;
+	protected CSGGeometry		mMasterGeometry;
     /** Control flag to force the use of a single material set at this node level */
     protected boolean			mForceSingleMaterial;
 	/** The optional list of child shapes (each annotated with an action as it is added) */
@@ -128,7 +128,7 @@ public class CSGGeonode
 	}
 	
 	/** Access to the MasterGeometry that defines the overall shape */
-	public Geometry getMasterGeometry() { return mMasterGeometry; }
+	public CSGGeometry getMasterGeometry() { return mMasterGeometry; }
 	
 	/** Access to the single material control */
 	public void forceSingleMaterial( boolean pFlag ) { mForceSingleMaterial = pFlag; }
@@ -235,10 +235,12 @@ public class CSGGeonode
 				
 			} else {
 				// Multiple elements
-				// 	NOTE that we only attach the independent child meshes, not the master itself
 				for( Spatial aSpatial : pMeshManager.getSpatials( this.getName(), mLightControl ) ) {
 					this.attachChild( aSpatial );
 				}
+				// NOTE that we only attach the independent child meshes, not the master itself
+				//	This means we could have positioning issues if the CSGGeonode moves and we 
+				//	then use mMasterGeometry for other processing, like collision detection
 			}
 			// Any deferred changes are complete now
 			mMeshManager = null;
@@ -356,36 +358,6 @@ public class CSGGeonode
 		return( null );
 	}
 	
-    /** Updates the bounding volume of the mesh. Should be called when the
-		mesh has been modified.
-		OVERRIDE to operate on the master 
-     */
-	@Override
-    public void updateModelBound(
-    ) {
-        super.updateModelBound();
-        
-        if ( mMasterGeometry != null) {
-        	mMasterGeometry.updateModelBound();
-        }
-    }
-
-    /** Update the bounding volume that contains this geometry. 
-     	OVERRIDE to operate on the master mesh
-     */
-    @Override
-    protected void updateWorldBound(
-    ) {
-    	// I was hoping to optimize this processing by operating solely on the the 
-    	// masterGeometry, but something goes amiss and the surfaces get lost at 
-    	// random viewing angles ?????
-        super.updateWorldBound();
-
-        if ( mMasterGeometry != null) {
-        	//this.worldBound = mMasterGeometry.refreshWorldBound().clone( this.worldBound );
-        }
-    }
-    
     /**	Returns the number of triangles contained in all sub-branches of this node that contain geometry.
 		OVERRIDE to operate directly from the master 
 	*/
@@ -412,7 +384,15 @@ public class CSGGeonode
     	Collidable 			pOther
     , 	CollisionResults 	pResults
     ) {
-        return( (mMasterGeometry == null) ? 0 : mMasterGeometry.collideWith( pOther, pResults ) );
+    	// Unfortunately, the MasterGeometry is not slaved to the repositioning of this
+    	// CSGGeonode, so its collision detection will be off
+    	int count = super.collideWith( pOther, pResults );
+    	if ( count > 0 ) {
+    		// We collided with something inside
+    		// @todo - is it possible to reflect this collision at this NODE level???
+    	}
+    	return( count );
+        //return( (mMasterGeometry == null) ? 0 : mMasterGeometry.collideWith( pOther, pResults ) );
     }
 
 

@@ -26,6 +26,7 @@ package net.wcomohundro.jme3.csg.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.FlyCamAppState;
@@ -67,12 +68,20 @@ import com.jme3.texture.Texture;
 
 import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGShape;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 
 /** Load various CSG models and try colliding with them */
 public class CSGTestF 
-	extends SimpleApplication 
+	extends CSGTestSceneLoader 
 {
+	public static void main(
+		String[] 	pArgs
+	) {
+	    SimpleApplication app = new CSGTestF();		    
+	    app.start();
+	}
+
 	/** List of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
 		null
@@ -86,44 +95,22 @@ public class CSGTestF
 	,	"Models/CSGLoadMultiTexture.xml"
 
 	};
-	
-	/** Which scene is currently being viewed */
-	protected int				mSceneIndex;
-	/** Spot for a bit of text */
-	protected BitmapText		mTextDisplay;
-    /** Prepare the Physics Environment, using jBullet */
-    protected BulletAppState    mPhysicsState;
 
 	public CSGTestF(
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		mSceneList = Arrays.asList( sSceneList );
+		mNullSceneMsg = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> to shoot, <ESC> to exit";
 	}
+	
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
-	    // Establish the text display
-	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
-	    
         /** Set up Physics environment */
 	    mPhysicsState = new BulletAppState();
         stateManager.attach( mPhysicsState );
-
-        /** Ready interaction */
-        createListeners();
         
-        /** Load the scene, leveraging the XMLImporter */
-        assetManager.registerLocator( "./Assets", FileLocator.class );
-        assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
-	    
-	    Spatial aScene = loadScene();
-	    if ( aScene != null ) {
-	    	rootNode.attachChild( aScene );
-	    }
-
+		super.commonApplicationInit();    
     }
     
     /** Handle update customizations */
@@ -140,33 +127,6 @@ public class CSGTestF
     ) {
     }
 
-    /** Service routine to load the scene */
-    protected Spatial loadScene(
-    ) {
-    	// For now, rely on a FilterKey which does not support caching
-    	Object aNode = null;
-    	String sceneName = sSceneList[ mSceneIndex ];
-    	if ( sceneName != null ) try {
-    		// For testing, suppress any caching
-	    	NonCachingKey aKey = new NonCachingKey( sceneName );
-	    	aNode = assetManager.loadAsset( aKey );
-    	} catch( Exception ex ) {
-    		sceneName += " ***Load Scene Failed: " + ex;
-		} else {
-			sceneName = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> to shoot, <ESC> to exit";
-		}
-    	if ( aNode instanceof Node ) {
-    		// Make every child a phsyical thing
-    		for( Spatial aChild : ((Node)aNode).getChildren() ) {
-	        	RigidBodyControl aBody = new RigidBodyControl( 0.0f );
-	        	aBody.setApplyPhysicsLocal( true );
-	        	aChild.addControl( aBody );
-	        	mPhysicsState.getPhysicsSpace().addAll( aChild );
-    		}
-    	}
-    	CSGTestDriver.postText( this, mTextDisplay, sceneName );
-    	return( (aNode instanceof Spatial) ? (Spatial)aNode : null );
-    }
     
     protected void createProjectile(
     	Vector3f	pLocation
@@ -188,10 +148,10 @@ public class CSGTestF
     }
 
     /** Service routine to activate the interactive listeners */
+    @Override
     protected void createListeners(
     ) {
-        inputManager.addMapping( "nextScene"
-        ,   new KeyTrigger( KeyInput.KEY_RETURN ) );
+    	super.createListeners();
         
         inputManager.addMapping( "shoot1"
         ,   new KeyTrigger( KeyInput.KEY_SPACE ) );
@@ -203,31 +163,30 @@ public class CSGTestF
             ,   float       pTimePerFrame
             ) {
                 if ( pKeyPressed ) {
-                    if ( pName.equals( "nextScene" ) ) {
-                		// Remove any existing physics
-                		for( Spatial aChild : rootNode.getChildren() ) {
-                			mPhysicsState.getPhysicsSpace().remove( aChild );
-                		}
-                        // Remove the old scene
-                        rootNode.detachAllChildren();
-                        
-                        // Select next scene
-                        mSceneIndex += 1;
-                        if ( mSceneIndex >= sSceneList.length ) mSceneIndex = 0;
-                        
-                        // And load it
-                	    Spatial aScene = loadScene();
-                	    if ( aScene != null ) {
-                	    	rootNode.attachChild( aScene );
-                	    }
-                    } else if ( pName.equals( "shoot1" ) ) {
+                    if ( pName.equals( "shoot1" ) ) {
                     	createProjectile( cam.getLocation(), cam.getDirection().mult(10) );
                     }
                 }
             }
         };  
-        inputManager.addListener( aListener, "nextScene" );
         inputManager.addListener( aListener, "shoot1" );
+    }
+    
+    /** OVERRIDE: apply physics */
+    @Override
+    protected void applyPhysics(
+    	CSGElement 		pSpatial
+    ) {
+    	if ( pSpatial instanceof Node ) {
+    		// Make every child a phsyical thing with default settings
+    		for( Spatial aChild : ((Node)pSpatial).getChildren() ) {
+	        	RigidBodyControl aBody = new RigidBodyControl( 0.0f );
+	        	aBody.setApplyPhysicsLocal( true );
+	        	aChild.addControl( aBody );
+	        	
+	        	mPhysicsState.getPhysicsSpace().addAll( aChild );
+    		}
+    	}
     }
 
 }

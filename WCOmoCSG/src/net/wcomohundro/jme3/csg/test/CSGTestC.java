@@ -69,42 +69,53 @@ import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
  		
  */
 public class CSGTestC 
-	extends SimpleApplication 
+	extends CSGTestSceneBase 
 {
+	public static void main(
+			String[] 	pArgs
+		) {
+		    SimpleApplication app = new CSGTestC();		    
+		    app.start();
+		}
 
 	public CSGTestC(
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
 	}
+
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
+		super.commonApplicationInit();    
+		
+		this.mPostText.push( "QWASDZ to move, <ESC> to exit" );
+		this.mRefreshText = true;
 	    // Start with Teapot
     	CSGGeometry aGeometry;
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
+    	aGeometry = buildShape( "Teapot+Box"
+    							, CSGGeometry.CSGOperator.UNION
     							, CSGGeometry.CSGOperator.UNION
     							, CSGGeometry.CSGOperator.SKIP);
     	aGeometry.move( 0f, 2.5f, 0f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
-						, CSGGeometry.CSGOperator.DIFFERENCE
-						, CSGGeometry.CSGOperator.SKIP);
+    	aGeometry = buildShape( "Teapot-Box"
+								, CSGGeometry.CSGOperator.UNION
+								, CSGGeometry.CSGOperator.DIFFERENCE
+								, CSGGeometry.CSGOperator.SKIP);
 		aGeometry.move( 2.5f, 0f, 0f );
 		rootNode.attachChild( aGeometry );
 		
     	// Start with cube
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.SKIP
+    	aGeometry = buildShape( "Box+Teapot"
+								, CSGGeometry.CSGOperator.SKIP
     							, CSGGeometry.CSGOperator.UNION
     							, CSGGeometry.CSGOperator.UNION );
     	aGeometry.move( 0f, 2.5f, -4f );
     	rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape(  CSGGeometry.CSGOperator.SKIP
+    	aGeometry = buildShape(  "Box-Teapot"
+								, CSGGeometry.CSGOperator.SKIP
     							, CSGGeometry.CSGOperator.UNION
     							, CSGGeometry.CSGOperator.DIFFERENCE );
     	aGeometry.move( 2.5f, 0f, -4f );
@@ -114,7 +125,8 @@ public class CSGTestC
     	//aGeometry.move( 0f, 0f, 2.5f );
     	//rootNode.attachChild( aGeometry );
     	
-    	aGeometry = buildShape( CSGGeometry.CSGOperator.UNION
+    	aGeometry = buildShape( "Teapot"
+    							, CSGGeometry.CSGOperator.UNION
     							, CSGGeometry.CSGOperator.SKIP
     							, CSGGeometry.CSGOperator.SKIP );
     	aGeometry.move( -2.5f, 0f, 0f );
@@ -122,7 +134,8 @@ public class CSGTestC
     }
 
     protected CSGGeometry buildShape(
-        CSGGeometry.CSGOperator		pOperator1
+    	String						pName
+    ,   CSGGeometry.CSGOperator		pOperator1
     ,	CSGGeometry.CSGOperator		pOperator2
     ,	CSGGeometry.CSGOperator		pOperator3
     ) {
@@ -130,7 +143,7 @@ public class CSGTestC
         Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
     	//mat_csg.getAdditionalRenderState().setFaceCullMode( FaceCullMode.Off );
 
-    	CSGGeometry aGeometry = new CSGGeometry();
+    	CSGGeometry aGeometry = new CSGGeometry( pName );
     	aGeometry.setMaterial( mat_csg );
 
     	Spatial aSpatial = assetManager.loadModel("Models/Teapot/Teapot.obj");

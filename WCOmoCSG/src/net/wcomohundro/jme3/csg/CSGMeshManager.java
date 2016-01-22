@@ -275,8 +275,9 @@ public class CSGMeshManager
 			materialKey = pMaterial.getKey();
 			if ( materialKey == null ) {
 				// We have a special material without a particular loader name,
-				// and we need something unique
-				materialKey = new AssetKey( CSGShape.assignInstanceKey( "Material" ) );
+				// and we need something unique to this particular instance.
+				// identityHashCode() is probably close enough for what I need.
+				materialKey = new AssetKey( "Material-" + System.identityHashCode( pMaterial ) );
 			}
 		}
 		StringBuilder aBuffer = new StringBuilder( 128 );

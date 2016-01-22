@@ -136,16 +136,9 @@ public class CSGTestSceneLoader
 		
 		// Initialize the scene list
 		mSceneList = new ArrayList();
-		mNullSceneMsg = "";
+		mNullSceneMsg = "<ENTER> to cycle through the scenes, QWASDZ to move, <ESC> to exit";
 	}
 	
-    @Override
-    public void simpleInitApp(
-    ) {
-    	// Standard init
-	    commonApplicationInit();
-	    
-    }
     /** OVERRIDE: to load the first scene */
     @Override
     protected void commonApplicationInit(
@@ -154,6 +147,7 @@ public class CSGTestSceneLoader
 		super.commonApplicationInit();   	
         
         // Load the scene, leveraging the XMLImporter
+		mLastScene = null;
 	    loadScene();
     }
     
@@ -244,6 +238,8 @@ public class CSGTestSceneLoader
     public void run(
     ) {
     	boolean isActive = true;
+    	StringBuilder aBuffer = new StringBuilder( 256 );
+    	
     	while( isActive ) {
     		synchronized( this ) {
 	    		if ( mLoadingScene == null ) try {
@@ -253,76 +249,100 @@ public class CSGTestSceneLoader
 	    			mLoadingScene = null;
 	    		}
     		}
-    		String reportString = mLoadingScene;
-    		if ( mLoadingScene != null ) try {
-    			// Suppress any asset caching
-    	    	NonCachingKey aKey = new NonCachingKey( mLoadingScene );
-    	    	Object aNode = assetManager.loadAsset( aKey );
-    	    	
-    	    	if ( aNode instanceof CSGEnvironment ) {
-    	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
-    	    		CSGVersion.reportVersion();
-
-    	    		reportString += " *** Processing Environment Reset";
-    	    		
-    	    	} else if ( aNode instanceof Spatial ) {
-    	        	if ( aNode instanceof CSGElement ) {
-    	        		// We know a bit more about Elements
-    	        		CSGElement csgSpatial = (CSGElement)aNode;
-    	    			if ( csgSpatial.isValid() ) {
-    	    				// Include timing
-    	    				reportString += ( " (" + (csgSpatial.getShapeRegenerationNS() / 1000000) + "ms)" );
-    	    				
-    	    				// Assign physics if active
-    	    				if ( mPhysicsState != null ) {
-    	    					csgSpatial.applyPhysics( mPhysicsState.getPhysicsSpace(), null );
-    	    				}
-    	    			} else {
-    	    				// Something bogus in the construction
-    	    				reportString += " ***Invalid shape";
-    	    			}
-    	    		}
-    	    		mLoadedSpatial = (Spatial)aNode;
-    	    		
-    	    	} else if ( aNode instanceof SceneProcessor ) {
-    	    		Light aLight = null;
-    	    		if ( aNode instanceof PointLightShadowRenderer ) {
-    	    			aLight = ((PointLightShadowRenderer)aNode).getLight();
-    	    		} else if ( aNode instanceof DirectionalLightShadowRenderer ) {
-    	    			aLight = ((DirectionalLightShadowRenderer)aNode).getLight();
-    	    		}
-    	    		if ( aLight != null ) {
-    	    			rootNode.addLight( aLight );
-    	    		}
-    	    		viewPort.addProcessor( (SceneProcessor)aNode );
-    	    		
-    	    		reportString += " *** SceneProcessor added";
-    	    		
-    	    	} else if ( aNode instanceof Filter ) {
-    	    		Light aLight = null;
-    	    		if ( aNode instanceof PointLightShadowFilter ) {
-    	    			aLight = ((PointLightShadowFilter)aNode).getLight();
-    	    		}
-    	    		if ( aLight != null ) {
-    	    			rootNode.addLight( aLight );
-    	    		}
-    	            FilterPostProcessor fpp = new FilterPostProcessor( assetManager );
-    	            fpp.addFilter( (Filter)aNode );
-    	            viewPort.addProcessor( fpp );
-
-    	            reportString += " *** PostFilter added";
-    	    	}
-        	} catch( Exception ex ) {
-        		reportString += " ***Load Scene Failed: " + ex;
-        		ex.printStackTrace( System.err );
-
-    		} finally {
-    			mLoadingScene = null;
-    		}
+    		aBuffer.setLength( 0 );
+    		StringBuilder reportString = loadElement( mLoadingScene, aBuffer );
+    		mLoadingScene = null;
+    		
     		if ( reportString != null ) {
-    			mPostText.push( reportString );
+    			mPostText.push( reportString.toString() );
     			mRefreshText = true;
     		}
     	}
+    }
+    
+    /** Service routine to load and process an element */
+    protected StringBuilder loadElement(
+    	String			pElementFile
+    ,	StringBuilder	pBuffer
+    ) {
+		if ( pElementFile != null ) try {
+			pBuffer.append( pElementFile );
+			
+			// Suppress any asset caching
+	    	NonCachingKey aKey = new NonCachingKey( pElementFile );
+	    	Object aNode = assetManager.loadAsset( aKey );
+	    	
+	    	if ( aNode instanceof CSGEnvironment ) {
+	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
+	    		CSGVersion.reportVersion();
+
+	    		pBuffer.append( " *** Processing Environment Reset" );
+	    		
+	    	} else if ( aNode instanceof Spatial ) {
+	        	if ( aNode instanceof CSGElement ) {
+	        		// We know a bit more about Elements
+	        		CSGElement csgSpatial = (CSGElement)aNode;
+	    			if ( csgSpatial.isValid() ) {
+	    				// Include timing
+	    				pBuffer.append( " (" + (csgSpatial.getShapeRegenerationNS() / 1000000) + "ms)" );
+	    				
+	    				// Assign physics if active
+	    				if ( mPhysicsState != null ) {
+	    					this.applyPhysics( csgSpatial );
+	    				}
+	    			} else {
+	    				// Something bogus in the construction
+	    				pBuffer.append( " ***Invalid shape" );
+	    			}
+	    		}
+	    		mLoadedSpatial = (Spatial)aNode;
+	    		
+	    	} else if ( aNode instanceof SceneProcessor ) {
+	    		Light aLight = null;
+	    		if ( aNode instanceof PointLightShadowRenderer ) {
+	    			aLight = ((PointLightShadowRenderer)aNode).getLight();
+	    		} else if ( aNode instanceof DirectionalLightShadowRenderer ) {
+	    			aLight = ((DirectionalLightShadowRenderer)aNode).getLight();
+	    		}
+	    		if ( aLight != null ) {
+	    			rootNode.addLight( aLight );
+	    		}
+	    		viewPort.addProcessor( (SceneProcessor)aNode );
+	    		
+	    		pBuffer.append( " *** SceneProcessor added" );
+	    		
+	    	} else if ( aNode instanceof Filter ) {
+	    		Light aLight = null;
+	    		if ( aNode instanceof PointLightShadowFilter ) {
+	    			aLight = ((PointLightShadowFilter)aNode).getLight();
+	    		}
+	    		if ( aLight != null ) {
+	    			rootNode.addLight( aLight );
+	    		}
+	            FilterPostProcessor fpp = new FilterPostProcessor( assetManager );
+	            fpp.addFilter( (Filter)aNode );
+	            viewPort.addProcessor( fpp );
+
+	            pBuffer.append( " *** PostFilter added" );
+	    	}
+    	} catch( Exception ex ) {
+    		pBuffer.append( " ***Load Scene Failed: " + ex );
+    		ex.printStackTrace( System.err );
+
+		} finally {
+			mLoadingScene = null;
+		} else {
+			// Nothing loaded
+			return( null );
+		}
+		return( pBuffer );
+    }
+    
+    /** FOR SUBCLASS OVERRIDE: apply physics */
+    protected void applyPhysics(
+    	CSGElement 		pSpatial
+    ) {
+    	// Let the element decide how to adjust its physics
+    	pSpatial.applyPhysics( mPhysicsState.getPhysicsSpace(), null );
     }
 }

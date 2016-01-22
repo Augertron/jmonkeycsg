@@ -154,6 +154,10 @@ public abstract class CSGTestSceneBase
         }
         assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
         
+        // By default, assume the entire root is the scene we use for click-on
+        mLastScene = this.rootNode;
+        
+        // If the subclass is Runnable, then start a thread to service it
         if ( this instanceof Runnable ) {
     		// Start the background thread that loads the scenes
         	mActionThread = new Thread( null, (Runnable)this, "BackgroundTestAction" );
@@ -260,7 +264,7 @@ public abstract class CSGTestSceneBase
     /** What is the user looking at? */
     protected String resolveSelectedItem(
     ) {
-    	String itemName = "...nothiing...";
+    	String itemName = "...nothing...";
     	Geometry picked = resolveSelectedGeometry();
     	if ( picked != null ) {
     		itemName = picked.getName();

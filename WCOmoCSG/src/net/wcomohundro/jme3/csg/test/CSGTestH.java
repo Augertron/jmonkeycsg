@@ -52,23 +52,29 @@ import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 /**	Check for support of a complex mesh, as provided by an exterior object
  	This test is based on the SourceForge ticket where the intersection of two
  	meshes is desired.
- 		
 */
 public class CSGTestH 
-	extends SimpleApplication 
+	extends CSGTestSceneBase 
 {
+	public static void main(
+		String[] 	pArgs
+	) {
+	    SimpleApplication app = new CSGTestH();		    
+	    app.start();
+	}
 
 	public CSGTestH(
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
 	}
     @Override
-    public void simpleInitApp(
+    protected void commonApplicationInit(
     ) {
-		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
+		super.commonApplicationInit();    
+		
+		this.mPostText.push( "QWASDZ to move, <ESC> to exit" );
+		this.mRefreshText = true;
+		
 	    // Basic material for the CSG
         Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
 
@@ -88,11 +94,19 @@ public class CSGTestH
 ******/
     	// Load the primary shape
     	Spatial aSpatial = assetManager.loadModel("Meshes/outer.obj");
+    	aSpatial.setMaterial( mat_csg );
+    	aSpatial.move( -5,  0, 0 );
+    	rootNode.attachChild( aSpatial );
+    	
     	CSGShape aShape = new CSGShape( "OuterShape", ((Geometry)aSpatial).getMesh() );
     	aGeometry.addShape( aShape, CSGGeometry.CSGOperator.UNION );
 	    
     	// Load the secondary shape
     	aSpatial = assetManager.loadModel("Meshes/view.obj");
+    	aSpatial.setMaterial( mat_csg );
+    	aSpatial.move( 5,  0, 0 );
+    	rootNode.attachChild( aSpatial );
+
     	CSGShape bShape = new CSGShape( "ViewShape", ((Geometry)aSpatial).getMesh() );
     	aGeometry.addShape( bShape, CSGGeometry.CSGOperator.INTERSECTION );
 
