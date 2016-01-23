@@ -218,7 +218,7 @@ public class CSGGeonode
 	@Override
 	public void deferSceneChanges( boolean pFlag ) { mDeferSceneChanges = pFlag; }
 	@Override
-	public synchronized void applySceneChanges(
+	public synchronized boolean applySceneChanges(
 	) {
 		if ( mMeshManager != null ) {
 			// Apply the previously generated changes
@@ -226,6 +226,9 @@ public class CSGGeonode
 			
 			// Any deferred changes are complete now
 			mMeshManager = null;
+			return( true );
+		} else {
+			return( false );
 		}
 	}
 	protected void applySceneChanges(

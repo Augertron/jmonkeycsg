@@ -32,6 +32,7 @@ package net.wcomohundro.jme3.csg.iob;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGTempVars;
@@ -120,6 +121,9 @@ public class CSGSolid
 				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 			// The face is too small to be pertinent, so if another face is added, 
 			// just overuse the given slot
+			if ( pEnvironment.mStructuralDebug ) {
+				pEnvironment.log( Level.WARNING, "Solid discarding face: " + pV1 + ", " + pV2 + ", " + pV3 );
+			}
 			return( pFaceIndex );
 		} else {
 			// Build the face (having checked the vertices above)

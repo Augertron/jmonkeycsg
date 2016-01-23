@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 import com.jme3.math.Vector2f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
@@ -290,16 +291,23 @@ public class CSGFace
 			|| CSGEnvironment
 				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )) ) {
 			// Not a meaningful face, do not bother with checking the plane
+			if ( pEnvironment.mStructuralDebug ) {
+				pEnvironment.log( Level.WARNING, "Degenerate face: " + this );
+			}
 			return;
 		}
 		mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
-		
-if ( false && pEnvironment.mStructuralDebug ) {
-	if ( (pV1.getPosition().z - 0.4f > pEnvironment.mEpsilonBetweenPointsDbl) 
-	||   (pV2.getPosition().z - 0.4f > pEnvironment.mEpsilonBetweenPointsDbl)
-	||   (pV3.getPosition().z - 0.4f > pEnvironment.mEpsilonBetweenPointsDbl) ) {
-		System.out.println( this.toString() );
-	}
+		if ( pEnvironment.mStructuralDebug && (mPlane == null) ) {
+			pEnvironment.log( Level.WARNING, "Invalid face: " + this );
+		}
+Vector3d aPoint = new Vector3d( -0.9, 0.19130059, 9.75 );
+if ( CSGEnvironment
+		.equalVector3d( pV1.getPosition(), aPoint, pEnvironment.mEpsilonBetweenPointsDbl )
+	|| CSGEnvironment
+		.equalVector3d( pV2.getPosition(), aPoint, pEnvironment.mEpsilonBetweenPointsDbl )
+	|| CSGEnvironment
+		.equalVector3d( pV3.getPosition(), aPoint, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+	System.out.println( "Point on Face: " + this );
 }
 	}
 	
@@ -473,6 +481,9 @@ if ( false && pEnvironment.mStructuralDebug ) {
 											, pTempVars, pEnvironment );
 			if ( pointOnEdge == null ) {
 				// Something not right about this intersection... Possibly things are too close
+				if ( pEnvironment.mStructuralDebug ) {
+					pEnvironment.log( Level.WARNING, "Face Extrapolation: " + pNewPosition + " / " + this );
+				}
 				return( null );
 			}
 			// Figure out the vertex on the edge

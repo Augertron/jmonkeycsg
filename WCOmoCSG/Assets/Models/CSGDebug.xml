@@ -1,7 +1,7 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
 	<csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB'
-		doublePrecision='true' structuralDebug='false' rationalizeValues='true'
+		doublePrecision='false' structuralDebug='true' rationalizeValues='true'
 		epsilonNearZero='1.0e-10' epsilonBetweenPoints='1.0e-7' epsilonOnPlane='1.0e-7'
 		epsilonMagnitudeRange='22' />
 		
@@ -13,6 +13,96 @@
         </lights>
     </lights>
 	<children>
+		<!-- A corridor, with a small missing triangle tucked behind the front cutout to the left -->
+		<net.wcomohundro.jme3.csg.CSGGeonode name='ACorridor'
+        		singleMaterial='false' 
+        		generateTangentBinormal='false'
+        		shadow_mode='CastAndReceive'
+        		materialName='Textures/Debug/Normals.xml'>
+        		<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml' -->
+        		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml' -->
+        		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+        		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
+        		<!-- materialName='Textures/Debug/Normals.xml' -->
+        		<!-- materialName='Textures/Debug/Wireframe.xml' -->
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Exterior'>
+				    <shapes>
+                		<net.wcomohundro.jme3.csg.CSGShape name='ExteriorBox'>
+				            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    				xExtent='1.0' yExtent='1.0' zExtent='10.0'>
+		                    </mesh>
+				    	</net.wcomohundro.jme3.csg.CSGShape>
+		                <net.wcomohundro.jme3.csg.CSGShape name='FrontDoorway' operator='DIFFERENCE'>
+		                		<!-- materialName='Textures/Rock/Rock2.xml'> -->
+		                		<!-- materialName='Textures/Rock/Rock1Rpt.xml'> -->
+		                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+		                    		xExtent='0.9' yExtent='0.5' zExtent='0.9'>
+		                    </mesh>
+		                    <transform class='com.jme3.math.Transform'>
+		                        <translation class='com.jme3.math.Vector3f' x='0' y='0.5' z='10'/>
+		                    </transform>
+			            </net.wcomohundro.jme3.csg.CSGShape>
+			            <!-- The missing triangle is VERY sensitive to the sample count below -->
+                		<net.wcomohundro.jme3.csg.CSGShape name='Core' operator='DIFFERENCE'>
+		                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+		                    	 	axisSamples='28' closed='true' zExtent='0.5' 
+		                    	 	radialSamples='30' radius='0.5'>
+		                    </mesh>
+		                 	<transform class='com.jme3.math.Transform'>
+		                        <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.5'/>
+		                    </transform>
+		                </net.wcomohundro.jme3.csg.CSGShape>
+				    </shapes>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <!-- NOTE that we build the 'unit' interior arch to be 1 long, and adjust
+                          the textures and sizes accordingly.  Then we apply scaling to
+                          match the size of the external box.  The lights are positioned
+                          within the 'unit' interior as well. -->
+<?ignore
+                <net.wcomohundro.jme3.csg.CSGShape name='InteriorArch' operator='DIFFERENCE' >
+                	<shapes>
+                		<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
+		                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+		                    	 	xExtent='0.5' yExtent='0.25' zExtent='0.5'>
+				                <faceProperties>
+				                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='0.5'/>
+				                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1' scaleY='0.5'/>
+				                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+				                    		materialName='Textures/Rock/Rock1NormalRpt.xml'/>
+				            	</faceProperties>
+		                    </mesh>
+		                    <transform class='com.jme3.math.Transform'>
+		                        <translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+		                    </transform>
+		                </net.wcomohundro.jme3.csg.CSGShape>
+                		<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+		                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+		                    	 	axisSamples='34' closed='true' zExtent='0.5' 
+		                    	 	radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'>
+				                <faceProperties>
+				                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1' scaleY='PI'/>
+				            	</faceProperties>
+		                    </mesh>
+		                </net.wcomohundro.jme3.csg.CSGShape>
+		            </shapes>
+		            <!-- Scale to match the transform below -->
+	                <faceProperties>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1.9' scaleY='1.9'/>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='19.9' scaleY='1.9'/>
+	                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1.9' scaleY='19.9'/>
+				        <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='19.9' scaleY='1.0'/>
+	            	</faceProperties>
+	            	<!-- Scale to match the exterior box -->
+                 	<transform class='com.jme3.math.Transform'>
+                        <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
+                    </transform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
+?>	            
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+<?ignore
         <!-- An Archway -->
         <net.wcomohundro.jme3.csg.CSGGeometry name='Archway'
             	materialName='Textures/Debug/NumberedBoxes.xml'>
@@ -319,5 +409,6 @@
            	</faceProperties>
             
          </net.wcomohundro.jme3.csg.CSGGeometry> 
+?>
 	</children>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

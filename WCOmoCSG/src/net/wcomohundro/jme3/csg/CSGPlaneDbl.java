@@ -75,7 +75,9 @@ public class CSGPlaneDbl
 		Vector3d temp2 = pC.subtract( pA, pTempVars.vectd5 );
 		Vector3d aNormal = temp1.cross( temp2 ).normalizeLocal();
 		//Vector3d aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
-		
+		if ( pEnvironment.mRationalizeValues ) {
+			pEnvironment.rationalizeVector( aNormal, pEnvironment.mEpsilonMagnitudeRange );
+		}
 		// I am defintely NOT understanding something here...
 		// I had thought that a normalDot of zero was indicating congruent points.  But
 		// apparently, the pattern (x, y, 0) (-x, y, 0) (0, 0, z) produces a valid normal
@@ -87,11 +89,13 @@ public class CSGPlaneDbl
 		}
 		double normalDot = aNormal.dot( pA );
 		CSGPlaneDbl aPlane = new CSGPlaneDbl( aNormal, pA, normalDot, -1, pEnvironment );
-		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
+		if ( pEnvironment.mStructuralDebug ) {
+			// NOTE that the rationalization of the normal could make the points look off the plane
+			//		(I wonder if I should compute normalDot before rationalizeVector???)
 			double aDistance = aPlane.pointDistance( pA );
 			double bDistance = aPlane.pointDistance( pB );
 			double cDistance = aPlane.pointDistance( pC );
-			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonNearZeroDbl ) {
+			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonOnPlaneDbl ) {
 				pEnvironment.log( Level.SEVERE, "Points NOT on plane: " + aPlane );				
 			}
 		}

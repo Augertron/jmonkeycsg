@@ -2,7 +2,7 @@
 //Models/CSGLoadEnvironmentIOB.xml
 //Models/CSGLoadEnvironmentBSP.xml
 
-Models/CSGDice.xml
+//Models/CSGDice.xml
 Models/CSGDebug.xml
 
 //Lights/ShadowPointLight.xml

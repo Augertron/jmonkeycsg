@@ -264,7 +264,14 @@ public interface ConstructiveSolidGeometry
 		 	applySceneChages() after regenerate(), typically on different threads.
 		 */
 		public void deferSceneChanges( boolean pFlag );
-		public void applySceneChanges();
+		/** applySceneChanges() is multi-thread safe so that .regenerate() can be called
+		 	from a background thread, and applySceneChanges() can be called continuously
+		 	from within Application.update() processing on the JME update thread.
+		 	
+		 	@return - true if pending changes were applied to the scene, false if no
+		 			  changes were found
+		 */
+		public boolean applySceneChanges();
 	}
 
 	/** Version tracking support 
