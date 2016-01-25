@@ -85,7 +85,7 @@ public class CSGTestM
 	protected static List<Vector3f> 	sPositions = new ArrayList<Vector3f>();
 	static {
 		sPositions.add( new Vector3f(0.80005103f,0.06314170f,0.37440395f));
-		sPositions.add( new Vector3f(0.28343803f,0.43108004f,0.48746461f));
+//		sPositions.add( new Vector3f(0.28343803f,0.43108004f,0.48746461f));
 		sPositions.add( new Vector3f(0.12868416f,0.01397777f,0.45756876f));
 		sPositions.add( new Vector3f(0.77755153f,0.57811391f,0.31153154f));
 		sPositions.add( new Vector3f(0.54848605f,0.43463808f,0.08887690f));
@@ -143,6 +143,9 @@ public class CSGTestM
 		this.mPostText.push( "<SPC> to blend, QWASDZ to move, <ESC> to exit" );
 		this.mRefreshText = true;
 		
+		CSGEnvironment myEnv = CSGEnvironment.resolveEnvironment( null, null );
+		myEnv.mStructuralDebug = true;
+		
 		mBlendedShape = new CSGGeometry( "TheBlend" );
 		mBlendedShape.deferSceneChanges( true );
 
@@ -153,7 +156,7 @@ public class CSGTestM
 	  	mBlendedShape.addShape(aCube);
 	  	mPreviousShape = mBlendedShape.regenerate();
 	  	
-	  	mSphere = new CSGShape( "Sphere", new CSGSphere( 5, 5, 0.3f ) );
+	  	mSphere = new CSGShape( "Sphere", new CSGSphere( 10, 10, 0.3f ) );
 	  	
 	   	rootNode.attachChild( mBlendedShape );
     }
@@ -218,6 +221,10 @@ public class CSGTestM
                     if ( pName.equals( "blend" ) ) {
                 	    takeAction( 1 );
                     }
+                } else {
+                	if ( pName.equals( "blend" ) ) {
+                		stopAction();
+                	}
                 }
             }
         };  
@@ -231,6 +238,13 @@ public class CSGTestM
     	if ( mAction == 0 ) synchronized( this ) {
     		mAction = pAction;
     		CSGTestDriver.postText( this, mTextDisplay, "** Rebuilding Shape" );
+    		this.notifyAll();
+    	}
+    }
+    protected void stopAction(
+    ) {
+    	if ( mAction > 0 ) synchronized( this ) {
+    		mAction = 0;
     		this.notifyAll();
     	}
     }
@@ -249,8 +263,13 @@ public class CSGTestM
 	    		}
     		}
         	// Blend another shape into the prior result
-        	blendSphere( mAction );
-    		mAction = 0;
+    		if ( (mAction > 0) && (mBlendedShape.getShapeRegenerationNS() >= 0) ) {
+    			blendSphere( mAction );
+    		} else try {
+    			Thread.currentThread().sleep( 20l );
+    		} catch( InterruptedException ex ) { 
+    			isActive = false;
+    		}
     	}
     }
 

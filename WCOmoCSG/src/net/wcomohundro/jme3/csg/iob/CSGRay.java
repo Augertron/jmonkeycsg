@@ -30,6 +30,8 @@
 **/
 package net.wcomohundro.jme3.csg.iob;
 
+import java.util.logging.Level;
+
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
@@ -79,37 +81,44 @@ public class CSGRay
 		Vector3d vB2minusB1 = pLineBPoint2.subtract( pLineBPoint1, pTempVars.vectd2 );
 		Vector3d vA1minusB1 = pLineAPoint1.subtract( pLineBPoint1, pTempVars.vectd3 );
 		
+		// Where on line A?
 		Vector3d nCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd4 );
 		Vector3d nACrossBA = vB2minusB1.cross( vA1minusB1, pTempVars.vectd5 );
 		double nA = nACrossBA.dot( nCrossAB );
 		
 		Vector3d dCrossAB = vA2minusA1.cross( vB2minusB1, pTempVars.vectd5 );
 		double d = dCrossAB.dot( dCrossAB );
-		double multiplier = nA / d;
-		if ( Double.isNaN( multiplier ) || Double.isInfinite( multiplier ) ) {
-			// Somehow, we did not properly intersect (possibly the line segments are too short?)
-			return( null );
+		double multiplierA = nA / d;
+		if ( Double.isNaN( multiplierA ) || Double.isInfinite( multiplierA ) ) {
+			return( null );		// No intersection
 		}
-		pResult = vA2minusA1.mult( nA / d, pResult );
+		pResult = vA2minusA1.mult( multiplierA, pResult );
 		pResult.addLocal( pLineAPoint1 );
 		
 		if ( pEnvironment.mRationalizeValues ) {
 			// Confirm that the magnitudes of the resultant point are rational
 			CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
 		}
-		if ( pEnvironment.mStructuralDebug ) {
-			// Confirm the intersection
-			Vector3d nBCrossBA = vA2minusA1.cross( vA1minusB1, pTempVars.vectd5 );
-			double nB = nBCrossBA.dot( nCrossAB );
+		// Where on line B?
+		Vector3d nBCrossBA = vA2minusA1.cross( vA1minusB1, pTempVars.vectd5 );
+		double nB = nBCrossBA.dot( nCrossAB );
 			
-			Vector3d bZero = vB2minusB1.multLocal( nB / d );
-			bZero.addLocal( pLineBPoint1 );
-			if ( pEnvironment.mRationalizeValues ) {
-				CSGEnvironment.rationalizeVector( bZero, pEnvironment.mEpsilonMagnitudeRange );
+		double multiplierB = nB / d;
+		if ( Double.isNaN( multiplierB ) || Double.isInfinite( multiplierB ) ) {
+			return( null );		// No Intersection
+		}	
+		Vector3d bZero = vB2minusB1.multLocal( multiplierB );
+		bZero.addLocal( pLineBPoint1 );
+		
+		if ( pEnvironment.mRationalizeValues ) {
+			CSGEnvironment.rationalizeVector( bZero, pEnvironment.mEpsilonMagnitudeRange );
+		}
+		// Confirm the intersection
+		if ( !CSGEnvironment.equalVector3d( pResult, bZero, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+			if ( pEnvironment.mStructuralDebug ) {
+				pEnvironment.log( Level.WARNING, "CSGRay.lineIntersection failed: " + pResult + "\n" + bZero );
 			}
-			if ( !CSGEnvironment.equalVector3d( pResult, bZero, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
-				throw new IllegalArgumentException( "Lines do not intersect" );
-			}
+			return( null );		// No Intersection
 		}
 		return( pResult );
 	}

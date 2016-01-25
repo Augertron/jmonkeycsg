@@ -70,7 +70,10 @@ public class CSGExternal
     	if ( modelName != null ) {
     		// Load the given model
         	Spatial aSpatial = pImporter.getAssetManager().loadModel( modelName );
-        	mesh = ((Geometry)aSpatial).getMesh();
+        	this.mesh = ((Geometry)aSpatial).getMesh();
+        	
+        	// We are valid if we have a mesh
+        	this.mIsValid = (this.mesh != null);
     	}
     }
         

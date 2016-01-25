@@ -1,5 +1,5 @@
 // List of scenes to load for TestE
-//Models/CSGLoadEnvironmentIOB.xml
+Models/CSGLoadEnvironmentIOB.xml
 //Models/CSGLoadEnvironmentBSP.xml
 
 Models/CSGLoadSimpleUnitBoxes.xml

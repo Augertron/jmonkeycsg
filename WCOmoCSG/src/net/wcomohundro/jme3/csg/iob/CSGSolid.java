@@ -103,7 +103,7 @@ public class CSGSolid
 		return( mBounds );
 	}
 	
-	/** Add a new face to this solid */
+	/** Add a new face to this solid, based on splitting an existing face */
 	protected int addFace(
 		int				pFaceIndex
 	,	CSGVertexIOB 	pV1
@@ -122,12 +122,12 @@ public class CSGSolid
 			// The face is too small to be pertinent, so if another face is added, 
 			// just overuse the given slot
 			if ( pEnvironment.mStructuralDebug ) {
-				pEnvironment.log( Level.WARNING, "Solid discarding face: " + pV1 + ", " + pV2 + ", " + pV3 );
+				pEnvironment.log( Level.WARNING, "CSGSolid discarding face: " + pV1 + ", " + pV2 + ", " + pV3 );
 			}
 			return( pFaceIndex );
 		} else {
 			// Build the face (having checked the vertices above)
-			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pFace.getMeshIndex(), false, pTempVars, pEnvironment );
+			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pFace, pTempVars, pEnvironment );
 			if ( aFace.isValid() ) {
 				// Retain the valid face
 				if ( pFaceIndex < 0 ) {
@@ -189,13 +189,19 @@ public class CSGSolid
 		CSGRay line;
 		CSGSegment segment1, segment2;
 		int signFace1Vert1, signFace1Vert2, signFace1Vert3, signFace2Vert1, signFace2Vert2, signFace2Vert3;
-		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
+		double tolerance = pEnvironment.mEpsilonOnPlaneDbl; // TOL;
 		
 		// Check each face in this solid
 		//	NOTE that we iterate with an index, since we dynamically adjust 'i'
 		//		 as a face is split.  This also means that mFaces.size() must
 		//		 be refreshed for testing on each iteration.
-loop1:	for( int i = 0; i < mFaces.size(); i += 1 ) {
+		int initialLimit = mFaces.size() * pSolid.getFaces().size() * 10;
+loop1:	for( int i = 0, j = initialLimit; i < (j = mFaces.size()); i += 1 ) {
+			// Rationality check (possibly debug???)
+			if ( j > initialLimit ) {
+				// We have split way too many times
+				throw new IllegalArgumentException( "CSGSolid.splitFaces - too many splits:" + j );
+			}
 			// Reset the face/vertices status for later classification
 			CSGFace face1 = mFaces.get( i );
 			face1.resetStatus();
@@ -322,8 +328,8 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 		Vector3d startPos, endPos;
 
 		// We now need to restrict the intersection 'line' from the planes of the faces
-		// to that portion which actually is bounded by the current face	
-		if ( pOtherSegment.getStartDistance() > (pFaceSegment.getStartDistance() + tolerance)) {
+		// to that portion which actually is bounded by the current face
+		if ( pOtherSegment.getStartDistance() > pFaceSegment.getStartDistance() ) { //(pFaceSegment.getStartDistance() + tolerance)) {
 			// The 'other' segment start is deeper so it determines the start point
 			startPos = pOtherSegment.getStartPosition();
 			
@@ -335,7 +341,7 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			startPos = pFaceSegment.getStartPosition();
 			startCollision = pFaceSegment.getStartCollision();
 		}		
-		if ( pOtherSegment.getEndDistance() < (pFaceSegment.getEndDistance() - tolerance)) {
+		if ( pOtherSegment.getEndDistance() < pFaceSegment.getEndDistance() ) { //(pFaceSegment.getEndDistance() - tolerance)) {
 			// The 'other' segment end is deeper, so it determines the end point
 			endPos = pOtherSegment.getEndPosition();
 			
@@ -346,7 +352,22 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			// This face segment end is deeper, to it determines the end point
 			endPos = pFaceSegment.getEndPosition();
 			endCollision = pFaceSegment.getEndCollision();
-		}		
+		}
+		if ( pEnvironment.mStructuralDebug ) {
+			// Confirm we have points on the expected plane
+			int startOnPlane = aFace.getPlane().pointPosition( startPos, pEnvironment.mEpsilonOnPlaneDbl );
+			int endOnPlane = aFace.getPlane().pointPosition( endPos, pEnvironment.mEpsilonOnPlaneDbl );
+			if ( (startOnPlane != 0) || (endOnPlane != 0) ) {
+				pEnvironment.log( Level.WARNING, "Invalid split points: " + startOnPlane + endOnPlane );
+				
+				int faceStartOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+				int faceEndOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+				int otherStartOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+				int otherEndOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+
+				throw new IllegalArgumentException( "Corrupted split" );
+			}
+		}
 		// The collision points determine how we split
 		switch( startCollision ) {
 		case V1:

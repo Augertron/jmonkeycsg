@@ -474,7 +474,6 @@ public class CSGShapeIOB
 								, CSGVertexIOB.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment )
 								, CSGVertexIOB.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment )
 								, mShape.getMeshIndex( pMeshManager, j )
-								, true
 								, pTempVars
 								, pEnvironment );
 			if ( aFace.isValid() ) {

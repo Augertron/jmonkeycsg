@@ -1,6 +1,6 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <!-- Prep the ENVIRONMENT -->
-<net.wcomohundro.jme3.csg.CSGEnvironment 
+<net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB
 	doublePrecision='true'
 	structuralDebug='true' />
 

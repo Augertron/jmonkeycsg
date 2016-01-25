@@ -271,25 +271,24 @@ public class CSGFace
 		CSGVertexIOB 	pV1
 	, 	CSGVertexIOB 	pV2
 	, 	CSGVertexIOB 	pV3
-	, 	int 			pMaterialIndex 
-	,	boolean			pConfirmVertices
+	,	int				pMeshIndex
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		super( new ArrayList( 3 ), null, pMaterialIndex );
+		super( new ArrayList( 3 ), null, pMeshIndex );
 		mStatus = CSGFaceStatus.UNKNOWN;
 
 		mVertices.add( pV1 );
 		mVertices.add( pV2 );
 		mVertices.add( pV3 );
 		
-		if ( pConfirmVertices
-		&& (CSGEnvironment
+		// Confirm the vertices
+		if ( CSGEnvironment
 				.equalVector3d( pV1.getPosition(), pV2.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
 			|| CSGEnvironment
 				.equalVector3d( pV2.getPosition(), pV3.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )
 			|| CSGEnvironment
-				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )) ) {
+				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )) {
 			// Not a meaningful face, do not bother with checking the plane
 			if ( pEnvironment.mStructuralDebug ) {
 				pEnvironment.log( Level.WARNING, "Degenerate face: " + this );
@@ -298,8 +297,39 @@ public class CSGFace
 		}
 		mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
 		if ( pEnvironment.mStructuralDebug && (mPlane == null) ) {
+			// The given points do not produce a valid plane
 			pEnvironment.log( Level.WARNING, "Invalid face: " + this );
 		}
+	}
+	public CSGFace(
+		CSGVertexIOB 	pV1
+	, 	CSGVertexIOB 	pV2
+	, 	CSGVertexIOB 	pV3
+	,	CSGFace			pSourceFace
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		super( new ArrayList( 3 ), null, pSourceFace.getMeshIndex() );
+		mStatus = CSGFaceStatus.UNKNOWN;
+
+		mVertices.add( pV1 );
+		mVertices.add( pV2 );
+		mVertices.add( pV3 );
+		
+		// BY DEFINITION, a new face based upon a source face MUST share the same plane
+		//mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
+		mPlane = pSourceFace.getPlane();
+		if ( pEnvironment.mStructuralDebug ) {
+			// Confirm that the given points reside on the plane
+			int v1=0, v2=0, v3=0;
+			if ( ((v1 = mPlane.pointPosition( pV1, pEnvironment )) != 0)
+			||	 ((v2 = mPlane.pointPosition( pV2, pEnvironment )) != 0)
+			||	 ((v3 = mPlane.pointPosition( pV3, pEnvironment )) != 0) ) {
+				pEnvironment.log( Level.WARNING, "Invalid face: point " + v1 + v2 + v3 + " not on plane: " + this );
+				mPlane = null;
+			}
+		}
+//temp code chasing the missing triangle
 Vector3d aPoint = new Vector3d( -0.9, 0.19130059, 9.75 );
 if ( CSGEnvironment
 		.equalVector3d( pV1.getPosition(), aPoint, pEnvironment.mEpsilonBetweenPointsDbl )

@@ -31,6 +31,7 @@
 package net.wcomohundro.jme3.csg.iob;
 
 import java.util.List;
+import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGTempVars;
@@ -155,7 +156,7 @@ public class CSGSegment
 				// V1 and V2 on opposite sides of the plane, so the EDGE12 is cut
 				anIndex = setEdge( anIndex, CSGFaceCollision.EDGE12, pFace.v1(), pFace.v2(), pTempVars, pEnvironment );
 			}
-			if( pSign2 * pSign3 < 0 ) { // (pSign2==1 && pSign3==-1) || (pSign2==-1 && pSign3==1) ) {
+			if ( pSign2 * pSign3 < 0 ) { // (pSign2==1 && pSign3==-1) || (pSign2==-1 && pSign3==1) ) {
 				// V2 and V3 on opposite sides of the plane, so the EDGE23 is cut
 				anIndex = setEdge( anIndex, CSGFaceCollision.EDGE23, pFace.v2(), pFace.v3(), pTempVars, pEnvironment );
 			}
@@ -175,6 +176,18 @@ public class CSGSegment
 	,	CSGEnvironment	pEnvironment
 	) {
 		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
+		
+		// An invalid segment will use NaN as a distance.  Since any comparison with
+		// NaN always yields 'false' structure the following logic accordingly
+		if ( (this.mEndDist > pOther.mStartDist + tolerance)
+		&&   (pOther.mEndDist > this.mStartDist + tolerance) ) {
+			// Overlap
+			return true;
+		} else {
+			// No overlap (or an invalid segment that we treat like no overlap)
+			return false;
+		}
+/**
 		if ( (this.mEndDist < pOther.mStartDist + tolerance )
 		||    (pOther.mEndDist < this.mStartDist + tolerance ) ) {
 			// No overlap
@@ -183,6 +196,7 @@ public class CSGSegment
 			// Overlap
 			return true;
 		}
+**/
 	}
 	
 	/** Accessors */
@@ -307,7 +321,7 @@ public class CSGSegment
 			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
 
 		 	mStartCollision = pCollision;
-		 	mStartDist = mLine.computePointToPointDistance( pVertex.getPosition(), pTempVars, pEnvironment );
+		 	mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment );
 		 	return( 1 );
 		 	
 		case 1:
@@ -318,7 +332,7 @@ public class CSGSegment
 			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
 
 			mEndCollision = pCollision;
-			mEndDist = mLine.computePointToPointDistance( pVertex.getPosition(), pTempVars, pEnvironment );
+			mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
 					
 			// The ending point distance should be smaller than  starting point distance 
 			if ( mStartDist > mEndDist ) {
@@ -365,6 +379,15 @@ public class CSGSegment
 			mStartCollision = pCollision;
 			mStartPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
 			mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment );
+			
+			if ( mFace.getPlane().pointPosition( mStartPosition, pEnvironment.mEpsilonOnPlaneDbl ) != 0 ) {
+				// Computed point is NOT on the face
+				// mStartPosition = null;
+				mStartDist = Double.NaN;
+				if ( pEnvironment.mStructuralDebug ) {
+					pEnvironment.log( Level.WARNING, "CSGSegment.setEdge invalid start: " + pVertex1 + ", " + pVertex2 + ", " + mStartPosition );
+				}
+			}
 			return( 1 );
 			
 		case 1:
@@ -373,6 +396,14 @@ public class CSGSegment
 			mEndPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
 			mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
 			
+			if ( mFace.getPlane().pointPosition( mEndPosition, pEnvironment.mEpsilonOnPlaneDbl ) != 0 ) {
+				// Computed point is NOT on the face
+				//mEndPosition = null;
+				mEndDist = Double.NaN;
+				if ( pEnvironment.mStructuralDebug ) {
+					pEnvironment.log( Level.WARNING, "CSGSegment.setEdge invalid end: " + pVertex1 + ", " + pVertex2 + ", " + mEndPosition );
+				}
+			}			
 			// The ending point distance should be 'farther' than starting point distance 
 			if ( mStartDist > mEndDist ) {
 			  	swapEnds();

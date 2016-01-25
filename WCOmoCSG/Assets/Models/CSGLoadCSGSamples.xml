@@ -11,6 +11,7 @@
         </lights>
     </lights>
 	<children>
+ 
 		<!--  ****************** NORMALS **************************** -->
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCube'
         		materialName='Textures/Debug/Normals.xml'>
@@ -165,7 +166,7 @@
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-        
+
  		<!--  Helix carved out of a spere -->
         <net.wcomohundro.jme3.csg.CSGGeonode name='HelixSphere'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
@@ -202,7 +203,7 @@
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-        
+      
         <!-- Blend with external mesh -->
         <net.wcomohundro.jme3.csg.CSGGeonode name='HelixSphere'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
@@ -230,5 +231,6 @@
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
+
 	</children>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

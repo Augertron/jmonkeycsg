@@ -134,6 +134,28 @@ public class CSGEnvironment<ShapeProcessorT>
     ) {
         return( !Float.isNaN( pValue ) && !Float.isInfinite( pValue ) );
     }
+    
+    /** Service routine to check for a value so close to zero that it might as well be zero */
+    public static double isZero(
+    	double		pValue
+    ,	double		pTolerance
+    ) {
+    	if ( (pValue < -pTolerance) || (pValue > pTolerance) ) {
+    		return( pValue );
+    	} else {
+    		return( 0.0 );
+    	}
+    }
+    public static float isZero(
+    	float		pValue
+    ,	float		pTolerance
+    ) {
+    	if ( (pValue < -pTolerance) || (pValue > pTolerance) ) {
+    		return( pValue );
+    	} else {
+    		return( 0.0f );
+    	}
+    }
 
     /** Service routine to check two vectors and see if they are the same, within a given 
 	 	tolerance. (Typically EPSILON_BETWEEN_POINTS, but not required)
