@@ -178,15 +178,16 @@ public class CSGVertexIOB
 		if ( pFlipIt ) {
 			// Make a flipped copy (invert the normal)
 			aCopy = new CSGVertexIOB( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null );
+			// Until proven otherwise, I am assuming that an inverted vertex does not share
+			// the same status.
 		} else {
 			// Standard copy
 			aCopy = new CSGVertexIOB( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone(), null );
+			// Retain the status
+			aCopy.mStatus = this.mStatus;
+			// By definition, the clone has the same position as this one
+			this.samePosition( aCopy );
 		}
-		// Retain the status
-		aCopy.mStatus = this.mStatus;
-		
-		// By definition, the clone has the same position as this one
-		this.samePosition( aCopy );
 		return( aCopy );
 	}
 	@Override
@@ -233,9 +234,10 @@ public class CSGVertexIOB
 			this.mSamePosition = new ArrayList<CSGVertexIOB>( 3 );
 			this.mSamePosition.add( this );
 		}
+		mSamePosition.add( pOtherVertex );
+		
 		// The list itself can be shared across all the Vertex instances
 		pOtherVertex.mSamePosition = this.mSamePosition;
-		pOtherVertex.mSamePosition.add( pOtherVertex );
 	}
 
 	/** Sets the vertex status, as needed */

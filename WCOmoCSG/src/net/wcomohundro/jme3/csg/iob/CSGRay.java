@@ -32,7 +32,10 @@ package net.wcomohundro.jme3.csg.iob;
 
 import java.util.logging.Level;
 
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
+import com.jme3.util.TempVars;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGPlaneDbl;
@@ -337,6 +340,138 @@ public class CSGRay
 			return pResult;
 		}
 	}
+
+    /** Compute if/where this ray intersects the given triangle */
+    public boolean intersectsTriangle(
+    	Vector3d 	pV0
+    , 	Vector3d 	pV1
+    , 	Vector3d 	pV2
+    ,	Vector3d	pTriangleNormal
+    ,	Vector3d 	pResult
+    , 	boolean 	pResultsAsPoint
+    ,	CSGTempVars	pVars
+    ,	double		pTolerance
+    ) {
+        Vector3d tempVa = pVars.vectd1,
+                tempVb = pVars.vectd2,
+                tempVc = pVars.vectd3;
+
+        Vector3d diff = mOrigin.subtract( pV0, tempVa );
+        Vector3d edge1 = pV1.subtract( pV0, tempVb );
+        Vector3d edge2 = pV2.subtract( pV0, tempVc );
+
+        double dirDotNorm = mDirection.dot( pTriangleNormal );
+        double sign;
+        if ( dirDotNorm > pTolerance ) {
+            sign = 1;
+        } else if (dirDotNorm < -pTolerance ) {
+            sign = -1;
+            dirDotNorm = -dirDotNorm;
+        } else {
+            // Ray and triangle are parallel
+            return false;
+        }
+        double dirDotEdge1xDiff, dirDotDiffxEdge2, diffDotNorm;
+        dirDotDiffxEdge2 = sign * mDirection.dot( diff.cross( edge2, edge2 ) );
+        if ( dirDotDiffxEdge2 >= 0.0 ) {
+            dirDotEdge1xDiff = sign * mDirection.dot( edge1.crossLocal( diff ) );
+
+            if ( dirDotEdge1xDiff >= 0.0 ) {
+                if ( dirDotDiffxEdge2 + dirDotEdge1xDiff <= dirDotNorm ) {
+                    diffDotNorm = -sign * diff.dot( pTriangleNormal );
+                    if ( diffDotNorm >= 0.0 ) {
+                        // Ray intersects triangle
+                        if ( pResult != null) {
+	                        double inv = 1 / dirDotNorm;
+	                        double t = diffDotNorm * inv;
+	                        if ( pResultsAsPoint ) {
+	                        	// Where is the intersection
+	                        	pResult.set( mOrigin )
+	                            	.addLocal( mDirection.x * t, mDirection.y * t, mDirection.z * t );
+	                        } else {
+	                            // these weights can be used to determine
+	                            // interpolated values, such as texture coord.
+	                            // eg. texcoord s,t at intersection point:
+	                            // s = w0*s0 + w1*s1 + w2*s2;
+	                            // t = w0*t0 + w1*t1 + w2*t2;
+	                            double w1 = dirDotDiffxEdge2 * inv;
+	                            double w2 = dirDotEdge1xDiff * inv;
+	                            
+	                            //float w0 = 1.0f - w1 - w2;
+	                            pResult.set(t, w1, w2);
+	                        }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    public boolean intersectsTriangle(
+    	Vector3d 	pV0
+    , 	Vector3d 	pV1
+    , 	Vector3d 	pV2
+    ,	double		pTolerance
+    ) {
+        double edge1X = pV1.x - pV0.x;
+        double edge1Y = pV1.y - pV0.y;
+        double edge1Z = pV1.z - pV0.z;
+
+        double edge2X = pV2.x - pV0.x;
+        double edge2Y = pV2.y - pV0.y;
+        double edge2Z = pV2.z - pV0.z;
+
+        double normX = ((edge1Y * edge2Z) - (edge1Z * edge2Y));
+        double normY = ((edge1Z * edge2X) - (edge1X * edge2Z));
+        double normZ = ((edge1X * edge2Y) - (edge1Y * edge2X));
+
+        double dirDotNorm = mDirection.x * normX + mDirection.y * normY + mDirection.z * normZ;
+
+        double diffX = mOrigin.x - pV0.x;
+        double diffY = mOrigin.y - pV0.y;
+        double diffZ = mOrigin.z - pV0.z;
+
+        double sign;
+        if ( dirDotNorm > pTolerance ) {
+            sign = 1;
+        } else if ( dirDotNorm < -pTolerance ) {
+            sign = -1f;
+            dirDotNorm = -dirDotNorm;
+        } else {
+            // ray and triangle/quad are parallel
+            return false;
+        }
+        double diffEdge2X = ((diffY * edge2Z) - (diffZ * edge2Y));
+        double diffEdge2Y = ((diffZ * edge2X) - (diffX * edge2Z));
+        double diffEdge2Z = ((diffX * edge2Y) - (diffY * edge2X));
+
+        double dirDotDiffxEdge2 = sign * (mDirection.x * diffEdge2X
+							                + mDirection.y * diffEdge2Y
+							                + mDirection.z * diffEdge2Z);
+
+        if ( dirDotDiffxEdge2 >= 0.0 ) {
+            diffEdge2X = ((edge1Y * diffZ) - (edge1Z * diffY));
+            diffEdge2Y = ((edge1Z * diffX) - (edge1X * diffZ));
+            diffEdge2Z = ((edge1X * diffY) - (edge1Y * diffX));
+
+            double dirDotEdge1xDiff = sign * (mDirection.x * diffEdge2X
+							                    + mDirection.y * diffEdge2Y
+							                    + mDirection.z * diffEdge2Z);
+
+            if ( dirDotEdge1xDiff >= 0.0 ) {
+                if ( dirDotDiffxEdge2 + dirDotEdge1xDiff <= dirDotNorm ) {
+                    double diffDotNorm = -sign * (diffX * normX + diffY * normY + diffZ * normZ);
+                    if ( diffDotNorm >= 0.0 ) {
+                        // ray intersects triangle
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
 	/** Randomly alter the direction of this line */
 	public void perturbDirection(

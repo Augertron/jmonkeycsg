@@ -47,6 +47,7 @@ import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
+import net.wcomohundro.jme3.csg.test.CSGTestM;
 
 /** A "FACE" describes a triangular surface on a solid, as defined by 3 vertices.  In addition,
  	every face tracks its own status about being inside, outside, or on the boundary of another
@@ -176,6 +177,7 @@ public class CSGFace
 	
 
 	/** Gets the position of a point relative to a line in the x plane */
+/** OBSOLETE
 	protected static CSGPointStatus linePositionInX(
 		Vector3d 		pPoint
 	, 	Vector3d 		pPointLine1
@@ -201,7 +203,6 @@ public class CSGFace
 			return CSGPointStatus.NONE;
 		}
 	}
-	/** Gets the position of a point relative to a line in the y plane */
 	protected static CSGPointStatus linePositionInY(
 		Vector3d 		pPoint
 	, 	Vector3d 		pPointLine1
@@ -227,7 +228,6 @@ public class CSGFace
 			return CSGPointStatus.NONE;
 		}
 	}
-	/** Gets the position of a point relative to a line in the z plane */
 	protected static CSGPointStatus linePositionInZ(
 		Vector3d 		pPoint
 	, 	Vector3d 		pPointLine1
@@ -253,7 +253,8 @@ public class CSGFace
 			return CSGPointStatus.NONE;
 		}
 	}
-
+***/
+	
 	/** Bounds of this face */
 	protected CSGBounds			mBounds;
 	/** Status of this Face */
@@ -325,20 +326,10 @@ public class CSGFace
 			if ( ((v1 = mPlane.pointPosition( pV1, pEnvironment )) != 0)
 			||	 ((v2 = mPlane.pointPosition( pV2, pEnvironment )) != 0)
 			||	 ((v3 = mPlane.pointPosition( pV3, pEnvironment )) != 0) ) {
-				pEnvironment.log( Level.WARNING, "Invalid face: point " + v1 + v2 + v3 + " not on plane: " + this );
+				pEnvironment.log( Level.WARNING, "Invalid CSGFace: point " + v1 + v2 + v3 + " not on plane: " + this );
 				mPlane = null;
 			}
 		}
-//temp code chasing the missing triangle
-Vector3d aPoint = new Vector3d( -0.9, 0.19130059, 9.75 );
-if ( CSGEnvironment
-		.equalVector3d( pV1.getPosition(), aPoint, pEnvironment.mEpsilonBetweenPointsDbl )
-	|| CSGEnvironment
-		.equalVector3d( pV2.getPosition(), aPoint, pEnvironment.mEpsilonBetweenPointsDbl )
-	|| CSGEnvironment
-		.equalVector3d( pV3.getPosition(), aPoint, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
-	System.out.println( "Point on Face: " + this );
-}
 	}
 	
 	/** Clones the face object */
@@ -382,15 +373,32 @@ if ( CSGEnvironment
 			CSGVertexIOB thisVertex = (CSGVertexIOB)aVertex;
 			Vector3d thisPosition = thisVertex.getPosition();
 			CSGVertexIOB otherVertex = pVertexList.get( thisPosition );
+			
 			if ( otherVertex == null ) {
 				// No overlap, so add this vertex to the list
 				pVertexList.put( thisPosition, thisVertex );
-			} else {
-				// Same as another vertex
+			} else if ( aVertex.equals( otherVertex ) ) {
+				// Same as another vertex (includes 'normal' check)
 				otherVertex.samePosition( thisVertex );
 			}
 		}
 		
+	}
+	/** Look if this faces matches a given position */
+	public boolean matchPosition(
+		List<Vector3d>	pPosition
+	,	CSGEnvironment	pEnvironment
+	) {
+		// Match every position in order
+		for( int i = 0; i < 3; i += 1 ) {
+			if ( !CSGEnvironment.equalVector3d( ((CSGVertexIOB)mVertices.get(i)).getPosition()
+											,	pPosition.get( i )
+											,	pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+				return( false );
+			}
+		}
+		// Everything above matched
+		return( true );
 	}
 	
 	/** OVERRIDE: for debug report */
@@ -580,7 +588,7 @@ if ( CSGEnvironment
  		****** TempVars used:  vectd4, vectd5, vectd6
 	 */
 	public CSGFaceStatus rayTraceClassify(
-		CSGSolid 		pSolid
+		CSGSolid 		pOtherSolid
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -596,10 +604,11 @@ if ( CSGEnvironment
 		CSGRay ray = new CSGRay( getNormal(), p0 );
 		
 		double dotProduct, distance; 
-		Vector3d intersectionPoint;
+		Vector3d intersectionPoint = null;
 		CSGFace closestFace = null;
 		double closestDistance  = Double.MAX_VALUE; 
-		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
+		double zeroTolerance = pEnvironment.mEpsilonNearZeroDbl;
+		double planeTolerance = pEnvironment.mEpsilonOnPlaneDbl;
 				
 		int deadmanSwitch = 100;
 outer:	while( deadmanSwitch-- > 0 ) {
@@ -607,22 +616,23 @@ outer:	while( deadmanSwitch-- > 0 ) {
 			closestDistance = Double.MAX_VALUE;
 			
 			// Match each face in the other solid
-			for( CSGFace otherFace : pSolid.getFaces() ) {
-				dotProduct = otherFace.getNormal().dot( ray.getDirection() );
+			for( CSGFace otherFace : pOtherSolid.getFaces() ) {
+				double absDotProduct = Math.abs( otherFace.getNormal().dot( ray.getDirection() ) );
 				intersectionPoint = ray.computePlaneIntersection( otherFace.getNormal()
 																, otherFace.getPlane().getDot()
 																, pTempVars.vectd5
 																, pTempVars
 																, pEnvironment );
 								
-				// Check if ray intersects the plane...  
+				// Check if ray intersects the plane, which happens a lot unless the
+				// ray is absolutely parallel to the plane
 				if ( intersectionPoint != null ) {
 					distance = ray.computePointToPointDistance( intersectionPoint
 																, pTempVars
 																, pEnvironment);
 					
 					// Check if the ray lies in plane...
-					if ( (Math.abs(distance) < tolerance) && (Math.abs( dotProduct ) < tolerance) ) {
+					if ( (Math.abs(distance) < planeTolerance) && (absDotProduct < zeroTolerance) ) {
 						// Disturb the ray in order to not lie within the other plane 
 						ray.perturbDirection();
 						
@@ -630,19 +640,19 @@ outer:	while( deadmanSwitch-- > 0 ) {
 						continue outer;
 					}
 					// Check if the ray starts in plane...
-					if ( (Math.abs( distance ) < tolerance) && (Math.abs( dotProduct ) > tolerance) ) {
-						// Check if the ray intersects the face...
-						if ( otherFace.hasPoint( intersectionPoint, pEnvironment ) ) {
+					if ( (Math.abs( distance ) < planeTolerance) && (absDotProduct > zeroTolerance) ) {
+						// Check if the ray intersects the face as well
+						if ( otherFace.hasPoint( ray, pTempVars, pEnvironment ) ) {
 							// The faces do touch
 							closestFace = otherFace;
 							closestDistance = 0;
 							break;
 						}
-					} else if ( (Math.abs( dotProduct ) > tolerance) && (distance > tolerance) ) {
-						// The ray intersects the plane
-						if( distance < closestDistance ) {
+					} else if ( (absDotProduct > zeroTolerance) && (distance > 0) ) {
+						// The ray intersects the plane, facing the same direction
+						if ( distance < closestDistance ) {
 							// Check if the ray intersects the face;
-							if ( otherFace.hasPoint( intersectionPoint, pEnvironment ) ) {
+							if ( otherFace.hasPoint( ray, pTempVars, pEnvironment ) ) {
 								// This face is now the closest
 								closestDistance = distance;
 								closestFace = otherFace;
@@ -662,27 +672,53 @@ outer:	while( deadmanSwitch-- > 0 ) {
 			dotProduct = closestFace.getNormal().dot( ray.getDirection() );
 			
 			// If distance = 0, then coplanar faces
-			if ( Math.abs( closestDistance ) < tolerance ) {
+			if ( Math.abs( closestDistance ) < planeTolerance ) {
 				// Same plane, but which way do we face?
-				if ( dotProduct > tolerance ) {
+				if ( dotProduct > 0 ) {
 					mStatus = CSGFaceStatus.SAME;
-				} else if ( dotProduct < -tolerance ) {
+				} else {
 					mStatus = CSGFaceStatus.OPPOSITE;
 				}
 			}
 			// If dot product > 0 (same direction), then inside face
-			else if ( dotProduct > tolerance ) {
+			else if ( dotProduct > 0 ) {
 				mStatus = CSGFaceStatus.INSIDE;
 			}
 			// If dot product < 0 (opposite direction), then outside face
-			else if ( dotProduct < -tolerance ) {
+			else {
 				mStatus = CSGFaceStatus.OUTSIDE;
 			}
 		}
 		return( mStatus );
 	}
 	
+	/** Checks if the face contains a point based on an intersecting ray */
+	protected boolean hasPoint(
+		CSGRay			pRay
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		boolean pointInTriangle 
+			= pRay.intersectsTriangle( this.v1().getPosition()
+										, this.v2().getPosition()
+										, this.v3().getPosition()
+										, pEnvironment.mEpsilonOnPlaneDbl );
+//			= pRay.intersectsTriangle( this.v1().getPosition()
+//										, this.v2().getPosition()
+//										, this.v3().getPosition()
+//										, this.getNormal()
+//										, null
+//										, true
+//										, pTempVars
+//										, pEnvironment.mEpsilonOnPlaneDbl );
+		return( pointInTriangle );
+	}
+
+	
 	/** Checks if the the face contains a point */	
+/** The following is from the original unboolean code.  I really do not understand what it is
+ 	doing, but it seems to fail when the values are close in 2 coordinates but differ in the third
+
 	protected boolean hasPoint(
 		Vector3d 		pPoint
 	,	CSGEnvironment	pEnvironment
@@ -729,7 +765,8 @@ outer:	while( deadmanSwitch-- > 0 ) {
 			return false;
 		}
 	}
-
+****/
+	
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(

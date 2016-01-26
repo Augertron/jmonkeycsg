@@ -212,10 +212,13 @@ public abstract class CSGTestSceneBase
 	                	
 	                	Triangle aTriangle = aCollision.getTriangle( null );
 	                	StringBuilder aBuffer = new StringBuilder( 128 );
-	                	aBuffer.append( aTriangle.get1() ).append( " / " )
-	                		.append( aTriangle.get2() ).append( " / " )
-	                		.append( aTriangle.get3() );
+	                	aBuffer.append( "(" )
+	                		.append( aTriangle.get1() ).append( ", " )
+	                		.append( aTriangle.get2() ).append( ", " )
+	                		.append( aTriangle.get3() )
+	                		.append( ")" );
 	                	mPostText.push( aBuffer.toString() );
+	                	System.out.println( aBuffer.toString() );
 	                	mRefreshText = true;
                 	}
                 } else if ( pName.equals( "video" ) ) {

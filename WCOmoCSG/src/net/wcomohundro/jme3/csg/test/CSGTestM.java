@@ -51,6 +51,7 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.SceneProcessor;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
@@ -66,6 +67,8 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+import net.wcomohundro.jme3.csg.iob.CSGFace;
+import net.wcomohundro.jme3.csg.iob.CSGVertexIOB;
 import net.wcomohundro.jme3.csg.shape.*;
 
 /** Simple test of the CSG support 
@@ -121,6 +124,22 @@ public class CSGTestM
 		sPositions.add( new Vector3f(0.26486641f,0.21563309f,0.56654203f));
 		sPositions.add( new Vector3f(0.39975405f,0.90919274f,0.80785227f));
 		sPositions.add( new Vector3f(0.54797322f,0.55813938f,0.40844613f));
+	}
+	
+	public static List<Vector3d> sDebugFace = new ArrayList(3);
+	public static List<Vector3d> sDebugFace2 = new ArrayList(3);
+	static {
+		sDebugFace.add( new Vector3d( 0.8684289, 0.013462324, 0.6622519) );
+		sDebugFace.add( new Vector3d( 0.8845707, 0.0631417, 0.6622519) );
+		sDebugFace.add( new Vector3d( 0.9622432, 0.0631417, 0.62678003) );
+		
+		sDebugFace.add( new Vector3d( 0.8845707,  0.0631417,  0.6622519 ) );
+		sDebugFace.add( new Vector3d( 0.93126726, 0.15847588, 0.62678003 ) );
+		sDebugFace.add( new Vector3d( 0.9622432,  0.0631417,  0.62678003 ) );
+		
+		sDebugFace2.add( new Vector3d( 0.15480220317840576, 0.0943608283996582, 0.169720858335495 ) );
+		sDebugFace2.add( new Vector3d( 0.10256612300872803, 0.09436081349849701, 0.169720858335495 ) );
+		sDebugFace2.add( new Vector3d( 0.17880430817604065, 0.16823174059391022, 0.2051926851272583 ) );
 	}
 	
 	protected CSGGeometry	mBlendedShape;

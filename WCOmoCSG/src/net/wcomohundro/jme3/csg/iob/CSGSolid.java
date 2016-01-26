@@ -41,6 +41,7 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
+import net.wcomohundro.jme3.csg.test.CSGTestM;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -289,7 +290,7 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 	) {
 		// Match every face against the other object
 		for( CSGFace aFace : mFaces ) {
-			// If the face vertices aren't classified to make the simple classify
+			// Status on the vertices can make the classification really simple
 			if ( aFace.simpleClassify() == false ) {
 				// Nothing simple about it, so use the ray trace classification
 				CSGFaceStatus aStatus = aFace.rayTraceClassify( pOtherObject, pTempVars, pEnvironment );
@@ -358,14 +359,14 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			int startOnPlane = aFace.getPlane().pointPosition( startPos, pEnvironment.mEpsilonOnPlaneDbl );
 			int endOnPlane = aFace.getPlane().pointPosition( endPos, pEnvironment.mEpsilonOnPlaneDbl );
 			if ( (startOnPlane != 0) || (endOnPlane != 0) ) {
-				pEnvironment.log( Level.WARNING, "Invalid split points: " + startOnPlane + endOnPlane );
+				pEnvironment.log( Level.WARNING, "CSGSolid: Invalid split points: " + startOnPlane + endOnPlane );
 				
 				int faceStartOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
 				int faceEndOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
 				int otherStartOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
 				int otherEndOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
 
-				throw new IllegalArgumentException( "Corrupted split" );
+				throw new IllegalArgumentException( "CSGSolid: Corrupted split" );
 			}
 		}
 		// The collision points determine how we split
@@ -552,6 +553,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 		if ( pFaceIndex >= 0 ) {
 			// Nothing actually added, but the original is still in its slot and must be eliminated
 			mFaces.remove( pFaceIndex );
+			if ( pEnvironment.mStructuralDebug ) {
+				pEnvironment.log( Level.WARNING, "CSGSolid.splitFace: no face remains-" + aFace );
+			}
 			return( -1 );
 		} else {
 			// Return the count of the faces we split into
