@@ -79,10 +79,14 @@ public class CSGEnvironment<ShapeProcessorT>
 	 		we do NOT declare this global as 'final' so that the default can be dynamically
 	 		modified at run time
 	 */
-	public static CSGEnvironment sStandardEnvironment = null;
+	protected static CSGEnvironment sStandardEnvironment = null;
+	public static CSGEnvironment resolveEnvironment(
+	) {
+		return( resolveEnvironment( null, null ) );
+	}
 	public static CSGEnvironment resolveEnvironment(
 		CSGEnvironment	pEnvironment
-	,	Spatial			pForSpatial
+	,	CSGElement		pForSpatial
 	) {
 		if ( pEnvironment != null ) {
 			// Use environment provided
@@ -106,10 +110,15 @@ public class CSGEnvironment<ShapeProcessorT>
 		}
 		return( pEnvironment );
 	}
+	public static void resetEnvironment(
+		CSGEnvironment	pEnvironment
+	) {
+		sStandardEnvironment = pEnvironment;
+	}
 	
 	/** Clone a copy with a given spatial */
 	public CSGEnvironment clone(
-		Spatial		pShape
+		CSGElement		pShape
 	) {
 		CSGEnvironment aCopy = null;
 		try {
@@ -226,6 +235,10 @@ public class CSGEnvironment<ShapeProcessorT>
 	/** Service routine to 'rationalize' a vector to keep all its components within the same
 	 	scale.  In other words, to have x,y,z values like 0.5, 0.4, 0.000000000001 with
 	 	wildly varying orders of magnitude is rather silly.
+	 	
+	 	NOTE NOTE NOTE
+	 		With extensive testing of IOB processing, using this seemed to add more
+	 		problems than it solved.  Activate at your own risk.
 	 */
 	public static Vector3d rationalizeVector(
 		Vector3d	pVector
@@ -366,7 +379,7 @@ public class CSGEnvironment<ShapeProcessorT>
 	
 	
 	/** Shape this environment applies to */
-	public Spatial		mShape;
+	public CSGElement	mShape;
 	/** Is value (Vector/Vertex) rationalization on or off */
 	public boolean		mRationalizeValues;
 	/** Is structural debug on or off */
@@ -400,14 +413,14 @@ public class CSGEnvironment<ShapeProcessorT>
 	,	float		pEpsilonNearZeroFlt
 	,	float		pEpsilonBetweenPointsFlt
 	,	float		pEpsilonOnPlaneFlt
-	,	boolean		pRationaizeValues
+	,	boolean		pRationalizeValues
 	,	int			pEpsilonMagnitudeRange
 	) {
 		mShape = null;
 		mDoublePrecision = pDoublePrecision;
 		mShapeClass = pHandlerClass;
 		mStructuralDebug = DEBUG;
-		mRationalizeValues = pRationaizeValues;
+		mRationalizeValues = pRationalizeValues;
 		
 		mEpsilonNearZeroDbl = pEpsilonNearZeroDbl;
 		mEpsilonOnPlaneDbl = pEpsilonOnPlaneDbl;		
@@ -426,7 +439,7 @@ public class CSGEnvironment<ShapeProcessorT>
 	,	String		pMessage
 	) {
 		if ( this.mShape != null ) {
-			pMessage = this.mShape.getName() + ": " + pMessage;
+			pMessage = this.mShape.asSpatial().getName() + ": " + pMessage;
 		}
 		sLogger.log( pLogLevel, pMessage );
 	}
@@ -436,7 +449,7 @@ public class CSGEnvironment<ShapeProcessorT>
 		String		pMessage
 	) {
 		if ( this.mShape != null ) {
-			pMessage = this.mShape.getName() + ": " + pMessage;
+			pMessage = this.mShape.asSpatial().getName() + ": " + pMessage;
 		}
 		return( new IllegalArgumentException( pMessage ) );
 	}

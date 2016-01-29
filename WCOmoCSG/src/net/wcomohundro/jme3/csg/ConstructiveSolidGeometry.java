@@ -230,6 +230,9 @@ public interface ConstructiveSolidGeometry
 	public interface CSGSpatial
 		extends CSGElement
 	{
+		/** Control if multiple materials are allowed */
+		public void forceSingleMaterial( boolean pFlag );
+		
 	    /** Accessor to the LOD level (ala Geometry) 
 	     		NOTE that setLodLevel() is defined by Spatial
 	     */

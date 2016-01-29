@@ -123,7 +123,7 @@ if ( false ) {	// Looks like the following gets you the same results as above wi
 	/** Produce a report on what we know about the active environment */
 	public static void reportVersion(
 	) {
-		reportVersion( CSGEnvironment.sStandardEnvironment, CSGEnvironment.sLogger );
+		reportVersion( CSGEnvironment.resolveEnvironment(), CSGEnvironment.sLogger );
 	}
 	public static void reportVersion(
 		CSGEnvironment	pEnvironment

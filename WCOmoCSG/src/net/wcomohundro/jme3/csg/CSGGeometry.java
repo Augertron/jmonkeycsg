@@ -185,7 +185,17 @@ public class CSGGeometry
     		this.material = pMaterial;
     	}
     }
-    
+	/** Access to the single material control */
+	@Override
+	public void forceSingleMaterial( 
+		boolean pFlag 
+	) { 
+		if ( !pFlag ) {
+			// CSGGeometry is inherently single material
+			throw new IllegalArgumentException( "CSGGeometry is inherently single material" );
+		}
+	}
+
     /** Test if this Spatial has its own custom physics defined */
     @Override
     public boolean hasPhysics() { return mPhysics != null; }

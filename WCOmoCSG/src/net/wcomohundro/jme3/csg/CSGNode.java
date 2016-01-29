@@ -167,6 +167,7 @@ public class CSGNode
     	super.setMaterial( pMaterial );
         this.mMaterial = pMaterial;
     }
+	
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
 	 	a material

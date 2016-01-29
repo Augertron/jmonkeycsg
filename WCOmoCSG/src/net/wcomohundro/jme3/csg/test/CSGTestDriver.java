@@ -70,7 +70,8 @@ public class CSGTestDriver
 	    //app = new CSGTestI( args );	// Shadow test
 	    //app = new CSGTestJ();			// Dynamic animation test from JME forum
 	    //app = new CSGTestK();			// 2D Surface test
-	    //app = new CSGTestL();			// 2D Surface test
+	    //app = new CSGTestL();			// Progressive add/subtract cylinder from prior
+	    //app = new CGGTestM();			// Progressive spherical mouse eating cube of cheese
 	        
 	    //app = new TestPointLightShadows();
 	    app.start();

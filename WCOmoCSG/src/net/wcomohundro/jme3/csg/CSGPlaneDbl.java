@@ -152,7 +152,7 @@ public class CSGPlaneDbl
 	,	Vector3d	pPointOnPlane
 	) {
 		// From the BSP FAQ paper, the 'D' value is calculated from the normal and a point on the plane.
-		this( pNormal, pPointOnPlane, pNormal.dot( pPointOnPlane ), -1, CSGEnvironment.sStandardEnvironment );
+		this( pNormal, pPointOnPlane, pNormal.dot( pPointOnPlane ), -1, CSGEnvironment.resolveEnvironment() );
 	}
 	/** Internal constructor for a given normal and dot */
 	protected CSGPlaneDbl(

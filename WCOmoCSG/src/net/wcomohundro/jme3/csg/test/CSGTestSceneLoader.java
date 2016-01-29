@@ -273,7 +273,7 @@ public class CSGTestSceneLoader
 	    	Object aNode = assetManager.loadAsset( aKey );
 	    	
 	    	if ( aNode instanceof CSGEnvironment ) {
-	    		CSGEnvironment.sStandardEnvironment = (CSGEnvironment)aNode;
+	    		CSGEnvironment.resetEnvironment( (CSGEnvironment)aNode );
 	    		CSGVersion.reportVersion();
 
 	    		pBuffer.append( " *** Processing Environment Reset" );

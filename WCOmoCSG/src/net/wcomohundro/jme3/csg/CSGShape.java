@@ -441,7 +441,7 @@ public class CSGShape
 	@Override
 	public CSGShape clone(
 	) {
-		return( clone( null, this.getLodLevel(), CSGEnvironment.sStandardEnvironment ) );
+		return( clone( null, this.getLodLevel(), CSGEnvironment.resolveEnvironment() ) );
 	}
 	public CSGShape clone(
 		CSGMeshManager		pMeshManager

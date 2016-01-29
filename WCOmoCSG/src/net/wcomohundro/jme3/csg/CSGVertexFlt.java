@@ -80,7 +80,7 @@ public class CSGVertexFlt
 	,	Vector3f		pNormal
 	,	Vector2f		pTextureCoordinate
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, CSGEnvironment.sStandardEnvironment );
+		this( pPosition, pNormal, pTextureCoordinate, CSGEnvironment.resolveEnvironment() );
 	}
 	public CSGVertexFlt(
 		Vector3f		pPosition

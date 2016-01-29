@@ -81,7 +81,7 @@ public class CSGEnvironmentIOB
 		,	EPSILON_NEAR_ZERO_FLT
 		,	EPSILON_BETWEEN_POINTS_FLT
 		,	EPSILON_ONPLANE_FLT
-		,	false
+		,	false						// I got bad results with this set to true
 		,	EPSILON_MAGNITUDE_RANGE );
 		
 		mRemoveUnsplitFace = REMOVE_UNSPLIT_FACE;

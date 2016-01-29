@@ -82,7 +82,7 @@ public class CSGVertexDbl
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, CSGEnvironment.sStandardEnvironment );
+		this( pPosition, pNormal, pTextureCoordinate, CSGEnvironment.resolveEnvironment() );
 	}
 	public CSGVertexDbl(
 		Vector3d		pPosition

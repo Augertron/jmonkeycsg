@@ -131,7 +131,9 @@ public class CSGGeonode
 	public CSGGeometry getMasterGeometry() { return mMasterGeometry; }
 	
 	/** Access to the single material control */
+	@Override
 	public void forceSingleMaterial( boolean pFlag ) { mForceSingleMaterial = pFlag; }
+
 	
     /** If physics is active for the shape, connect it all up now */
     @Override

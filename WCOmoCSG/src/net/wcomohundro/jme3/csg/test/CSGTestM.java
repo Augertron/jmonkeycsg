@@ -40,6 +40,7 @@ import com.jme3.font.BitmapText;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.AmbientLight;
 import com.jme3.light.Light;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -63,6 +64,7 @@ import net.wcomohundro.jme3.csg.CSGGeometry;
 import net.wcomohundro.jme3.csg.CSGGeonode;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGVersion;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
@@ -129,7 +131,7 @@ public class CSGTestM
 ****/		
 		// The following includes a partial sphere in the middle of open
 		// space around step 320....
-		// A triangle is dropped around step 40 ....
+		// A triangle is dropped around step 40 .... (which was pruned back to fail on step four)
 		sPositions.add( new Vector3f(0.05513537f,0.88032979f,0.10482091f)); // 1
 		sPositions.add( new Vector3f(0.01727545f,0.81447572f,0.25078678f)); // 2
 //		sPositions.add( new Vector3f(0.00964278f,0.75274724f,0.49159241f)); // 3
@@ -485,18 +487,14 @@ public class CSGTestM
 		sDebugFace2.add( new Vector3d( 0.15480220317840576, 0.0943608283996582, 0.169720858335495 ) );
 		sDebugFace2.add( new Vector3d( 0.10256612300872803, 0.09436081349849701, 0.169720858335495 ) );
 		sDebugFace2.add( new Vector3d( 0.17880430817604065, 0.16823174059391022, 0.2051926851272583 ) );
-		
-//		(-0.21916875, 0.7058243, 0.0718849)
-//		(-0.23773603, 0.6923344, 0.1575371)
-//		(-0.21916875, 0.7802758, 0.07188491)
-		
+			
 		sDebugIntersection[0] 
 			= new Vector3d( -0.22993217408657074, 0.6713560223579407, 0.02223246917128563);
 		sDebugIntersection[1] 
 				= new Vector3d(-0.19741584360599518, 0.6949805617332458, 0.1722324937582016);
 	}
 	
-	protected CSGGeometry	mBlendedShape;
+	protected ConstructiveSolidGeometry.CSGSpatial	mBlendedShape;
 	protected CSGShape		mPreviousShape;
 	protected CSGShape		mSphere;
 	protected int			mPositionIndex;
@@ -537,12 +535,18 @@ public class CSGTestM
 		mSingleStep = false;
 		
 		// This is the progressive shape
-		mBlendedShape = new CSGGeometry( "TheBlend" );
+		mBlendedShape = new CSGGeonode( "TheBlend" );
+		mBlendedShape.forceSingleMaterial( false );
 		mBlendedShape.deferSceneChanges( true );
 
-	    Material mat_csg = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
-	    mBlendedShape.setMaterial( mat_csg );
+	    //Material cubeMaterial = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
+        Material cubeMaterial = assetManager.loadMaterial( "Textures/BrickWall/BrickWallRpt.xml"  );
+	    mBlendedShape.setDefaultMaterial( cubeMaterial );
 	  	
+        Light aLight = new AmbientLight();
+        aLight.setColor( ColorRGBA.White );
+        rootNode.addLight( aLight );
+
 	    // This is the starting base cube of cheese
 	  	CSGShape aCube = new CSGShape( "Box", new CSGBox(1,1,1) );
 	  	mBlendedShape.addShape(aCube);
@@ -550,8 +554,10 @@ public class CSGTestM
 	  	
 	  	// This is the spherical mouse
 	  	mSphere = new CSGShape( "Sphere", new CSGSphere( 12, 12, 0.3f ) );
+	    Material sphereMaterial = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
+	    mSphere.setMaterial( sphereMaterial );
 	  	
-	   	rootNode.attachChild( mBlendedShape );
+	   	rootNode.attachChild( (Spatial)mBlendedShape );
     }
     @Override
     public void simpleUpdate(
@@ -572,7 +578,7 @@ public class CSGTestM
     	if ( (mPositionIndex >= 0) && (mPositionIndex < sPositions.size() ) ) {
       		mSphere.setLocalTranslation( sPositions.get( mPositionIndex++ ) );
       	}else{
-      		mSphere.setLocalTranslation( mBlendedShape.getLocalTranslation() );
+      		mSphere.setLocalTranslation( ((Spatial)mBlendedShape).getLocalTranslation() );
         	mSphere.move( new Vector3f(   FastMath.rand.nextFloat()
         								, FastMath.rand.nextFloat()
         								, FastMath.rand.nextFloat() ).multLocal(1f) );
