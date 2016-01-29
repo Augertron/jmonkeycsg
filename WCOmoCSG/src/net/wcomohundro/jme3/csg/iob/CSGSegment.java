@@ -41,6 +41,7 @@ import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
+import net.wcomohundro.jme3.csg.test.CSGTestM;
 
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
@@ -303,7 +304,8 @@ public class CSGSegment
 	
 	
 	/** Sets an end as vertex (starting point if none end were defined, ending point otherwise)
-	    @return false if all the ends were already defined, true otherwise
+	
+	    @return - the index of the next extremity to set
 	 */
 	protected int setVertex(
 		int					pIndex
@@ -354,8 +356,14 @@ public class CSGSegment
 	}
 	
 	/** Sets an end as edge (starting point if none end were defined, ending point otherwise)
+	 	NOTE
+	 		Due to rounding and near-zero issues, it is possible for the upper levels to
+	 		think there is a collision with this segment, but in reality we cannot compute a
+	 		valid intersection point.  In that case, we set the 'distance' to NaN, knowing that
+	 		subsequent comparisons will fail.  The 'position' is left set to the intersection
+	 		point for debugging purposes.
 	 
-	    @return false if all ends were already defined, true otherwise
+	    @return - the index of the next extremity to set
 	    
 	    ****** TempVars used:  vectd6
 	 */
@@ -367,6 +375,8 @@ public class CSGSegment
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
+		double tolerance = pEnvironment.mEpsilonOnPlaneDbl;
+		
 		Vector3d point1 = pVertex1.getPosition();
 		Vector3d point2 = pVertex2.getPosition();
 		Vector3d edgeDirection = point2.subtract( point1, pTempVars.vectd6 );
@@ -377,33 +387,36 @@ public class CSGSegment
 		case 0:
 			// No other points have yet been defined
 			mStartCollision = pCollision;
-			mStartPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
-			mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment );
-			
-			if ( mFace.getPlane().pointPosition( mStartPosition, pEnvironment.mEpsilonOnPlaneDbl ) != 0 ) {
+			mStartPosition = mLine.computeLineIntersection( edgeLine, null, tolerance, pTempVars, pEnvironment );
+			//mStartPosition = mLine.computeLineIntersection( point1, point2, null, tolerance, pTempVars, pEnvironment );
+			if ( (mStartPosition == null)
+			||   (mFace.getPlane().pointPosition( mStartPosition, tolerance ) != 0) ) {
 				// Computed point is NOT on the face
-				// mStartPosition = null;
 				mStartDist = Double.NaN;
 				if ( pEnvironment.mStructuralDebug ) {
 					pEnvironment.log( Level.WARNING, "CSGSegment.setEdge invalid start: " + pVertex1 + ", " + pVertex2 + ", " + mStartPosition );
 				}
+			} else {
+				mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment );
 			}
 			return( 1 );
 			
 		case 1:
 			// Starting point already defined, define the ending point
 			mEndCollision = pCollision;
-			mEndPosition = mLine.computeLineIntersection( edgeLine, null, pTempVars, pEnvironment );
-			mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
+			mEndPosition = mLine.computeLineIntersection( edgeLine, null, tolerance, pTempVars, pEnvironment );
+			//mEndPosition = mLine.computeLineIntersection( point1, point2, null, tolerance, pTempVars, pEnvironment );
 			
-			if ( mFace.getPlane().pointPosition( mEndPosition, pEnvironment.mEpsilonOnPlaneDbl ) != 0 ) {
+			if ( (mEndPosition == null)
+			||   (mFace.getPlane().pointPosition( mEndPosition, tolerance ) != 0) ) {
 				// Computed point is NOT on the face
-				//mEndPosition = null;
 				mEndDist = Double.NaN;
 				if ( pEnvironment.mStructuralDebug ) {
 					pEnvironment.log( Level.WARNING, "CSGSegment.setEdge invalid end: " + pVertex1 + ", " + pVertex2 + ", " + mEndPosition );
 				}
-			}			
+			} else {	
+				mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
+			}
 			// The ending point distance should be 'farther' than starting point distance 
 			if ( mStartDist > mEndDist ) {
 			  	swapEnds();

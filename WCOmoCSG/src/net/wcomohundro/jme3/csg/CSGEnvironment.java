@@ -400,13 +400,14 @@ public class CSGEnvironment<ShapeProcessorT>
 	,	float		pEpsilonNearZeroFlt
 	,	float		pEpsilonBetweenPointsFlt
 	,	float		pEpsilonOnPlaneFlt
+	,	boolean		pRationaizeValues
 	,	int			pEpsilonMagnitudeRange
 	) {
 		mShape = null;
 		mDoublePrecision = pDoublePrecision;
 		mShapeClass = pHandlerClass;
 		mStructuralDebug = DEBUG;
-		mRationalizeValues = true;
+		mRationalizeValues = pRationaizeValues;
 		
 		mEpsilonNearZeroDbl = pEpsilonNearZeroDbl;
 		mEpsilonOnPlaneDbl = pEpsilonOnPlaneDbl;		
@@ -460,7 +461,7 @@ public class CSGEnvironment<ShapeProcessorT>
 		// Save the configuration options
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mDoublePrecision, "doublePrecision", false );
-		aCapsule.write( mRationalizeValues, "rationalizeValues", true );
+		aCapsule.write( mRationalizeValues, "rationalizeValues", false );
 		aCapsule.write( mStructuralDebug, "structuralDebug", false );
 	}
 	
@@ -470,7 +471,7 @@ public class CSGEnvironment<ShapeProcessorT>
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mDoublePrecision = aCapsule.readBoolean( "doublePrecision", true );
-		mRationalizeValues = aCapsule.readBoolean( "rationalizeValues", true );
+		mRationalizeValues = aCapsule.readBoolean( "rationalizeValues", false );
 		mStructuralDebug = aCapsule.readBoolean( "structuralDebug", DEBUG );
 	}
 

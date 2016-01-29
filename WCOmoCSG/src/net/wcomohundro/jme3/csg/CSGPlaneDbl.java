@@ -96,7 +96,7 @@ public class CSGPlaneDbl
 			double bDistance = aPlane.pointDistance( pB );
 			double cDistance = aPlane.pointDistance( pC );
 			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonOnPlaneDbl ) {
-				pEnvironment.log( Level.SEVERE, "Points NOT on plane: " + aPlane );				
+				pEnvironment.log( Level.SEVERE, "CSGPlaneDbl, points NOT on plane: " + aPlane );				
 			}
 		}
 		return( aPlane );

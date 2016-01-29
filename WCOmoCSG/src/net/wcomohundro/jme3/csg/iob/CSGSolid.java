@@ -123,7 +123,7 @@ public class CSGSolid
 			// The face is too small to be pertinent, so if another face is added, 
 			// just overuse the given slot
 			if ( pEnvironment.mStructuralDebug ) {
-				pEnvironment.log( Level.WARNING, "CSGSolid discarding face: " + pV1 + ", " + pV2 + ", " + pV3 );
+				pEnvironment.log( Level.WARNING, "CSGSolid discarding miniscule face:\n\t" + pV1 + "\n\t" + pV2 + "\n\t" + pV3 );
 			}
 			return( pFaceIndex );
 		} else {
@@ -145,9 +145,11 @@ public class CSGSolid
 					return( -1 );
 				}
 			} else {
-				// A face is invalid if no plane could be determined -- in other words, the
-				// vertices are in a line
-				throw new IllegalArgumentException( "Invalid new Face: " + aFace );
+				// A face is invalid if the given points are NOT on the given plane
+				if ( pEnvironment.mStructuralDebug ) {
+					pEnvironment.log( Level.WARNING, "CSGSolid invalid new face:\n" + this );
+				}
+				return( pFaceIndex );
 			}
 		}
 	}
@@ -183,9 +185,9 @@ public class CSGSolid
 	 	****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
 	 */
 	public void splitFaces(
-		CSGSolid 		pSolid
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGSolid 			pSolid
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		CSGRay line;
 		CSGSegment segment1, segment2;
@@ -226,8 +228,8 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 													
 							// If all the signs are zero, the planes are coplanar, so skip it
 							// If all the signs are positive or negative, the planes do not intersect, so skip it
-							// If the signs are not equal, then it looks like an intersection and we are 
-							// interested
+							// If the signs are not equal, then it looks like an intersection 
+							// is possible and we are interested
 							if ( !(signFace1Vert1==signFace1Vert2 && signFace1Vert2==signFace1Vert3) ) {
 								// Relative positions of the face2 vertices to the face1 plane
 								signFace2Vert1 = face1.computePosition( face2.v1(), tolerance );
@@ -284,9 +286,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
  		****** TempVars used:  vectd5, vectd6
 	 */
 	public void classifyFaces(
-		CSGSolid 		pOtherObject
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		CSGSolid 			pOtherObject
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		// Match every face against the other object
 		for( CSGFace aFace : mFaces ) {
@@ -294,11 +296,12 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			if ( aFace.simpleClassify() == false ) {
 				// Nothing simple about it, so use the ray trace classification
 				CSGFaceStatus aStatus = aFace.rayTraceClassify( pOtherObject, pTempVars, pEnvironment );
-				
-				// Mark the vertices to reflect the face status
-				aFace.v1().mark( aStatus );
-				aFace.v2().mark( aStatus );
-				aFace.v3().mark( aStatus );
+				if ( aStatus != null ) {
+					// Mark the vertices to reflect the face status
+					aFace.v1().mark( aStatus );
+					aFace.v2().mark( aStatus );
+					aFace.v3().mark( aStatus );
+				}
 			}
 		}
 	}
@@ -312,11 +315,11 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 	 	****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
     */	  
 	protected int splitFace(
-		int 			pFaceIndex
-	, 	CSGSegment 		pFaceSegment
-	, 	CSGSegment 		pOtherSegment
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
+		int 				pFaceIndex
+	, 	CSGSegment 			pFaceSegment
+	, 	CSGSegment 			pOtherSegment
+	,	CSGTempVars			pTempVars
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
 		CSGFace.CSGFaceCollision startCollision, endCollision;
 		
@@ -359,7 +362,7 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 			int startOnPlane = aFace.getPlane().pointPosition( startPos, pEnvironment.mEpsilonOnPlaneDbl );
 			int endOnPlane = aFace.getPlane().pointPosition( endPos, pEnvironment.mEpsilonOnPlaneDbl );
 			if ( (startOnPlane != 0) || (endOnPlane != 0) ) {
-				pEnvironment.log( Level.WARNING, "CSGSolid: Invalid split points: " + startOnPlane + endOnPlane );
+				pEnvironment.log( Level.WARNING, "CSGSolid: Invalid split points " + startOnPlane + endOnPlane );
 				
 				int faceStartOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
 				int faceEndOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
@@ -551,12 +554,19 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 		// face was actually added.  If any face at all was added, then pFaceIndex would be 
 		// reset to -1
 		if ( pFaceIndex >= 0 ) {
-			// Nothing actually added, but the original is still in its slot and must be eliminated
-			mFaces.remove( pFaceIndex );
+			// Nothing actually added, but the original is still in its slot
+			// Once upon a time, I thought it should be removed, but now I am not so sure
 			if ( pEnvironment.mStructuralDebug ) {
-				pEnvironment.log( Level.WARNING, "CSGSolid.splitFace: no face remains-" + aFace );
+				pEnvironment.log( Level.WARNING, "CSGSolid.splitFace: no face remains:\n" + aFace );
 			}
-			return( -1 );
+			if ( pEnvironment.mRemoveUnsplitFace ) {
+				// Eliminate the face that could not be split
+				mFaces.remove( pFaceIndex );
+				return( -1 );
+			} else {
+				// Retain the face that could not be split
+				return( 0 ); 
+			}
 		} else {
 			// Return the count of the faces we split into
 			return( -pFaceIndex );

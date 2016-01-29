@@ -35,6 +35,7 @@ import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
+import com.jme3.math.FastMath;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
@@ -47,15 +48,22 @@ public class CSGEnvironmentIOB
 	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
 	// Tolerance to decide if a given point in 'on' a plane
 	public static final float EPSILON_ONPLANE_FLT = 1.0e-5f;
-	public static final double EPSILON_ONPLANE_DBL = 1.0e-7;
+	public static final double EPSILON_ONPLANE_DBL = 1.0e-8;
 	// Tolerance to determine if two points are close enough to be considered the same point
 	public static final float EPSILON_BETWEEN_POINTS_FLT = 1.0e-5f;
-	public static final double EPSILON_BETWEEN_POINTS_DBL = 1.0e-7;
+	public static final double EPSILON_BETWEEN_POINTS_DBL = FastMath.FLT_EPSILON;
 	// Tolerance if a given value is near enough to zero to be treated as zero
 	public static final float EPSILON_NEAR_ZERO_FLT = 1.0e-7f;
-	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-10;
+	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-9;
 	// Tolerance of difference between magnitudes between two doubles
 	public static final int EPSILON_MAGNITUDE_RANGE = 22;
+	
+	// What to do with a face that we want to split but which produces nothing
+	public static final boolean REMOVE_UNSPLIT_FACE = false;
+	
+	
+	///////////////////////////////// IOB SPECIFIC PROCESSING /////////////////////////////////
+	public boolean mRemoveUnsplitFace;
 	
 	// NOTE that '5E-15' may cause points on a plane to report problems.  In other words,
 	//		when near_zero gets this small, the precision errors cause points on a plane to
@@ -73,7 +81,10 @@ public class CSGEnvironmentIOB
 		,	EPSILON_NEAR_ZERO_FLT
 		,	EPSILON_BETWEEN_POINTS_FLT
 		,	EPSILON_ONPLANE_FLT
+		,	false
 		,	EPSILON_MAGNITUDE_RANGE );
+		
+		mRemoveUnsplitFace = REMOVE_UNSPLIT_FACE;
 	}
 	
 	/** Support the persistence of this Environment */
@@ -96,6 +107,8 @@ public class CSGEnvironmentIOB
 			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
 		aCapsule.write( mEpsilonMagnitudeRange, "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
+		
+		aCapsule.write( mRemoveUnsplitFace, "removeUnsplitFace", REMOVE_UNSPLIT_FACE );
 	}
 	
 	@Override
@@ -115,6 +128,8 @@ public class CSGEnvironmentIOB
 			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
 		mEpsilonMagnitudeRange = aCapsule.readInt( "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
+		
+		mRemoveUnsplitFace = aCapsule.readBoolean( "removeUnsplitFace", REMOVE_UNSPLIT_FACE );
 	}
 
 

@@ -318,7 +318,6 @@ public class CSGFace
 		mVertices.add( pV3 );
 		
 		// BY DEFINITION, a new face based upon a source face MUST share the same plane
-		//mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
 		mPlane = pSourceFace.getPlane();
 		if ( pEnvironment.mStructuralDebug ) {
 			// Confirm that the given points reside on the plane
@@ -326,7 +325,7 @@ public class CSGFace
 			if ( ((v1 = mPlane.pointPosition( pV1, pEnvironment )) != 0)
 			||	 ((v2 = mPlane.pointPosition( pV2, pEnvironment )) != 0)
 			||	 ((v3 = mPlane.pointPosition( pV3, pEnvironment )) != 0) ) {
-				pEnvironment.log( Level.WARNING, "Invalid CSGFace: point " + v1 + v2 + v3 + " not on plane: " + this );
+				pEnvironment.log( Level.WARNING, "Invalid CSGFace: point " + v1 + v2 + v3 + " not on plane:\n" + this );
 				mPlane = null;
 			}
 		}
@@ -520,7 +519,8 @@ public class CSGFace
 			if ( pointOnEdge == null ) {
 				// Something not right about this intersection... Possibly things are too close
 				if ( pEnvironment.mStructuralDebug ) {
-					pEnvironment.log( Level.WARNING, "Face Extrapolation: " + pNewPosition + " / " + this );
+					// NOTE that .lineIntersection() may well have logged this problem as well
+					pEnvironment.log( Level.WARNING, "CSGFace.extrapolate failed: " + pNewPosition + "\n" + this );
 				}
 				return( null );
 			}
@@ -642,7 +642,7 @@ outer:	while( deadmanSwitch-- > 0 ) {
 					// Check if the ray starts in plane...
 					if ( (Math.abs( distance ) < planeTolerance) && (absDotProduct > zeroTolerance) ) {
 						// Check if the ray intersects the face as well
-						if ( otherFace.hasPoint( ray, pTempVars, pEnvironment ) ) {
+						if ( otherFace.hasPoint( ray, intersectionPoint, pTempVars, pEnvironment ) ) {
 							// The faces do touch
 							closestFace = otherFace;
 							closestDistance = 0;
@@ -652,7 +652,7 @@ outer:	while( deadmanSwitch-- > 0 ) {
 						// The ray intersects the plane, facing the same direction
 						if ( distance < closestDistance ) {
 							// Check if the ray intersects the face;
-							if ( otherFace.hasPoint( ray, pTempVars, pEnvironment ) ) {
+							if ( otherFace.hasPoint( ray, intersectionPoint, pTempVars, pEnvironment ) ) {
 								// This face is now the closest
 								closestDistance = distance;
 								closestFace = otherFace;
@@ -661,52 +661,68 @@ outer:	while( deadmanSwitch-- > 0 ) {
 					}
 				}
 			}
-			// We have matched against every other face
-			break outer;
-		}
-		// If no face found: outside face
-		if ( closestFace == null ) {
-			mStatus = CSGFaceStatus.OUTSIDE;
-		} else {
-			// If a face was found, then the DOT tells us which side
-			dotProduct = closestFace.getNormal().dot( ray.getDirection() );
-			
-			// If distance = 0, then coplanar faces
-			if ( Math.abs( closestDistance ) < planeTolerance ) {
-				// Same plane, but which way do we face?
-				if ( dotProduct > 0 ) {
-					mStatus = CSGFaceStatus.SAME;
-				} else {
-					mStatus = CSGFaceStatus.OPPOSITE;
+			// We have matched against every other face		
+			if ( closestFace == null ) {
+				// If no face found: outside face
+				mStatus = CSGFaceStatus.OUTSIDE;
+			} else {
+				// If a face was found, then the DOT tells us which side
+				dotProduct = closestFace.getNormal().dot( ray.getDirection() );
+				
+				// If distance = 0, then coplanar faces
+				if ( Math.abs( closestDistance ) < planeTolerance ) {
+					// Same plane, but which way do we face?
+					if ( dotProduct > 0 ) {
+						mStatus = CSGFaceStatus.SAME;
+					} else {
+						mStatus = CSGFaceStatus.OPPOSITE;
+					}
+				}
+				// If dot product > 0 (same direction), then inside face
+				else if ( dotProduct > 0 ) {
+					mStatus = CSGFaceStatus.INSIDE;
+				}
+				// If dot product < 0 (opposite direction), then outside face
+				else {
+					mStatus = CSGFaceStatus.OUTSIDE;
 				}
 			}
-			// If dot product > 0 (same direction), then inside face
-			else if ( dotProduct > 0 ) {
-				mStatus = CSGFaceStatus.INSIDE;
-			}
-			// If dot product < 0 (opposite direction), then outside face
-			else {
-				mStatus = CSGFaceStatus.OUTSIDE;
-			}
+			return( mStatus );
 		}
-		return( mStatus );
+		// The deadman switch expired
+		mStatus = CSGFaceStatus.UNKNOWN;
+		if ( pEnvironment.mStructuralDebug ) {
+			CSGEnvironment.sLogger.log( Level.WARNING, "CSGFace.rayTrace failed to converge: " + this );
+		}
+		return( null );
 	}
 	
 	/** Checks if the face contains a point based on an intersecting ray */
 	protected boolean hasPoint(
 		CSGRay			pRay
+	,	Vector3d		pPoint
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
+		// Quick check on the extremes
+		Vector3d v1 = this.v1().getPosition();
+		Vector3d v2 = this.v2().getPosition();
+		Vector3d v3 = this.v3().getPosition();
+		if ( ((pPoint.x < v1.x) && (pPoint.x < v2.x) && (pPoint.x < v3.x)) 
+		||	 ((pPoint.x > v1.x) && (pPoint.x > v2.x) && (pPoint.x > v3.x))
+		||   ((pPoint.y < v1.y) && (pPoint.y < v2.y) && (pPoint.y < v3.y)) 
+		||	 ((pPoint.y > v1.y) && (pPoint.y > v2.y) && (pPoint.y > v3.y))
+		||   ((pPoint.z < v1.z) && (pPoint.z < v2.z) && (pPoint.z < v3.z)) 
+		||	 ((pPoint.z > v1.z) && (pPoint.z > v2.z) && (pPoint.z > v3.z)) ) {
+			// No possible intersection
+			//return( false );
+		}
+		// Full fledged, computed intersection check
 		boolean pointInTriangle 
-			= pRay.intersectsTriangle( this.v1().getPosition()
-										, this.v2().getPosition()
-										, this.v3().getPosition()
-										, pEnvironment.mEpsilonOnPlaneDbl );
+			= pRay.intersectsTriangle( v1, v2, v3, pEnvironment.mEpsilonOnPlaneDbl );
 //			= pRay.intersectsTriangle( this.v1().getPosition()
 //										, this.v2().getPosition()
 //										, this.v3().getPosition()
-//										, this.getNormal()
 //										, null
 //										, true
 //										, pTempVars

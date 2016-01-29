@@ -216,7 +216,8 @@ public abstract class CSGTestSceneBase
 	                		.append( aTriangle.get1() ).append( ", " )
 	                		.append( aTriangle.get2() ).append( ", " )
 	                		.append( aTriangle.get3() )
-	                		.append( ")" );
+	                		.append( ") - " )
+	                		.append( aCollision.getDistance() );
 	                	mPostText.push( aBuffer.toString() );
 	                	System.out.println( aBuffer.toString() );
 	                	mRefreshText = true;

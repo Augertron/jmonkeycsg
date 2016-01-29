@@ -55,7 +55,7 @@ public class CSGRay
 	
 	//private static final double TOL = 1e-10f;
 	
-	/** Intersection of two lines 
+	/** Intersection of two lines (if any)
 	 	 	In general you can find the two points, A0 and B0, on the respective lines A1A2 and B1B2 which 
 	 	 	are closest together and determine if they coincide or else see how far apart they lie.
 
@@ -68,6 +68,8 @@ public class CSGRay
  			d = dot(cross(A2-A1,B2-B1),cross(A2-A1,B2-B1));
  			A0 = A1 + (nA/d)*(A2-A1);
  			B0 = B1 + (nB/d)*(B2-B1);
+ 			
+ 			@return - the intersection point, or NULL if the two lines do not cross
  			
  		****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5
 	 */
@@ -98,10 +100,6 @@ public class CSGRay
 		pResult = vA2minusA1.mult( multiplierA, pResult );
 		pResult.addLocal( pLineAPoint1 );
 		
-		if ( pEnvironment.mRationalizeValues ) {
-			// Confirm that the magnitudes of the resultant point are rational
-			CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
-		}
 		// Where on line B?
 		Vector3d nBCrossBA = vA2minusA1.cross( vA1minusB1, pTempVars.vectd5 );
 		double nB = nBCrossBA.dot( nCrossAB );
@@ -113,15 +111,14 @@ public class CSGRay
 		Vector3d bZero = vB2minusB1.multLocal( multiplierB );
 		bZero.addLocal( pLineBPoint1 );
 		
-		if ( pEnvironment.mRationalizeValues ) {
-			CSGEnvironment.rationalizeVector( bZero, pEnvironment.mEpsilonMagnitudeRange );
-		}
 		// Confirm the intersection
 		if ( !CSGEnvironment.equalVector3d( pResult, bZero, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
-			if ( pEnvironment.mStructuralDebug ) {
-				pEnvironment.log( Level.WARNING, "CSGRay.lineIntersection failed: " + pResult + "\n" + bZero );
-			}
 			return( null );		// No Intersection
+		}
+		if ( pEnvironment.mRationalizeValues ) {
+			// Confirm that the magnitudes of the resultant point are rational
+			CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
+			CSGEnvironment.rationalizeVector( bZero, pEnvironment.mEpsilonMagnitudeRange );
 		}
 		return( pResult );
 	}
@@ -198,6 +195,12 @@ public class CSGRay
 		} else {
 			throw new IllegalArgumentException( "Ray built from parallel faces" );
 		}
+		// NOTE NOTE NOTE
+		//		If rational values are active, the following seems to screw things up
+		//		unless the magnitude range is very very large, so I am disabling it
+//		if ( pEnvironment.mRationalizeValues ) {
+//			CSGEnvironment.rationalizeVector( mDirection, pEnvironment.mEpsilonMagnitudeRange );
+//		}
 		mDirection.normalizeLocal();
 	}
 
@@ -233,37 +236,76 @@ public class CSGRay
 		}
 	}
 	
-	/** Computes the vertex resulting from the intersection with another line */
+	/** Computes the vertex resulting from the intersection with another line 
+	 	I found the following on the web which may shed some light on the code 
+	 	
+--------------------------------------------------------------------------------------------
+The ray is basically defined by the part of the line when the parameter (t or s) is greater 
+than or equal to 0 (assuming p0 and q0 are the starting points of the rays). Unless the 
+lines are perfectly parallel, they will intersect at some point. This is the point at 
+which the X and Y values of both lines correspond with one another. So we rewrite them 
+as equalities:
+
+p0.x + t * pd.x = q0.x + s * qd.x
+p0.y + t * pd.y = q0.y + s * qd.y
+
+We can now algebraically isolate t and s:
+
+t = (qd.x*(q0.y - p0.y) + qd.y*(p0.x - q0.x)) / (pd.y*qd.x - pd.x*qd.y)
+s = (pd.x*(q0.y - p0.y) + pd.y*(p0.x - q0.x)) / (pd.y*qd.x - pd.x*qd.y)
+
+Since both have the same divisor, we can make this a little easier on the computer by calculating it first:
+
+div = pd.y*qd.x - pd.x*qd.y
+
+(If div = 0, you can stop here: the lines/rays are perfectly parallel and they will never intersect.)
+
+Now:
+
+t = (qd.x*(q0.y - p0.y) + qd.y*(p0.x - q0.x)) / div
+s = (pd.x*(q0.y - p0.y) + pd.y*(p0.x - q0.x)) / div
+
+t is the point on the first line at which the intersection occurs, and s is the point of intersection 
+on the second line.
+
+We must determine if the intersection occurs in the rays. If t >= 0 and s >= 0, then the rays 
+intersect. If one or both are < 0, the rays do not intersect, and the intersection occurs at 
+some point before the start of the ray (on the line that the ray defines).
+
+If t and s meet the proper conditions, you can now plug t or s into one of the original equations 
+to find the exact point of intersection, which you also might need for your program.
+-----------------------------------------------------------------------------------------------------------
+ 
+	*/
 	public Vector3d computeLineIntersection(
 		CSGRay			pOtherLine
 	,	Vector3d		pResult
+	,	double			pTolerance
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		//x = x1 + a1*t = x2 + b1*s
 		//y = y1 + a2*t = y2 + b2*s
 		//z = z1 + a3*t = z2 + b3*s
-		
-		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
 		Vector3d lineOrigin = pOtherLine.getOrigin(); 
 		Vector3d lineDirection = pOtherLine.getDirection();
 				
 		double t;
-		if ( Math.abs( mDirection.y*lineDirection.x - mDirection.x*lineDirection.y ) > tolerance ) {
+		if ( Math.abs( mDirection.y*lineDirection.x - mDirection.x*lineDirection.y ) > pTolerance ) {
 			t = (-mOrigin.y*lineDirection.x
 					+ lineOrigin.y*lineDirection.x
 					+ lineDirection.y*mOrigin.x
 					- lineDirection.y*lineOrigin.x) 
 				/ (mDirection.y*lineDirection.x - mDirection.x*lineDirection.y);
 			
-		} else if ( Math.abs( -mDirection.x*lineDirection.z + mDirection.z*lineDirection.x) > tolerance ) {
+		} else if ( Math.abs( -mDirection.x*lineDirection.z + mDirection.z*lineDirection.x) > pTolerance ) {
 			t = -(-lineDirection.z*mOrigin.x
 					+ lineDirection.z*lineOrigin.x
 					+ lineDirection.x*mOrigin.z
 					- lineDirection.x*lineOrigin.z)
 				/ (-mDirection.x*lineDirection.z + mDirection.z*lineDirection.x);
 			
-		} else if ( Math.abs( -mDirection.z*lineDirection.y + mDirection.y*lineDirection.z) > tolerance ) {
+		} else if ( Math.abs( -mDirection.z*lineDirection.y + mDirection.y*lineDirection.z) > pTolerance ) {
 			t = (mOrigin.z*lineDirection.y
 					- lineOrigin.z*lineDirection.y
 					- lineDirection.z*mOrigin.y
@@ -282,6 +324,24 @@ public class CSGRay
 			// Confirm that the magnitudes of the resultant point are rational
 			CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
 		}
+		return( pResult );
+	}
+	public Vector3d computeLineIntersection(
+		Vector3d		pOtherPoint1
+	,	Vector3d		pOtherPoint2
+	,	Vector3d		pResult
+	,	double			pTolerance
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		Vector3d thisPoint2 = pTempVars.vectd6.set( this.mOrigin ).addLocal( this.mDirection );
+		pResult = lineIntersection( this.mOrigin
+									,	thisPoint2
+									,	pOtherPoint1
+									,	pOtherPoint2
+									,	pResult
+									,	pTempVars
+									,	pEnvironment );
 		return( pResult );
 	}
 	
@@ -346,7 +406,6 @@ public class CSGRay
     	Vector3d 	pV0
     , 	Vector3d 	pV1
     , 	Vector3d 	pV2
-    ,	Vector3d	pTriangleNormal
     ,	Vector3d 	pResult
     , 	boolean 	pResultsAsPoint
     ,	CSGTempVars	pVars
@@ -354,13 +413,15 @@ public class CSGRay
     ) {
         Vector3d tempVa = pVars.vectd1,
                 tempVb = pVars.vectd2,
-                tempVc = pVars.vectd3;
+                tempVc = pVars.vectd3,
+        		tempVd = pVars.vectd4;
 
         Vector3d diff = mOrigin.subtract( pV0, tempVa );
         Vector3d edge1 = pV1.subtract( pV0, tempVb );
         Vector3d edge2 = pV2.subtract( pV0, tempVc );
+        Vector3d norm = edge1.cross( edge2, tempVd );
 
-        double dirDotNorm = mDirection.dot( pTriangleNormal );
+        double dirDotNorm = mDirection.dot( norm );
         double sign;
         if ( dirDotNorm > pTolerance ) {
             sign = 1;
@@ -378,7 +439,7 @@ public class CSGRay
 
             if ( dirDotEdge1xDiff >= 0.0 ) {
                 if ( dirDotDiffxEdge2 + dirDotEdge1xDiff <= dirDotNorm ) {
-                    diffDotNorm = -sign * diff.dot( pTriangleNormal );
+                    diffDotNorm = -sign * diff.dot( norm );
                     if ( diffDotNorm >= 0.0 ) {
                         // Ray intersects triangle
                         if ( pResult != null) {
@@ -389,7 +450,7 @@ public class CSGRay
 	                        	pResult.set( mOrigin )
 	                            	.addLocal( mDirection.x * t, mDirection.y * t, mDirection.z * t );
 	                        } else {
-	                            // these weights can be used to determine
+	                            // These weights can be used to determine
 	                            // interpolated values, such as texture coord.
 	                            // eg. texcoord s,t at intersection point:
 	                            // s = w0*s0 + w1*s1 + w2*s2;
