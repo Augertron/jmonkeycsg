@@ -41,6 +41,8 @@ import java.util.Queue;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.math.CSGTransform;
 
@@ -104,7 +106,7 @@ public class CSGNode
 	/** The list of custom Propertes to apply to the various faces of the interior components */
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Is this a valid geometry */
-	protected boolean					mIsValid;
+	protected CSGExceptionI				mInError;
 	/** Shape regeneration time */
 	protected long						mRegenNS;
 	/** Processing environment to apply */
@@ -129,7 +131,15 @@ public class CSGNode
 
 	/** Is this a valid geometry */
 	@Override
-	public boolean isValid() { return mIsValid; }
+	public boolean isValid() { return( mInError == null ); }
+	@Override
+	public CSGExceptionI getError() { return mInError; }
+	public void setError(
+		CSGExceptionI	pError
+	) {
+		mInError = CSGConstructionException.registerError( mInError, pError );
+	}
+
 	
 	/** Is there an active parent to this element? */
 	@Override
@@ -251,13 +261,13 @@ public class CSGNode
 	/** Action to generate the mesh based on the given shapes */
     @Override
 	public CSGShape regenerate(
-	) {
+	) throws CSGConstructionException {
 		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
 	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		mRegenNS = -1;
 		long totalNS = 0;
 
@@ -265,9 +275,9 @@ public class CSGNode
 		// NOTE that we only detect first level children -- but you can always nest by
 		//		using deeper levels of this class.
 		CSGShape lastValidShape = null;
-		mIsValid = true;
+		mInError = null;
 		for( Spatial aSpatial : this.getChildren() ) {
-			if ( aSpatial instanceof CSGElement ) {
+			if ( aSpatial instanceof CSGElement ) try {
 				// Trigger the regeneration
 				CSGElement csgSpatial = (CSGElement)aSpatial;
 				CSGShape aShape = csgSpatial.regenerate( pEnvironment );
@@ -278,8 +288,11 @@ public class CSGNode
 					lastValidShape = aShape;
 				} else {
 					// If any child shape is invalid, then this shape is invalid
-					mIsValid = false;
+					setError( csgSpatial.getError() );
 				}
+			} catch( CSGConstructionException ex ) {
+				// Record the error and continue on???
+				setError( ex );
 			}
 		}
 		mRegenNS = totalNS;
@@ -382,13 +395,13 @@ public class CSGNode
 
 		// Individual CSGSpatials will regenerate as part of read(), so now scan the list
 		// looking for any oddness.
-		mIsValid = true;
+		mInError = null;
 		for( Spatial aSpatial : this.getChildren() ) {
 			if ( aSpatial instanceof CSGElement ) {
 				CSGElement csgSpatial = (CSGElement)aSpatial;
 				mRegenNS += csgSpatial.getShapeRegenerationNS();
 				if ( !csgSpatial.isValid() ) {
-					mIsValid = false;
+					mInError = CSGConstructionException.registerError( mInError, csgSpatial.getError() );
 				}
 			}
 		}		

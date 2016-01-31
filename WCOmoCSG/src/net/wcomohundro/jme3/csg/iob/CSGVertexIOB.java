@@ -88,7 +88,7 @@ public class CSGVertexIOB
 		// NOTE that we are starting from 'float' precision, but working in 'double' hereafter
 		Vector3d aPosition = new Vector3d( pPosition.x, pPosition.y, pPosition.z );
 		Vector3d aNormal = new Vector3d( pNormal.x, pNormal.y, pNormal.z );
-		aVertex = new CSGVertexIOB( aPosition, aNormal, pTextureCoordinate, CSGVertexStatus.UNKNOWN, pEnvironment );
+		aVertex = new CSGVertexIOB( aPosition, aNormal, pTextureCoordinate, pEnvironment );
 
 		return( aVertex );
 	}
@@ -105,19 +105,17 @@ public class CSGVertexIOB
 		Vector3d		pPosition
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
-	,	CSGVertexStatus	pStatus
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, pStatus, CSGShapeIOB.sDefaultEnvironment );
+		this( pPosition, pNormal, pTextureCoordinate, CSGShapeIOB.sDefaultEnvironment );
 	}
 	public CSGVertexIOB(
 		Vector3d		pPosition
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
-	,	CSGVertexStatus	pStatus
 	,	CSGEnvironment	pEnvironment
 	) {
 		super( pPosition, pNormal, pTextureCoordinate, pEnvironment );
-		mStatus = pStatus;
+		mStatus = CSGVertexStatus.UNKNOWN;
 		
 		if ( pEnvironment.mRationalizeValues ) {
 			// NOTE if you do NOT rationalize the position vector, you can get some
@@ -174,19 +172,27 @@ public class CSGVertexIOB
 	public CSGVertexDbl clone(
 		boolean		pFlipIt
 	) {
+		return( clone( pFlipIt, CSGEnvironment.resolveEnvironment() ) );
+	}
+	public CSGVertexIOB clone(
+		boolean			pFlipIt
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGVertexIOB aCopy;
 		if ( pFlipIt ) {
 			// Make a flipped copy (invert the normal)
-			aCopy = new CSGVertexIOB( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null );
-			// Until proven otherwise, I am assuming that an inverted vertex does not share
-			// the same status.
+			aCopy = new CSGVertexIOB( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), pEnvironment );
 		} else {
 			// Standard copy
-			aCopy = new CSGVertexIOB( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone(), null );
-			// Retain the status
-			aCopy.mStatus = this.mStatus;
+			aCopy = new CSGVertexIOB( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone(), pEnvironment );
 			// By definition, the clone has the same position as this one
 			this.samePosition( aCopy );
+		}
+		// NOTE that the status cannot be cloned, since it is likely we are cloning a vertex
+		//		to reside in a different face, which may well have a different status. BUT
+		//		a vertex on a BOUNDARY remains on a boundary, not matter what, even if inverted.
+		if ( this.mStatus == CSGVertexStatus.BOUNDARY ) {
+			aCopy.mStatus = CSGVertexStatus.BOUNDARY;
 		}
 		return( aCopy );
 	}
@@ -210,7 +216,7 @@ public class CSGVertexIOB
 			zValue = (float)pNormal.z;
 			pNormal.set( xValue, yValue, zValue );
 		}
-		return( new CSGVertexIOB( pPosition, pNormal, pTextureCoordinate, null ) );
+		return( new CSGVertexIOB( pPosition, pNormal, pTextureCoordinate, pEnvironment ) );
 	}
 
 	/** Accessor to the status */
@@ -240,12 +246,20 @@ public class CSGVertexIOB
 		pOtherVertex.mSamePosition = this.mSamePosition;
 	}
 
-	/** Sets the vertex status, as needed */
+	/** Resets the vertex status */
 	public void mark(
-		CSGFace.CSGFaceStatus 	pStatus
+		CSGFace 	pForFace
 	) {
-		// Mark this vertex, if not already marked
-		if ( this.mStatus == CSGVertexStatus.UNKNOWN ) {
+		mark( pForFace.getStatus(), this.mSamePosition );
+	}	
+	protected void mark(
+		CSGFace.CSGFaceStatus 	pStatus
+	,	List<CSGVertexIOB>		pSamePosition
+	) {
+		// Mark this vertex according to the face just given
+		if ( this.mStatus != CSGVertexStatus.BOUNDARY ) {
+			// A BOUNDARY vacillates between inside/outside and is not reset
+			// due to what any face says. The vertex itself just stays on the boundary.
 			switch( pStatus ) {
 			case INSIDE:
 				this.mStatus = CSGVertexStatus.INSIDE;
@@ -257,11 +271,24 @@ public class CSGVertexIOB
 			case OPPOSITE:
 				this.mStatus = CSGVertexStatus.BOUNDARY;
 				break;
+			case UNKNOWN:
+				this.mStatus = CSGVertexStatus.UNKNOWN;
+				break;
 			}
-			if ( this.mSamePosition != null ) {
-				// Any other vertices that share this same position have the same status
-				for( CSGVertexIOB otherVertex : mSamePosition ) {
-					otherVertex.mark( pStatus );
+		}
+		if ( pSamePosition != null ) {
+			// Here is what I think is happening.
+			//	At this point in the process, all the faces have been split so that no two
+			//	faces from the different solids overlap.  That means every face is either
+			//	entirely inside, outside, or coincident with the other solid.  If the 
+			//  status of the entire face is known,  then by definition, each of its vertices 
+			//  is known as well.
+			//	So any other vertex at the exact same position must likewise have the 
+			//  same status.  This provides a bit of a short cut for the same positioned
+			//	vertex in two different faces. 
+			for( CSGVertexIOB otherVertex : pSamePosition ) {
+				if ( otherVertex != this ) {
+					otherVertex.mark( pStatus, null );
 				}
 			}
 		}

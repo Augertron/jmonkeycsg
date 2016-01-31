@@ -41,6 +41,7 @@ import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.math.CSGTransform;
 
 import com.jme3.asset.AssetKey;
@@ -122,9 +123,6 @@ public class CSGGeonode
 		String	pName
 	) {
 		super( pName );
-		
-		// Assume invalid until regeneration OR read() completes
-		mIsValid = false;
 	}
 	
 	/** Access to the MasterGeometry that defines the overall shape */
@@ -258,7 +256,7 @@ public class CSGGeonode
 	@Override
 	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		mRegenNS = 0;
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction operation
@@ -338,28 +336,31 @@ public class CSGGeonode
 						= new CSGGeometry( this.getName(), meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
 					mMasterGeometry.setMaterial( mMaterial.clone() );
 					
-					// Return the product if it is valid
-					if ( mIsValid = aProduct.isValid() ) {
-						if ( mDeferSceneChanges ) synchronized( this ) {
-							// Update the scene later
-							mMeshManager = meshManager;
-						} else {
-							// Update the scene NOW
-							applySceneChanges( meshManager );
-						}
-						return( aProduct );
+					// Return the product
+					setError( aProduct.getError() );
+					if ( mDeferSceneChanges ) synchronized( this ) {
+						// Update the scene later
+						mMeshManager = meshManager;
+					} else {
+						// Update the scene NOW
+						applySceneChanges( meshManager );
 					}
+					return( aProduct );
 				} else {
 					// Nothing produced
-					mIsValid = false;
+					setError( null );
 				}
+			} catch( CSGConstructionException ex ) {
+				// Record the problem and toss it again
+				setError( ex );
+				throw ex;
 			} finally {
 				tempVars.release();
 				mRegenNS = System.nanoTime() - startTimer;
 			}
 		} else {
 			// Nothing interesting
-			mIsValid = false;
+			setError( null );
 		}
 		// Fall out to here only if nothing was generated
 		return( null );
@@ -448,7 +449,7 @@ public class CSGGeonode
 		}
 		// Rebuild based on the shapes just loaded, which sets the mValid status
 		regenerate();
-		if ( mIsValid ) {
+		if ( this.isValid() ) {
 	        // TangentBinormalGenerator directive
 	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
 	        if ( generate ) {

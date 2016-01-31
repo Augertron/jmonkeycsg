@@ -57,6 +57,8 @@ import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 
 /** Constructive Solid Geometry (CSG)
@@ -237,7 +239,7 @@ public class CSGShapeIOB
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList );
@@ -256,7 +258,8 @@ public class CSGShapeIOB
 		CSGShape aShape = new CSGShape( aHandler
 										, this.mShape.getName()
 										, this.mShape.getOrder()
-										, this.mShape.isValid() && pOther.isValid() );
+										, this.mShape.getError()
+										, pOther.getError() );
 		return( aShape );
 	}
 
@@ -267,7 +270,7 @@ public class CSGShapeIOB
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList );
@@ -286,7 +289,8 @@ public class CSGShapeIOB
 		CSGShape aShape = new CSGShape( aHandler
 										, this.mShape.getName()
 										, this.mShape.getOrder()
-										, this.mShape.isValid() && pOther.isValid() );
+										, this.mShape.getError()
+										, pOther.getError() );
 		return( aShape );
 	}
 
@@ -297,7 +301,7 @@ public class CSGShapeIOB
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList );
@@ -316,7 +320,8 @@ public class CSGShapeIOB
 		CSGShape aShape = new CSGShape( aHandler
 										, this.mShape.getName()
 										, this.mShape.getOrder()
-										, this.mShape.isValid() && pOther.isValid() );
+										, this.mShape.getError()
+										, pOther.getError() );
 		return( aShape );
 	}
 	
@@ -327,7 +332,7 @@ public class CSGShapeIOB
 	,	CSGMeshManager		pMaterialManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	)  throws CSGConstructionException {
 		// This is a simple addition of all the 'other' faces into this face list
 		if ( this.mShape.isValid() ) {
 			if ( pOther.isValid() ) {
@@ -341,7 +346,10 @@ public class CSGShapeIOB
 				this.mFaces.addAll( otherFaceList );
 			} else {
 				// This shape is not valid if merged with an invalid shape
-				this.mShape.setValid( false );
+				this.mShape.setError( new CSGConstructionException( CSGErrorCode.INVALID_SHAPE
+									,	"CSGShapeIOB.merge - blended invalid shape"
+									,	this.mShape
+									,	pOther.getError() ) );
 			}
 		}
 		return( this.mShape );
@@ -606,7 +614,7 @@ public class CSGShapeIOB
 	, 	CSGFaceStatus		pFaceStatus3
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	)  throws CSGConstructionException {
 		List<CSGFace> newFaceList = new ArrayList();
 		
 		// Split the faces so that neither of them intercepts each other
@@ -618,7 +626,7 @@ public class CSGShapeIOB
 		pSolidB.classifyFaces( pSolidA, pTempVars, pEnvironment );
 		
 		if ( pInvertInteriorB ) {
-			pSolidB = pSolidB.invertFaces( CSGFace.CSGFaceStatus.INSIDE );
+			pSolidB = pSolidB.invertFaces( CSGFace.CSGFaceStatus.INSIDE, pEnvironment );
 		}
 		// Select faces that fit with the desired status  
 		filterFaces( newFaceList, pSolidA.getFaces(), pFaceStatus1, pFaceStatus2 );
@@ -638,6 +646,10 @@ public class CSGShapeIOB
 			if ( (faceStatus == pFaceStatus1) || (faceStatus == pFaceStatus2) ) {
 				// This is a keeper
 				pResultList.add( aFace );
+			} else if ( faceStatus == CSGFaceStatus.UNKNOWN ) {
+				// This face has slipped through the cracks
+				CSGEnvironment.sLogger.log( Level.WARNING
+				, "filterFaces: unknown face status in mesh:" + mShape.getName() );							
 			}
 		}
 	}

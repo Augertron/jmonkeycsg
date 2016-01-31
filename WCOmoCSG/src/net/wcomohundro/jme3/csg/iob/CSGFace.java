@@ -46,6 +46,8 @@ import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
 import net.wcomohundro.jme3.csg.test.CSGTestM;
 
@@ -313,9 +315,11 @@ public class CSGFace
 		super( new ArrayList( 3 ), null, pSourceFace.getMeshIndex() );
 		mStatus = CSGFaceStatus.UNKNOWN;
 
-		mVertices.add( pV1 );
-		mVertices.add( pV2 );
-		mVertices.add( pV3 );
+		// A new face based on vertices from an old face must clone them
+		// to keep the status unique as needed.
+		mVertices.add( pV1.clone( false, pEnvironment ) );
+		mVertices.add( pV2.clone( false, pEnvironment ) );
+		mVertices.add( pV3.clone( false, pEnvironment ) );
 		
 		// BY DEFINITION, a new face based upon a source face MUST share the same plane
 		mPlane = pSourceFace.getPlane();
@@ -336,21 +340,27 @@ public class CSGFace
 	public CSGFace clone(
 		boolean		pInvert
 	) {
+		return( clone( pInvert, CSGEnvironment.resolveEnvironment() ) );
+	}	
+	public CSGFace clone(
+		boolean			pInvert
+	,	CSGEnvironment	pEnvironment
+	) {
 		CSGFace aCopy = new CSGFace();
 		aCopy.mStatus = this.mStatus;
 		aCopy.mMeshIndex = this.mMeshIndex;
 		
 		if ( pInvert ) {
 			// Flip the order of the vertices
-			aCopy.mVertices.add( v3().clone( pInvert ) );
-			aCopy.mVertices.add( v2().clone( pInvert ) );
-			aCopy.mVertices.add( v1().clone( pInvert ) );
+			aCopy.mVertices.add( v3().clone( pInvert, pEnvironment ) );
+			aCopy.mVertices.add( v2().clone( pInvert, pEnvironment ) );
+			aCopy.mVertices.add( v1().clone( pInvert, pEnvironment ) );
 			
 		} else {
 			// Simple copy
-			aCopy.mVertices.add( v1().clone( pInvert ) );
-			aCopy.mVertices.add( v2().clone( pInvert ) );
-			aCopy.mVertices.add( v3().clone( pInvert ) );
+			aCopy.mVertices.add( v1().clone( pInvert, pEnvironment ) );
+			aCopy.mVertices.add( v2().clone( pInvert, pEnvironment ) );
+			aCopy.mVertices.add( v3().clone( pInvert, pEnvironment ) );
 		}
 		aCopy.mPlane = this.mPlane.clone( pInvert );
 		return aCopy;
@@ -477,9 +487,9 @@ public class CSGFace
 		mStatus = CSGFaceStatus.UNKNOWN;
 		
 		// Reset the vertices as well
-		v1().setStatus( CSGVertexStatus.UNKNOWN );
-		v2().setStatus( CSGVertexStatus.UNKNOWN );
-		v3().setStatus( CSGVertexStatus.UNKNOWN );
+		v1().mark( this );
+		v2().mark( this );
+		v3().mark( this );
 	}
 	
 
@@ -564,6 +574,7 @@ public class CSGFace
 	 */
 	public boolean simpleClassify(
 	) {
+		CSGFaceStatus faceStatus = null;
 		CSGVertexStatus status1 = v1().getStatus();
 		CSGVertexStatus status2 = v2().getStatus();
 		CSGVertexStatus status3 = v3().getStatus();
@@ -571,15 +582,29 @@ public class CSGFace
 		if ( (status1 == CSGVertexStatus.INSIDE) 
 		|| (status2 == CSGVertexStatus.INSIDE) 
 		|| (status3 == CSGVertexStatus.INSIDE) ) {
-			this.mStatus = CSGFaceStatus.INSIDE;
-			return true;
-		} else if ( (status1 == CSGVertexStatus.OUTSIDE) 
+			// Something is on the inside
+			faceStatus = CSGFaceStatus.INSIDE;
+		} 
+		if ( (status1 == CSGVertexStatus.OUTSIDE) 
 		|| (status2 == CSGVertexStatus.OUTSIDE) 
 		|| (status3 == CSGVertexStatus.OUTSIDE) ) {
-			this.mStatus = CSGFaceStatus.OUTSIDE;
-			return true; 
-		} else {
+			// Something is on the outside
+			if ( faceStatus == null ) {
+				faceStatus = CSGFaceStatus.OUTSIDE;
+			} else {
+				// Both inside and outside???
+				// Attribute it to rounding issues where two faces are very very
+				// close but just different enough
+				faceStatus = null;
+			}
+		}
+		if ( faceStatus == null ) {
+			// Nothing simple about it
 			return false;
+		} else {
+			// Use what we know
+			this.mStatus = faceStatus;
+			return true;
 		}
 	}
 	
@@ -591,7 +616,7 @@ public class CSGFace
 		CSGSolid 		pOtherSolid
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
-	) {
+	) throws CSGConstructionException {
 		// creating a ray starting starting at the face baricenter going to the normal direction
 		Vector3d position1 = v1().getPosition();
 		Vector3d position2 = v2().getPosition();
@@ -612,6 +637,13 @@ public class CSGFace
 				
 		int deadmanSwitch = 100;
 outer:	while( deadmanSwitch-- > 0 ) {
+			// Allow an outside monitor to abort long running construction
+			if ( Thread.currentThread().isInterrupted() ) {
+				CSGConstructionException anError
+					= new CSGConstructionException( CSGErrorCode.INTERRUPTED
+													,	"CSGFace.rayTraceClassify - interrupted" );
+				throw anError;
+			}
 			// Assume something touches
 			closestDistance = Double.MAX_VALUE;
 			
@@ -715,6 +747,7 @@ outer:	while( deadmanSwitch-- > 0 ) {
 		||   ((pPoint.z < v1.z) && (pPoint.z < v2.z) && (pPoint.z < v3.z)) 
 		||	 ((pPoint.z > v1.z) && (pPoint.z > v2.z) && (pPoint.z > v3.z)) ) {
 			// No possible intersection
+			// @todo why does this not work????
 			//return( false );
 		}
 		// Full fledged, computed intersection check

@@ -80,8 +80,6 @@ public class CSGLinkNode
 	/** Null constructor */
 	public CSGLinkNode(
 	) {
-		// Assume invalid until regeneration OR read() completes
-		mIsValid = false;
 	}
 	
     /** If physics is active for any subelement, connect it all up now */

@@ -38,6 +38,8 @@ import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
@@ -83,12 +85,13 @@ public class CSGSolid
 	
 	/** Produce a new solid with selected faces inverted */
 	public CSGSolid invertFaces(
-		CSGFace.CSGFaceStatus	pInvertFilter
+		CSGFaceStatus	pInvertFilter
+	,	CSGEnvironment	pEnvironment
 	) {
 		List<CSGFace> invertedList = new ArrayList<CSGFace>( mFaces.size() );
 		for( CSGFace aFace : mFaces ) {
 			if ( aFace.getStatus() == pInvertFilter ) {
-				CSGFace invertedFace = aFace.clone( true );
+				CSGFace invertedFace = aFace.clone( true, pEnvironment );
 				invertedList.add( invertedFace );
 			}
 		}
@@ -128,6 +131,7 @@ public class CSGSolid
 			return( pFaceIndex );
 		} else {
 			// Build the face (having checked the vertices above)
+			// NOTE that the face constructor will clone the vertices appropriately
 			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pFace, pTempVars, pEnvironment );
 			if ( aFace.isValid() ) {
 				// Retain the valid face
@@ -185,39 +189,57 @@ public class CSGSolid
 	 	****** TempVars used:  vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
 	 */
 	public void splitFaces(
-		CSGSolid 			pSolid
+		CSGSolid 			pOtherSolid
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	)  throws CSGConstructionException {
 		CSGRay line;
 		CSGSegment segment1, segment2;
 		int signFace1Vert1, signFace1Vert2, signFace1Vert3, signFace2Vert1, signFace2Vert2, signFace2Vert3;
 		double tolerance = pEnvironment.mEpsilonOnPlaneDbl; // TOL;
 		
+		CSGBounds thisBound = this.getBounds();
+		CSGBounds otherBound = pOtherSolid.getBounds();
+		boolean solidsOverlap = thisBound.overlap( otherBound, pEnvironment );
+
 		// Check each face in this solid
 		//	NOTE that we iterate with an index, since we dynamically adjust 'i'
 		//		 as a face is split.  This also means that mFaces.size() must
 		//		 be refreshed for testing on each iteration.
-		int initialLimit = mFaces.size() * pSolid.getFaces().size() * 10;
+		List<CSGFace> otherFaces = pOtherSolid.getFaces();
+		int initialLimit = mFaces.size() * otherFaces.size() * 10;
+		
 loop1:	for( int i = 0, j = initialLimit; i < (j = mFaces.size()); i += 1 ) {
 			// Rationality check (possibly debug???)
 			if ( j > initialLimit ) {
 				// We have split way too many times
-				throw new IllegalArgumentException( "CSGSolid.splitFaces - too many splits:" + j );
+				CSGConstructionException anError
+					= new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+													,	"CSGSolid.splitFaces - too many splits:" + j );
+				throw anError;
 			}
-			// Reset the face/vertices status for later classification
+			// Allow an outside monitor to abort long running construction
+			if ( Thread.currentThread().isInterrupted() ) {
+				CSGConstructionException anError
+					= new CSGConstructionException( CSGErrorCode.INTERRUPTED
+													,	"CSGSolid.splitFaces - interrupted: " + j );
+				throw anError;
+			}
+			// Reset the face status for later classification
 			CSGFace face1 = mFaces.get( i );
 			face1.resetStatus();
 				
 			// Check if the objects bounds overlap
-			CSGBounds thisBound = this.getBounds();
-			CSGBounds otherBound = pSolid.getBounds();
-			if ( thisBound.overlap( otherBound, pEnvironment ) ) {			
+			//	NOTE the overlap check is within the face loop so that resetStatus() is called
+			//		 on every face
+			if ( solidsOverlap ) {			
 				// Check if object1 face and anything in object2 overlap
 				CSGBounds thisFaceBound = face1.getBound();
 				if ( thisFaceBound.overlap( otherBound, pEnvironment ) ) {
 					// If there is a gross overlap, then each face in object 2 must be checked
-loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
+loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
+						CSGFace face2 = otherFaces.get( m );
+					
 						// Check if object1 face and object2 face overlap at all 
 						CSGBounds otherFaceBound = face2.getBound();
 						if ( thisFaceBound.overlap( otherFaceBound, pEnvironment ) ) {
@@ -289,7 +311,7 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 		CSGSolid 			pOtherObject
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	) throws CSGConstructionException {
 		// Match every face against the other object
 		for( CSGFace aFace : mFaces ) {
 			// Status on the vertices can make the classification really simple
@@ -298,9 +320,9 @@ loop2:				for( CSGFace face2 : pSolid.getFaces() ) {
 				CSGFaceStatus aStatus = aFace.rayTraceClassify( pOtherObject, pTempVars, pEnvironment );
 				if ( aStatus != null ) {
 					// Mark the vertices to reflect the face status
-					aFace.v1().mark( aStatus );
-					aFace.v2().mark( aStatus );
-					aFace.v3().mark( aStatus );
+					aFace.v1().mark( aFace );
+					aFace.v2().mark( aFace );
+					aFace.v3().mark( aFace );
 				}
 			}
 		}

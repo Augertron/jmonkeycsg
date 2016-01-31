@@ -45,6 +45,9 @@ import java.util.Map;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.shape.CSGBox;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
@@ -170,7 +173,7 @@ public class CSGShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
 		,	CSGEnvironmentT		pEnvironment
-		);
+		) throws CSGConstructionException;
 		
 		/** Subtract a shape from this one */
 		public CSGShape difference(
@@ -178,7 +181,7 @@ public class CSGShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
 		,	CSGEnvironmentT		pEnvironment
-		);
+		) throws CSGConstructionException;
 
 		/** Find the intersection with another shape */
 		public CSGShape intersection(
@@ -186,7 +189,7 @@ public class CSGShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
 		,	CSGEnvironmentT		pEnvironment
-		);
+		) throws CSGConstructionException;
 		
 		/** Find the merge with another shape */
 		public CSGShape merge(
@@ -194,7 +197,7 @@ public class CSGShape
 		,	CSGMeshManager		pMeshManager
 		,	CSGTempVars			pTempVars
 		,	CSGEnvironmentT		pEnvironment
-		);
+		) throws CSGConstructionException;
 		
 		/** Produce the mesh(es) that corresponds to this shape
 		 	The zeroth mesh in the list is the total, composite mesh.
@@ -287,8 +290,8 @@ public class CSGShape
     
     /** Unique instance marker, suitable as a key */
     protected String					mShapeKey;
-    /** Valid shape flag */
-    protected boolean					mIsValid;
+    /** Valid shape control */
+    protected CSGExceptionI				mInError;
 	/** The active handler that performs shape manipulation */
 	protected CSGShapeProcessor			mHandler;
 	/** The operator applied to this shape as it is added into the geometry */
@@ -329,7 +332,6 @@ public class CSGShape
 	,	int		pOrder
 	) {
 		super( pShapeName, pMesh );
-		mIsValid = true;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
 		mSurface = CSGShapeSurface.USE_MESH;
@@ -339,7 +341,6 @@ public class CSGShape
 	,	int		pOrder
 	) {
 		super( pShapeName );	// no mesh provided
-		mIsValid = true;
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;		
 		mSurface = CSGShapeSurface.USE_MESH;
@@ -359,13 +360,16 @@ public class CSGShape
 		CSGShapeProcessor	pHandler
 	,	String				pShapeName
 	,	int					pOrder
-	,	boolean				pIsValid
+	,	CSGExceptionI		pAnError
+	,	CSGExceptionI		pOtherError
 	) {
 		super( pShapeName );
 		mHandler = pHandler.setShape( this );
-		mIsValid = pIsValid;
 		mOrder = pOrder;
 		mSurface = CSGShapeSurface.USE_MESH;
+		
+		setError( pAnError );
+		setError( pOtherError );
 	}
 	
 	/** Return the JME aspect of this element */
@@ -491,8 +495,14 @@ public class CSGShape
 	
 	/** The shape knows if it is 'valid' or not */
 	@Override
-	public boolean isValid() { return mIsValid; }
-	public void setValid( boolean pFlag ) { mIsValid = pFlag; }
+	public boolean isValid() { return( mInError == null ); }
+	@Override
+	public CSGExceptionI getError() { return mInError; }
+	public void setError(
+		CSGExceptionI	pError
+	) {
+		mInError = CSGConstructionException.registerError( mInError, pError );
+	}
 	
 	/** Mostly internal access to the handler */
 	public CSGShapeProcessor getHandler(
@@ -812,7 +822,9 @@ public class CSGShape
 					setSpatial( aSpatial, null );
 				} else {
 					// No mesh/subshapes/spatial -- so just what is this???
-					mIsValid = false;
+					setError( new CSGConstructionException( CSGErrorCode.EMPTY_SHAPE
+							, 	"CSGShape.read() with no mesh/shapes"
+							,	this ) );
 				}
 			}
 		}

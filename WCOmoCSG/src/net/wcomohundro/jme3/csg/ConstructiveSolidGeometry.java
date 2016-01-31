@@ -37,6 +37,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
 import net.wcomohundro.jme3.csg.shape.*;
 
 import com.jme3.asset.AssetManager;
@@ -172,8 +174,9 @@ public interface ConstructiveSolidGeometry
 		/** Return the JME aspect of this element */
 		public Spatial asSpatial();
 		
-		/** Is this a valid element */
+		/** Is this a valid element? */
 		public boolean isValid();	
+		public CSGExceptionI getError();
 		
 		/** This there an active parent to this element */
 		public CSGElement getParentElement();
@@ -215,10 +218,10 @@ public interface ConstructiveSolidGeometry
 		public List<CSGFaceProperties>	getFaceProperties();
 		
 		/** Action to generate the mesh based on the given shapes */
-		public CSGShape regenerate();
+		public CSGShape regenerate() throws CSGConstructionException;
 		public CSGShape regenerate(
 			CSGEnvironment		pEnvironment
-		);
+		)  throws CSGConstructionException;
 		/** How long did it take to build the last shape 
 		 		NOTE that a negative value means that regeneration is actively processing  */
 		public long getShapeRegenerationNS();

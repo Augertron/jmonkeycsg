@@ -32,6 +32,9 @@ import com.jme3.scene.Spatial;
 
 import java.io.IOException;
 
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
+
 
 
 /** SHAPE extension to load a mesh via an external definition */
@@ -67,13 +70,23 @@ public class CSGExternal
         // Look for the external element
         InputCapsule inCapsule = pImporter.getCapsule( this );
     	String modelName = inCapsule.readString( "model", null );
-    	if ( modelName != null ) {
+    	if ( modelName != null ) try {
     		// Load the given model
         	Spatial aSpatial = pImporter.getAssetManager().loadModel( modelName );
         	this.mesh = ((Geometry)aSpatial).getMesh();
         	
         	// We are valid if we have a mesh
-        	this.mIsValid = (this.mesh != null);
+        	if ( this.mesh == null ) {
+        		setError( new CSGConstructionException( CSGErrorCode.EMPTY_SHAPE
+        				,	"CSGExternal.read - model has no mesh: "  + modelName
+        				,	this ) );
+        	}
+    	} catch( Exception ex ) {
+    		// Retain the error, which marks this shape invalid
+    		setError( new CSGConstructionException( CSGErrorCode.LOAD_FAILED
+    					,	"CSGExternal.read - model load failed: " + modelName
+    					,	this
+    					,	ex ) );
     	}
     }
         

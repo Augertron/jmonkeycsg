@@ -67,6 +67,8 @@ import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.TempVars;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
 import net.wcomohundro.jme3.math.CSGTransform;
@@ -113,8 +115,8 @@ public class CSGGeometry
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Processing environment to apply */
 	protected CSGEnvironment			mEnvironment;
-	/** Is this a valid geometry */
-	protected boolean					mIsValid;
+	/** Is this a valid geometry? */
+	protected CSGExceptionI				mInError;
 	/** Management of the generated meshes */
 	protected CSGMeshManager			mMeshManager;
 	protected boolean					mDeferSceneChanges;
@@ -160,7 +162,14 @@ public class CSGGeometry
 	
 	/** Is this a valid geometry */
 	@Override
-	public boolean isValid() { return mIsValid; }
+	public boolean isValid() { return( mInError == null ); }
+	@Override
+	public CSGExceptionI getError() { return mInError; }
+	public void setError(
+		CSGExceptionI	pError
+	) {
+		mInError = CSGConstructionException.registerError( mInError, pError );
+	}
 	
 	/** Is there an active parent to this element? */
 	@Override
@@ -341,13 +350,13 @@ public class CSGGeometry
 	/** Action to generate the mesh based on the given shapes */
 	@Override
 	public CSGShape regenerate(
-	) {
+	) throws CSGConstructionException {
 		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
 	public CSGShape regenerate(
 		CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		mRegenNS = 0;
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction
@@ -420,21 +429,24 @@ public class CSGGeometry
 					// any given mesh based on its index.  For a singleton, we want the master.
 					aProduct.toMesh( meshManager, false, tempVars, pEnvironment );
 
-					// Return the final shape if we have a valid product
-					if ( mIsValid = aProduct.isValid() ) {
-						if ( mDeferSceneChanges ) synchronized( this ) {
-							// Update the scene later
-							mMeshManager = meshManager;
-						} else {
-							// Update the scene NOW
-							applySceneChanges( meshManager );
-						}
-						return( aProduct );
+					// Return the final shape
+					setError( aProduct.getError() );
+					if ( mDeferSceneChanges ) synchronized( this ) {
+						// Update the scene later
+						mMeshManager = meshManager;
+					} else {
+						// Update the scene NOW
+						applySceneChanges( meshManager );
 					}
+					return( aProduct );
 				} else {
-					// Nothing interesting produced
-					mIsValid = false;
+					// Nothing interesting produced, but we have no explicit error
+					setError( null );
 				}
+			} catch( CSGConstructionException ex ) {
+				// Record the problem and toss it again
+				setError( ex );
+				throw ex;
 			} finally {
 				tempVars.release();
 				mRegenNS = System.nanoTime() - startTimer;
@@ -442,11 +454,14 @@ public class CSGGeometry
 		} else if ( this.mesh instanceof CSGMesh ) {
 			// If in 'debug' mode, look for a possible delegate
 			this.mesh = ((CSGMesh)this.mesh).resolveMesh( mDebugMesh );
-			mIsValid = true;
+			setError( null );
 			
+		} else if ( this.mesh != null ) {
+			// Just a mesh
+			setError( null );
 		} else {
-			// Could be just a mesh
-			mIsValid = (this.mesh != null);
+			// No really sure what this is if we have no shapes and not mesh????
+			setError( null );
 		}
 		// Fall out to here only if no final Shape was produced
 		return( null );
@@ -547,7 +562,7 @@ public class CSGGeometry
 		// Rebuild based on the shapes just loaded (which also sets mValid)
 		regenerate();
 		
-		if ( mIsValid ) {
+		if ( this.isValid() ) {
 	        // TangentBinormalGenerator directive
 	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
 	        if ( generate ) {

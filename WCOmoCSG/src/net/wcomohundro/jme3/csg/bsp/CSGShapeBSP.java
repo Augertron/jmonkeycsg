@@ -54,6 +54,9 @@ import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB;
 
 import com.jme3.export.InputCapsule;
@@ -342,6 +345,16 @@ public class CSGShapeBSP
 		
 		mLostVertices = pPartitionA.getLostVertexCount( true ) + pPartitionB.getLostVertexCount( true );
 	}
+	public CSGExceptionI getError(
+	) {
+		if ( this.isValid() ) {
+			return( null );
+		} else {
+			return( new CSGConstructionException( CSGErrorCode.INVALID_SHAPE
+						, 	"CSGSahpeBSP - corruption at level: " + mCorruptLevel
+						,	this.mShape ) );
+		}
+	}
 	/** Accessor to how many vertices where 'lost' during construction */
 	public int getLostVertexCount() { return mLostVertices; }
 	
@@ -418,7 +431,7 @@ public class CSGShapeBSP
 
 		CSGShapeBSP aHandler = new CSGShapeBSP( null, a.allPolygons( null ) );
 		aHandler.setCorrupt( a, b );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getName(), mShape.getOrder(), aHandler.isValid() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getName(), mShape.getOrder(), aHandler.getError(), null );
 		return( aShape );
 	}
 	
@@ -451,7 +464,7 @@ public class CSGShapeBSP
 
 		CSGShapeBSP aHandler = new CSGShapeBSP( null, a.allPolygons( null ) );
 		aHandler.setCorrupt( a, b );
-		CSGShape aShape = new CSGShape( aHandler, mShape.getName(), mShape.getOrder(), aHandler.isValid() );
+		CSGShape aShape = new CSGShape( aHandler, mShape.getName(), mShape.getOrder(), aHandler.getError(), null );
         return( aShape );
 	}
 

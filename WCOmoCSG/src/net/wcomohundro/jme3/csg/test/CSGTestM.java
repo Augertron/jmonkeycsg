@@ -28,6 +28,7 @@ package net.wcomohundro.jme3.csg.test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.FlyCamAppState;
@@ -129,6 +130,8 @@ public class CSGTestM
 		sPositions.add( new Vector3f(0.39975405f,0.90919274f,0.80785227f));
 		sPositions.add( new Vector3f(0.54797322f,0.55813938f,0.40844613f));
 ****/		
+		
+/********
 		// The following includes a partial sphere in the middle of open
 		// space around step 320....
 		// A triangle is dropped around step 40 .... (which was pruned back to fail on step four)
@@ -470,6 +473,132 @@ public class CSGTestM
 		sPositions.add( new Vector3f(0.16462982f,0.02611572f,0.61550331f)); // 336
 		sPositions.add( new Vector3f(0.41169584f,0.17189682f,0.40301746f)); // 337
 		sPositions.add( new Vector3f(0.72930288f,0.19264102f,0.63703346f)); // 338
+***************/
+		/** Bogus triangle around step 96 (seen from below)  */
+sPositions.add( new Vector3f(0.27770352f,0.46122688f,0.51517385f)); // 1
+sPositions.add( new Vector3f(0.27608168f,0.34551549f,0.06539202f)); // 2
+sPositions.add( new Vector3f(0.52630138f,0.03579539f,0.02474916f)); // 3
+sPositions.add( new Vector3f(0.20595354f,0.66981322f,0.42971194f)); // 4
+sPositions.add( new Vector3f(0.18904364f,0.52505225f,0.93140197f)); // 5
+sPositions.add( new Vector3f(0.97935265f,0.68711704f,0.48158187f)); // 6
+sPositions.add( new Vector3f(0.48596126f,0.23843467f,0.93357599f)); // 7
+sPositions.add( new Vector3f(0.01421112f,0.27380580f,0.19773597f)); // 8
+sPositions.add( new Vector3f(0.71298790f,0.87922210f,0.51476270f)); // 9
+sPositions.add( new Vector3f(0.79485250f,0.75485551f,0.99515438f)); // 10
+sPositions.add( new Vector3f(0.77157128f,0.77839476f,0.05931848f)); // 11
+sPositions.add( new Vector3f(0.33765650f,0.29436308f,0.59538013f)); // 12
+sPositions.add( new Vector3f(0.64518267f,0.11867213f,0.96176815f)); // 13
+sPositions.add( new Vector3f(0.24848801f,0.15109754f,0.61993992f)); // 14
+sPositions.add( new Vector3f(0.45582271f,0.61759496f,0.86084294f)); // 15
+sPositions.add( new Vector3f(0.80071312f,0.78237444f,0.29684871f)); // 16
+sPositions.add( new Vector3f(0.32384932f,0.78567892f,0.68176097f)); // 17
+sPositions.add( new Vector3f(0.88186044f,0.89698583f,0.38646924f)); // 18
+sPositions.add( new Vector3f(0.31246120f,0.99689889f,0.60366225f)); // 19
+sPositions.add( new Vector3f(0.69722843f,0.17010564f,0.40289277f)); // 20
+sPositions.add( new Vector3f(0.56737870f,0.51288295f,0.00321507f)); // 21
+sPositions.add( new Vector3f(0.82534564f,0.57062274f,0.28261465f)); // 22
+sPositions.add( new Vector3f(0.37348580f,0.81682342f,0.67368442f)); // 23
+sPositions.add( new Vector3f(0.66826415f,0.99113899f,0.97949696f)); // 24
+sPositions.add( new Vector3f(0.22438675f,0.61881346f,0.43422037f)); // 25
+sPositions.add( new Vector3f(0.25544399f,0.43739003f,0.49165052f)); // 26
+sPositions.add( new Vector3f(0.87480676f,0.11029208f,0.22472137f)); // 27
+sPositions.add( new Vector3f(0.89608353f,0.91551888f,0.23170120f)); // 28
+sPositions.add( new Vector3f(0.33723837f,0.05473995f,0.15784162f)); // 29
+sPositions.add( new Vector3f(0.60865152f,0.61520189f,0.97737426f)); // 30
+sPositions.add( new Vector3f(0.14142460f,0.39914387f,0.24599236f)); // 31
+sPositions.add( new Vector3f(0.22566748f,0.41332263f,0.00950694f)); // 32
+sPositions.add( new Vector3f(0.15485024f,0.57639825f,0.70119578f)); // 33
+sPositions.add( new Vector3f(0.05290598f,0.79258788f,0.22659695f)); // 34
+sPositions.add( new Vector3f(0.10861605f,0.91088176f,0.68035346f)); // 35
+sPositions.add( new Vector3f(0.04377919f,0.44823188f,0.15094322f)); // 36
+sPositions.add( new Vector3f(0.68920767f,0.66604137f,0.94466478f)); // 37
+sPositions.add( new Vector3f(0.04464799f,0.50060058f,0.37275547f)); // 38
+sPositions.add( new Vector3f(0.62931901f,0.45162231f,0.35753506f)); // 39
+sPositions.add( new Vector3f(0.65202111f,0.51006013f,0.78109592f)); // 40
+sPositions.add( new Vector3f(0.68563026f,0.31424040f,0.61688083f)); // 41
+sPositions.add( new Vector3f(0.08739573f,0.56442362f,0.07361543f)); // 42
+sPositions.add( new Vector3f(0.02775884f,0.40120864f,0.25368088f)); // 43
+sPositions.add( new Vector3f(0.42561126f,0.08508533f,0.52417850f)); // 44
+sPositions.add( new Vector3f(0.93444425f,0.77615744f,0.98109519f)); // 45
+sPositions.add( new Vector3f(0.92854166f,0.68288749f,0.46841764f)); // 46
+sPositions.add( new Vector3f(0.37007278f,0.39217353f,0.14524925f)); // 47
+sPositions.add( new Vector3f(0.14926779f,0.44578153f,0.17686743f)); // 48
+sPositions.add( new Vector3f(0.87827176f,0.81727195f,0.18523437f)); // 49
+sPositions.add( new Vector3f(0.11627805f,0.33141774f,0.59711856f)); // 50
+sPositions.add( new Vector3f(0.02587420f,0.94024926f,0.71002156f)); // 51
+sPositions.add( new Vector3f(0.44550377f,0.82438296f,0.62283421f)); // 52
+sPositions.add( new Vector3f(0.72342467f,0.46676254f,0.39422596f)); // 53
+sPositions.add( new Vector3f(0.92897040f,0.50566000f,0.61273122f)); // 54
+sPositions.add( new Vector3f(0.47882491f,0.65437132f,0.83060253f)); // 55
+sPositions.add( new Vector3f(0.27306068f,0.57173127f,0.13774878f)); // 56
+sPositions.add( new Vector3f(0.42655313f,0.59532160f,0.31875283f)); // 57
+sPositions.add( new Vector3f(0.38511860f,0.54043925f,0.47768301f)); // 58
+sPositions.add( new Vector3f(0.24471194f,0.82192814f,0.48830944f)); // 59
+sPositions.add( new Vector3f(0.67278528f,0.54504466f,0.09745085f)); // 60
+sPositions.add( new Vector3f(0.35128516f,0.65485710f,0.61607915f)); // 61
+sPositions.add( new Vector3f(0.15284234f,0.09497422f,0.11146510f)); // 62
+sPositions.add( new Vector3f(0.70446914f,0.65306264f,0.58151633f)); // 63
+sPositions.add( new Vector3f(0.60797894f,0.51344681f,0.92530870f)); // 64
+sPositions.add( new Vector3f(0.34852356f,0.07145715f,0.17945975f)); // 65
+sPositions.add( new Vector3f(0.37254894f,0.80542964f,0.88890177f)); // 66
+sPositions.add( new Vector3f(0.73616028f,0.39821291f,0.06801569f)); // 67
+sPositions.add( new Vector3f(0.20351452f,0.91303581f,0.72320229f)); // 68
+sPositions.add( new Vector3f(0.95461959f,0.21565855f,0.91324383f)); // 69
+sPositions.add( new Vector3f(0.46340734f,0.40685672f,0.19976103f)); // 70
+sPositions.add( new Vector3f(0.11011094f,0.90722120f,0.49331629f)); // 71
+sPositions.add( new Vector3f(0.48457295f,0.46555865f,0.85865045f)); // 72
+sPositions.add( new Vector3f(0.19199139f,0.71535790f,0.86834544f)); // 73
+sPositions.add( new Vector3f(0.04115498f,0.82713747f,0.42915702f)); // 74
+sPositions.add( new Vector3f(0.61800349f,0.06707484f,0.62543017f)); // 75
+sPositions.add( new Vector3f(0.88783878f,0.43486172f,0.12229562f)); // 76
+sPositions.add( new Vector3f(0.63693637f,0.49088907f,0.79137754f)); // 77
+sPositions.add( new Vector3f(0.87867749f,0.78637511f,0.14664972f)); // 78
+sPositions.add( new Vector3f(0.05955619f,0.38885713f,0.14290255f)); // 79
+sPositions.add( new Vector3f(0.13591242f,0.11856502f,0.32858527f)); // 80
+sPositions.add( new Vector3f(0.45130950f,0.12749821f,0.22140574f)); // 81
+sPositions.add( new Vector3f(0.99816906f,0.39879960f,0.67688763f)); // 82
+sPositions.add( new Vector3f(0.27599066f,0.87235457f,0.10976708f)); // 83
+sPositions.add( new Vector3f(0.28443813f,0.34108049f,0.17074001f)); // 84
+sPositions.add( new Vector3f(0.59220099f,0.64068037f,0.29883301f)); // 85
+sPositions.add( new Vector3f(0.21032435f,0.69509870f,0.22718686f)); // 86
+sPositions.add( new Vector3f(0.96133840f,0.07793272f,0.98381025f)); // 87
+sPositions.add( new Vector3f(0.86025840f,0.55727190f,0.13104689f)); // 88
+sPositions.add( new Vector3f(0.47240525f,0.90199143f,0.77609187f)); // 89
+sPositions.add( new Vector3f(0.78712440f,0.55742973f,0.76311892f)); // 90
+sPositions.add( new Vector3f(0.61108696f,0.10808033f,0.72990811f)); // 91
+sPositions.add( new Vector3f(0.48142982f,0.81970024f,0.52060682f)); // 92
+sPositions.add( new Vector3f(0.67186862f,0.77876258f,0.23121035f)); // 93
+sPositions.add( new Vector3f(0.15493429f,0.40537888f,0.23185605f)); // 94
+sPositions.add( new Vector3f(0.58995610f,0.33311659f,0.00705606f)); // 95
+sPositions.add( new Vector3f(0.39417428f,0.47937870f,0.61971760f)); // 96
+sPositions.add( new Vector3f(0.54585254f,0.68676496f,0.87139761f)); // 97
+sPositions.add( new Vector3f(0.06776696f,0.87885374f,0.14896846f)); // 98
+sPositions.add( new Vector3f(0.37081677f,0.18404460f,0.54669964f)); // 99
+sPositions.add( new Vector3f(0.17017645f,0.54999292f,0.11128503f)); // 100
+sPositions.add( new Vector3f(0.56053740f,0.78079951f,0.30992448f)); // 101
+sPositions.add( new Vector3f(0.32001537f,0.44523436f,0.08620554f)); // 102
+sPositions.add( new Vector3f(0.76590687f,0.03684270f,0.59364378f)); // 103
+sPositions.add( new Vector3f(0.80683553f,0.18522841f,0.85459214f)); // 104
+sPositions.add( new Vector3f(0.15438688f,0.41930842f,0.33797449f)); // 105
+sPositions.add( new Vector3f(0.69640076f,0.19685644f,0.05853683f)); // 106
+sPositions.add( new Vector3f(0.73739821f,0.09245175f,0.41357023f)); // 107
+sPositions.add( new Vector3f(0.57426214f,0.51166886f,0.70436966f)); // 108
+sPositions.add( new Vector3f(0.78882986f,0.07467782f,0.57291675f)); // 109
+sPositions.add( new Vector3f(0.15640312f,0.40672356f,0.02575749f)); // 110
+sPositions.add( new Vector3f(0.73176700f,0.54052198f,0.32932806f)); // 111
+sPositions.add( new Vector3f(0.80149478f,0.98603159f,0.81871510f)); // 112
+sPositions.add( new Vector3f(0.45161510f,0.24455494f,0.32157898f)); // 113
+sPositions.add( new Vector3f(0.69247639f,0.65278059f,0.74903792f)); // 114
+sPositions.add( new Vector3f(0.57290655f,0.11720842f,0.89983869f)); // 115
+sPositions.add( new Vector3f(0.02047265f,0.66252160f,0.35670352f)); // 116
+sPositions.add( new Vector3f(0.21933514f,0.60925192f,0.47442764f)); // 117
+sPositions.add( new Vector3f(0.47672379f,0.40354192f,0.61204731f)); // 118
+sPositions.add( new Vector3f(0.71098053f,0.22188783f,0.74071270f)); // 119
+sPositions.add( new Vector3f(0.35400301f,0.96791077f,0.88958502f)); // 120
+sPositions.add( new Vector3f(0.00277239f,0.11852777f,0.46382076f)); // 121
+sPositions.add( new Vector3f(0.76961392f,0.95164806f,0.00021791f)); // 122
+sPositions.add( new Vector3f(0.04299396f,0.94793499f,0.06643200f)); // 123
+		
 	}
 	
 	public static List<Vector3d> sDebugFace = new ArrayList(3);
@@ -484,9 +613,18 @@ public class CSGTestM
 		sDebugFace.add( new Vector3d( 0.93126726, 0.15847588, 0.62678003 ) );
 		sDebugFace.add( new Vector3d( 0.9622432,  0.0631417,  0.62678003 ) );
 		
-		sDebugFace2.add( new Vector3d( 0.15480220317840576, 0.0943608283996582, 0.169720858335495 ) );
-		sDebugFace2.add( new Vector3d( 0.10256612300872803, 0.09436081349849701, 0.169720858335495 ) );
-		sDebugFace2.add( new Vector3d( 0.17880430817604065, 0.16823174059391022, 0.2051926851272583 ) );
+//		sDebugFace2.add( new Vector3d( 0.15480220317840576, 0.0943608283996582, 0.169720858335495 ) );
+//		sDebugFace2.add( new Vector3d( 0.10256612300872803, 0.09436081349849701, 0.169720858335495 ) );
+//		sDebugFace2.add( new Vector3d( 0.17880430817604065, 0.16823174059391022, 0.2051926851272583 ) );
+		
+		// BEFORE INVERT
+		sDebugFace2.add( new Vector3d(0.46167982, 0.9314737, 0.08121036 ) );
+		sDebugFace2.add( new Vector3d(0.42916352, 0.95509815, 0.23121035) );
+		sDebugFace2.add( new Vector3d(0.5020609, 0.95989114, 0.1483221) );
+		// AFTER INVERT
+		sDebugFace2.add( new Vector3d(0.5020609, 0.95989114, 0.1483221) );
+		sDebugFace2.add( new Vector3d(0.42916352, 0.95509815, 0.23121035) );
+		sDebugFace2.add( new Vector3d(0.46167982, 0.9314737, 0.08121036 ) );
 			
 		sDebugIntersection[0] 
 			= new Vector3d( -0.22993217408657074, 0.6713560223579407, 0.02223246917128563);
@@ -495,12 +633,12 @@ public class CSGTestM
 	}
 	
 	protected ConstructiveSolidGeometry.CSGSpatial	mBlendedShape;
-	protected CSGShape		mPreviousShape;
-	protected CSGShape		mSphere;
-	protected int			mPositionIndex;
-	protected boolean		mSingleStep;
-	protected int			mAction;
-	protected int			mCounter;
+	protected Stack<CSGShape>	mPreviousShape;
+	protected CSGShape			mSphere;
+	protected int				mPositionIndex;
+	protected boolean			mSingleStep;
+	protected int				mAction;
+	protected int				mCounter;
 
 	public CSGTestM(
 	) {
@@ -512,8 +650,9 @@ public class CSGTestM
     protected void commonApplicationInit(
     ) {
 		super.commonApplicationInit();    
+	    flyCam.setMoveSpeed( 3 );			// Move a bit slower
 		
-		this.mPostText.push( "<SPC> to blend, QWASDZ to move, <ESC> to exit" );
+		this.mPostText.push( "<SPC> to blend, <BKSPC> to rollback, QWASDZ to move, <ESC> to exit" );
 		this.mRefreshText = true;
 		
 		CSGEnvironmentIOB myEnv = (CSGEnvironmentIOB)CSGEnvironment.resolveEnvironment( null, null );
@@ -533,6 +672,7 @@ public class CSGTestM
 		//		-1 := no precanned,  0 := all precanned
 		mPositionIndex = -1;
 		mSingleStep = false;
+		mPreviousShape = new Stack();
 		
 		// This is the progressive shape
 		mBlendedShape = new CSGGeonode( "TheBlend" );
@@ -550,10 +690,10 @@ public class CSGTestM
 	    // This is the starting base cube of cheese
 	  	CSGShape aCube = new CSGShape( "Box", new CSGBox(1,1,1) );
 	  	mBlendedShape.addShape(aCube);
-	  	mPreviousShape = mBlendedShape.regenerate();
+	  	mPreviousShape.push( mBlendedShape.regenerate() );
 	  	
 	  	// This is the spherical mouse
-	  	mSphere = new CSGShape( "Sphere", new CSGSphere( 12, 12, 0.3f ) );
+	  	mSphere = new CSGShape( "Sphere", new CSGSphere( 5, 5, 0.3f ) );
 	    Material sphereMaterial = new Material( assetManager, "Common/MatDefs/Misc/ShowNormals.j3md" );
 	    mSphere.setMaterial( sphereMaterial );
 	  	
@@ -573,7 +713,7 @@ public class CSGTestM
     	int		pAction
     ) {
     	mCounter += 1;
-    	mBlendedShape.addShape( mPreviousShape );
+    	mBlendedShape.addShape( mPreviousShape.peek() );
       	
     	if ( (mPositionIndex >= 0) && (mPositionIndex < sPositions.size() ) ) {
       		mSphere.setLocalTranslation( sPositions.get( mPositionIndex++ ) );
@@ -587,7 +727,7 @@ public class CSGTestM
       	mBlendedShape.addShape( mSphere, CSGOperator.DIFFERENCE );
       	
       	try {
-      		mPreviousShape = mBlendedShape.regenerate();
+      		mPreviousShape.push( mBlendedShape.regenerate() );
     	    mPostText.push( "Rebuilt in " + (mBlendedShape.getShapeRegenerationNS() / 1000000) + "ms [" + mCounter + "]");    	    
     		mRefreshText = true;
       	} catch( Exception ex ){
@@ -610,6 +750,7 @@ public class CSGTestM
     	
     	final SimpleApplication thisApp = this;
         inputManager.addMapping( "blend", new KeyTrigger( KeyInput.KEY_SPACE ) );
+        inputManager.addMapping( "prior", new KeyTrigger( KeyInput.KEY_BACK ) );
         
         ActionListener aListener = new ActionListener() {
             public void onAction(
@@ -620,6 +761,11 @@ public class CSGTestM
                 if ( pKeyPressed ) {
                     if ( pName.equals( "blend" ) ) {
                 	    takeAction( 1 );
+                    } else if ( pName.equals( "prior" ) ) {
+                    	mCounter -= 1;
+                    	mPositionIndex -= 1;
+                    	mPreviousShape.pop();
+                		CSGTestDriver.postText( thisApp, mTextDisplay, "** Seq: " + mCounter );
                     }
                 } else {
                 	if ( pName.equals( "blend" ) ) {
@@ -629,6 +775,7 @@ public class CSGTestM
             }
         };  
         inputManager.addListener( aListener, "blend" );
+        inputManager.addListener( aListener, "prior" );
     }
     /** Service routine to trigger the action */
     protected void takeAction(
