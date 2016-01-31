@@ -315,7 +315,7 @@ loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
 		// Match every face against the other object
 		for( CSGFace aFace : mFaces ) {
 			// Status on the vertices can make the classification really simple
-			if ( aFace.simpleClassify() == false ) {
+			if ( aFace.simpleClassify( pEnvironment ) == false ) {
 				// Nothing simple about it, so use the ray trace classification
 				CSGFaceStatus aStatus = aFace.rayTraceClassify( pOtherObject, pTempVars, pEnvironment );
 				if ( aStatus != null ) {
@@ -342,7 +342,7 @@ loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
 	, 	CSGSegment 			pOtherSegment
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	) throws CSGConstructionException {
 		CSGFace.CSGFaceCollision startCollision, endCollision;
 		
 		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL
@@ -391,7 +391,8 @@ loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
 				int otherStartOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
 				int otherEndOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
 
-				throw new IllegalArgumentException( "CSGSolid: Corrupted split" );
+				throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+												,	"CSGSolid: Corrupted split" );
 			}
 		}
 		// The collision points determine how we split

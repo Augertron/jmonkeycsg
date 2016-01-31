@@ -39,6 +39,8 @@ import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
 import net.wcomohundro.jme3.csg.test.CSGTestM;
@@ -111,7 +113,7 @@ public class CSGSegment
 	, 	int 			pSign3
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
-	) {
+	) throws CSGConstructionException {
 		mFace = pFace;
 		mLine = pLine;
 		int anIndex = 0;
@@ -166,7 +168,8 @@ public class CSGSegment
 				anIndex = setEdge( anIndex, CSGFaceCollision.EDGE31, pFace.v3(), pFace.v1(), pTempVars, pEnvironment );
 			}
 			if ( anIndex < 2 ) {
-				throw new IllegalStateException( "Segment does not intersect with face" );
+				throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+													,	"CSGSegment does not intersect with face" );
 			}
 		}
 	}
@@ -313,7 +316,7 @@ public class CSGSegment
 	,	CSGVertexIOB		pVertex
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		switch( pIndex ) {
 		case 0:
 			// No end yet defined - define the starting point 
@@ -351,7 +354,8 @@ public class CSGSegment
 			
 		default:
 			// Vertices already set....
-			throw new IllegalStateException( "Segment intersects with 3 vertices" );
+			throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+												,	"CSGSegment intersects with 3 vertices" );
 		}
 	}
 	
@@ -374,7 +378,7 @@ public class CSGSegment
 	, 	CSGVertexIOB		pVertex2
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		double tolerance = pEnvironment.mEpsilonOnPlaneDbl;
 		
 		Vector3d point1 = pVertex1.getPosition();
@@ -425,7 +429,8 @@ public class CSGSegment
 			
 		default:
 			// All points have already been defined
-			throw new IllegalStateException( "Segment intersects with 3 edges" );
+			throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+											,	"CSGSegment intersects with 3 edges" );
 		}
 	}
 

@@ -363,7 +363,7 @@ public class CSGShapeIOB
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
-	) {
+	) throws CSGConstructionException {
 		// Convert the mesh in to appropriate polygons
 	    VertexBuffer indexBuffer = pMesh.getBuffer( VertexBuffer.Type.Index );
 		IndexBuffer idxBuffer = null;
@@ -400,13 +400,16 @@ public class CSGShapeIOB
 			iAdjust = 1;
 			break;
 		default:
-			throw new IllegalArgumentException( "Mesh type not supported: " + meshMode );
+			throw new CSGConstructionException( CSGErrorCode.INVALID_MESH
+											,	"Mesh type not supported: " + meshMode );
 		}
 		if ( posBuffer == null ) {
-			throw new IllegalArgumentException( "Mesh lacking Type.Position buffer" );
+			throw new CSGConstructionException( CSGErrorCode.INVALID_MESH
+											,	"Mesh lacking Type.Position buffer" );
 		}
 		if ( normBuffer == null ) {
-			throw new IllegalArgumentException( "Mesh lacking Type.Normal buffer" );
+			throw new CSGConstructionException( CSGErrorCode.INVALID_MESH
+											,	"Mesh lacking Type.Normal buffer" );
 		}
 		// Work from 3 points which define a triangle
 		List<CSGFace> faces = new ArrayList<CSGFace>( triangleCount );

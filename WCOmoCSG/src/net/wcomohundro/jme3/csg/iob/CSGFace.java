@@ -80,14 +80,6 @@ public class CSGFace
 	,	OPPOSITE		// Coincident with a solid (opposite orientation)
 	}
 	
-	/** Status of a point in relationship to a line */
-	protected static enum CSGPointStatus {
-		UP				// Point status if UP relative to an edge
-	,	DOWN 			// Point status if DOWN relative to an edge
-	,	ON 				// Point status if ON an edge
-	,	NONE			// Point status if none of the above
-	}
-	
 	/** Surface collision selector 
 	 	When determining how two faces (ie planes) collide - along a line - the
 	 	following are the possibilities of how the line travels across the face.
@@ -156,7 +148,7 @@ public class CSGFace
 		/** Check if this point (a vertex) is on a given edge */
 		public boolean vertexOnEdge(
 			CSGFaceCollision	pEdge
-		) {
+		) throws CSGConstructionException {
 			switch( this ) {
 			case V1:
 				return( (pEdge == EDGE12) || (pEdge == EDGE31) );
@@ -166,7 +158,8 @@ public class CSGFace
 				return( (pEdge == EDGE23) || (pEdge == EDGE31) );
 				
 			default:
-				throw new IllegalArgumentException( "Not a Vertex: " + this );
+				throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+												,	"CSGFaceCollision - not a Vertex: " + this );
 			}
 		}
 		
@@ -317,6 +310,9 @@ public class CSGFace
 
 		// A new face based on vertices from an old face must clone them
 		// to keep the status unique as needed.
+		// @todo -  I am still not 100% convinced that a clone is needed here...
+		//		    If the vertex represents the same position, shouldn't its 
+		//			status always be the same????
 		mVertices.add( pV1.clone( false, pEnvironment ) );
 		mVertices.add( pV2.clone( false, pEnvironment ) );
 		mVertices.add( pV3.clone( false, pEnvironment ) );
@@ -573,6 +569,7 @@ public class CSGFace
 	 	@return true if the face could be classified, false otherwise 
 	 */
 	public boolean simpleClassify(
+		CSGEnvironment		pEnvironment
 	) {
 		CSGFaceStatus faceStatus = null;
 		CSGVertexStatus status1 = v1().getStatus();
@@ -595,6 +592,10 @@ public class CSGFace
 				// Both inside and outside???
 				// Attribute it to rounding issues where two faces are very very
 				// close but just different enough
+				if ( pEnvironment.mStructuralDebug ) {
+					pEnvironment.log( Level.WARNING
+									, "CSGFace.simpleClassify - inconsistent vertex status: " + this );
+				}
 				faceStatus = null;
 			}
 		}

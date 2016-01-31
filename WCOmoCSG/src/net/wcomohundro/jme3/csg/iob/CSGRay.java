@@ -42,6 +42,8 @@ import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 
 /** This class is a variant of the basic jme3 Ray, but relying on 'double' coordinates rather than floats.
  	A ray is a 3D construct represented by a direction and an origin.
@@ -118,6 +120,7 @@ public class CSGRay
 		if ( pEnvironment.mRationalizeValues ) {
 			// Confirm that the magnitudes of the resultant point are rational
 			CSGEnvironment.rationalizeVector( pResult, pEnvironment.mEpsilonMagnitudeRange );
+			// For debug breakpoint
 			CSGEnvironment.rationalizeVector( bZero, pEnvironment.mEpsilonMagnitudeRange );
 		}
 		return( pResult );
@@ -152,7 +155,7 @@ public class CSGRay
 		CSGFace 		pFace1
 	, 	CSGFace 		pFace2
 	,	CSGEnvironment	pEnvironment
-	) {
+	) throws CSGConstructionException {
 		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL;
 		CSGPlaneDbl planeFace1 = pFace1.getPlane();
 		CSGPlaneDbl planeFace2 = pFace2.getPlane();
@@ -193,7 +196,8 @@ public class CSGRay
 				CSGEnvironment.rationalizeVector( mOrigin, pEnvironment.mEpsilonMagnitudeRange );
 			}
 		} else {
-			throw new IllegalArgumentException( "Ray built from parallel faces" );
+			throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+												,	"CSGRay built from parallel faces" );
 		}
 		// NOTE NOTE NOTE
 		//		If rational values are active, the following seems to screw things up

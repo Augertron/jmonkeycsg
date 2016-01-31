@@ -44,6 +44,8 @@ import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 
 /** A Vertex in the IOB processing realm is assigned to a face, and is dynamically marked as its
  	IN/OUT/BOUNDARY condition is determined.
@@ -59,7 +61,24 @@ public class CSGVertexIOB
 	//private static final double TOL = 1e-5f;
 
 	
-	/** Status of an individual vertex */
+	/** Status of an individual vertex  - used to optimize face classification.
+	 		The BOUNDARY state can be set early on during CSGSegment processing if a vertex
+	 		is known to be an end point of the segment.  Being on a boundary means we 
+	 		cannot know anything more about the face containing this vertex.  A boundary
+	 		could be part of either an inside or outside face.
+	 		
+	 		The INSIDE and OUTSIDE states can be set when a given face is determined to
+	 		be either in or out.  Since classification occurs after all face overlap has 
+	 		been eliminated, it means that all vertices in the same face share the 
+	 		same status (but a BOUNDARY is never overridden)  Any vertex that shares
+	 		the same position as one marked INSIDE/OUTSIDE is, by definition, also
+	 		INSIDE/OUTSIDE.  This is where the optimization occurs.  Determining (via
+	 		standard raytrace processing) that a face is in/out can then affect the
+	 		status of any other face that shares the same position.
+	 		
+	 		INSIDE/OUTSIDE must be reset and redetermined on a face-by-face basis.
+	 		But once a BOUNDARY, always a BOUNDARY.
+	 */
 	public static enum CSGVertexStatus {
 		UNKNOWN			// Not Yet classified
 	,	INSIDE			// Inside a solid
@@ -106,7 +125,7 @@ public class CSGVertexIOB
 	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, CSGShapeIOB.sDefaultEnvironment );
+		this( pPosition, pNormal, pTextureCoordinate, CSGEnvironment.resolveEnvironment() );
 	}
 	public CSGVertexIOB(
 		Vector3d		pPosition
@@ -118,8 +137,6 @@ public class CSGVertexIOB
 		mStatus = CSGVertexStatus.UNKNOWN;
 		
 		if ( pEnvironment.mRationalizeValues ) {
-			// NOTE if you do NOT rationalize the position vector, you can get some
-			//		strange artifacts (probably due to 'near zero' processing)
 			CSGEnvironment.rationalizeVector( mPosition, pEnvironment.mEpsilonMagnitudeRange );
 		}
 	}
@@ -130,7 +147,7 @@ public class CSGVertexIOB
 	,	Vector3d		pNewPosition
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
-	) {
+	) throws CSGConstructionException {
 		super( pNewPosition, new Vector3d(), new Vector2f(), false );
 		mStatus = CSGVertexStatus.UNKNOWN;
 		
@@ -148,7 +165,8 @@ public class CSGVertexIOB
 			double d3 = pVertexA.getPosition().distance( pVertexB.getPosition() );
 			d3 -= (d1 + d2);
 			if ( d3 > pEnvironment.mEpsilonNearZeroDbl ) {
-				throw new IllegalArgumentException( "New Vertex not aligned with given points: " + d3 );
+				throw new CSGConstructionException( CSGErrorCode.INVALID_VERTEX
+												,	"CSGVertexIOB not aligned with given points: " + d3 );
 			}
 		}
 		// What is its normal?
@@ -256,10 +274,10 @@ public class CSGVertexIOB
 		CSGFace.CSGFaceStatus 	pStatus
 	,	List<CSGVertexIOB>		pSamePosition
 	) {
-		// Mark this vertex according to the face just given
+		// A BOUNDARY vacillates between inside/outside and is not reset
+		// due to what any face says. The vertex itself just stays on the boundary.
 		if ( this.mStatus != CSGVertexStatus.BOUNDARY ) {
-			// A BOUNDARY vacillates between inside/outside and is not reset
-			// due to what any face says. The vertex itself just stays on the boundary.
+			// Mark this vertex according to the face just given
 			switch( pStatus ) {
 			case INSIDE:
 				this.mStatus = CSGVertexStatus.INSIDE;
@@ -269,9 +287,12 @@ public class CSGVertexIOB
 				break;
 			case SAME:
 			case OPPOSITE:
+				// Once we set it on the boundary, it remains on the boundary and
+				// is not part of any quick face status check
 				this.mStatus = CSGVertexStatus.BOUNDARY;
 				break;
 			case UNKNOWN:
+				// Reset the status 
 				this.mStatus = CSGVertexStatus.UNKNOWN;
 				break;
 			}
@@ -283,7 +304,7 @@ public class CSGVertexIOB
 			//	entirely inside, outside, or coincident with the other solid.  If the 
 			//  status of the entire face is known,  then by definition, each of its vertices 
 			//  is known as well.
-			//	So any other vertex at the exact same position must likewise have the 
+			//	So any OTHER vertex at the exact same position must likewise have the 
 			//  same status.  This provides a bit of a short cut for the same positioned
 			//	vertex in two different faces. 
 			for( CSGVertexIOB otherVertex : pSamePosition ) {

@@ -46,6 +46,9 @@ public interface CSGExceptionI
 	,	INVALID_SHAPE		// Working with a shape that has marked itself invalid
 	,	CONSTRUCTION_FAILED	// CSG regeneration failed
 	,	LOAD_FAILED			// Asset load mechanism failed
+	,	INVALID_VERTEX		// Attempt to build a bogus vertex
+	,	INVALID_PLANE		// Attempt to build a bogus plane
+	,	INVALID_MESH		// Working with a mesh we do not understand
 	,	INTERRUPTED			// Processing externally interrupted
 	}
 	/** The associated error code */
