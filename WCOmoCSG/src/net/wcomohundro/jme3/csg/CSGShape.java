@@ -650,7 +650,7 @@ public class CSGShape
 	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment ).union( useOther, pMeshManager, pTempVars, pEnvironment ) );
@@ -662,7 +662,7 @@ public class CSGShape
 	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment ).difference( useOther, pMeshManager, pTempVars, pEnvironment ) );
@@ -674,7 +674,7 @@ public class CSGShape
 	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment ).intersection( useOther, pMeshManager, pTempVars, pEnvironment ) );
@@ -686,7 +686,7 @@ public class CSGShape
 	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
-	) {
+	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment ).merge( useOther, pMeshManager, pTempVars, pEnvironment ) );
@@ -740,6 +740,7 @@ public class CSGShape
 				}
 			}
 		}
+		// Looks like an empty shape
 		return( null );
     }
 	
@@ -822,9 +823,7 @@ public class CSGShape
 					setSpatial( aSpatial, null );
 				} else {
 					// No mesh/subshapes/spatial -- so just what is this???
-					setError( new CSGConstructionException( CSGErrorCode.EMPTY_SHAPE
-							, 	"CSGShape.read() with no mesh/shapes"
-							,	this ) );
+					this.readNoContents( pImporter, aCapsule );
 				}
 			}
 		}
@@ -844,6 +843,15 @@ public class CSGShape
         
         // Special debug??
         mDebug = aCapsule.readSavableArrayList( "debug", null );
+	}
+	/** FOR SUBCLASS OVERRIDE:  shape with no mesh or subshapes */
+	protected void readNoContents(
+		JmeImporter		pImporter
+	,	InputCapsule	pInCapsule
+	) throws IOException {
+		setError( new CSGConstructionException( CSGErrorCode.EMPTY_SHAPE
+				, 	"CSGShape.read() with no mesh/shapes"
+				,	this ) );		
 	}
 
 	/** Service routine to use the appropriate representation of this shape */

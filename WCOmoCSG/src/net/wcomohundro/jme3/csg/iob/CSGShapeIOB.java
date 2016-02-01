@@ -500,7 +500,11 @@ public class CSGShapeIOB
 				faces.add( aFace );
 			} else if ( meshMode == Mode.Triangles ) {
 				// We expect reasonable triangles in Triangle mode
-				CSGEnvironment.sLogger.log( Level.WARNING, "Invalid face in mesh:" + mShape.getName() );
+				if ( pEnvironment.mStructuralDebug ) {
+					CSGEnvironment.sLogger.log( Level.WARNING
+											, "Invalid face in mesh[" + mShape.getName() + "] " + aFace );
+				}
+				invalidFaceCount += 1;
 			} else {
 				// Other triangle modes may use degenerate triangles on purpose
 				invalidFaceCount += 1;

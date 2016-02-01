@@ -168,6 +168,9 @@ public class CSGGeometry
 	public void setError(
 		CSGExceptionI	pError
 	) {
+		if ( (pError != null) && (pError.getCSGElement() == null) ) {
+			pError.setCSGElement( this );
+		}
 		mInError = CSGConstructionException.registerError( mInError, pError );
 	}
 	
@@ -559,9 +562,12 @@ public class CSGGeometry
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
         
-		// Rebuild based on the shapes just loaded (which also sets mValid)
-		regenerate();
-		
+		// Rebuild based on the shapes just loaded
+        try {
+        	regenerate();
+        } catch( CSGConstructionException ex ) {
+        	// This error should already be registered with this element
+        }
 		if ( this.isValid() ) {
 	        // TangentBinormalGenerator directive
 	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );

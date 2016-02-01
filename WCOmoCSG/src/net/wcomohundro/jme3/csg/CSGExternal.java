@@ -59,17 +59,12 @@ public class CSGExternal
 	) {
 	}
 
-	/** Support the load of an externally defined mesh */
-    @Override
-    public void read(
-    	JmeImporter		pImporter
-    ) throws IOException {
-        // Let the super do its thing
-        super.read( pImporter );
-        
-        // Look for the external element
-        InputCapsule inCapsule = pImporter.getCapsule( this );
-    	String modelName = inCapsule.readString( "model", null );
+	/** OVERRIDE:  shape with no mesh or subshapes so expect a MODEL */
+	protected void readNoContents(
+		JmeImporter		pImporter
+	,	InputCapsule	pInCapsule
+	) throws IOException {
+    	String modelName = pInCapsule.readString( "model", null );
     	if ( modelName != null ) try {
     		// Load the given model
         	Spatial aSpatial = pImporter.getAssetManager().loadModel( modelName );
@@ -87,8 +82,13 @@ public class CSGExternal
     					,	"CSGExternal.read - model load failed: " + modelName
     					,	this
     					,	ex ) );
+    	} else {
+			setError( new CSGConstructionException( CSGErrorCode.EMPTY_SHAPE
+					, 	"CSGExternal.read() with no mesh/shapes/model"
+					,	this ) );
     	}
-    }
+	}
+
         
 	/////// Implement ConstructiveSolidGeometry
 	@Override

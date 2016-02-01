@@ -254,6 +254,8 @@ public class CSGFace
 	protected CSGBounds			mBounds;
 	/** Status of this Face */
 	protected CSGFaceStatus		mStatus;
+	/** Where to start a face-to-face scan */
+	protected int				mScanStartIndex;
 
 	
 	/** Standard null constructor */
@@ -345,6 +347,7 @@ public class CSGFace
 		CSGFace aCopy = new CSGFace();
 		aCopy.mStatus = this.mStatus;
 		aCopy.mMeshIndex = this.mMeshIndex;
+		aCopy.mScanStartIndex = 0;
 		
 		if ( pInvert ) {
 			// Flip the order of the vertices
@@ -361,6 +364,11 @@ public class CSGFace
 		aCopy.mPlane = this.mPlane.clone( pInvert );
 		return aCopy;
 	}
+	
+	/** Accessor to the scan start point */
+	public int getScanStartIndex() { return mScanStartIndex; }
+	public void setScanStartIndex( int pIndex ) { mScanStartIndex = pIndex; }
+	
 	
 	/** Match this given face to a list of other vertices, looking for any vertex that
 	 	shares its position.  Such vertices can be linked together since their 'status'
@@ -639,7 +647,9 @@ public class CSGFace
 		int deadmanSwitch = 100;
 outer:	while( deadmanSwitch-- > 0 ) {
 			// Allow an outside monitor to abort long running construction
-			if ( Thread.currentThread().isInterrupted() ) {
+			if ( Thread.interrupted() ) {
+				// NOTE use of .interrupted() (which clears the interrupted status) versus
+				//		currentThread.isInterrupted()  (which leaves the interrupted status alone)
 				CSGConstructionException anError
 					= new CSGConstructionException( CSGErrorCode.INTERRUPTED
 													,	"CSGFace.rayTraceClassify - interrupted" );

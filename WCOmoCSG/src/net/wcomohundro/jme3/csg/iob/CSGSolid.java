@@ -113,7 +113,7 @@ public class CSGSolid
 	,	CSGVertexIOB 	pV1
 	, 	CSGVertexIOB 	pV2
 	, 	CSGVertexIOB 	pV3
-	, 	CSGFace			pFace
+	, 	CSGFace			pSeedFace
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -132,8 +132,12 @@ public class CSGSolid
 		} else {
 			// Build the face (having checked the vertices above)
 			// NOTE that the face constructor will clone the vertices appropriately
-			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pFace, pTempVars, pEnvironment );
+			//		BUT it is assumed that this new face is in the same plane as the seed face
+			CSGFace aFace = new CSGFace( pV1, pV2, pV3, pSeedFace, pTempVars, pEnvironment );
 			if ( aFace.isValid() ) {
+				// Mark this new face with its starting point in the secondary scan.
+				aFace.setScanStartIndex( pSeedFace.getScanStartIndex() );
+				
 				// Retain the valid face
 				if ( pFaceIndex < 0 ) {
 					// Simple add to the end
@@ -206,12 +210,15 @@ public class CSGSolid
 		//	NOTE that we iterate with an index, since we dynamically adjust 'i'
 		//		 as a face is split.  This also means that mFaces.size() must
 		//		 be refreshed for testing on each iteration.
-		List<CSGFace> otherFaces = pOtherSolid.getFaces();
-		int initialLimit = mFaces.size() * otherFaces.size() * 10;
+		int initialSize = mFaces.size();
 		
-loop1:	for( int i = 0, j = initialLimit; i < (j = mFaces.size()); i += 1 ) {
+		List<CSGFace> otherFaces = pOtherSolid.getFaces();
+		int otherSize = otherFaces.size();
+		int sizeLimit = initialSize * otherSize * 10;
+		
+loop1:	for( int i = 0, j = sizeLimit; i < (j = mFaces.size()); i += 1 ) {
 			// Rationality check (possibly debug???)
-			if ( j > initialLimit ) {
+			if ( j > sizeLimit ) {
 				// We have split way too many times
 				CSGConstructionException anError
 					= new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
@@ -219,7 +226,9 @@ loop1:	for( int i = 0, j = initialLimit; i < (j = mFaces.size()); i += 1 ) {
 				throw anError;
 			}
 			// Allow an outside monitor to abort long running construction
-			if ( Thread.currentThread().isInterrupted() ) {
+			if ( Thread.interrupted() ) {
+				// NOTE use of .interrupted() (which clears the interrupted status) versus
+				//		currentThread.isInterrupted()  (which leaves the interrupted status alone)
 				CSGConstructionException anError
 					= new CSGConstructionException( CSGErrorCode.INTERRUPTED
 													,	"CSGSolid.splitFaces - interrupted: " + j );
@@ -228,16 +237,29 @@ loop1:	for( int i = 0, j = initialLimit; i < (j = mFaces.size()); i += 1 ) {
 			// Reset the face status for later classification
 			CSGFace face1 = mFaces.get( i );
 			face1.resetStatus();
-				
+			if ( i < initialSize ) {
+				// First pass over the seed faces does a full scan over the other solid
+				// Anything after the initial set is built as a fragment of some other face
+				// that has already been scanned against some subset of the second list.
+				face1.setScanStartIndex( 0 );
+			} else if ( i == initialSize ) {
+				// The first pass has made it through all the seed faces.  Everything past
+				// this point is the result of a split.  Refactor the limit to try to better
+				// bound a reasonable count of faces.
+				// Use the count we have right now, with how many more times the expanded
+				// faces could split
+				sizeLimit = j + ((j - initialSize) * otherSize * 10);
+			}
 			// Check if the objects bounds overlap
 			//	NOTE the overlap check is within the face loop so that resetStatus() is called
-			//		 on every face
+			//		 on every face even if there is no overlap to process.
 			if ( solidsOverlap ) {			
 				// Check if object1 face and anything in object2 overlap
 				CSGBounds thisFaceBound = face1.getBound();
 				if ( thisFaceBound.overlap( otherBound, pEnvironment ) ) {
 					// If there is a gross overlap, then each face in object 2 must be checked
-loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
+					// The face itself tells us where to start in the secondary list
+loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; m += 1 ) {
 						CSGFace face2 = otherFaces.get( m );
 					
 						// Check if object1 face and object2 face overlap at all 
@@ -271,7 +293,7 @@ loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
 									// If the two segments intersect, then the face must be split
 									if ( segment1.intersect( segment2, pEnvironment ) ) {
 										// A face can be split into 2 - 5 subfaces, based on how they collide
-										switch( splitFace( i, segment1, segment2, pTempVars, pEnvironment ) ) {
+										switch( splitFace( i, m + 1, segment1, segment2, pTempVars, pEnvironment ) ) {
 										case 0:
 											// The face was not really split, so continue on checking
 											// with next face from solid2
@@ -281,6 +303,7 @@ loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
 											// The face was physically removed, so a new face is in the
 											// ith position.  It must be checked from the beginning
 											i -= 1;
+											initialSize -= 1;
 											continue loop1;
 											
 										default:
@@ -338,6 +361,7 @@ loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
     */	  
 	protected int splitFace(
 		int 				pFaceIndex
+	,	int					pSecondaryScanStartingPoint
 	, 	CSGSegment 			pFaceSegment
 	, 	CSGSegment 			pOtherSegment
 	,	CSGTempVars			pTempVars
@@ -346,11 +370,15 @@ loop2:				for( int m = 0, n = otherFaces.size(); m < n; m += 1 ) {
 		CSGFace.CSGFaceCollision startCollision, endCollision;
 		
 		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL
+		CSGFace aFace = mFaces.get( pFaceIndex );
+
+		// We can keep track of how far through the secondary face list we are
+		// via the scan starting point in this face.
+		aFace.setScanStartIndex( pSecondaryScanStartingPoint );
 		
 		// NOTE that the position vectors can be taken from either segment.  Since
 		//		both segments represent different portions of the same intersection
 		//		line, the positions apply to both faces.
-		CSGFace aFace = mFaces.get( pFaceIndex );
 		Vector3d startPos, endPos;
 
 		// We now need to restrict the intersection 'line' from the planes of the faces

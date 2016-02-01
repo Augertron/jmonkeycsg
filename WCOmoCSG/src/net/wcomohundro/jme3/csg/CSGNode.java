@@ -137,6 +137,9 @@ public class CSGNode
 	public void setError(
 		CSGExceptionI	pError
 	) {
+		if ( (pError != null) && (pError.getCSGElement() == null) ) {
+			pError.setCSGElement( this );
+		}
 		mInError = CSGConstructionException.registerError( mInError, pError );
 	}
 

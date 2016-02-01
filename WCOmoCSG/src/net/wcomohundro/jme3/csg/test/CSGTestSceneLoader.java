@@ -82,6 +82,7 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 
 
 /** Base application that can "load" scenes via the XML asset loader */
@@ -186,10 +187,13 @@ public class CSGTestSceneLoader
         ,   new KeyTrigger( KeyInput.KEY_RETURN ) );
         inputManager.addMapping( "priorScene"
         ,   new KeyTrigger( KeyInput.KEY_BACKSLASH ) );
+        inputManager.addMapping( "abortLoad"
+        ,   new KeyTrigger( KeyInput.KEY_DELETE ) );
         
         ActionListener aListener = new CSGTestActionListener(); 
         inputManager.addListener( aListener, "nextScene" );
         inputManager.addListener( aListener, "priorScene" );
+        inputManager.addListener( aListener, "abortLoad" );
     }
     /** Inner helper class that processes user input */
     protected class CSGTestActionListener
@@ -216,7 +220,11 @@ public class CSGTestSceneLoader
                     
                     // And load it
             	    loadScene();
-                }  
+                } else if ( pName.equals( "abortLoad" ) ) {
+            		if ( mLoadingScene != null ) {
+            			CSGTestSceneLoader.this.mActionThread.interrupt();
+            		}
+                }
             } else {
             }
         }
@@ -250,7 +258,12 @@ public class CSGTestSceneLoader
 	    		}
     		}
     		aBuffer.setLength( 0 );
-    		StringBuilder reportString = loadElement( mLoadingScene, aBuffer );
+    		StringBuilder reportString = null;
+    		try {
+    			reportString = loadElement( mLoadingScene, aBuffer );
+    		} catch( CSGConstructionException ex ) {
+    			reportString = CSGConstructionException.reportError( ex, " // ", aBuffer );
+    		}
     		mLoadingScene = null;
     		
     		if ( reportString != null ) {
@@ -292,7 +305,8 @@ public class CSGTestSceneLoader
 	    				}
 	    			} else {
 	    				// Something bogus in the construction
-	    				pBuffer.append( " ***Invalid shape" );
+	    				pBuffer.append( " *** Invalid shape: " );
+	    				CSGConstructionException.reportError( csgSpatial.getError(), " // ", pBuffer );
 	    			}
 	    		}
 	    		mLoadedSpatial = (Spatial)aNode;

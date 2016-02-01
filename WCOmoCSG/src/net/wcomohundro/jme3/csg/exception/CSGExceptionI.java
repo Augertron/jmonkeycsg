@@ -56,6 +56,10 @@ public interface CSGExceptionI
 
 	/** The associated element */
 	public CSGElement getCSGElement();
+	public void setCSGElement( CSGElement pElement );
+	
+	/** Build a report on this error */
+	public void reportError( StringBuilder pBuffer );
 	
 	/** Error list management */
 	public CSGExceptionI getNextError();

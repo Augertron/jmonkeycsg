@@ -49,6 +49,27 @@ public class CSGConstructionException
 			return( pPriorError );
 		}
 	}
+	/** Service routine to report on an error */
+	public static StringBuilder reportError(
+		CSGExceptionI	pError
+	,	String			pSeparator
+	,	StringBuilder	pBuffer
+	) {
+		if ( pBuffer == null ) {
+			pBuffer = new StringBuilder( 128 );
+		}
+		if ( pError != null ) {
+			// Add each error in the list
+			int priorLength = pBuffer.length();
+			for( CSGExceptionI anError : pError ) {
+				if ( pBuffer.length() > priorLength ) {
+					pBuffer.append( pSeparator );
+				}
+				anError.reportError( pBuffer );
+			}
+		}
+		return( pBuffer );
+	}
 	
 	/** The error code */
 	protected CSGErrorCode	mErrorCode;
@@ -112,6 +133,8 @@ public class CSGConstructionException
 	/** The associated element */
 	@Override
 	public CSGElement getCSGElement() { return mElement; }
+	@Override
+	public void setCSGElement( CSGElement pElement ) { mElement = pElement; }
 	
 	/** Error list management */
 	@Override
@@ -129,6 +152,20 @@ public class CSGConstructionException
 		}
 		return( pError );
 	}
+	
+	/** Build a report on this error */
+	public void reportError( 
+		StringBuilder pBuffer
+	) {
+		pBuffer.append( mErrorCode.toString() )
+			   .append( ": " )
+			   .append( this.getLocalizedMessage() );
+		if ( mElement != null ) {
+			pBuffer.append( ", element: " )
+			       .append( mElement.asSpatial().getName() );
+		}
+	}
+
 
 	/////////////////////////// Iterable ///////////////////////////////
 	public Iterator iterator(

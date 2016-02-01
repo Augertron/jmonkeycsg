@@ -159,7 +159,7 @@ public abstract class CSGTestSceneBase
         
         // If the subclass is Runnable, then start a thread to service it
         if ( this instanceof Runnable ) {
-    		// Start the background thread that loads the scenes
+    		// Start the background thread that performs the actions
         	mActionThread = new Thread( null, (Runnable)this, "BackgroundTestAction" );
         	mActionThread.setPriority( Thread.MIN_PRIORITY );
         	mActionThread.setDaemon( true );

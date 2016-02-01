@@ -13,7 +13,7 @@
 	<children>
  
 		<!--  ****************** NORMALS **************************** -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCube'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeNormal'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
@@ -31,7 +31,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='HollowCube'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='HollowCubeNormal'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-5.0'/>
@@ -49,7 +49,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='RoundedCube'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='RoundedCubeNormal'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='5.0'/>
@@ -69,7 +69,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
 		<!--  *********************** TEXTURES *********************  -->
- 	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCube'
+ 	    <net.wcomohundro.jme3.csg.CSGGeonode name='BumpyCubeTexture'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='0.0'/>
@@ -89,7 +89,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='HollowCube'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='HollowCubeTexture'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='-5.0'/>
@@ -109,7 +109,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='RoundedCube'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='RoundedCubeTexture'
         		materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='5.0'/>
@@ -205,7 +205,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
       
         <!-- Blend with external mesh -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='HelixSphere'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='Teapot'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
        			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
             <transform class='com.jme3.math.Transform'>
@@ -220,7 +220,7 @@
                     </transform>
                 </net.wcomohundro.jme3.csg.CSGExternal>
                 
-                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='UNION'
+                <net.wcomohundro.jme3.csg.CSGShape name='Brick' operator='UNION'
                 		materialName='Textures/Debug/Normals.xml'>
                 		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml'> -->
 		            <transform class='com.jme3.math.Transform'>

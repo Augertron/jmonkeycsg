@@ -448,7 +448,11 @@ public class CSGGeonode
 			}
 		}
 		// Rebuild based on the shapes just loaded, which sets the mValid status
-		regenerate();
+        try {
+        	regenerate();
+        } catch( CSGConstructionException ex ) {
+        	// This error should already be registered with this element
+        }
 		if ( this.isValid() ) {
 	        // TangentBinormalGenerator directive
 	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );

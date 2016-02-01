@@ -474,7 +474,8 @@ public class CSGTestM
 		sPositions.add( new Vector3f(0.41169584f,0.17189682f,0.40301746f)); // 337
 		sPositions.add( new Vector3f(0.72930288f,0.19264102f,0.63703346f)); // 338
 ***************/
-		/** Bogus triangle around step 96 (seen from below)  */
+		/// Bogus triangle around step 96 (seen from below)
+/*****
 sPositions.add( new Vector3f(0.27770352f,0.46122688f,0.51517385f)); // 1
 sPositions.add( new Vector3f(0.27608168f,0.34551549f,0.06539202f)); // 2
 sPositions.add( new Vector3f(0.52630138f,0.03579539f,0.02474916f)); // 3
@@ -598,7 +599,17 @@ sPositions.add( new Vector3f(0.35400301f,0.96791077f,0.88958502f)); // 120
 sPositions.add( new Vector3f(0.00277239f,0.11852777f,0.46382076f)); // 121
 sPositions.add( new Vector3f(0.76961392f,0.95164806f,0.00021791f)); // 122
 sPositions.add( new Vector3f(0.04299396f,0.94793499f,0.06643200f)); // 123
-		
+****/		
+
+		// Infinite splits ????
+		sPositions.add(new Vector3f(0.83990216f,0.01416303f,0.41397852f)); //1, 
+		sPositions.add(new Vector3f(0.14809741f,0.30853847f,0.32987046f)); //2, 
+		sPositions.add(new Vector3f(0.54515183f,0.29772508f,0.26086247f)); //3, 
+		sPositions.add(new Vector3f(0.50555390f,0.28294140f,0.73018849f)); //4,
+		sPositions.add(new Vector3f(0.67798418f,0.78858733f,0.27823582f)); //5, 
+		sPositions.add(new Vector3f(0.00424497f,0.13861489f,0.73975629f)); //6,
+		sPositions.add(new Vector3f(0.37070101f,0.58056056f,0.03278502f)); //7, 
+
 	}
 	
 	public static List<Vector3d> sDebugFace = new ArrayList(3);
@@ -666,12 +677,12 @@ sPositions.add( new Vector3f(0.04299396f,0.94793499f,0.06643200f)); // 123
 //		myEnv.mRationalizeValues = false;
 //		myEnv.mEpsilonMagnitudeRange = 30; 	// 22
 		
-//		myEnv.mRemoveUnsplitFace = false;
+		myEnv.mRemoveUnsplitFace = false;
 		
 		// The position index controls how many pre-canned motions we use
 		//		-1 := no precanned,  0 := all precanned
-		mPositionIndex = -1;
-		mSingleStep = false;
+		mPositionIndex = 0;
+		mSingleStep = true;
 		mPreviousShape = new Stack();
 		
 		// This is the progressive shape
