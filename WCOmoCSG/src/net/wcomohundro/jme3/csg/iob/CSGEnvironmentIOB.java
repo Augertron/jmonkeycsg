@@ -55,6 +55,11 @@ public class CSGEnvironmentIOB
 	// Tolerance if a given value is near enough to zero to be treated as zero
 	public static final float EPSILON_NEAR_ZERO_FLT = 1.0e-7f;
 	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-9;
+	
+	// Limits on points
+	public static final float EPSILON_MAX_POINT_POSITION = 10000f;
+	public static final float EPSILON_MAX_POINT_TEXTURE = 10000f;
+	
 	// Tolerance of difference between magnitudes between two doubles
 	public static final int EPSILON_MAGNITUDE_RANGE = 22;
 	
@@ -75,12 +80,18 @@ public class CSGEnvironmentIOB
 	) {
 		super( true
 		,	CSGShapeIOB.class
+		
 		,	EPSILON_NEAR_ZERO_DBL
 		,	EPSILON_BETWEEN_POINTS_DBL
 		,	EPSILON_ONPLANE_DBL
+		
 		,	EPSILON_NEAR_ZERO_FLT
 		,	EPSILON_BETWEEN_POINTS_FLT
 		,	EPSILON_ONPLANE_FLT
+		
+		,	EPSILON_MAX_POINT_POSITION
+		,	EPSILON_MAX_POINT_TEXTURE
+		
 		,	false						// I got bad results with this set to true
 		,	EPSILON_MAGNITUDE_RANGE );
 		
@@ -106,6 +117,9 @@ public class CSGEnvironmentIOB
 			aCapsule.write( mEpsilonBetweenPointsFlt, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		aCapsule.write( mEpsilonMaxPointPositionFlt, "epsilonMaxPointPosition", EPSILON_MAX_POINT_POSITION );
+		aCapsule.write( mEpsilonMaxPointTextureFlt, "epsilonMaxPointTexture", EPSILON_MAX_POINT_TEXTURE );
+
 		aCapsule.write( mEpsilonMagnitudeRange, "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
 		
 		aCapsule.write( mRemoveUnsplitFace, "removeUnsplitFace", REMOVE_UNSPLIT_FACE );
@@ -127,6 +141,9 @@ public class CSGEnvironmentIOB
 			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		mEpsilonMaxPointPositionFlt = aCapsule.readFloat( "epsilonMaxPointPosition", EPSILON_MAX_POINT_POSITION );
+		mEpsilonMaxPointTextureFlt = aCapsule.readFloat( "epsilonMaxPointTexture", EPSILON_MAX_POINT_TEXTURE );
+
 		mEpsilonMagnitudeRange = aCapsule.readInt( "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
 		
 		mRemoveUnsplitFace = aCapsule.readBoolean( "removeUnsplitFace", REMOVE_UNSPLIT_FACE );

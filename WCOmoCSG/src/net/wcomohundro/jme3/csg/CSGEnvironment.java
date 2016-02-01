@@ -314,10 +314,11 @@ public class CSGEnvironment<ShapeProcessorT>
 	/** Debug support for confirming a vertex */
 	public static boolean confirmVertex(
 		CSGVertexFlt	pVertex
+	,	CSGEnvironment	pEnvironment
 	) {
 		// This is more a spot customize a check for something going wrong in a given test case
-		float maxBetweenPoints = 10000f;
-		float maxTexCoord = 1000f;
+		float maxBetweenPoints = pEnvironment.mEpsilonMaxPointPositionFlt;
+		float maxTexCoord = pEnvironment.mEpsilonMaxPointTextureFlt;
 		
 		// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
 		//		false comparisons
@@ -346,10 +347,11 @@ public class CSGEnvironment<ShapeProcessorT>
 	}
 	public static boolean confirmVertex(
 		CSGVertexDbl	pVertex
+	,	CSGEnvironment	pEnvironment
 	) {
 		// This is more a spot customize a check for something going wrong in a given test case
-		double maxBetweenPoints = 10000;
-		double maxTexCoord = 1000;
+		double maxBetweenPoints = pEnvironment.mEpsilonMaxPointPositionFlt;
+		double maxTexCoord = pEnvironment.mEpsilonMaxPointTextureFlt;
 		
 		// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
 		//		false comparisons
@@ -396,6 +398,10 @@ public class CSGEnvironment<ShapeProcessorT>
 	/** EPSILON - meaningful minimal distance between points */
 	public double		mEpsilonBetweenPointsDbl;
 	public float		mEpsilonBetweenPointsFlt;
+	/** EPSILON - meaningful maximal of a point */
+	public float		mEpsilonMaxPointPositionFlt;
+	public float		mEpsilonMaxPointTextureFlt;
+
 	/** EPSILON - meaningful range of magnitudes between two floating point numbers */
 	public int			mEpsilonMagnitudeRange;
 
@@ -407,12 +413,18 @@ public class CSGEnvironment<ShapeProcessorT>
 	protected CSGEnvironment(
 		boolean		pDoublePrecision
 	,	Class		pHandlerClass
+	
 	,	double		pEpsilonNearZeroDbl
 	,	double		pEpsilonBetweenPointsDbl
 	,	double		pEpsilonOnPlaneDbl
+	
 	,	float		pEpsilonNearZeroFlt
 	,	float		pEpsilonBetweenPointsFlt
 	,	float		pEpsilonOnPlaneFlt
+	
+	,	float		pEpsilonMaxPointPosition
+	,   float 		pEpsilonMaxPointTexture
+
 	,	boolean		pRationalizeValues
 	,	int			pEpsilonMagnitudeRange
 	) {
@@ -429,6 +441,9 @@ public class CSGEnvironment<ShapeProcessorT>
 		mEpsilonNearZeroFlt = pEpsilonNearZeroFlt;
 		mEpsilonOnPlaneFlt = pEpsilonOnPlaneFlt;		
 		mEpsilonBetweenPointsFlt = pEpsilonBetweenPointsFlt;
+		
+		mEpsilonMaxPointPositionFlt = pEpsilonMaxPointPosition;
+		mEpsilonMaxPointTextureFlt = pEpsilonMaxPointTexture;
 		
 		mEpsilonMagnitudeRange = pEpsilonMagnitudeRange;
 	}

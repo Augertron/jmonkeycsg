@@ -148,7 +148,8 @@ public class CSGVertexIOB
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) throws CSGConstructionException {
-		super( pNewPosition, new Vector3d(), new Vector2f(), false );
+		// Suppress the vertex check
+		super( pNewPosition, new Vector3d(), new Vector2f(), null );
 		mStatus = CSGVertexStatus.UNKNOWN;
 		
 		if ( pEnvironment.mRationalizeValues ) {

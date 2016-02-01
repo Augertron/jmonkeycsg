@@ -12,9 +12,11 @@ Models/CSGLoadSimpleCylinders.xml
 Models/CSGLoadSimplePipes.xml
 Models/CSGLoadSimpleSpheres.xml
 
-
 Models/CSGLoadCSGNormalTests.xml
 Models/CSGLoadNonMultiTexture.xml
 Models/CSGLoadMultiTexture.xml
 Models/CSGLoadLightedCorridor.xml
+
+Models/CSGLoadFloorBumpySurface.xml
+
 Models/CSGLoadCSGSamples.xml

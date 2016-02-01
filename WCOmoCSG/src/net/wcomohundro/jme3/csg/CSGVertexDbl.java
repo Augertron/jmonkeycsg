@@ -90,21 +90,13 @@ public class CSGVertexDbl
 	,	Vector2f		pTextureCoordinate
 	,	CSGEnvironment	pEnvironment
 	) {
-		this( pPosition, pNormal, pTextureCoordinate, (pEnvironment != null) && pEnvironment.mStructuralDebug );
-	}
-	public CSGVertexDbl(
-		Vector3d		pPosition
-	,	Vector3d		pNormal
-	,	Vector2f		pTextureCoordinate
-	,	boolean			pConfirmVertex
-	) {
 		// Use what was given
 		mPosition = pPosition;
 		mNormal = pNormal;
 		mTextureCoordinate = pTextureCoordinate;
 		
-		if ( pConfirmVertex ) {
-			CSGEnvironment.confirmVertex( this );
+		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
+			CSGEnvironment.confirmVertex( this, pEnvironment );
 		}
 	}
 	

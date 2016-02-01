@@ -65,6 +65,10 @@ public class CSGEnvironmentBSP
 	public static final float EPSILON_NEAR_ZERO_FLT = 5.0e-7f;
 	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-10;
 	
+	// Limits on points
+	public static final float EPSILON_MAX_POINT_POSITION = 10000f;
+	public static final float EPSILON_MAX_POINT_TEXTURE = 10000f;
+
 	// Tolerance of difference between magnitudes between two doubles
 	public static final int EPSILON_MAGNITUDE_RANGE = 22;
 
@@ -98,12 +102,18 @@ public class CSGEnvironmentBSP
 	) {
 		super( pDoublePrecision
 		,	CSGShapeBSP.class
+		
 		,	EPSILON_NEAR_ZERO_DBL
 		,	EPSILON_BETWEEN_POINTS_DBL
 		,	EPSILON_ONPLANE_DBL
+		
 		,	EPSILON_NEAR_ZERO_FLT
 		,	EPSILON_BETWEEN_POINTS_FLT
 		,	EPSILON_ONPLANE_FLT
+		
+		,	EPSILON_MAX_POINT_POSITION
+		,	EPSILON_MAX_POINT_TEXTURE
+		
 		,	false
 		,	EPSILON_MAGNITUDE_RANGE );
 
@@ -175,6 +185,9 @@ public class CSGEnvironmentBSP
 			aCapsule.write( mEpsilonBetweenPointsFlt, "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			aCapsule.write( mEpsilonOnPlaneFlt, "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		aCapsule.write( mEpsilonMaxPointPositionFlt, "epsilonMaxPointPosition", EPSILON_MAX_POINT_POSITION );
+		aCapsule.write( mEpsilonMaxPointTextureFlt, "epsilonMaxPointTexture", EPSILON_MAX_POINT_TEXTURE );
+
 		aCapsule.write( mEpsilonMagnitudeRange, "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
 
 		if ( mDoublePrecision ) {
@@ -203,6 +216,9 @@ public class CSGEnvironmentBSP
 			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
 		}
+		mEpsilonMaxPointPositionFlt = aCapsule.readFloat( "epsilonMaxPointPosition", EPSILON_MAX_POINT_POSITION );
+		mEpsilonMaxPointTextureFlt = aCapsule.readFloat( "epsilonMaxPointTexture", EPSILON_MAX_POINT_TEXTURE );
+		
 		mEpsilonMagnitudeRange = aCapsule.readInt( "epsilonMagnitudeRange", EPSILON_MAGNITUDE_RANGE );
 
 		if ( mDoublePrecision ) {

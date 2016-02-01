@@ -94,7 +94,7 @@ public class CSGVertexFlt
 		mTextureCoordinate = pTextureCoordinate;
 		
 		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			CSGEnvironment.confirmVertex( this );
+			CSGEnvironment.confirmVertex( this, pEnvironment );
 		}
 	}
 	
