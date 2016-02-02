@@ -87,15 +87,19 @@ can trigger the load of such <i>assets</i>. However, it does nothing with CSGSha
 		<dd>Add the given shape into the blend via the <b>INTERSECTION</b> operation.</dd>
 		<dt>addShape( CSGShape pShape, CSGOperator pOperator )</dt>
 		<dd>Add the given shape into the blend via the explicitly given operation.</dd>
+		<dt>removeAllShapes( )</dt>
 		<dt>removeShape( CSGShape pShape )</dt>
 		<dd>Remove a previously added shape from the blending process.
 <br><b>NOTE</b> that this is NOT subtract. Once removed, the shape plays no part.</dd>
 		<dt>regenerate( )<dt>
 		<dt>regenerate( CSGEnvironment pEnvironment )<dt>
 		<dd>Apply all the active shape processing and produce a Mesh.  If no explicit 
-<i>CSGEnvironment</i> is provided, then the system standard environment will be used.</dd>
+<i>CSGEnvironment</i> is provided, then the system standard environment will be used.
+<br>The resultant CSGShape is returned by .regenerate() and can be blended back into
+another CSGSpatial.</dd>
 		<dt>isValid( )<dt>
-		<dd>After regeneration, determine if a valid Mesh was produced or not.</dd>
+		<dd>After regeneration, determine if a valid Mesh was produced or not.  If not valid,
+error information is available via <i>.getError();</i></dd>
 		<dt>getShapeRegenerationNS( )<dt>
 		<dd>After regeneration, return a <i>long</i> count of nanoseconds it took to produce
 the final Mesh.</dd>
@@ -192,7 +196,7 @@ allows you to apply a transform at the parent level to get the scale and positio
             &lt;net.wcomohundro.jme3.csg.CSGShape name='InteriorArch' operator='DIFFERENCE' &gt;
                 &lt;shapes&gt;
                     &lt;net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'&gt;
-                        &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                        &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
                                     xExtent='0.5' yExtent='0.25' zExtent='0.5'&gt;
                             &lt;faceProperties&gt;
                                 &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='0.5'/&gt;
@@ -208,7 +212,7 @@ allows you to apply a transform at the parent level to get the scale and positio
                     &lt;net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'&gt;
                         &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
                                 axisSamples='34' closed='true' zExtent='0.5' 
-                                radialSamples='32' radius='0.5' textureMode='FLAT_LINEAR'&gt;
+                                radialSamples='32' radius='0.5' textureMode='ROLLER'&gt;
                             &lt;faceProperties&gt;
                                 &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1' scaleY='PI'/&gt;
                             &lt;/faceProperties&gt;
@@ -239,7 +243,7 @@ allows you to apply a transform at the parent level to get the scale and positio
  	<p>By default, the IOB processor (working in double precision) is what is used.  You can
  flip the entire system to use the BSP processor by including the following in your initialization
  code (before using any CSG service):
- <blockquote>CSGEnvironment.sStandardEnvironment = new CSGEnvironment( false );</blockquote>
+ <blockquote>CSGEnvironment.resetEnvironment( new CSGEnvironmentBSP() );</blockquote>
 
  	<h3 id="external">CSGExternal</h3>
  	<p><i>CSGExternal</i> is a special extension of CSGShape that supports a <b>Savable</b>

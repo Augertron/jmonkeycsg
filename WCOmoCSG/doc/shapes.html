@@ -41,13 +41,15 @@
 		<div class="sidebar">
 			<ul>
 				<li><a href="#mesh">CSGMesh</a></li>
-				<li><a href="#box">CSGBox</a></li>
+				<li><a href="#box">CSGBox / CSGAxialBox</a></li>
 				<li><a href="#radial">CSGRadial</a></li>
 				<li><a href="#cylinder">CSGCylinder</a></li>
 				<li><a href="#sphere">CSGSphere</a></li>
 				<li><a href="#pipe">CSGPipe</a></li>
 				<li><a href="#spline">CSGSplineGenerator</a></li>			
-				<li><a href="#material">CSGMaterial</a></li>			
+				<li><a href="#surface">CSGSurface</a></li>
+				<li><a href="#heightmap">CSGHeightMapGenerator</a></li>			
+				<li><a href="#material">CSGFaceProperties</a></li>			
 			</ul>
 		</div>
 	</div>
@@ -143,6 +145,12 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
  cover the expanded size.  The box on the bottom has texture 
  scaling applied to four faces to account for the size.</p>
  	
+ 	<h3 id="axbox">CSGAxialBox</h3>
+ 	<p><i>CSGAxialBox</i> is a minor variant of CSGBox where the texture is applied to the
+ LEFT/RIGHT/TOP/BOTTOM faces just like the texture is applied to the round sides of a 
+ cylinder.  This helps when aligning textures from blended primitives.</p>
+ 	<p>The import XML definition replaces <i>CSGBox</i> with <i>CSGAxialBox</i></p>
+ 	
  	<h3 id="radial">CSGRadial</h3>
  	<p><i>CSGRadial</i> is an extension to CSGMesh that defines a common design approach to  
 those CSG shape primitives that are built of a series of slices along the z-axis, with each
@@ -150,10 +158,12 @@ slice defined by vertices radially distributed around its center.
 <br><i>CSGRadialCapped</i> is a radial shape with flat end-caps, like a cylinder or a pipe. 
 A texture <i>mode</i> controls how the texture is applied to the faces where:
 <blockquote>
-FLAT			- The texture of the end caps is simply flat
- <br>UNIFORM		- Texture of end caps is flat and uniform in scale to the curved surface
- <br>FLAT_LINEAR	- Flat end caps, curved surface is linear front-to-back
- <br>UNIFORM_LINEAR	- Flat, uniform end caps, curved surface is linear front-to-back
+<dl><dt>CAN</dt><dd>Image the shape rotated to sit on is back surface (like soup can).  
+Then X moves around the circumference, and Y increases upwards on the can.</dd>
+<dt>ROLLER</dt><dd>Image the shape rotated so that the back is to left and the front is
+to the right.  Then X increases linearly from left to right, and 
+Y increases along the circumference as you move up.</dd>
+</dl>
 </blockquote>
 </p>
 	<p>The java entry points configuring the radial are:</p>
@@ -202,7 +212,7 @@ progression.</dd>
     &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSomeRadial' 
             zExtent='3.0' axisSamples='32' radialSamples='32' firstRadial='PI/4' 
             radius='1.1' scaleSliceX='2.0' scaleSliceY='2.0' twist='2PI' 
-            radius2='1.7' textureMode='FLAT_LINEAR' &gt;
+            radius2='1.7' textureMode='CAN' &gt;
         ... other definitions from CSGMesh ...
     &lt;/mesh&gt;
 </pre></code>
@@ -219,24 +229,27 @@ progression.</dd>
 </pre></code>
 </p>
  	<img src="images/CSGCylinders.png" alt="CSGBoxes">
- 	<p>The cylinder on the left applies the texture around the circumference.  The cylinder on the 
- right applies the texture <i>linearly</i>, from front to back.  Both have the 'sides' texture
+ 	<p>The cylinder on the left applies the texture around the circumference like a CAN.  The cylinder on the 
+ right applies the texture like a ROLLER.  Both have the 'sides' texture
  scaled to approximate the pattern on the end caps.</p>
  	
  	<h3 id="sphere">CSGSphere</h3>
  	<p><i>CSGSphere</i> creates a basic sphere shape, based on the setting of 
- CSGRadial. A sphere has only one face and no end caps and only the single main radius applies. Since
- sine/cosine vary more rapidly near the right-angle extremes, the sphere can be generated with either
+ CSGRadial. A sphere has only one face (with integral endcaps) and only the single main radius applies.
+ A sphere marked <i>not</i> closed eliminates north and south pole slices that converge to a single
+ point and appear with tiny holes instead. 
+ <br>Since sine/cosine vary more rapidly near the right-angle extremes, the sphere can be generated with either
  even slices (same distance at each z-axis step) or to generate more slices with a smaller z-axis
  step near the right-angle points.
  <br>A texture <i>mode</i> controls how the texture is applied to the polar regions (the last section
  generated from a common center point to a slice) where:
 <blockquote>
- ZAXIS - Wrap texture radially and along the z-axis
-<br> PROJECTED - Wrap texture radially, but spherically project along the z-axis
-<br> POLAR - Apply texture to each pole.  Eliminates polar distortion, but mirrors the texture 
-across the equator</blockquote>
- <br></p>
+<dl><dt>ZAXIS</dt><dd>Wrap texture radially and along the z-axis</dd>
+<dt>PROJECTED</dt><dd>Wrap texture radially, but spherically project along the z-axis</dd>
+<dt>POLAR</dt><dd>Apply texture to each pole.  Eliminates polar distortion, but mirrors the texture 
+across the equator</dd></dl>
+</blockquote>
+</p>
 	<p>The java entry points configuring the sphere are:</p>
 	<dl>
 		<dt>setEvenSlices( boolean pFlag )<dt>
@@ -253,7 +266,7 @@ the right-angle extremes.</dd>
 </p>
  	<img src="images/CSGSpheres.png" alt="CSGBoxes">
  	<p>The sphere on the left uses the ZAXIS texture mode.  The sphere in the center uses the
- PROJECTED texture mode. The sphere on the right uses the POLAR texture mode (note the equator).</p>
+ PROJECTED texture mode. The sphere on the right uses the POLAR texture mode.</p>
 	 	 
  	<h3 id="pipe">CSGPipe</h3>
  	<p><i>CSGPipe</i> creates a cylindrical shape whose z-axis follows a given spline rather
@@ -264,12 +277,12 @@ the right-angle extremes.</dd>
  <i>line</i> between the current center point and the next. This means the end cap slices can be 
  very sensitive to the structure of the spline. To handle some of the oddities, various PipeEnd
  custom options are supported where:
- <blockquote>
- STANDARD - End slice is generated 'normally', perpendicular to the last point of the curve
-<br> PERPENDICULAR - End slice is generated perpendicular to the x/y/z axes
-<br> PERPENDICULAR45 - End slice is generated perpendicular/45degree to the x/y/z axes
-<br> CROPPED - Curve end points do NOT produce a slice, they only influence the last slice normal
- </blockquote>
+ <blockquote><dl>
+<dt>STANDARD</dt><dd>End slice is generated 'normally', perpendicular to the last point of the curve</dd>
+<dt>PERPENDICULAR</dt><dd>End slice is generated perpendicular to the x/y/z axes</dd>
+<dt>PERPENDICULAR45</dt><dd>End slice is generated perpendicular/45degree to the x/y/z axes</dd>
+<dt>CROPPED</dt><dd>Curve end points do NOT produce a slice, they only influence the last slice normal</dd>
+</dl></blockquote>
   </p>
  <p>Another oddity of building slices along a spline rather than a straight line is that due to the
  bends in the spline, the slices may collide with each other.  This results in a very crumpled looking
@@ -287,7 +300,7 @@ occurs, take action to adjust the slice to eliminate the collision.</dd>
 	</dl>
 	<p>The import XML definitions look something like:
 <code><pre>
-    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGPIPE' 
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
             pipeEnds='STANDARD' smoothSurface='false &gt;
     	&lt;slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator'  arc='PI'/&gt;
     &lt;/mesh;&gt;
@@ -341,7 +354,54 @@ a complete torus.  A value greater than 2Pi is only meaningful for a helix.</dd>
  	<img src="images/CSGTwisted.png" alt="CSGBoxes">
  	<p>A sample torus, where each slice is scaled in x/y to produce an ellipse, the slices are 
 twisted from front to back, and beginning radius is different from the end radius.</p>
+
+ 	<h3 id='spline'>CSGSurface</h3>
+    <p><i>CSGSurface</i> is not a solid, but rather a 2dimensional surface used as a floor.
+It is similar to the jme3 Terrain mechanism but lacks the Terrain's LOD support. It operates
+by producing a Mesh from standard jme3 HeightMap data, with the extents in X/Z, with height in Y.</p>
+ 	<p>The java entry points configuring the surface are:</p>
+	<dl>
+		<dt>setExtent( int pSizeOfSquareArea )<dt>
+		<dd>The width and depth of the area (a value of 2**N + 1 is required)</dd>
+		<dt>setHeightMap( float[] pHeightMap )<dt>
+		<dd>The height of each data point.</dd>
+		<dt>setScale( Vector3f pScale )</dt>
+		<dd>The scale to apply to all the data points.</dd>
+	</dl>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'&gt;
+        &lt;faceProperties&gt;
+            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+					face='SURFACE' scaleX='1032' scaleY='1032'/&gt;
+        &lt;/faceProperties&gt;
+        &lt;heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+            			type='HILL' size='129' scale='0.025' seed='12345' /&gt;
+    &lt;/mesh&gt;
+</pre></code>
+</p>
  	
+    <h3 id='heightmap'>CSGHeightMapGenerator (helper class)</h3>
+    <p><i>CSGHeightMapGenerator</i> is not a shape.  Rather, it is a helper class that can assist
+in building the HeightMap data used by CSGSurface. It includes support for the basic jme3 
+classes within <i>com.jme3.terrain.heightmap</i>.  In particular, the types are:</p>
+<blockquote><dl>
+<dt>DISPLACEMENT</dt><dd>uses MidpointDisplacementHeightMap</dd>
+<dt>FAULT</dt><dd>uses FaultHeightMap</dd>
+<dt>FLUID</dt><dd>uses FluidSimHeightMap</dd>
+<dt>HILL</dt><dd>uses HillHeightMap</dd>
+<dt>PARTICLE</dt><dd>uses ParticleDepositionHeightMap</dd>
+</dl></blockquote>
+	<p>
+	<p>The import XML definitions look something like:
+<code><pre>
+    &lt;heightMap class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator'  
+    		type='HILL' size='257' iterations='100' seed='0'
+    	... type specific parameters here, @see the code itself ...
+    /&gt;
+</pre></code>
+</p>
+
  	<h3 id='material'>CSGFaceProperties (helper class)</h3>
     <p><i>CSGFaceProperties</i> is not a shape.  Rather, it is a helper class that can assist in 
 applying custom materials and texture scaling to different <i>faces</i> in a CSGMesh.  In most regards, 
@@ -363,10 +423,20 @@ processing does understand multiple Materials applied to primitives, and it espe
 CSGMesh.  So if you include a CSGBox with custom Materials with a jme3 Geometry node, those 
 Materials are ignored.  But if you include that same CSGBox via a CSGShape added to a
 CSGGeonode, then the custom Materials are used.</blockquote>
-	<p>CSGFaceProperties is also used to control the texture scaling that applies to a face. This
+	<p>CSGFaceProperties is also used to control the texture scaling and positioning that applies to a face. This
 addresses the issue of a box elongated in z, but not in x and y.  In that case, the front and back
 faces should retain unit texture scaling.  But the left/right/top/bottom faces should be scaled
 appropriately to prevent the texture from stretching.</p>
+	<p>In addition to scaling the texture, you can also control its origin and span.  Typically
+a texture runs from 0.0 to 1.0 across a face.  Scaling can account for a face that is a different size.
+But when blending primitives together, you may want the texture of a subcomponent to align with the
+texture of the larger component.  Think of building dice, with pips.  You could create such an 
+item by subtracting a smaller cylinder multiple times from a larger cube.  But if you want the 
+texture pattern to be continuous across the pips, then you have to set an appropriate texture
+origin to each cylinder.</p>
+	<p>As well as texture, you can control physics properties per face. In the example of building
+a <i>Room</i>, you might want bouncy walls but an inert floor.  This can be done by defining 
+different Physics properties to the different faces.</p>
 	<p>In any case, CSGFaceProperties applies to a face or faces, as determined by a bitmask
 of all the faces involved.</p>
 	<p>The import XML definitions look something like:

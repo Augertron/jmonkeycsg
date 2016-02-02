@@ -41,7 +41,9 @@
 		<div class="sidebar">
 			<ul>
 				<li><a href="#lights">Lights</a></li>
+				<li><a href="#physics">Physics</a></li>
 				<li><a href="#animation">Animation</a></li>
+				<li><a href="#progressive">Progressive Rebuild</a></li>
 				<li><a href="#surfaces">2D Surfaces</a></li>		
 			</ul>
 		</div>
@@ -94,6 +96,18 @@ reposition a Light as its associated Spatial is transformed.  By default, CSG wi
 assign an appropriate Control to all local lights encountered during a blend.  It uses a custom
 CSGLightControl that better supports the underlying CSG structure.  But you can disable this
 feature or provide any other Control to use for light management.</p>
+
+    <h3 id='physics'>Physics</h3>
+	<p>In a fashion very similar to Lights, I had not foreseen the need for Physics processing
+being an integral part of CSG.  But as I worked through more tests, I hit the requirement to
+define Physics at the primitive level, rather than trying to add it back in externally.  All 
+in all, it is much easier to add Physics definitions via XML at the proper level, and then 
+have the system take care of it all for you.</p>
+	<p>To this end, Physics are added much like lights.  Physics applies only to the segment
+of the final mesh appropriate to the blended primitive. So if you are creating a <i>room</i>
+by subtacting a small box from a bigger box, and you want bouncy walls but an inert floor, you 
+can apply different, per-face physics to the different surfaces.  The final blend keeps it
+all straight for you.</p>
 	
  	<h3 id="animation">Animation</h3>
  	<p>Support for animation based on dynamic CSG processing is not one of my design goals. 
@@ -112,7 +126,26 @@ feature or provide any other Control to use for light management.</p>
  The CSG code will rebuild the blend from scratch on every regenerate call.
  <br><a href='images/CSGAnimation.mpeg'>download movie</a>(which is rather choppy due
  to the recording being active, but which is rather smooth in real life)</p>
-
+ 
+  	<h3 id="progressive">Progressive Rebuild</h3>
+ 	<p>A more practical form of semi-automation is applying progressive changes to a 
+ single target shape.  These changes could be triggered by user action, or could be
+ continuous, moving at whatever rate the underlying hardware can provide.  CSG is
+ structured to allow you to easily implement progressive changes.  The key is that
+ the return of the <i>.regenerate()</i> call is a CSGShape.  This shape is the single
+ result of the prior blend, and is ready for use.</p>
+ 	<p>A typical design pattern is to save the result of the initial .regenerate() in
+ a 'priorResult' variable.  The update action is to first remove all shapes from your
+ target, blend in the priorResult, blend in any new changes, and then save the result
+ of this new .regenerate() back into priorResult.  This update loop can be run repetitively,
+ incorporating whatever new changes are desired in each loop.</p>
+ 	<p>For example, CSGTestM starts with a cubic block of 'cheese'.  The update loop is to
+ randomly move a spherical 'mouse' within a single quadrant of the block, and then subtract
+ the sphere from the cube.  The result becomes the next starting point, so as the loop 
+ continues, more and more of cheese is gnawed away by the mouse. While not smooth enough
+ for true animation, it is still an effective display.
+ <br><a href='images/CSGProgressiveRebuild.mpeg'>download movie</a></p>
+ 
  	<h3 id="surfaces">2D Surfaces</h3>
  	<p>The main thrust of CSG is the blending of solids.  But I ran into the situation of 
  wanting to place a solid on my 2D floor without the floor bleeding through.  There is certainly 

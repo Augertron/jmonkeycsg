@@ -121,6 +121,10 @@ public class CSGSurface
     public int getWidth() { return mExtent; }
     public int getHeight() { return mExtent; }
     
+    /** Accessors to the scale */
+    public Vector3f getScale() { return( mScale ); }
+    public void setScale( Vector3f pScale ) { mScale = pScale; }
+    
     /** Accessor to the height data */
     public float getValue(
     	int		pX

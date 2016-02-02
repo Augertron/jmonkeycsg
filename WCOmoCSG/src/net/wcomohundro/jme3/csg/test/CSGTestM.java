@@ -653,8 +653,8 @@ sPositions.add( new Vector3f(0.04299396f,0.94793499f,0.06643200f)); // 123
 
 	public CSGTestM(
 	) {
-		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		//super( new FlyCamAppState() );
+		//super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		super( new FlyCamAppState() );
 	}
 	
     @Override
@@ -681,8 +681,8 @@ sPositions.add( new Vector3f(0.04299396f,0.94793499f,0.06643200f)); // 123
 		
 		// The position index controls how many pre-canned motions we use
 		//		-1 := no precanned,  0 := all precanned
-		mPositionIndex = 0;
-		mSingleStep = true;
+		mPositionIndex = -1;
+		mSingleStep = false;
 		mPreviousShape = new Stack();
 		
 		// This is the progressive shape
