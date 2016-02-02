@@ -2,7 +2,7 @@
 <html>
 <!-- Webpage home for the SourceForge "jMonkeyCSG" project -->
 <head>
-    <title>jMonkey CSG - Constructive Solid Geometry (Lights/Animation/...)</title>
+    <title>jMonkey CSG - Constructive Solid Geometry (Lights/Physics/...)</title>
     <!-- Use a JQuery ThemeRoller theme, in this case 'smoothness' -->
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="jquery-ui-1.11.2.custom.css">
@@ -31,7 +31,8 @@
 				<li><a href="index.html">Home</a></li>
 				<li><a href="shapes.html">Shapes</a></li>
 				<li><a href="spatials.html">Spatials</a></li>
-				<li><a class="disabled">Lights/Animation/2D Surfaces</a></li>
+				<li><a class="disabled">Lights/Physics/2D Surfaces</a></li>
+				<li><a href="animat.html">Animation</a></li>
 			</ul>
 		</div>
 	</nav>
@@ -42,8 +43,6 @@
 			<ul>
 				<li><a href="#lights">Lights</a></li>
 				<li><a href="#physics">Physics</a></li>
-				<li><a href="#animation">Animation</a></li>
-				<li><a href="#progressive">Progressive Rebuild</a></li>
 				<li><a href="#surfaces">2D Surfaces</a></li>		
 			</ul>
 		</div>
@@ -109,43 +108,6 @@ by subtacting a small box from a bigger box, and you want bouncy walls but an in
 can apply different, per-face physics to the different surfaces.  The final blend keeps it
 all straight for you.</p>
 	
- 	<h3 id="animation">Animation</h3>
- 	<p>Support for animation based on dynamic CSG processing is not one of my design goals. 
- I always anticipated severe performance hits due to matching all the surfaces in one shape 
- against all the surfaces in some other set of shapes.  I expected to use CSG as a loading 
- operation, absorbing the performance cost as part of initial setup.  If animation was desired, 
- I assumed that some N number of frames would be pre-built.</p>
- 	<p>But it is still a fun test to see just what CSG can do dynamically. A rather simple
- test case is to have two shapes with a common center rotating in opposite directions. Then 
- display the intersection of the two. With simple boxes (12 triangles per box), you get 
- pretty good response.  Change one of those boxes to a somewhat smooth cylinder, and the
- frame rate takes a hit. You can interrogate the blended shape after regeneration to get
- a count of nanoseconds required to build the shape.</p>
- 	<p>The setup is straight forward.  Create two shapes and blend them into a third. In the
- update loop, apply rotation to the two primitives, and then regenerate the blended shape. 
- The CSG code will rebuild the blend from scratch on every regenerate call.
- <br><a href='images/CSGAnimation.mpeg'>download movie</a>(which is rather choppy due
- to the recording being active, but which is rather smooth in real life)</p>
- 
-  	<h3 id="progressive">Progressive Rebuild</h3>
- 	<p>A more practical form of semi-automation is applying progressive changes to a 
- single target shape.  These changes could be triggered by user action, or could be
- continuous, moving at whatever rate the underlying hardware can provide.  CSG is
- structured to allow you to easily implement progressive changes.  The key is that
- the return of the <i>.regenerate()</i> call is a CSGShape.  This shape is the single
- result of the prior blend, and is ready for use.</p>
- 	<p>A typical design pattern is to save the result of the initial .regenerate() in
- a 'priorResult' variable.  The update action is to first remove all shapes from your
- target, blend in the priorResult, blend in any new changes, and then save the result
- of this new .regenerate() back into priorResult.  This update loop can be run repetitively,
- incorporating whatever new changes are desired in each loop.</p>
- 	<p>For example, CSGTestM starts with a cubic block of 'cheese'.  The update loop is to
- randomly move a spherical 'mouse' within a single quadrant of the block, and then subtract
- the sphere from the cube.  The result becomes the next starting point, so as the loop 
- continues, more and more of cheese is gnawed away by the mouse. While not smooth enough
- for true animation, it is still an effective display.
- <br><a href='images/CSGProgressiveRebuild.mpeg'>download movie</a></p>
- 
  	<h3 id="surfaces">2D Surfaces</h3>
  	<p>The main thrust of CSG is the blending of solids.  But I ran into the situation of 
  wanting to place a solid on my 2D floor without the floor bleeding through.  There is certainly 
@@ -167,12 +129,13 @@ all straight for you.</p>
 				<li><a href="index.html">Home</a></li>
 				<li><a href="shapes.html">Shapes</a></li>
 				<li><a href="spatials.html">Spatials</a></li>
-				<li><a class="disabled">Lights/Animation/2D Surfaces</a></li>
+				<li><a class="disabled">Lights/Physics/2D Surfaces</a></li>
+				<li><a href="animat.html">Animation</a></li>
 			</ul>
 		</div>
 	</nav>
 	<footer>
-		<div class='left'>&copy; 2015, W.C.Omohundro, All Rights Reserved</div>
+		<div class='left'>&copy; 2015-2016, W.C.Omohundro, All Rights Reserved</div>
 		<div class='right'><a href="http://www.css3templates.co.uk" 
 		target='other'>-- web design from css3templates.co.uk --</a></div>
 	</footer>

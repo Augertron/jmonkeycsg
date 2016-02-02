@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<!-- Webpage home for the SourceForge "jMonkeyCSG" project -->
+<head>
+    <title>jMonkey CSG - Constructive Solid Geometry (Animation)</title>
+    <!-- Use a JQuery ThemeRoller theme, in this case 'smoothness' -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="jquery-ui-1.11.2.custom.css">
+
+    <!-- Include the basic JQuery support (core and ui) -->
+    <script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jquery-ui-1.11.2.custom.min.js"></script>
+    
+    <meta name="description" 
+        content="This is a plugin for the jMonkey 3D development environment which supports CSG - Constructive Solid Geometry">
+    <meta name="keywords" 
+        content="jMonkey 3D CSG ConstructiveSolidGeometry">
+</head>
+<body>
+<div id="main">
+  <header>
+  	<div id="logo">
+  		<div id="logo_text">
+    		<h1><i>jMonkey</i> <em>CSG - Constructive Solid Geometry</em></h1>
+    		<h2>Complex 3D shapes built by combining simple primitives</h2>
+  		</div>
+  	</div>
+  	<nav>
+		<div class="menu_container">
+			<ul class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
+				<li><a href="spatials.html">Spatials</a></li>
+				<li><a href="las.html">Lights/Physics/2D Surfaces</a></li>
+				<li><a class="disabled">Animation</a></li>
+			</ul>
+		</div>
+	</nav>
+  </header>
+  <div id="site_content">
+  	<div id="sidebar_container">
+		<div class="sidebar">
+			<ul>
+				<li><a href="#animation">Animation</a></li>
+				<li><a href="#progressive">Progressive Rebuild</a></li>
+				<li><a href="#threads">Multi-Threading</a></li>		
+			</ul>
+		</div>
+	</div>
+    <div class="content">
+    
+ 	<h3 id="animation">Animation</h3>
+ 	<p>Support for animation based on dynamic CSG processing is not one of my design goals. 
+ I always anticipated severe performance hits due to matching all the surfaces in one shape 
+ against all the surfaces in some other set of shapes.  I expected to use CSG as a loading 
+ operation, absorbing the performance cost as part of initial setup.  If animation was desired, 
+ I assumed that some N number of frames would be pre-built.</p>
+ 	<p>But it is still a fun test to see just what CSG can do dynamically. A rather simple
+ test case is to have two shapes with a common center rotating in opposite directions. Then 
+ display the intersection of the two. With simple boxes (12 triangles per box), you get 
+ pretty good response.  Change one of those boxes to a somewhat smooth cylinder, and the
+ frame rate takes a hit. You can interrogate the blended shape after regeneration to get
+ a count of nanoseconds required to build the shape.</p>
+ 	<p>The setup is straight forward.  Create two shapes and blend them into a third. In the
+ update loop, apply rotation to the two primitives, and then regenerate the blended shape. 
+ The CSG code will rebuild the blend from scratch on every regenerate call.
+ <br><a href='images/CSGAnimation.mpeg'>download movie</a>(which is rather choppy due
+ to the recording being active, but which is rather smooth in real life)</p>
+ 
+  	<h3 id="progressive">Progressive Rebuild</h3>
+ 	<p>A more practical form of semi-automation is applying progressive changes to a 
+ single target shape.  These changes could be triggered by user action, or could be
+ continuous, moving at whatever rate the underlying hardware can provide.  CSG is
+ structured to allow you to easily implement progressive changes.  The key is that
+ the return of the <i>.regenerate()</i> call is a CSGShape.  This shape is the single
+ result of the prior blend, and is ready for use.</p>
+ 	<p>A typical design pattern is to save the result of the initial .regenerate() in
+ a 'priorResult' variable.  The update action is to first remove all shapes from your
+ target, blend in the priorResult, blend in any new changes, and then save the result
+ of this new .regenerate() back into priorResult.  This update loop can be run repetitively,
+ incorporating whatever new changes are desired in each loop.</p>
+ 	<p>For example, CSGTestM starts with a cubic block of 'cheese'.  The update loop is to
+ randomly move a spherical 'mouse' within a single quadrant of the block, and then subtract
+ the sphere from the cube.  The result becomes the next starting point, so as the loop 
+ continues, more and more of cheese is gnawed away by the mouse. While not smooth enough
+ for true animation, it is still an effective display.
+ <br><a href='images/CSGProgressiveRebuild.mpeg'>download movie</a></p>
+ 
+ 	<h3 id="threads">Multi-threading</h3>
+ 	<p>To better support animation and progressive rebuild, the CSG construction process
+ has been made <i>thread aware</i>.
+ </p>
+	<p></p>
+	</div>
+ </div>
+ <div>
+  	<nav>
+		<div class="menu_container">
+			<ul class="sf-menu">
+				<li><a href="index.html">Home</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
+				<li><a href="spatials.html">Spatials</a></li>
+				<li><a href="las.html">Lights/Physics/2D Surfaces</a></li>
+				<li><a class="disabled">Animation</a></li>
+			</ul>
+		</div>
+	</nav>
+	<footer>
+		<div class='left'>&copy; 2015-2016, W.C.Omohundro, All Rights Reserved</div>
+		<div class='right'><a href="http://www.css3templates.co.uk" 
+		target='other'>-- web design from css3templates.co.uk --</a></div>
+	</footer>
+</div>
+
+</div>
+</body>
+</html>
