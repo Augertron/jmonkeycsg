@@ -29,8 +29,8 @@
 		<div class="menu_container">
 			<ul  class="sf-menu">
 				<li><a href="index.html">Home</a></li>
-				<li><a class="disabled">Shapes</a></li>
 				<li><a href="spatials.html">Spatials</a></li>
+				<li><a class="disabled">Shapes</a></li>
 				<li><a href="las.html">Lights/Physics/2D Surfaces</a></li>
 				<li><a href="animat.html">Animation</a></li>
 			</ul>
@@ -43,7 +43,7 @@
 			<ul>
 				<li><a href="#mesh">CSGMesh</a></li>
 				<li><a href="#box">CSGBox / CSGAxialBox</a></li>
-				<li><a href="#radial">CSGRadial</a></li>
+				<li><a href="#radial">CSGAxial / CSGRadial</a></li>
 				<li><a href="#cylinder">CSGCylinder</a></li>
 				<li><a href="#sphere">CSGSphere</a></li>
 				<li><a href="#pipe">CSGPipe</a></li>
@@ -55,6 +55,10 @@
 		</div>
 	</div>
     <div class="content">
+    <p>CSGShape can be built from any mesh. No further primitives other than those provided by the 
+core jMonkey services are required. However, when working with blending shapes of different
+textures, I needed finer grained control of how the primitive shapes operated.  And I wanted
+easier XML construction.  So the following have been created.</p>
     
     <h3 id='mesh'>CSGMesh</h3>
 	<p><i>CSGMesh</i> defines a common design approach to the CSG shape primitives, as well as
@@ -100,7 +104,7 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
  <br> 0x20 - BOTTOM
  <br> 0x40 - SIDES
  <br> 0x80 - SURFACE
- <br><br>and the logical combination of these values can apply that same scaling to multiple faces.
+ <br><br>and the logical combination of these values can apply that same properties to multiple faces.
  	</blockquote>
  	</p>
  
@@ -109,7 +113,8 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
     &lt;mesh class='net.wcomohundro.jme3.csg.shape.CSGSomeShape' 
             generateTangentBinormal='true' &gt;
         &lt;faceProperties>
-            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.0'/&gt;
+            &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.0'
+                materialName='Textures/Rock/Rock1Rpt.xml' /&gt;
             &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='10' scaleY='1.0'/&gt;
             &lt;net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='10.0'/&gt;
         &lt;/faceProperties&gt;
@@ -120,9 +125,9 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
 	
  	<h3 id="box">CSGBox</h3>
  	<p><i>CSGBox</i> creates a basic brick shape of given x, y and z extents. The key difference 
- between CSGBox and the standard jme3 Box is its definition of <i>faces</i> and the ability to 
- apply different texture scaling to the different sides.</p>
- 	<p>The java entry points for adjusting the configuration include everthing from CSGMesh and</p>
+ between CSGBox and the standard jme3 Box is its definition of <i>faces</i> 
+ (FRONT/BACK/TOP/BOTTOM/LEFT/RIGHT) and the ability to apply different properties to the different sides.</p>
+ 	<p>The java entry points for adjusting the configuration include everything from CSGMesh and</p>
  	<dl>
  		<dt>setXExtent( float pExtent )</dt>
  		<dt>setYExtent( float pExtent )</dt>
@@ -152,16 +157,17 @@ for every CSG shape is to invoke updateGeometry() on itself.</dd>
  cylinder.  This helps when aligning textures from blended primitives.</p>
  	<p>The import XML definition replaces <i>CSGBox</i> with <i>CSGAxialBox</i></p>
  	
- 	<h3 id="radial">CSGRadial</h3>
- 	<p><i>CSGRadial</i> is an extension to CSGMesh that defines a common design approach to  
-those CSG shape primitives that are built of a series of slices along the z-axis, with each
-slice defined by vertices radially distributed around its center. 
+ 	<h3 id="radial">CSGAxial / CSGRadial</h3>
+ 	<p><i>CSGAxial</i> is an extension to CSGMesh that defines a common design approach to  
+those CSG shape primitives that are built of a series of slices along the z-axis.  <i>CSGRadial</i>
+extends this idea with each slice defined by vertices radially distributed around its center. 
 <br><i>CSGRadialCapped</i> is a radial shape with flat end-caps, like a cylinder or a pipe. 
-A texture <i>mode</i> controls how the texture is applied to the faces where:
+The standard faces FRONT/BACK/SIDES apply to all capped radials. A texture <i>mode</i> controls 
+how the texture is applied to the faces where:
 <blockquote>
-<dl><dt>CAN</dt><dd>Image the shape rotated to sit on is back surface (like soup can).  
+<dl><dt>CAN</dt><dd>Imagine the shape tilted up to sit on is back face (like a soup can).  
 Then X moves around the circumference, and Y increases upwards on the can.</dd>
-<dt>ROLLER</dt><dd>Image the shape rotated so that the back is to left and the front is
+<dt>ROLLER</dt><dd>Imagine the shape rotated so that the back is to left and the front is
 to the right.  Then X increases linearly from left to right, and 
 Y increases along the circumference as you move up.</dd>
 </dl>
@@ -236,9 +242,9 @@ progression.</dd>
  	
  	<h3 id="sphere">CSGSphere</h3>
  	<p><i>CSGSphere</i> creates a basic sphere shape, based on the setting of 
- CSGRadial. A sphere has only one face (with integral endcaps) and only the single main radius applies.
- A sphere marked <i>not</i> closed eliminates north and south pole slices that converge to a single
- point and appear with tiny holes instead. 
+ CSGRadial. A sphere has only one face SURFACE (with integral endcaps) and only the single main radius applies.
+ A sphere marked <b>not</b> closed eliminates the north and south pole slices that converge to a single
+ point, and tiny holes appear at the extremities instead. 
  <br>Since sine/cosine vary more rapidly near the right-angle extremes, the sphere can be generated with either
  even slices (same distance at each z-axis step) or to generate more slices with a smaller z-axis
  step near the right-angle points.
@@ -282,7 +288,7 @@ the right-angle extremes.</dd>
 <dt>STANDARD</dt><dd>End slice is generated 'normally', perpendicular to the last point of the curve</dd>
 <dt>PERPENDICULAR</dt><dd>End slice is generated perpendicular to the x/y/z axes</dd>
 <dt>PERPENDICULAR45</dt><dd>End slice is generated perpendicular/45degree to the x/y/z axes</dd>
-<dt>CROPPED</dt><dd>Curve end points do NOT produce a slice, they only influence the last slice normal</dd>
+<dt>CROPPED</dt><dd>The spline end points do NOT produce a slice, they only influence the last slice normal</dd>
 </dl></blockquote>
   </p>
  <p>Another oddity of building slices along a spline rather than a straight line is that due to the
@@ -457,8 +463,8 @@ of all the faces involved.</p>
 		<div class="menu_container">
 			<ul  class="sf-menu">
 				<li><a href="index.html">Home</a></li>
-				<li><a class="disabled">Shapes</a></li>
 				<li><a href="spatials.html">Spatials</a></li>
+				<li><a class="disabled">Shapes</a></li>
 				<li><a href="las.html">Lights/Physics/2D Surfaces</a></li>
 				<li><a href="animat.html">Animation</a></li>
 			</ul>

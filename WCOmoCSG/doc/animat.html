@@ -29,8 +29,8 @@
 		<div class="menu_container">
 			<ul class="sf-menu">
 				<li><a href="index.html">Home</a></li>
-				<li><a href="shapes.html">Shapes</a></li>
 				<li><a href="spatials.html">Spatials</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
 				<li><a href="las.html">Lights/Physics/2D Surfaces</a></li>
 				<li><a class="disabled">Animation</a></li>
 			</ul>
@@ -64,7 +64,7 @@
  	<p>The setup is straight forward.  Create two shapes and blend them into a third. In the
  update loop, apply rotation to the two primitives, and then regenerate the blended shape. 
  The CSG code will rebuild the blend from scratch on every regenerate call.
- <br><a href='images/CSGAnimation.mpeg'>download movie</a>(which is rather choppy due
+ <br><a href='images/CSGAnimation.mpeg'>download movie</a> (which is rather choppy due
  to the recording being active, but which is rather smooth in real life)</p>
  
   	<h3 id="progressive">Progressive Rebuild</h3>
@@ -82,14 +82,36 @@
  	<p>For example, CSGTestM starts with a cubic block of 'cheese'.  The update loop is to
  randomly move a spherical 'mouse' within a single quadrant of the block, and then subtract
  the sphere from the cube.  The result becomes the next starting point, so as the loop 
- continues, more and more of cheese is gnawed away by the mouse. While not smooth enough
+ continues, more and more cheese is gnawed away by the mouse. While not smooth enough
  for true animation, it is still an effective display.
  <br><a href='images/CSGProgressiveRebuild.mpeg'>download movie</a></p>
  
  	<h3 id="threads">Multi-threading</h3>
  	<p>To better support animation and progressive rebuild, the CSG construction process
- has been made <i>thread aware</i>.
- </p>
+ has been made <i>thread aware</i>. Regeneration has been broken into two distinct steps.
+ The first includes all the heavy lifting of analyzing the blending shapes, resolving 
+ conflicts, and deciding on the structure of the final result.  The second step is applying
+ the final shape to the active visual scene.</p>
+ 	<p>By default, <i>.regenerate()</i> executes both steps.  But you can use:
+<code><pre>
+         myCSGSpatial.deferSceneChanges( true );
+</pre></code>
+ which subsequently causes regenerate to execute only the first step.  The changes are held internally
+ within the spatial until explicitly applied by:
+  <code><pre>
+         myCSGSpatial.applySceneChanges();
+ </pre></code>
+ which updates the underlying scene. <i>.regenerate()</i> and <i>.applySceneChanges()</i>
+ are thread-aware and properly synchronized.  This means you can drive regeneration (the
+ CPU intensive step) from a background thread, and call <i>.applySceneChanges()</i> from
+ within the standard jme3 <i>.update()</i> thread.  <i>.applySceneChanges()</i> returns
+ true if work was done, false if no updates were applied.</p>
+ 	<p>As part of being thread-aware, the major internal processing loops monitor
+ <i>Thread.interrupted()</i>. If such an interruption is detected, the regeneration process
+ is aborted and a CSGConstructionException is thrown. 
+ <blockquote>NOTE that CSGConstructionException is a RuntimeException, so that the caller
+ is NOT required to explicitly code in exception handling.  java.lang.InterruptedException
+ is not used by the CSG process.</blockquote></p>
 	<p></p>
 	</div>
  </div>
@@ -98,8 +120,8 @@
 		<div class="menu_container">
 			<ul class="sf-menu">
 				<li><a href="index.html">Home</a></li>
-				<li><a href="shapes.html">Shapes</a></li>
 				<li><a href="spatials.html">Spatials</a></li>
+				<li><a href="shapes.html">Shapes</a></li>
 				<li><a href="las.html">Lights/Physics/2D Surfaces</a></li>
 				<li><a class="disabled">Animation</a></li>
 			</ul>
