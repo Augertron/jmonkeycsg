@@ -630,7 +630,7 @@ public class CSGShapeBSP
 		
 		// Include the master list of all elements
 		Mesh aMesh = toMesh( -1, aPolyList, aPositionList, aNormalList, aTexCoordList, anIndexList );
-		pMeshManager.registerMasterMesh( aMesh );
+		pMeshManager.registerMasterMesh( aMesh, this.mShape.getName() );
 		
 		if ( pProduceSubelements ) {
 			// Produce the meshes for all the sub elements

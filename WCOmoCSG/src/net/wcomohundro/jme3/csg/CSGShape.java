@@ -477,7 +477,7 @@ public class CSGShape
 //		aClone.setLodLevel( pLODLevel );
 		
 		// Register this shape's standard Material
-		pMeshManager.resolveMeshIndex( aClone.getMaterial(), null, aClone );
+		pMeshManager.resolveMeshIndex( null, aClone.getMaterial(), null, aClone );
 		
 		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
 		return( aClone );
@@ -544,24 +544,22 @@ public class CSGShape
 		CSGMeshManager		pMeshManager
 	,	int					pFaceIndex
 	) {
-		Material useMaterial;
-		PhysicsControl usePhysics;
-		
 		if ( this.mesh instanceof CSGMesh ) {
 			// CSGMesh based primitives may support per-face materials in their own right
-			useMaterial = ((CSGMesh)this.mesh).getMaterial( pFaceIndex );
+			String useName = ((CSGMesh)this.mesh).getMeshName( pFaceIndex );
+			
+			Material useMaterial = ((CSGMesh)this.mesh).getMaterial( pFaceIndex );
 			if ( useMaterial == null ) {
 				// Nothing special, use the standard
 				useMaterial = this.getMaterial();
 			}
-			usePhysics = ((CSGMesh)this.mesh).getPhysics( pFaceIndex );
+			PhysicsControl usePhysics = ((CSGMesh)this.mesh).getPhysics( pFaceIndex );
+			return( pMeshManager.resolveMeshIndex( useName, useMaterial, usePhysics, this ) );
+			
 		} else {
-			// Use the standard 
-			useMaterial = this.getMaterial();
-			usePhysics = null;
+			// Base the index on the underlying material only
+			return( pMeshManager.resolveMeshIndex( null, this.getMaterial(), null, this ) );
 		}
-		// Base the index on the underlying material
-		return( pMeshManager.resolveMeshIndex( useMaterial, usePhysics, this ) );
 	}
 	
 	/** Accessor to the transform to apply to the underlying Mesh */

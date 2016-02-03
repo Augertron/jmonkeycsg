@@ -156,23 +156,24 @@
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-15.0' z='10.0'/>
             </transform>
-            <shapes>s
+            <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Box' operator='UNION'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
                     		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
 		                <faceProperties>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.5'
-		                    		materialName='Textures/Rock/Rock1Rpt.xml'/>
+		                    		name='FrontBack' materialName='Textures/Rock/Rock1Rpt.xml'/>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='2' scaleY='1.5'
-		                    		materialName='Textures/BrickWall/BrickWallRpt.xml'/>
-		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'/>
+		                    		name='LeftRight' materialName='Textures/BrickWall/BrickWallRpt.xml'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'
+		                    		name='TopBottom'/>
 		            	</faceProperties>
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10' y='0' z='10.0'/>
@@ -183,10 +184,11 @@
                     		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
 		                <faceProperties>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.5'
-		                    		materialName='Textures/Rock/Rock1Rpt.xml'/>
+		                    		name='FrontBack' materialName='Textures/Rock/Rock1Rpt.xml'/>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='2' scaleY='1.5'
-		                    		materialName='Textures/BrickWall/BrickWallRpt.xml'/>
-		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'/>
+		                    		name='LeftRight' materialName='Textures/BrickWall/BrickWallRpt.xml'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'
+		                    		name='TopBottom'/>
 		            	</faceProperties>
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
@@ -197,9 +199,10 @@
                     		zExtent='2.0' radius='0.75'
                     	 	axisSamples='34' closed='true' radialSamples='32' textureMode='FLAT_LINEAR'>
 		                <faceProperties>
-		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='3'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='3'
+		                    		name='InteriorSides'/>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK'
-		                    		materialName='Textures/Rock/Rock2Rpt.xml'/>
+		                    		name='InteriorFrontBack' materialName='Textures/Rock/Rock2Rpt.xml'/>
 		            	</faceProperties>
                     </mesh>
                     <transform class='com.jme3.math.Transform'>
@@ -209,7 +212,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-5' y='0' z='10.0'/>
@@ -220,10 +223,11 @@
                     		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
 		                <faceProperties>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.5'
-		                    		materialName='Textures/Rock/Rock1Rpt.xml'/>
+		                    		name='FrontBack' materialName='Textures/Rock/Rock1Rpt.xml'/>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='2' scaleY='1.5'
-		                    		materialName='Textures/BrickWall/BrickWallRpt.xml'/>
-		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'/>
+		                    		name='LeftRight' materialName='Textures/BrickWall/BrickWallRpt.xml'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'
+		                    		name='TopBottom'/>
 		            	</faceProperties>
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
@@ -234,9 +238,10 @@
                     		zExtent='2.0' radius='0.75'
                     	 	axisSamples='34' closed='true' radialSamples='32' textureMode='FLAT_LINEAR'>
 		                <faceProperties>
-		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='3'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='3'
+		                    		name='InteriorSides'/>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK'
-		                    		materialName='Textures/Rock/Rock2Rpt.xml'/>
+		                    		name='InteriorFrontBack' materialName='Textures/Rock/Rock2Rpt.xml'/>
 		            	</faceProperties>
                     </mesh>
                     <transform class='com.jme3.math.Transform'>
@@ -247,7 +252,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
 		<!-- A corridor -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='Corridor'
         		materialName='Textures/Rock/Rock1Rpt.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='0' z='10.0'/>
@@ -293,7 +298,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
      
 		<!-- A pipe in a box -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInABox'
         		materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='20' y='0' z='10.0'/>
@@ -329,7 +334,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGCompoundShape'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInAWireBox'
         		singleMaterial='false'
         		materialName='Textures/Debug/Wireframe.xml' >
         		<!-- aterialName='Textures/Rock/Rock2Rpt.xml' -->
@@ -366,7 +371,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGCompoundShape2'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInABox'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
        			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
             <transform class='com.jme3.math.Transform'>

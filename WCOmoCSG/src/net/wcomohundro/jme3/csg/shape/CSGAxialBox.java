@@ -547,7 +547,19 @@ public class CSGAxialBox
     	aBuffer.clear();
         tc.updateData( aBuffer );
     }
-    
+ 
+	/** Accessor to the mesh name that applies to the given surface */
+    @Override
+	public String getMeshName(
+		int					pFaceIndex
+	) {
+		// Determine the face, which we know is in the sFaces order, with 2 triangles 
+    	// per face
+    	Face aFace = sFaces[ pFaceIndex / 2 ];
+    	String aName = resolveFaceName( aFace.getMask() );
+		return( aName );
+	}
+
 	/** Accessor to the material that applies to the given surface */
     @Override
 	public Material getMaterial(

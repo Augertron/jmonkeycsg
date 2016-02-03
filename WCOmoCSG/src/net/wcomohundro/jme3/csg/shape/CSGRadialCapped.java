@@ -159,6 +159,22 @@ public abstract class CSGRadialCapped
 
 	/** Accessor to the material that applies to the given surface */
     @Override
+	public String getMeshName(
+		int					pFaceIndex
+	) {
+    	if ( mFaceProperties != null ) {
+			// Determine the face
+	    	Face aFace = whichFace( pFaceIndex );
+	    	String aName = resolveFaceName( aFace.getMask() );
+			return( aName );
+    	} else {
+    		// No custom properties
+    		return( null );
+    	}
+	}
+
+    /** Accessor to the material that applies to the given surface */
+    @Override
 	public Material getMaterial(
 		int					pFaceIndex
 	) {

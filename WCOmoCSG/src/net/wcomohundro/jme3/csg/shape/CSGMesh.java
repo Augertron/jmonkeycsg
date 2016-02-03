@@ -185,7 +185,15 @@ public abstract class CSGMesh
     public abstract void applyGradient(
     	List<ColorRGBA>	pColorList
     );
-
+    
+	/** FOR CSGShape PROCESSING: Accessor to the mesh name that applies to the given surface */
+	public String getMeshName(
+		int					pFaceIndex
+	) {
+		// Subclasses must override if they support custom material per surface
+		return( null );
+	}
+	
 	/** FOR CSGShape PROCESSING: Accessor to the material that applies to the given surface */
 	public Material getMaterial(
 		int					pFaceIndex
@@ -198,7 +206,7 @@ public abstract class CSGMesh
 	public PhysicsControl getPhysics(
 		int					pFaceIndex
 	) {
-		// Subclasses must override if they support custom material per surface
+		// Subclasses must override if they support custom physics per surface
 		return( null );
 	}
 
@@ -212,9 +220,7 @@ public abstract class CSGMesh
 			// Register every property in the list.  The manager will resolve multiple
 			// usages of the same item to the same index
 			for( CSGFaceProperties aProperty : mFaceProperties ) {
-				if ( aProperty.hasMaterial() || aProperty.hasPhysics()) {
-					pMeshManager.resolveMeshIndex( aProperty.getMaterial(), aProperty.getPhysics(), pShape );
-				}
+				pMeshManager.resolveMeshIndex( aProperty, pShape );
 			}
 		}
 	}
@@ -230,6 +236,27 @@ public abstract class CSGMesh
 				if ( aProperty.appliesToFace( pFaceBit ) ) {
 					// Use this one
 					return( aProperty );
+				}
+			}
+		}
+		return( null );
+	}
+	protected String matchFaceName(
+		int			pFaceBit
+	) {
+		if ( mFaceProperties != null ) {
+			// Sequential scan looking for a match
+			// The assumption is there are so few faces that a sequential scan is very efficient
+			for( CSGFaceProperties aProperty : mFaceProperties ) {
+				if ( aProperty.appliesToFace( pFaceBit ) ) {
+					// Use this one if it has a material
+					String aName = aProperty.getName();
+					if ( aName != null ) {
+						return( aName );
+					}
+					// NOTE that we could match a property based on the bitmask, but if
+					//		it has no name, we will keep looking.  This lets us use
+					//		separate definitions for scale versus material versus physics
 				}
 			}
 		}
@@ -358,6 +385,13 @@ public abstract class CSGMesh
 		return( null );
 	}
 	
+	/** Service routine to match a custom mesh name to a given face */
+	protected String resolveFaceName(
+		int			pFaceBit
+	) {
+		String aName = matchFaceName( pFaceBit );
+		return( aName );
+	}
 	/** Service routine to match a custom material to a given face */
 	protected Material resolveFaceMaterial(
 		int			pFaceBit

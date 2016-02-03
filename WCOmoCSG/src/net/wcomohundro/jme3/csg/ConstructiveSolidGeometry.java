@@ -207,6 +207,8 @@ public interface ConstructiveSolidGeometry
 		/** Test if this Element has its own custom physics defined */
 		public boolean hasPhysics();
 		public PhysicsControl getPhysics();
+	    public void setPhysics( PhysicsControl pPhysics );
+
 		/** If physics is active for the element, connect it all up now */
 		public void applyPhysics(
 			PhysicsSpace		pPhysicsSpace

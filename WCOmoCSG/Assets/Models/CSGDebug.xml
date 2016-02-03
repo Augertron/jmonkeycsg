@@ -13,6 +13,45 @@
         </lights>
     </lights>
 	<children>
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox'
+        		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-10' y='0' z='10.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1.5'
+		                    		name='FrontBack' materialName='Textures/Rock/Rock1Rpt.xml'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='2' scaleY='1.5'
+		                    		name='LeftRight' materialName='Textures/BrickWall/BrickWallRpt.xml'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'
+		                    		name='TopBottom'/>
+		            	</faceProperties>
+                    </mesh>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                
+                <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+                		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
+                    		zExtent='2.0' radius='0.75'
+                    	 	axisSamples='34' closed='true' radialSamples='32' textureMode='FLAT_LINEAR'>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='2' scaleY='3'
+		                    		name='InteriorSides'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK'
+		                    		name='InteriorFrontBack' materialName='Textures/Rock/Rock2Rpt.xml'/>
+		            	</faceProperties>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.1'/>
+                    </transform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+<?ignore
 		<!-- A corridor, with a small missing triangle tucked behind the front cutout to the left -->
 		<net.wcomohundro.jme3.csg.CSGGeonode name='ACorridor'
         		singleMaterial='false' 
@@ -60,7 +99,7 @@
                           the textures and sizes accordingly.  Then we apply scaling to
                           match the size of the external box.  The lights are positioned
                           within the 'unit' interior as well. -->
-<?ignore
+
                 <net.wcomohundro.jme3.csg.CSGShape name='InteriorArch' operator='DIFFERENCE' >
                 	<shapes>
                 		<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom' operator='UNION'>
@@ -98,11 +137,10 @@
                  	<transform class='com.jme3.math.Transform'>
                         <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
                     </transform>
-	            </net.wcomohundro.jme3.csg.CSGShape>
-?>	            
+	            </net.wcomohundro.jme3.csg.CSGShape>	            
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-<?ignore
+
         <!-- An Archway -->
         <net.wcomohundro.jme3.csg.CSGGeometry name='Archway'
             	materialName='Textures/Debug/NumberedBoxes.xml'>

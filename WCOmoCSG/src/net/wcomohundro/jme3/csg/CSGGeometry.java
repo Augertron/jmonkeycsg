@@ -213,6 +213,8 @@ public class CSGGeometry
     public boolean hasPhysics() { return mPhysics != null; }
     @Override
     public PhysicsControl getPhysics() { return mPhysics; }
+    @Override
+    public void setPhysics( PhysicsControl pPhysics ) { mPhysics = pPhysics; }
     
     /** If physics is active for the shape, connect it all up now */
     @Override

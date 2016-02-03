@@ -248,6 +248,7 @@ public class CSGNode
     /** Accessor to the physics */
     @Override
     public PhysicsControl getPhysics() { return mPhysics; }
+    @Override
     public void setPhysics(
     	PhysicsControl		pPhysics
     ) {

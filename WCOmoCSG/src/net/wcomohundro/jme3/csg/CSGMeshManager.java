@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.bullet.control.PhysicsControl;
@@ -114,12 +115,12 @@ public class CSGMeshManager
 		// possibly explicitly named material.  Remember that NULL is a valid key for the
 		// generic
 		Object genericKey
-			= selectKey( null, genericInfo.mLightListKey, genericInfo.mPhysicsKey );
+			= selectKey( null, null, genericInfo.mLightListKey, genericInfo.mPhysicsKey );
 		mMeshMap.put( genericKey, genericInfo );
 
 		if ( genericInfo.mMaterial != null ) {
 			genericKey
-				= selectKey( genericInfo.mMaterial, genericInfo.mLightListKey, genericInfo.mPhysicsKey );
+				= selectKey( null, genericInfo.mMaterial, genericInfo.mLightListKey, genericInfo.mPhysicsKey );
 			if ( genericKey != null ) {
 				mMeshMap.put( genericKey, genericInfo );
 			}
@@ -131,7 +132,7 @@ public class CSGMeshManager
 		Material	pGenericMaterial
 	,	CSGShape	pShape
 	) {
-		CSGMeshInfo meshInfo = resolveMeshInfo( pGenericMaterial, null, pShape );
+		CSGMeshInfo meshInfo = resolveMeshInfo( null, pGenericMaterial, null, pShape );
 		if ( meshInfo.mMaterial == null ) {
 			// No specific override, still using the generic in force
 			meshInfo.mMaterial = this.resolveMaterial( sGenericMeshIndex );
@@ -157,14 +158,20 @@ public class CSGMeshManager
 		for( int i = 0; i <= mMeshCount; i += 1 ) {
 			Spatial aSpatial;
 			CSGMeshInfo meshInfo = mMeshMap.get( new Integer( i ) );
-			if ( meshInfo.mMesh != null ) {
+			
+			// We are only interested in 'real' meshes
+			if ( (meshInfo.mMesh != null) && (meshInfo.mMesh.getTriangleCount() > 0) ) {
 				// Build a Geometry that covers the given mesh with the desired Material,
 				// applying local lights/physics as needed
-				aSpatial = new Geometry( pCoreName + i, meshInfo.mMesh );
+				aSpatial = new Geometry( meshInfo.resolveName( pCoreName + i ), meshInfo.mMesh );
 				if ( meshInfo.mMaterial != null ) {
 					aSpatial.setMaterial( meshInfo.mMaterial.clone() );
 				}
 				StringBuilder shapeKey = new StringBuilder( 128 );
+				if ( meshInfo.mName != null ) {
+					// Custom mesh name
+					shapeKey.append( meshInfo.mName );
+				}
 				if ( meshInfo.mLightListKey != null ) {
 					// Custom lights have been defined.  
 					shapeKey.append( meshInfo.mLightListKey );
@@ -180,7 +187,7 @@ public class CSGMeshManager
 					CSGNode aNode = nodeMap.get( stringKey );
 					if ( aNode == null ) {
 						// This shape's Node has not yet been created
-						aNode = new CSGNode( pCoreName + i + "Node" );
+						aNode = new CSGNode( meshInfo.resolveName( pCoreName + i + "Node" ) );
 						aList.add( aNode );
 						nodeMap.put( stringKey, aNode );
 						
@@ -211,19 +218,32 @@ public class CSGMeshManager
 	
 	/** Define a material for subsequent use, returning its associated Mesh index */
 	public Integer resolveMeshIndex(
-		Material		pMaterial
+		String			pMeshName
+	,	Material		pMaterial
 	,	PhysicsControl	pPhysics
 	,	CSGShape		pShape
 	) {
-		return( resolveMeshInfo( pMaterial, pPhysics, pShape ).mIndex );
+		return( resolveMeshInfo( pMeshName, pMaterial, pPhysics, pShape ).mIndex );
+	}
+	public Integer resolveMeshIndex(
+		CSGFaceProperties	pProperties
+	,	CSGShape			pShape
+	) {
+		if ( pProperties.hasName() || pProperties.hasMaterial() || pProperties.hasPhysics()) {
+			return( resolveMeshInfo( pProperties, pShape ).mIndex );
+		} else {
+			return( null );
+		}
 	}
 	
 	/** Register the Master mesh */
 	public void registerMasterMesh(
 		Mesh		pMesh
+	,	String		pName
 	) {
 		// By definition, the master mesh relies on the generic material
-		CSGMeshInfo masterInfo = new CSGMeshInfo( sMasterMeshIndex, pMesh, resolveMaterial( sGenericMeshIndex ) );
+		CSGMeshInfo masterInfo 
+			= new CSGMeshInfo( sMasterMeshIndex, pName, pMesh, resolveMaterial( sGenericMeshIndex ) );
 		mMeshMap.put( sMasterMeshIndex, masterInfo );
 	}
 	
@@ -265,7 +285,8 @@ public class CSGMeshManager
 	 	Mesh information based on the active material and active lighting
 	 */
 	protected Object selectKey(
-		Material	pMaterial
+		String		pMeshName
+	,	Material	pMaterial
 	,	String		pLightListKey
 	,	String		pPhysicsKey
 	) {
@@ -281,7 +302,11 @@ public class CSGMeshManager
 			}
 		}
 		StringBuilder aBuffer = new StringBuilder( 128 );
+		if ( pMeshName != null ) {
+			aBuffer.append( pMeshName );
+		}
 		if ( pLightListKey != null ) {
+			if ( aBuffer.length() > 0 ) aBuffer.append( "-" );
 			aBuffer.append( pLightListKey );
 		}
 		if ( pPhysicsKey != null ) {
@@ -303,7 +328,17 @@ public class CSGMeshManager
 	
 	/** Service routine that locates or creates the appropriate MeshInfo to use */
 	protected CSGMeshInfo resolveMeshInfo(
-		Material		pMaterial
+		CSGFaceProperties	pProperties
+	,	CSGShape			pShape
+	) {
+		return( resolveMeshInfo( pProperties.getName()
+								, pProperties.getMaterial()
+								, pProperties.getPhysics()
+								, pShape ) );
+	}
+	protected CSGMeshInfo resolveMeshInfo(
+		String			pMeshName
+	,	Material		pMaterial
 	,	PhysicsControl	pPhysics
 	,	CSGShape		pShape
 	) {
@@ -342,7 +377,7 @@ public class CSGMeshManager
 			// Use the explicit physics for this shape
 			aPhysicsKey = CSGMeshInfo.createPhysicsKey( pShape );
 		}
-		Object meshKey = selectKey( pMaterial, aLightListKey, aPhysicsKey );
+		Object meshKey = selectKey( pMeshName, pMaterial, aLightListKey, aPhysicsKey );
 		
 		// Look for custom material
 		if ( meshKey == null ) {
@@ -365,6 +400,7 @@ public class CSGMeshManager
 					pMaterial = mGenericIndexStack.peek().mMaterial;
 				}
 				meshInfo = new CSGMeshInfo( meshIndex
+											, pMeshName
 											, pMaterial
 											, aLightList, aLightListTransform, aLightListKey
 											, aPhysics, aPhysicsKey );
@@ -403,6 +439,8 @@ class CSGMeshInfo
 	
 	/** The index that selects this info */
 	protected Integer			mIndex;
+	/** The name associated with this mesh */
+	protected String			mName;
 	/** The Material that applies */
 	protected Material			mMaterial;
 	/** The custom lighting that applies */
@@ -420,8 +458,10 @@ class CSGMeshInfo
 		Integer			pIndex
 	,	CSGElement		pElement
 	) {
-		// Track the material
 		this.mIndex = pIndex;
+		this.mName = pElement.asSpatial().getName();
+		
+		// Track the material
 		this.mMaterial = pElement.getMaterial();
 		
 		// Track the local light list
@@ -445,6 +485,7 @@ class CSGMeshInfo
 	/** Constructor for a dyanmic entry */
 	CSGMeshInfo(
 		Integer			pIndex
+	,	String			pName
 	,	Material		pMaterial
 	,	LightList		pLightList
 	,	Transform		pLightListTransform
@@ -453,6 +494,8 @@ class CSGMeshInfo
 	,	String			pPhysicsKey
 	) {
 		this.mIndex = pIndex;
+		this.mName = pName;
+		
 		this.mMaterial = pMaterial;
 		
 		// Remember the active lights
@@ -466,12 +509,31 @@ class CSGMeshInfo
 	}
 	CSGMeshInfo(
 		Integer			pIndex
+	,	String			pName
 	,	Mesh			pMesh
 	,	Material		pMaterial
 	) {
 		this.mIndex = pIndex;
+		this.mName = pName;
 		this.mMesh = pMesh;
 		this.mMaterial = pMaterial;
 	}
 
+	/** Resolve the name to use with any entity generated to handle this mesh */
+	public String resolveName(
+		String		pDefault
+	) {
+		if ( this.mName == null ) {
+			return( pDefault );
+		} else {
+			return( this.mName );
+		}
+	}
+	
+	/** OVERRIDE: better debug report */
+	@Override
+	public String toString(
+	) {
+		return( "CSGMeshInfo[" + mIndex + "] " + ((mName == null) ? "" : mName ) );
+	}
 }

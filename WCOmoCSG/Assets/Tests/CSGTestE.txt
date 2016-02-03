@@ -3,7 +3,7 @@
 //Models/CSGLoadEnvironmentBSP.xml
 
 //Models/CSGDice.xml
-//Models/CSGDebug.xml
+Models/CSGDebug.xml
 
 //Lights/ShadowPointLight.xml
 //Lights/ShadowDirectionalLight.xml
@@ -14,7 +14,7 @@
 //Models/CSGLoadSimpleSpheres.xml
 //Models/CSGLoadSimplePipes.xml
 
-Models/CSGLoadCSGSamples.xml
+//Models/CSGLoadCSGSamples.xml
 
 //Models/CSGLoadCSGNormalTests.xml
 //Models/CSGLoadMultiTexture.xml

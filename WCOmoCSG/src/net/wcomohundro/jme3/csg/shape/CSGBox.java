@@ -238,7 +238,19 @@ public class CSGBox
         tc.updateData( aBuffer );
     }
     
-	/** Accessor to the material that applies to the given surface */
+	/** Accessor to the mesh name that applies to the given surface */
+    @Override
+	public String getMeshName(
+		int					pFaceIndex
+	) {
+		// Determine the face, which we know is in the order
+    	//	Front/Back/Left/Right/Top/Bottom, with 2 triangles per face, which matches
+    	//  the bits in Face
+    	int faceMask = 1 << (pFaceIndex / 2);
+    	String aName = resolveFaceName( faceMask );
+		return( aName );
+	}
+    /** Accessor to the material that applies to the given surface */
     @Override
 	public Material getMaterial(
 		int					pFaceIndex
@@ -250,7 +262,6 @@ public class CSGBox
     	Material aMaterial = resolveFaceMaterial( faceMask );
 		return( aMaterial );
 	}
-    
 	/** Accessor to the physics that applies to the given surface */
     @Override
 	public PhysicsControl getPhysics(

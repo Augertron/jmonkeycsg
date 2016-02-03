@@ -178,6 +178,8 @@ public class CSGFaceProperties
 
 	/** The bitmask of 'faces' these properties apply to */
 	protected int				mFaceMask;
+	/** Special name associated with these properties */
+	protected String			mName;
 	/** A custom material that applies to the face(s) */
 	protected Material			mMaterial;
 	/** A custom texture scaling that applies to the face(s) */
@@ -229,6 +231,10 @@ public class CSGFaceProperties
 	) {
 		return( pFace.maskIncludesFace( mFaceMask ) );
 	}
+
+	/** Accessor to special name */
+	public boolean hasName() { return( mName != null ); }
+	public String getName() { return mName; }
 	
 	/** Accessor to the Material property */
 	public boolean hasMaterial() { return( mMaterial != null ); }
@@ -280,6 +286,8 @@ public class CSGFaceProperties
         } else {
         	mFaceMask = aFace.getMask();
         }
+        mName = aCapsule.readString( "name", null );
+        
         // Look for a property
         mMaterial = null;
         String matName = aCapsule.readString( "materialName", null );
@@ -353,7 +361,8 @@ public class CSGFaceProperties
         } else {
         	aCapsule.write( aFace, "face", null );
         }
-        
+        aCapsule.write( mName, "name", null );
+
         aCapsule.write( mMaterial, "material", null );
         
         if ( mTextureScale != null ) {
@@ -384,6 +393,13 @@ public class CSGFaceProperties
 													, sCSGFacePropertiesRevision
 													, sCSGFacePropertiesDate
 													, pBuffer ) );
+	}
+	
+	/** OVERRIDE: better debug report */
+	@Override
+	public String toString(
+	) {
+		return( "CSGFaceProperties[" + mFaceMask + "] " + ((mName == null) ? "" : mName) );
 	}
 
 }
