@@ -168,7 +168,7 @@ public class CSGMeshManager
 					aSpatial.setMaterial( meshInfo.mMaterial.clone() );
 				}
 				StringBuilder shapeKey = new StringBuilder( 128 );
-				if ( meshInfo.mName != null ) {
+				if ( meshInfo.mUniqueMesh ) {
 					// Custom mesh name
 					shapeKey.append( meshInfo.mName );
 				}
@@ -343,6 +343,8 @@ public class CSGMeshManager
 	,	CSGShape		pShape
 	) {
 		// Decide which 'key' we are looking up
+		// NOTE that pMeshName will only be non-null if a custom name was defined
+		//		via face properties
 		CSGMeshInfo genericInfo = mGenericIndexStack.peek();
 
 		String aLightListKey;
@@ -400,7 +402,8 @@ public class CSGMeshManager
 					pMaterial = mGenericIndexStack.peek().mMaterial;
 				}
 				meshInfo = new CSGMeshInfo( meshIndex
-											, pMeshName
+											, (pMeshName == null) ? pShape.getName() : pMeshName
+											, (pMeshName != null)
 											, pMaterial
 											, aLightList, aLightListTransform, aLightListKey
 											, aPhysics, aPhysicsKey );
@@ -441,6 +444,7 @@ class CSGMeshInfo
 	protected Integer			mIndex;
 	/** The name associated with this mesh */
 	protected String			mName;
+	protected boolean			mUniqueMesh;
 	/** The Material that applies */
 	protected Material			mMaterial;
 	/** The custom lighting that applies */
@@ -460,6 +464,7 @@ class CSGMeshInfo
 	) {
 		this.mIndex = pIndex;
 		this.mName = pElement.asSpatial().getName();
+		this.mUniqueMesh = false;
 		
 		// Track the material
 		this.mMaterial = pElement.getMaterial();
@@ -486,6 +491,7 @@ class CSGMeshInfo
 	CSGMeshInfo(
 		Integer			pIndex
 	,	String			pName
+	,	boolean			pUniqueMesh
 	,	Material		pMaterial
 	,	LightList		pLightList
 	,	Transform		pLightListTransform
@@ -495,6 +501,7 @@ class CSGMeshInfo
 	) {
 		this.mIndex = pIndex;
 		this.mName = pName;
+		this.mUniqueMesh = pUniqueMesh;
 		
 		this.mMaterial = pMaterial;
 		
@@ -515,6 +522,7 @@ class CSGMeshInfo
 	) {
 		this.mIndex = pIndex;
 		this.mName = pName;
+		this.mUniqueMesh = false;
 		this.mMesh = pMesh;
 		this.mMaterial = pMaterial;
 	}

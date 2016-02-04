@@ -19,7 +19,7 @@
                 <translation class='com.jme3.math.Vector3f' x='-10' y='0' z='10.0'/>
             </transform>
             <shapes>
-                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                <net.wcomohundro.jme3.csg.CSGShape name='ExteriorBox'>
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
                     		xExtent='1.0' yExtent='1.5' zExtent='2.0'>
 		                <faceProperties>
@@ -28,7 +28,7 @@
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='2' scaleY='1.5'
 		                    		name='LeftRight' materialName='Textures/BrickWall/BrickWallRpt.xml'/>
 		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='2.0'
-		                    		name='TopBottom'/>
+		                    		/>
 		            	</faceProperties>
                     </mesh>
                 </net.wcomohundro.jme3.csg.CSGShape>
