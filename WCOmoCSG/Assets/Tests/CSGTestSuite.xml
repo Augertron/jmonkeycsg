@@ -1,0 +1,32 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- Prep the ENVIRONMENT -->
+<net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+	<scenes>
+		<String value='Models/CSGLoadSimpleUnitBoxes.xml'/>
+		<String value='Models/CSGLoadSimpleUnitCylinders.xml'/>
+		<String value='Models/CSGLoadSimpleUnitSpheres.xml'/>
+		<String value='Models/CSGLoadSimpleUnitPipes.xml'/>
+
+		<String value='Models/CSGLoadSimpleBoxes.xml'/>
+		<String value='Models/CSGLoadSimpleCylinders.xml'/>
+		<String value='Models/CSGLoadSimpleSpheres.xml'/>
+		<String value='Models/CSGLoadSimplePipes.xml'/>
+
+		<String value='Models/CSGLoadCSGNormalTests.xml'/>
+		<String value='Models/CSGLoadNonMultiTexture.xml'/>
+		<String value='Models/CSGLoadMultiTexture.xml'/>
+		<String value='Models/CSGLoadLightedCorridor.xml'/>
+
+		<String value='Models/CSGLoadFloorBumpySurface.xml'/>
+		
+		<String value='Models/CSGLoadCSGSamples.xml'/>
+		
+<?ignore
+		<String value='Models/CSGDebug.xml'/>
+		<String value='Models/CSGDice.xml'/>
+
+		<String value='Models/CSGLoadSmoothedPipes.xml'/>
+?>
+	</scenes>
+</net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+

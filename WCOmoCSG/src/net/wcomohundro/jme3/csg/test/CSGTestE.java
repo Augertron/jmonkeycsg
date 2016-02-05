@@ -93,11 +93,12 @@ public class CSGTestE
 
 	/** Default list of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
-
-		"Models/CSGLoadSimpleUnit.xml"
-	,	"Models/CSGLoadSimple.xml"
-	,	"Models/CSGLoadMultiTexture.xml"
-	,	"Models/CSGLoadCSGSamples.xml"
+		"Tests/CSGTestE.xml"
+		
+//		"Models/CSGLoadSimpleUnit.xml"
+//	,	"Models/CSGLoadSimple.xml"
+//	,	"Models/CSGLoadMultiTexture.xml"
+//	,	"Models/CSGLoadCSGSamples.xml"
 	
 //	,	"Models/CSGLoadTextureCylinders.xml"
 //	,	"Models/CSGLoadLighted.xml"
@@ -111,18 +112,12 @@ public class CSGTestE
 		String[]	pArgs
 	) {
 		//super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		super( new FlyCamAppState() );
-		
+		super( pArgs, new FlyCamAppState() );
+		if ( pArgs.length == 0 ) {
+			mInitArgs = sSceneList;
+		}
 		mSceneList.add( null );		// Start with a blank
 		mNullSceneMsg = "<ENTER> to cycle through the scenes, QWASDZ to move, <ESC> to exit";
-
-		if ( pArgs.length == 0 ) {
-			CSGTestDriver.readStrings( "./Assets/Tests/CSGTestE.txt", mSceneList, sSceneList );			
-		} else if ( pArgs.length == 1 ) {
-			CSGTestDriver.readStrings( pArgs[ 0 ], mSceneList, sSceneList );		
-		} else if ( pArgs.length > 1 ) {
-			mSceneList.addAll( Arrays.asList( pArgs ) );
-		}
 	}
     
 }

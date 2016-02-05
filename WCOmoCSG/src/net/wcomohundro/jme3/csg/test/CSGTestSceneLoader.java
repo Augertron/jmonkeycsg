@@ -103,7 +103,8 @@ public class CSGTestSceneLoader
 	    app.start();
 	}
 	
-	
+	/** Initialization args */
+	protected String[]			mInitArgs;
 	/** List of available scenes */
 	protected List<String>		mSceneList;
 	/** Which scene is currently being viewed */
@@ -120,20 +121,16 @@ public class CSGTestSceneLoader
 		String[]	pArgs
 	) {
 		//this( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		this( new FlyCamAppState() );
-		
-		if ( pArgs.length == 1 ) {
-			CSGTestDriver.readStrings( pArgs[ 0 ], mSceneList, null );		
-		} else if ( pArgs.length > 1 ) {
-			mSceneList.addAll( Arrays.asList( pArgs ) );
-		}
+		this( pArgs, new FlyCamAppState() );		
 	}
 	
 	/** This is a base class designed for subclass override */
 	protected CSGTestSceneLoader(
-		AppState...	pInitialStates
+		String[]		pArgs
+	,	AppState...		pInitialStates
 	) {
 		super( pInitialStates );
+		mInitArgs = pArgs;
 		
 		// Initialize the scene list
 		mSceneList = new ArrayList();
@@ -145,8 +142,17 @@ public class CSGTestSceneLoader
     protected void commonApplicationInit(
     ) {
     	// Do the standard setup
-		super.commonApplicationInit();   	
-        
+		super.commonApplicationInit();   
+		
+		if ( mInitArgs == null ) {
+			// Nothing defaulted
+		} else if ( mInitArgs.length == 1 ) {
+			// Singleton read of a file (possibly an Asset)
+			CSGTestDriver.readStrings( mInitArgs[ 0 ], mSceneList, null, assetManager );		
+		} else if ( mInitArgs.length > 1 ) {
+			// Literal list of scenes in the arguments
+			mSceneList.addAll( Arrays.asList( mInitArgs ) );
+		}
         // Load the scene, leveraging the XMLImporter
 		mLastScene = null;
 	    loadScene();

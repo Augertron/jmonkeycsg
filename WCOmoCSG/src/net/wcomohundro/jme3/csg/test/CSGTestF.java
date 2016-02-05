@@ -98,7 +98,7 @@ public class CSGTestF
 
 	public CSGTestF(
 	) {
-		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		super( null, new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
 		mSceneList = Arrays.asList( sSceneList );
 		mNullSceneMsg = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> to shoot, <ESC> to exit";
 	}

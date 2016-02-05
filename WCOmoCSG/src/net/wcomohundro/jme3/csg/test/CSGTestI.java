@@ -116,7 +116,7 @@ public class CSGTestI
 
 	public CSGTestI(
 	) {
-		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		super( null, new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
 		//super( new FlyCamAppState() );
 		
 		mSceneList = Arrays.asList( sSceneList );

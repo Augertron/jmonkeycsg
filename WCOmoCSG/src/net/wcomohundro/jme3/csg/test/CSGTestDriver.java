@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -35,6 +36,9 @@ import java.util.ArrayList;
 import jme3test.light.TestPointLightShadows;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.asset.AssetManager;
+import com.jme3.asset.AssetNotFoundException;
+import com.jme3.asset.NonCachingKey;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.renderer.Camera;
@@ -108,13 +112,28 @@ public class CSGTestDriver
     	String			pFileName
     ,	List<String>	pSeedValues
     ,	String[]		pDefaultValues
+    ,	AssetManager	pAssetManager
     ) {
     	if ( pSeedValues == null ) pSeedValues = new ArrayList();
     	int initialCount = pSeedValues.size();
     	
 		// Look for a given list
 		File aFile = new File( pFileName );
-		if ( aFile.exists() ) {
+		if ( pAssetManager != null ) try {
+			// Load as an asset
+	    	NonCachingKey aKey = new NonCachingKey( pFileName );
+	    	Object scenes = pAssetManager.loadAsset( aKey );
+	    	if ( scenes instanceof CSGTestSceneList ) {
+	    		pSeedValues.addAll( Arrays.asList( ((CSGTestSceneList)scenes).getSceneList() ) );
+	    	}
+	    } catch( AssetNotFoundException ex ) {
+	    	// Just punt any problems with locating an asset
+	    	
+	    } catch( Exception ex ) {
+	    	// Report on problems loading the asset
+			System.out.println( "*** Initialization failed: " + ex );
+	    	
+	    } else if ( aFile.exists() ) {
 			LineNumberReader aReader = null;
 			try {
 				aReader = new LineNumberReader( new FileReader( aFile ) );
