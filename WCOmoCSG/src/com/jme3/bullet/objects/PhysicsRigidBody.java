@@ -737,10 +737,8 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
         setKinematic(capsule.readBoolean("kinematic", false));
 
         setRestitution(capsule.readFloat("restitution", 0));
-        Vector3f angularFactor = (Vector3f) capsule.readSavable("angularFactor", Vector3f.NAN.clone());
-// WCO 20Nov2015 - it will never be ==
-//        if(angularFactor == Vector3f.NAN) {
-        if(angularFactor.equals( Vector3f.NAN )) {
+        Vector3f angularFactor = (Vector3f) capsule.readSavable("angularFactor", null);
+        if(angularFactor == null) {
             setAngularFactor(capsule.readFloat("angularFactor", 1));
         } else {
             setAngularFactor(angularFactor);
@@ -755,6 +753,7 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
         setPhysicsRotation((Matrix3f) capsule.readSavable("physicsRotation", new Matrix3f()));
 
 // WCO 21Nov2015 - do not overwrite an empty joints array with null
+// wco 03Feb2016 - synch with 5939
         joints = capsule.readSavableArrayList("joints", this.joints );
     }
 }
