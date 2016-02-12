@@ -530,6 +530,9 @@ to find the exact point of intersection, which you also might need for your prog
                     if ( diffDotNorm >= 0.0 ) {
                         // ray intersects triangle
                         return true;
+                    } else if ( -diffDotNorm < pTolerance ) {
+                    	// it is so close, just call it a hit
+                    	return true;
                     }
                 }
             }

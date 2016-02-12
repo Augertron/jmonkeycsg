@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -43,7 +44,6 @@ import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
-import net.wcomohundro.jme3.csg.test.CSGTestM;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -237,6 +237,7 @@ loop1:	for( int i = 0, j = sizeLimit; i < (j = mFaces.size()); i += 1 ) {
 			// Reset the face status for later classification
 			CSGFace face1 = mFaces.get( i );
 			face1.resetStatus();
+
 			if ( i < initialSize ) {
 				// First pass over the seed faces does a full scan over the other solid
 				// Anything after the initial set is built as a fragment of some other face
@@ -261,7 +262,7 @@ loop1:	for( int i = 0, j = sizeLimit; i < (j = mFaces.size()); i += 1 ) {
 					// The face itself tells us where to start in the secondary list
 loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; m += 1 ) {
 						CSGFace face2 = otherFaces.get( m );
-					
+			
 						// Check if object1 face and object2 face overlap at all 
 						CSGBounds otherFaceBound = face2.getBound();
 						if ( thisFaceBound.overlap( otherFaceBound, pEnvironment ) ) {
@@ -336,13 +337,14 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 	,	CSGEnvironmentIOB	pEnvironment
 	) throws CSGConstructionException {
 		// Match every face against the other object
-		for( CSGFace aFace : mFaces ) {
+		for( CSGFace aFace : mFaces ) {	
 			// Status on the vertices can make the classification really simple
 			if ( aFace.simpleClassify( pEnvironment ) == false ) {
 				// Nothing simple about it, so use the ray trace classification
 				CSGFaceStatus aStatus = aFace.rayTraceClassify( pOtherObject, pTempVars, pEnvironment );
 				if ( aStatus != null ) {
-					// Mark the vertices to reflect the face status
+					// Mark the vertices to reflect the face status, 
+					// which can speed up the classification of other faces that share a vertex.
 					aFace.v1().mark( aFace );
 					aFace.v2().mark( aFace );
 					aFace.v3().mark( aFace );
@@ -409,18 +411,20 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		}
 		if ( pEnvironment.mStructuralDebug ) {
 			// Confirm we have points on the expected plane
-			int startOnPlane = aFace.getPlane().pointPosition( startPos, pEnvironment.mEpsilonOnPlaneDbl );
-			int endOnPlane = aFace.getPlane().pointPosition( endPos, pEnvironment.mEpsilonOnPlaneDbl );
+			CSGPlaneDbl facePlane = aFace.getPlane();
+			int startOnPlane = facePlane.pointPosition( startPos, pEnvironment.mEpsilonOnPlaneDbl );
+			int endOnPlane = facePlane.pointPosition( endPos, pEnvironment.mEpsilonOnPlaneDbl );
 			if ( (startOnPlane != 0) || (endOnPlane != 0) ) {
 				pEnvironment.log( Level.WARNING, "CSGSolid: Invalid split points " + startOnPlane + endOnPlane );
 				
-				int faceStartOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
-				int faceEndOnPlane = aFace.getPlane().pointPosition( pFaceSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
-				int otherStartOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
-				int otherEndOnPlane = aFace.getPlane().pointPosition( pOtherSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
-
-				throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
-												,	"CSGSolid: Corrupted split" );
+				int faceStartOnPlane = facePlane.pointPosition( pFaceSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+				int faceEndOnPlane = facePlane.pointPosition( pFaceSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+				int otherStartOnPlane = facePlane.pointPosition( pOtherSegment.getStartPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+				int otherEndOnPlane = facePlane.pointPosition( pOtherSegment.getEndPosition(), pEnvironment.mEpsilonOnPlaneDbl );
+				if ( (startCollision != CSGFaceCollision.NONE) && (endCollision != CSGFaceCollision.NONE)) {
+					throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+														,	"CSGSolid: Corrupted split" );
+				}
 			}
 		}
 		// The collision points determine how we split

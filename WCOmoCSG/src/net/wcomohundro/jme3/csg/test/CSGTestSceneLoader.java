@@ -66,6 +66,7 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.SceneProcessor;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.shadow.AbstractShadowRenderer;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
@@ -114,6 +115,8 @@ public class CSGTestSceneLoader
 	/** Background loaded scene */
 	protected Spatial			mLoadedSpatial;
 	protected String			mNullSceneMsg;
+	/** The world 'context' we operate in, as determined by the last loaded scene */
+	protected Node				mWorldContext;
 
 
 	/** Args are expected to tell us what to load */
@@ -236,16 +239,29 @@ public class CSGTestSceneLoader
         }
     }
 
+    /** OVERRIDE: to attach any background loaded spatial into the current visuals */
     @Override
     public void update(
     ) {
     	super.update();
     	
     	if ( mLoadedSpatial != null ) {
-    		rootNode.attachChild( mLoadedSpatial );
-    		mLastScene = mLoadedSpatial;
+    		attachLoadedSpatial( mLoadedSpatial );
     		mLoadedSpatial = null;
     	}
+    }
+    /** FOR SUBCLASS OVERRIDE: connect the loaded scene */
+    protected void attachLoadedSpatial(
+    	Spatial		pSpatial
+    ) {
+		rootNode.attachChild( pSpatial );
+		mLastScene = pSpatial; 
+		
+		if ( pSpatial instanceof Node ) {
+			mWorldContext = (Node)pSpatial;
+		} else {
+			mWorldContext = rootNode;
+		}
     }
     
     /////////////////////// Implement Runnable ////////////////

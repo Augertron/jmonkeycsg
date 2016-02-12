@@ -67,11 +67,13 @@ import com.jme3.post.SceneProcessor;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.shadow.AbstractShadowRenderer;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.PointLightShadowFilter;
 import com.jme3.shadow.PointLightShadowRenderer;
 import com.jme3.texture.Texture;
+import com.jme3.util.BufferUtils;
 import com.jme3.font.BitmapText;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
@@ -99,6 +101,8 @@ public abstract class CSGTestSceneBase
 	protected Thread			mActionThread;
 	/** Active item for wireframe display */
 	protected Geometry			mWireframe;
+	/** Selected triangle for wireframe display */
+	protected Geometry			mSelectedTriangle;
     /** Prepared Physics Environment, using jBullet */
     protected BulletAppState    mPhysicsState;
 	/** Capture file path */
@@ -138,6 +142,12 @@ public abstract class CSGTestSceneBase
 	    
 	    // Establish the text display
 	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
+	    
+	    // Build the primitive selected triangle display
+	    mSelectedTriangle = new Geometry( "Selected" );
+	    Material triangleMat = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
+	    triangleMat.setColor( "Color", ColorRGBA.Gray );
+	    mSelectedTriangle.setMaterial( triangleMat );
 	    
 	    // Support Sceen shots
 	    if ( mCapturePath != null ) {
@@ -205,12 +215,33 @@ public abstract class CSGTestSceneBase
                 	
                 } else if ( pName.equals( "wireframe" ) ) {
                 	// Report on the click
-                	CollisionResult aCollision = resolveSelectedCollision();
-                	if ( aCollision != null ) {
+                	CollisionResults aCollisions = resolveSelectedCollision();
+                	if ( aCollisions != null ) {
+                		CollisionResult aCollision = aCollisions.getClosestCollision();
 	                	mWireframe = aCollision.getGeometry();
 	                	mWireframe.getMaterial().getAdditionalRenderState().setWireframe( true );
 	                	
 	                	Triangle aTriangle = aCollision.getTriangle( null );
+	                	Vector3f aNormal = aTriangle.getNormal();
+	                	
+	                	Mesh aMesh = new Mesh();
+	                    Vector3f[] vertices = new Vector3f[3];
+	                    Vector3f[] normals = new Vector3f[3];
+	                    int[] indexes = new int[] { 0, 1, 2 };
+	                    vertices[0] = aTriangle.get1();
+	                    vertices[1] = aTriangle.get2();
+	                    vertices[2] = aTriangle.get3();
+	                    normals[0] = aNormal;
+	                    normals[1] = aNormal;
+	                    normals[2] = aNormal;
+	                	aMesh.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
+	                	aMesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
+	                    //mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord)); 
+	                    aMesh.setBuffer(Type.Index, 3, BufferUtils.createIntBuffer(indexes));
+	                	mSelectedTriangle.setMesh( aMesh );
+	                	mSelectedTriangle.setLocalTransform( mWireframe.getLocalTransform() );
+	                	mWireframe.getParent().attachChild( mSelectedTriangle );
+	                	
 	                	StringBuilder aBuffer = new StringBuilder( 128 );
 	                	aBuffer.append( "(" )
 	                		.append( aTriangle.get1() ).append( ", " )
@@ -242,6 +273,7 @@ public abstract class CSGTestSceneBase
             		
             	} else if ( pName.equals( "wireframe" ) ) {
             		if ( mWireframe != null ) {
+            			mWireframe.getParent().detachChild( mSelectedTriangle );
                 		mWireframe.getMaterial().getAdditionalRenderState().setWireframe( false );            			
             			mWireframe = null;
             			
@@ -268,19 +300,24 @@ public abstract class CSGTestSceneBase
     /** What is the user looking at? */
     protected String resolveSelectedItem(
     ) {
-    	String itemName = "...nothing...";
-    	Geometry picked = resolveSelectedGeometry();
-    	if ( picked != null ) {
-    		itemName = picked.getName();
+    	StringBuilder aBuffer = null;
+    	CollisionResults aCollisions = resolveSelectedCollision();
+    	if ( aCollisions != null ) {
+    		aBuffer = new StringBuilder( 128 );
+    		for( CollisionResult aCollision : aCollisions ) {
+    			Geometry picked = aCollision.getGeometry();
+    			if ( aBuffer.length() > 0 ) aBuffer.append( "; " );
+    			aBuffer.append( picked.getName() );
+    		}
     	}
-    	return( itemName );
+    	return( (aBuffer == null) ? "...nothing..." : aBuffer.toString() );
     }
     protected Geometry resolveSelectedGeometry(
     ) {
-    	CollisionResult aCollision = resolveSelectedCollision();
-    	return( (aCollision == null) ? null : aCollision.getGeometry() );
+    	CollisionResults aCollision = resolveSelectedCollision();
+    	return( (aCollision == null) ? null : aCollision.getClosestCollision().getGeometry() );
     }
-    protected CollisionResult resolveSelectedCollision(
+    protected CollisionResults resolveSelectedCollision(
     ) {
     	CollisionResults results = new CollisionResults();
     	
@@ -297,7 +334,7 @@ public abstract class CSGTestSceneBase
         if ( mLastScene != null ) {
 	        mLastScene.collideWith( aRay, results );
 	        if ( results.size() > 0 ) {
-	        	return( results.getClosestCollision() );
+	        	return( results );
 	        }
         }
     	return( null );

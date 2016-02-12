@@ -64,6 +64,8 @@ import com.jme3.post.SceneProcessor;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.plugins.blender.math.Vector3d;
 import com.jme3.shadow.AbstractShadowRenderer;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.PointLightShadowFilter;
@@ -84,6 +86,34 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 public class CSGTestE 
 	extends CSGTestSceneLoader 
 {
+	private static List<Vector3d> sDebugFace = new ArrayList(); 
+	private static List<Vector3d> sDebugFace2 = new ArrayList(); 
+	private static List<Vector3d> sDebugFace3 = new ArrayList(); 
+	private static Vector3d sDebugVertex 
+		= new Vector3d( 0.3635494112968445, -0.8776854872703552, -9.949999809265137 );
+	static {
+		sDebugFace2.add( new Vector3d( 0.3635494, -0.8776855, -9.95 ) );
+		sDebugFace2.add( new Vector3d( 0.0, 0.0, -9.95 ) );
+		sDebugFace2.add( new Vector3d( 0.6717517, -0.6717512, -9.95 ) );
+		
+//		sDebugFace.add( new Vector3d( 0.3635494, -0.8776855, -9.95) );
+//		sDebugFace.add( new Vector3d( 0.0, 0.0, -9.95) );
+//		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.95) );
+		
+		sDebugFace.add( new Vector3d( -0.95, 0.0, -9.95 ) );
+		sDebugFace.add( new Vector3d( 0.95, 0.0, -9.95 ) );
+		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.95 ) );
+				
+		sDebugFace.add( new Vector3d( -0.949999988079071, 0.0, -9.949999809265137 ) );
+		sDebugFace.add( new Vector3d( 0.949999988079071, 0.0, -9.949999809265137 ) );
+		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.949999809265137 ) );
+		
+		// This one seems to corrupt the status of the other....
+		sDebugFace3.add( new Vector3d( 1.1328636695395744E-8, -0.949999988079071, -9.949999809265137) );
+		sDebugFace3.add( new Vector3d( 0.0, 0.0, -9.949999809265137) );
+		sDebugFace3.add( new Vector3d( 0.3635494112968445, -0.8776854872703552, -9.949999809265137) );
+	};
+	
 	public static void main(
 		String[] 	pArgs
 	) {

@@ -388,6 +388,8 @@ public class CSGEnvironment<ShapeProcessorT>
 	public boolean		mStructuralDebug;
 	/** Control flag to process in double precision */
 	public boolean 		mDoublePrecision;
+	/** Control flag to apply 'shape' transform directly to mesh before blending */
+	public boolean		mPreTransform;
 	
 	/** EPSILON - near to zero */
 	public double		mEpsilonNearZeroDbl;
@@ -427,12 +429,13 @@ public class CSGEnvironment<ShapeProcessorT>
 
 	,	boolean		pRationalizeValues
 	,	int			pEpsilonMagnitudeRange
+	
+	,	boolean		pPreTransform
 	) {
 		mShape = null;
 		mDoublePrecision = pDoublePrecision;
 		mShapeClass = pHandlerClass;
 		mStructuralDebug = DEBUG;
-		mRationalizeValues = pRationalizeValues;
 		
 		mEpsilonNearZeroDbl = pEpsilonNearZeroDbl;
 		mEpsilonOnPlaneDbl = pEpsilonOnPlaneDbl;		
@@ -445,7 +448,10 @@ public class CSGEnvironment<ShapeProcessorT>
 		mEpsilonMaxPointPositionFlt = pEpsilonMaxPointPosition;
 		mEpsilonMaxPointTextureFlt = pEpsilonMaxPointTexture;
 		
+		mRationalizeValues = pRationalizeValues;
 		mEpsilonMagnitudeRange = pEpsilonMagnitudeRange;
+		
+		mPreTransform = pPreTransform;
 	}
 	
 	/** Log a message */
@@ -490,6 +496,7 @@ public class CSGEnvironment<ShapeProcessorT>
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
 		aCapsule.write( mDoublePrecision, "doublePrecision", false );
 		aCapsule.write( mRationalizeValues, "rationalizeValues", false );
+		aCapsule.write( mPreTransform, "preTransform", true );
 		aCapsule.write( mStructuralDebug, "structuralDebug", false );
 	}
 	
@@ -500,6 +507,7 @@ public class CSGEnvironment<ShapeProcessorT>
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		mDoublePrecision = aCapsule.readBoolean( "doublePrecision", true );
 		mRationalizeValues = aCapsule.readBoolean( "rationalizeValues", false );
+		mPreTransform = aCapsule.readBoolean( "preTransform", true );
 		mStructuralDebug = aCapsule.readBoolean( "structuralDebug", DEBUG );
 	}
 

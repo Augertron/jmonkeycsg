@@ -73,10 +73,6 @@ public class CSGLinkNode
 	public static final String sCSGLinkNodeDate="$Date$";
 	
 	
-	/** A list of arbitrary elements that can be named and referenced during
-	 	XML load processing via id='somename' and ref='somename' */
-	protected Savable[]		mLibraryItems;
-	
 	/** Null constructor */
 	public CSGLinkNode(
 	) {
@@ -105,9 +101,6 @@ public class CSGLinkNode
     	AssetManager aManager = pImporter.getAssetManager();
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		
-		// Support arbitrary Library items, defined BEFORE we process the rest of the items
-		mLibraryItems = aCapsule.readSavableArray( "library", null );
-
 		// Let the super do its thing
 		super.read( pImporter );
 		

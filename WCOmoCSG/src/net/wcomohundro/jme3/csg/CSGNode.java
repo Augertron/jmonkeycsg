@@ -111,8 +111,11 @@ public class CSGNode
 	protected long						mRegenNS;
 	/** Processing environment to apply */
 	protected CSGEnvironment			mEnvironment;
+	/** A list of arbitrary elements that can be named and referenced during
+	 	XML load processing via id='somename' and ref='somename' */
+	protected Savable[]		mLibraryItems;
 
-	
+
 	/** Basic null constructor */
 	public CSGNode(
 	) {
@@ -342,6 +345,9 @@ public class CSGNode
         	// Incorporate this name AND define the standard as needed
         	mEnvironment = CSGEnvironment.resolveEnvironment( mEnvironment, this );
         }
+		// Support arbitrary Library items, defined BEFORE we process the rest of the items
+		mLibraryItems = aCapsule.readSavableArray( "library", null );
+
 		// Let the super do its thing
 		super.read( pImporter );
 		

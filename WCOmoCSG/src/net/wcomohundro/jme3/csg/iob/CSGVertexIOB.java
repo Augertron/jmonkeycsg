@@ -33,6 +33,7 @@ package net.wcomohundro.jme3.csg.iob;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.jme3.math.Quaternion;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -46,6 +47,7 @@ import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
+
 
 /** A Vertex in the IOB processing realm is assigned to a face, and is dynamically marked as its
  	IN/OUT/BOUNDARY condition is determined.
@@ -236,6 +238,34 @@ public class CSGVertexIOB
 			pNormal.set( xValue, yValue, zValue );
 		}
 		return( new CSGVertexIOB( pPosition, pNormal, pTextureCoordinate, pEnvironment ) );
+	}
+	
+	/** Apply a transform to this vertex to produce another */
+	public CSGVertexIOB applyTransform(
+		Transform		pTransform
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		Vector3d dPosition, dNormal;
+		
+		// Adjust the position
+		Vector3f aPosition = pTempVars.vect1.set( (float)mPosition.x, (float)mPosition.y, (float)mPosition.z );
+		aPosition = pTransform.transformVector( aPosition, aPosition );
+		dPosition = new Vector3d( aPosition.x, aPosition.y, aPosition.z );
+
+		// Only rotation affects the surface normal
+		Quaternion aRotation = pTransform.getRotation();
+		if ( !Quaternion.IDENTITY.equals( aRotation ) ) {
+			// Apply the rotation
+			Vector3f aNormal = pTempVars.vect2.set( (float)mNormal.x, (float)mNormal.y, (float)mNormal.z );
+			aNormal = aRotation.multLocal( aNormal );
+			dNormal = new Vector3d( aNormal.x, aNormal.y, aNormal.z );
+		} else {
+			// Use the unrotated normal
+			dNormal = mNormal;
+		}
+		CSGVertexIOB aVertex = new CSGVertexIOB( dPosition, dNormal, mTextureCoordinate, pEnvironment );
+		return( aVertex );
 	}
 
 	/** Accessor to the status */

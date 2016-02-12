@@ -114,9 +114,11 @@ public class CSGEnvironmentBSP
 		,	EPSILON_MAX_POINT_POSITION
 		,	EPSILON_MAX_POINT_TEXTURE
 		
-		,	false
-		,	EPSILON_MAGNITUDE_RANGE );
-
+		,	false						// IOB testing got bad results with this as true
+		,	EPSILON_MAGNITUDE_RANGE
+		
+		,	true 						// PreTransform was the initial approach
+		);
 		mBSPLimit = (mDoublePrecision) ? BSP_HIERARCHY_DEEP_LIMIT : BSP_HIERARCHY_LIMIT;
 				
 		mPolygonTriangleOnly = LIMIT_TO_TRIANGLES;

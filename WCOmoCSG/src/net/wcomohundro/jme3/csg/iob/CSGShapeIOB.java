@@ -194,6 +194,20 @@ public class CSGShapeIOB
 		}
 		return( this );
 	}
+	
+	/** Apply a transform to a resultant shape */
+	@Override
+	public void applyTransform(
+		Transform		pTransform
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		// Every face must be adjusted
+		for( CSGFace aFace : mFaces ) {
+			aFace.applyTransform( pTransform, pTempVars, pEnvironment );
+		}
+	}
+
 
 	/** Make a copy of this shape */
 	@Override
@@ -223,7 +237,7 @@ public class CSGShapeIOB
 		if ( mFaces.isEmpty() && ((aMesh = mShape.getMesh()) != null) ) {
 			// Generate the faces
 			mFaces = fromMesh( aMesh
-								, mShape.getCSGTransform()
+								, mShape.getCSGTransform( pEnvironment )
 								, pMaterialManager
 								, pLevelOfDetail
 								, pTempVars

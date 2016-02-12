@@ -119,21 +119,7 @@ public class CSGTestDriver
     	
 		// Look for a given list
 		File aFile = new File( pFileName );
-		if ( pAssetManager != null ) try {
-			// Load as an asset
-	    	NonCachingKey aKey = new NonCachingKey( pFileName );
-	    	Object scenes = pAssetManager.loadAsset( aKey );
-	    	if ( scenes instanceof CSGTestSceneList ) {
-	    		pSeedValues.addAll( Arrays.asList( ((CSGTestSceneList)scenes).getSceneList() ) );
-	    	}
-	    } catch( AssetNotFoundException ex ) {
-	    	// Just punt any problems with locating an asset
-	    	
-	    } catch( Exception ex ) {
-	    	// Report on problems loading the asset
-			System.out.println( "*** Initialization failed: " + ex );
-	    	
-	    } else if ( aFile.exists() ) {
+		if ( aFile.exists() ) {
 			LineNumberReader aReader = null;
 			try {
 				aReader = new LineNumberReader( new FileReader( aFile ) );
@@ -151,7 +137,21 @@ public class CSGTestDriver
 			} finally {
 				if ( aReader != null ) try { aReader.close(); } catch( Exception ignore ) {}
 			}
-		}
+		} else if ( pAssetManager != null ) try {
+			// Load as an asset
+	    	NonCachingKey aKey = new NonCachingKey( pFileName );
+	    	Object scenes = pAssetManager.loadAsset( aKey );
+	    	if ( scenes instanceof CSGTestSceneList ) {
+	    		pSeedValues.addAll( Arrays.asList( ((CSGTestSceneList)scenes).getSceneList() ) );
+	    	}
+	    } catch( AssetNotFoundException ex ) {
+	    	// Just punt any problems with locating an asset
+	    	
+	    } catch( Exception ex ) {
+	    	// Report on problems loading the asset
+			System.out.println( "*** Initialization failed: " + ex );
+	    	
+	    } else 
 		// If nothing was loaded, then revert back to canned list
 		if ( (pSeedValues.size() == initialCount) && (pDefaultValues != null) ) {
 			Collections.addAll( pSeedValues, pDefaultValues );

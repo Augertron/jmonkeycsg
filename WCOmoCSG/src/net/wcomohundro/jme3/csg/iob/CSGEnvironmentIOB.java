@@ -49,9 +49,13 @@ public class CSGEnvironmentIOB
 	// Tolerance to decide if a given point in 'on' a plane
 	public static final float EPSILON_ONPLANE_FLT = 1.0e-5f;
 	public static final double EPSILON_ONPLANE_DBL = 1.0e-8;
+
 	// Tolerance to determine if two points are close enough to be considered the same point
 	public static final float EPSILON_BETWEEN_POINTS_FLT = 1.0e-5f;
-	public static final double EPSILON_BETWEEN_POINTS_DBL = FastMath.FLT_EPSILON;
+	public static final double EPSILON_BETWEEN_POINTS_DBL = 2.0e-7; // FastMath.FLT_EPSILON;
+	// NOTE that if you use the FastMath value, then a value you pull from a float Mesh 
+	//		will NOT match its corresponding double in a vertex
+	
 	// Tolerance if a given value is near enough to zero to be treated as zero
 	public static final float EPSILON_NEAR_ZERO_FLT = 1.0e-7f;
 	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-9;
@@ -93,8 +97,10 @@ public class CSGEnvironmentIOB
 		,	EPSILON_MAX_POINT_TEXTURE
 		
 		,	false						// I got bad results with this set to true
-		,	EPSILON_MAGNITUDE_RANGE );
+		,	EPSILON_MAGNITUDE_RANGE
 		
+		,	true 						// PreTransform was the initial approach
+		);
 		mRemoveUnsplitFace = REMOVE_UNSPLIT_FACE;
 	}
 	

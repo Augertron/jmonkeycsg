@@ -155,6 +155,12 @@ public class CSGShape
 		/** Refresh this handler and ensure it is ready for blending */
 		public CSGShapeProcessor refresh(
 		);
+		/** Apply a transform to a resultant shape */
+		public void applyTransform(
+			Transform		pTransform
+		,	CSGTempVars		pTempVars
+		,	CSGEnvironment	pEnvironment
+		);
 
 		/** Make a copy */
 		public CSGShapeProcessor clone(
@@ -564,6 +570,7 @@ public class CSGShape
 	
 	/** Accessor to the transform to apply to the underlying Mesh */
 	public Transform getCSGTransform(
+		CSGEnvironment		pEnvironment
 	) {
 		// The local transform applies for sure
 		Transform aTransform = this.getLocalTransform();
@@ -572,8 +579,8 @@ public class CSGShape
 			aTransform = null;
 		}
 		// If we are a subshape of a SHAPE, then the parent's transform applies as well
-		if ( mParentElement instanceof CSGShape ) {
-			Transform parentTransform = ((CSGShape)mParentElement).getCSGTransform();
+		if ( pEnvironment.mPreTransform && (mParentElement instanceof CSGShape) ) {
+			Transform parentTransform = ((CSGShape)mParentElement).getCSGTransform( pEnvironment );
 			if ( parentTransform != null ) {
 				// The parent transform must be incorporated
 				if ( aTransform == null ) {
@@ -951,6 +958,13 @@ public class CSGShape
 			if ( this.getName() != null ) {
 				// Apply the explicit name of 'this' shape to the resultant blend
 				aProduct.setName( this.getName() );
+			}
+			// Is there a per shape transform to apply?
+			Transform shapeTransform = this.getCSGTransform( pEnvironment );
+			if ( !pEnvironment.mPreTransform && (shapeTransform != null) ) {
+				// If we did NOT apply the transform directly to the mesh, we must
+				// apply the shape transform now.
+				aProduct.getHandler( pEnvironment ).applyTransform( shapeTransform, pTempVars, pEnvironment );
 			}
 			return( aProduct );
 			

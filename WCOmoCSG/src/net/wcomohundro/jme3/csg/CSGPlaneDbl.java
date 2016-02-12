@@ -42,7 +42,10 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /**  Constructive Solid Geometry (CSG)
@@ -58,10 +61,8 @@ public class CSGPlaneDbl
 	public static final String sCSGPlaneDblDate="$Date$";
 
 	/** Factory method to produce a plane from a minimal set of points 
-	 * 
-	 	TempVars Usage:
-	 		vect4
-	 		vect5
+	
+	 	TempVars Usage: vectd4, vectd5
 	 */
 	public static CSGPlaneDbl fromPoints(
 		Vector3d		pA
@@ -87,16 +88,20 @@ public class CSGPlaneDbl
 			// Not a valid normal
 			return( null );
 		}
-		double normalDot = aNormal.dot( pA );
-		CSGPlaneDbl aPlane = new CSGPlaneDbl( aNormal, pA, normalDot, -1, pEnvironment );
+		double normalDot = aNormal.dot( pA ) + aNormal.dot( pB ) + aNormal.dot( pC );
+		CSGPlaneDbl aPlane = new CSGPlaneDbl( aNormal, pA, normalDot / 3.0, -1, pEnvironment );
+		
 		if ( pEnvironment.mStructuralDebug ) {
 			// NOTE that the rationalization of the normal could make the points look off the plane
-			//		(I wonder if I should compute normalDot before rationalizeVector???)
 			double aDistance = aPlane.pointDistance( pA );
 			double bDistance = aPlane.pointDistance( pB );
 			double cDistance = aPlane.pointDistance( pC );
-			if ( aDistance + bDistance + cDistance > pEnvironment.mEpsilonOnPlaneDbl ) {
-				pEnvironment.log( Level.SEVERE, "CSGPlaneDbl, points NOT on plane: " + aPlane );				
+			if ( (aDistance > pEnvironment.mEpsilonOnPlaneDbl)
+			||   (bDistance > pEnvironment.mEpsilonOnPlaneDbl)
+			||   (cDistance> pEnvironment.mEpsilonOnPlaneDbl) ) {
+				pEnvironment.log( Level.SEVERE
+				, 	"CSGPlaneDbl, points NOT on plane: " + aPlane
+					+ ": " + aDistance + ", " + bDistance + ", " + cDistance );				
 			}
 		}
 		return( aPlane );
@@ -162,6 +167,11 @@ public class CSGPlaneDbl
 	,	int				pMarkValue
 	,	CSGEnvironment	pEnvironment
 	) {
+		mSurfaceNormal = pNormal;
+		mPointOnPlane = pPointOnPlane;
+		mDot = pDot;
+		mMark = pMarkValue;
+		
 		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
 			// Remember that NaN always returns false for any comparison, so structure the logic accordingly
 			double normalLength = pNormal.length();
@@ -174,14 +184,15 @@ public class CSGPlaneDbl
 				pEnvironment.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
 				pDot =  Double.NaN;
 			}
+			double aDistance = this.pointDistance( pPointOnPlane );
+			if ( aDistance > pEnvironment.mEpsilonOnPlaneDbl ) {
+				pEnvironment.log( Level.SEVERE, "CSGPlaneDbl, point NOT on plane: " + this );				
+			}
 		}
-		mSurfaceNormal = pNormal;
-		mPointOnPlane = pPointOnPlane;
-		mDot = pDot;
-		mMark = pMarkValue;
 	}
 	
 	/** Return a copy */
+	@Override
 	public CSGPlaneDbl clone(
 		boolean		pFlipIt
 	) {
@@ -190,6 +201,33 @@ public class CSGPlaneDbl
 			return( new CSGPlaneDbl( mSurfaceNormal.negate(), mPointOnPlane, -mDot, -1, null ) );
 		} else {
 			// Standard use of this immutable copy
+			return( this );
+		}
+	}
+	
+	/** Return a plane that has been transformed */
+	public CSGPlaneDbl applyTransform(
+		Transform		pTransform
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		// Only the normal is adjusted due to rotation
+		Quaternion aRotation = pTransform.getRotation();
+		if ( !Quaternion.IDENTITY.equals( aRotation ) ) {
+			// Adjust the normal
+			Vector3d dNormal = this.getNormal();
+			Vector3f aNormal = pTempVars.vect3.set( (float)dNormal.x, (float)dNormal.y, (float)dNormal.z );
+			aNormal = aRotation.multLocal( aNormal );
+			Vector3d newNormal = new Vector3d( aNormal.x, aNormal.y, aNormal.z );
+			
+			// Adjust the point
+			Vector3f aPosition = pTempVars.vect4.set( (float)mPointOnPlane.x, (float)mPointOnPlane.y, (float)mPointOnPlane.z );
+			aPosition = pTransform.transformVector( aPosition, aPosition );
+			Vector3d newPosition = new Vector3d( aPosition.x, aPosition.y, aPosition.z );
+
+			return( new CSGPlaneDbl( newNormal, newPosition, newNormal.dot( newPosition ), -1, pEnvironment ) );
+		} else {
+			// The plane does not move
 			return( this );
 		}
 	}

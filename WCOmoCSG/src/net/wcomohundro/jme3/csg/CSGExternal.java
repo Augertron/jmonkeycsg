@@ -68,12 +68,19 @@ public class CSGExternal
     	if ( modelName != null ) try {
     		// Load the given model
         	Spatial aSpatial = pImporter.getAssetManager().loadModel( modelName );
-        	this.mesh = ((Geometry)aSpatial).getMesh();
-        	
-        	// We are valid if we have a mesh
-        	if ( this.mesh == null ) {
+        	if ( aSpatial instanceof Geometry ) {
+	        	this.mesh = ((Geometry)aSpatial).getMesh();
+	        	
+	        	// We are valid if we have a mesh
+	        	if ( this.mesh == null ) {
+	        		setError( new CSGConstructionException( CSGErrorCode.EMPTY_SHAPE
+	        				,	"CSGExternal.read - model has no mesh: "  + modelName
+	        				,	this ) );
+	        	}
+        	} else {
+        		// Not a valid shape
         		setError( new CSGConstructionException( CSGErrorCode.EMPTY_SHAPE
-        				,	"CSGExternal.read - model has no mesh: "  + modelName
+        				,	"CSGExternal.read - model not a Geometry: "  + modelName
         				,	this ) );
         	}
     	} catch( Exception ex ) {

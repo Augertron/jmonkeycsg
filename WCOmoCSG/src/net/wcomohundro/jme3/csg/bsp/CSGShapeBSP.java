@@ -58,6 +58,7 @@ import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB;
+import net.wcomohundro.jme3.csg.iob.CSGFace;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -375,6 +376,16 @@ public class CSGShapeBSP
 		mPolygons.clear();
 		return( this );
 	}
+	
+	/** Apply a transform to a resultant shape */
+	@Override
+	public void applyTransform(
+		Transform		pTransform
+	,	CSGTempVars		pTempVars
+	,	CSGEnvironment	pEnvironment
+	) {
+		throw new IllegalStateException( ".applyTransform() not yet implemented" );
+	}
 
 	/** Make a copy of this shape */
 	@Override
@@ -395,7 +406,7 @@ public class CSGShapeBSP
 		if ( mPolygons.isEmpty() && (mShape.getMesh() != null) ) {
 			// Generate the polygons
 			mPolygons = fromMesh( mShape.getMesh()
-									, mShape.getCSGTransform()
+									, mShape.getCSGTransform( pEnvironment )
 									, pMaterialManager
 									, pLevelOfDetail
 									, pTempVars
