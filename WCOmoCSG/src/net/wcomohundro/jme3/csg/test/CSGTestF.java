@@ -84,13 +84,11 @@ public class CSGTestF
 
 	/** List of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
-		null
-
 //	,	"Models/CSGLoadSimpleUnit.xml"
 //	,	"Models/CSGLoadSimple.xml"
 //	,	"Models/CSGLoadCSGCubeCylinder.xml"
 //	,	"Models/CSGLoadCSGCubeCube.xml"
-	,	"Models/CSGLoadNonMultiTexture.xml"
+		"Models/CSGLoadNonMultiTexture.xml"
 	,	"Models/CSGLoadLightedCorridor.xml"
 	,	"Models/CSGLoadMultiTexture.xml"
 
@@ -98,8 +96,16 @@ public class CSGTestF
 
 	public CSGTestF(
 	) {
-		super( null, new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		mSceneList = Arrays.asList( sSceneList );
+		this( null );
+	}
+	public CSGTestF(
+		String[]	pArgs
+	) {
+		super( pArgs, new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		if ( (pArgs == null) || (pArgs.length == 0) ) {
+			mInitArgs = sSceneList;
+		}
+		mSceneList.add( null );		// Start with a blank
 		mNullSceneMsg = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> to shoot, <ESC> to exit";
 	}
 	

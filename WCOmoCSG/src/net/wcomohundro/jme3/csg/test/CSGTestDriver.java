@@ -24,18 +24,45 @@
 **/
 package net.wcomohundro.jme3.csg.test;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import jme3test.light.TestPointLightShadows;
 
+import com.jme3.app.SettingsDialog;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.SettingsDialog.SelectionListener;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.asset.NonCachingKey;
@@ -43,12 +70,17 @@ import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.plugins.blender.math.Vector3d;
+import com.jme3.system.AppSettings;
+import com.jme3.system.JmeSystem;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
+/** A simple application driver that can post a dialog */
 public class CSGTestDriver 
+	extends JFrame
+	implements Runnable
 {
 	public static void main(
 		String[] args
@@ -58,16 +90,47 @@ public class CSGTestDriver
 					+ "/" + System.getProperty( "java.util.logging.config.class" ) );
 		CSGVersion.reportVersion();
 		
-//		Vector3d aVector = new Vector3d( -0.5, -4.371139e-8, 0 );
-//		CSGEnvironment.rationalizeVector( aVector, 20 );
-		
+		// Display the standard JME startup dialog
+        AppSettings aSettings = new AppSettings( true );
+        if ( !JmeSystem.showSettingsDialog( aSettings, true ) ) {
+        	// User cancel
+            return;
+        }
+        // Show the AppPicker dialog
+        CSGTestDriverAppItem[] appChoices = new CSGTestDriverAppItem[] {
+        	new CSGTestDriverAppItem( "Simple Shapes", CSGTestE.class, "Tests/CSGSimpleShapes.xml" )
+        ,	new CSGTestDriverAppItem( "LevelOfDetail", CSGTestG.class, "Models/CSGLoadLOD.xml" )
+        ,	new CSGTestDriverAppItem( "Blended Shapes", CSGTestE.class, "Tests/CSGBlendedShapes.xml" )
+        ,	new CSGTestDriverAppItem( "Physics", CSGTestF.class, "Tests/CSGPhysics.xml" )
+        ,	new CSGTestDriverAppItem( "Floors", CSGTestE.class, "Models/CSGLoadFloorBumpySurface.xml" )
+        ,	new CSGTestDriverAppItem( "Animation", CSGTestJ.class )
+        ,	new CSGTestDriverAppItem( "Progressive (mouse/cheese)", CSGTestM.class )
+        ,	new CSGTestDriverAppItem( "Progressive (+/- cylinder)", CSGTestL.class )
+        };
+        CSGTestDriverAppItem whichApp = showAppPickerDialog( appChoices );
+        if ( whichApp == null ) {
+        	// User cancel
+        	return;
+        }
+        // Construct the application
 	    SimpleApplication app;
+	    try {
+	        if ( whichApp.mApplicationArgs == null ) {
+	        	app = (SimpleApplication)whichApp.mApplicationClass.newInstance();
+	        } else {
+	        	Constructor aConstructor 
+	        		= whichApp.mApplicationClass.getConstructor( new Class[] { String[].class } );
+	        	app = (SimpleApplication)aConstructor.newInstance( new Object[] { whichApp.mApplicationArgs } );
+	        }
+		} catch( Exception ex ) {
+			return;
+		}
 	    
 	    //app = new CSGTestA();			// Cube +/- sphere direct calls, no import
 	    //app = new CSGTestB();			// Cube +/- cylinder direct calls, no import
 	    //app = new CSGTestC();			// Teapot +/- cube direct calls, no import
 	    //app = new CSGTestD();			// Export definitions
-	    app = new CSGTestE( args );		// Cycle through imports listed in CSGTestE.txt
+	    //app = new CSGTestE( args );		// Cycle through imports listed in CSGTestE.txt
 	    //app = new CSGTestF();			// Cycle through canned import list and apply physics
 	    //app = new CSGTestG();			// Level Of Detail
 	    //app = new CSGTestH();			// Test case for support ticket and raw shapes
@@ -77,7 +140,9 @@ public class CSGTestDriver
 	    //app = new CSGTestL();			// Progressive add/subtract cylinder from prior
 	    //app = new CGGTestM();			// Progressive spherical mouse eating cube of cheese
 	        
-	    //app = new TestPointLightShadows();
+	    // Apply the settings selected above
+	    app.setSettings( aSettings );
+	    app.setShowSettings( false );
 	    app.start();
 	}
 
@@ -143,6 +208,9 @@ public class CSGTestDriver
 	    	Object scenes = pAssetManager.loadAsset( aKey );
 	    	if ( scenes instanceof CSGTestSceneList ) {
 	    		pSeedValues.addAll( Arrays.asList( ((CSGTestSceneList)scenes).getSceneList() ) );
+	    	} else {
+	    		// Treat as a single file reference
+	    		pSeedValues.add( pFileName );
 	    	}
 	    } catch( AssetNotFoundException ex ) {
 	    	// Just punt any problems with locating an asset
@@ -158,4 +226,202 @@ public class CSGTestDriver
 		}
     	return( pSeedValues );
     }
+    
+    /** Post the application picker dialog */
+    protected static CSGTestDriverAppItem showAppPickerDialog(
+    	CSGTestDriverAppItem[]	pAppChoices
+    ) {
+        // Activate the dialog
+        CSGTestDriver aDriver = new CSGTestDriver( pAppChoices );
+        SwingUtilities.invokeLater( aDriver );
+        
+        // Wait for the dialog to complete
+        synchronized( aDriver ) {
+            while( aDriver.mIsActive ) try {
+            	aDriver.wait();
+            } catch ( InterruptedException ex ) {
+            }
+        }
+        return( (aDriver.mRunApplication) ? aDriver.mSelectedApp : null );
+    }
+    
+    /** Active dialog flag */
+    protected boolean				mIsActive;
+    /** Continuation flag */
+    protected boolean				mRunApplication;
+    /** The application to run */
+    protected CSGTestDriverAppItem	mSelectedApp;
+    /** Application picker dropdown */
+    protected JComboBox 			mAppPickerCombo;
+    /** Resource bundle */
+    protected ResourceBundle		mResourceBundle;
+
+
+    /** Simple initialization of the frame */
+    public CSGTestDriver(
+    	CSGTestDriverAppItem[]	pAppChoices
+    ) {
+    	// We are active until the dialog closes 
+    	mIsActive = true;
+    	
+    	// Borrow the standard SettingsDialog resources
+    	mResourceBundle = ResourceBundle.getBundle( "com.jme3.app/SettingsDialog" );
+    	
+    	// Some basic layout
+        setAlwaysOnTop( true );
+        setResizable( false );
+        GridBagConstraints gbc;
+        
+        JPanel mainPanel = new JPanel( new GridBagLayout() );
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch( Exception ex ) {
+            throw new IllegalStateException( "Could not set native look and feel." );
+        }
+        setTitle( "CSGTestDriver" );
+
+        // Monitor the window closing
+        addWindowListener( new WindowAdapter() {
+            @Override
+            public void windowClosing( WindowEvent pEvent ) {
+                completeUserAction( false );
+                dispose();
+            }
+        });
+        
+        // Monitor key strokes
+        KeyListener aListener = new KeyAdapter() {
+            @Override
+            public void keyPressed( KeyEvent pEvent ) {
+                if ( pEvent.getKeyCode() == KeyEvent.VK_ENTER ) {
+                    completeUserAction( true );
+                    dispose();
+                }
+                else if ( pEvent.getKeyCode() == KeyEvent.VK_ESCAPE ) {
+                    completeUserAction( false );
+                    dispose();
+                }
+            }
+        };
+        // The pick list
+        mAppPickerCombo = new JComboBox();
+        mAppPickerCombo.setModel( new DefaultComboBoxModel( pAppChoices ) );
+        mAppPickerCombo.setSelectedItem( pAppChoices[0] );
+        mAppPickerCombo.addKeyListener( aListener );
+        
+        // Picklist layout
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        mainPanel.add( new JLabel( "Application" ), gbc);
+        gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 16, 4, 4);
+        gbc.gridx = 2;
+        gbc.gridwidth = 2;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        mainPanel.add( mAppPickerCombo, gbc);
+
+        // Some standard buttons
+        JButton ok = new JButton( mResourceBundle.getString( "button.ok" ) );               
+        JButton cancel = new JButton( mResourceBundle.getString( "button.cancel" ) );
+        
+        ok.addActionListener( new ActionListener() {
+        	@Override
+            public void actionPerformed( ActionEvent pEvent ) {
+                completeUserAction( true );
+                dispose();
+            }
+        });
+
+        cancel.addActionListener( new ActionListener() {
+        	@Override
+            public void actionPerformed( ActionEvent pEvent ) {
+                completeUserAction( false );
+                dispose();
+            }
+        });
+        // Button layout
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.EAST;
+        mainPanel.add( ok, gbc ); 
+        
+        gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 16, 4, 4);
+        gbc.gridx = 2;
+        gbc.gridwidth = 2;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.WEST;
+        mainPanel.add( cancel, gbc );
+        
+        // Master panel control
+        this.getContentPane().add( mainPanel );
+        pack();
+        mainPanel.getRootPane().setDefaultButton(ok);
+    }
+    
+    /** Manage the selection */
+    protected synchronized void completeUserAction(
+    	boolean		pRunApplication
+    ) {
+    	mRunApplication = pRunApplication;
+        mIsActive = false;
+        
+        if ( mRunApplication ) {
+        	mSelectedApp = (CSGTestDriverAppItem)mAppPickerCombo.getSelectedItem();
+        }
+        this.notifyAll();
+    }
+    
+    /** Background activation */
+    @Override
+    public void run(
+    ) {
+        synchronized( this ) {
+        	// Show the dialog
+            setLocationRelativeTo( null );
+            setVisible( true );       
+            toFront();
+        }
+    }
+
+}
+/** Helper class that associates a class with a display name */
+class CSGTestDriverAppItem
+{
+	String		mDisplayItem;
+	Class		mApplicationClass;
+	String[]	mApplicationArgs;
+	
+	CSGTestDriverAppItem( 
+		String 		pName
+	, 	Class 		pClass
+	) {
+		this( pName, pClass, (String[])null );
+	}
+	CSGTestDriverAppItem( 
+		String 		pName
+	, 	Class 		pClass
+	,	String		pArg
+	) { 
+		this( pName, pClass, new String[1] );
+		mApplicationArgs[0] = pArg;
+	}
+	CSGTestDriverAppItem( 
+		String 		pName
+	, 	Class 		pClass
+	,	String[]	pArgs
+	) { 
+		mDisplayItem = pName; 
+		mApplicationClass = pClass; 
+		mApplicationArgs = pArgs;
+	}
+	
+	@Override
+	public String toString() { return mDisplayItem; }
 }

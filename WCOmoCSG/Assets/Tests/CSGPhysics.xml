@@ -1,0 +1,8 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- Blended shapes -->
+<net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+	<scenes>
+		<String value='Models/CSGLoadLightedCorridor.xml'/>
+	</scenes>
+</net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+

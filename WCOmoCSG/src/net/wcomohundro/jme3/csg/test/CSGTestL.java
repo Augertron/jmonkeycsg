@@ -96,7 +96,7 @@ public class CSGTestL
     ) {
 		super.commonApplicationInit();    
 		
-		this.mPostText.push( "<SPC> to add a cylinder, QWASDZ to move, <ESC> to exit" );
+		this.mPostText.push( "<SPC> to add a cylinder, <BKSPC> to remove, QWASDZ to move, <ESC> to exit" );
 		this.mRefreshText = true;
 
 	    Mesh mesh1 = new Box( 1, 1, 1 );

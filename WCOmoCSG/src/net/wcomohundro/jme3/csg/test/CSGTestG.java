@@ -83,16 +83,21 @@ public class CSGTestG
 
 	/** List of input scenes to cycle through */
 	protected static String[] sSceneList = new String[] {
-		null
-
-	,	"Models/CSGLoadLOD.xml"
-
+		"Models/CSGLoadLOD.xml"
 	};
 
 	public CSGTestG(
 	) {
-		super( null, new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		mSceneList = Arrays.asList( sSceneList );
+		this( null );
+	}
+	public CSGTestG(
+		String[]	pArgs
+	) {
+		super( pArgs, new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
+		if ( (pArgs == null) || (pArgs.length == 0) ) {
+			mInitArgs = sSceneList;
+		}
+		mSceneList.add( null );		// Start with a blank
 		mNullSceneMsg = "<ENTER> to cycle through the scenes, QWASDZ to move, <SPC> for LOD, <ESC> to exit";
 	}
 	   

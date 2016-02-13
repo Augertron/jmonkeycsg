@@ -1,0 +1,12 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- Blended shapes -->
+<net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+	<scenes>
+		<String value='Models/CSGLoadCSGNormalTests.xml'/>
+		<String value='Models/CSGLoadNonMultiTexture.xml'/>
+		<String value='Models/CSGLoadMultiTexture.xml'/>
+		<String value='Models/CSGLoadLightedCorridor.xml'/>
+		<String value='Models/CSGLoadCSGSamples.xml'/>
+	</scenes>
+</net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+
