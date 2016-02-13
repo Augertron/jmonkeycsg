@@ -135,10 +135,11 @@ public abstract class CSGTestSceneBase
     protected void commonApplicationInit(
     ) {
 		// Free the mouse up for debug support
-	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
-	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
-	    
-        cam.setFrustumPerspective( 45f, (float)cam.getWidth() / cam.getHeight(), 0.1f, 250f);
+    	if ( this.flyCam != null ) {
+		    this.flyCam.setMoveSpeed( 20 );			// Move a bit faster
+		    this.flyCam.setDragToRotate( true );	// Only use the mouse while it is clicked
+    	}
+        this.cam.setFrustumPerspective( 45f, (float)cam.getWidth() / cam.getHeight(), 0.1f, 250f);
 	    
 	    // Establish the text display
 	    mTextDisplay = CSGTestDriver.defineTextDisplay( this, this.guiFont );
