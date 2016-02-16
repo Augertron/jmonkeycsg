@@ -29,6 +29,9 @@
 **/
 package net.wcomohundro.jme3.csg;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
+
+import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.Light;
 import com.jme3.light.LightList;
@@ -75,7 +78,8 @@ public class CSGLightControl
 				pNode.addLight( aLight );
 			}
     		// Match the light to this node so that transforms apply
-			if ( pLightControl != null ) {
+			// NOTE that Ambient lights are not affected by any control and can be skipped
+			if ( !(aLight instanceof AmbientLight) ) {
 				if ( pLightControl instanceof CSGLightControl ) {
 					CSGLightControl aControl = ((CSGLightControl)pLightControl).clone( aLight );
 					aControl.setLocalTransform( pLocalTransform );
@@ -90,24 +94,63 @@ public class CSGLightControl
 		}
 	}
 	
+	/** Light.clone() does not really work very well--- so here is a hack */
+	public static Light cloneLight(
+		Light		pLight
+	) {
+		Light aCopy;
+		if ( pLight instanceof SpotLight ) {
+			SpotLight aSpot = (SpotLight)pLight;
+			aCopy = new SpotLight( aSpot.getPosition()
+									, aSpot.getDirection()
+									, aSpot.getSpotRange()
+									, aSpot.getColor()
+									, aSpot.getSpotInnerAngle()
+									, aSpot.getSpotOuterAngle() );
+		} else if ( pLight instanceof PointLight ) {
+			PointLight aSpot = (PointLight)pLight;
+			aCopy = new PointLight( aSpot.getPosition()
+									, aSpot.getColor()
+									, aSpot.getRadius() );
+		} else if ( pLight instanceof DirectionalLight ) {
+			DirectionalLight aSpot = (DirectionalLight)pLight;
+			aCopy = new DirectionalLight( aSpot.getDirection()
+									, aSpot.getColor() );			
+		} else if ( pLight instanceof AmbientLight ) {
+			AmbientLight aSpot = (AmbientLight)pLight;
+			aCopy = new AmbientLight( aSpot.getColor() );						
+		} else {
+			aCopy = null;
+		}
+		return( aCopy );
+	}
+	
 	/** The Light that is local to the Spatial */
     protected Light		mLight;
-    /** Local transfrom to apply */
+    /** Local transform to apply */
     protected Transform	mLocalTransform;
     /** The original local position of the light */
     protected Vector3f	mOriginalPosition;
     /** The original local direction of the light */
     protected Vector3f	mOriginalDirection;
+    /** What was the last transform we applied */
+    protected Transform	mLastWorldTransform;
+    /** Control flag to adjust the light only on the intial position */
+    protected boolean	mInitialPositionOnly;
+    
 
     /** Null constructor where the light must be defined later */
     public CSGLightControl(
     ) {
+    	this( null, true );
     }
     /** Standard constructor that knows its light */
     public CSGLightControl(
     	Light	pLight
+    ,	boolean	pInitialPositionOnly
     ) {
         this.mLight = pLight;
+        this.mInitialPositionOnly = pInitialPositionOnly;
     }
     
     /** Clone this control for a given light */
@@ -118,6 +161,22 @@ public class CSGLightControl
     	aCopy.mLight = pLight;
     	return( aCopy );
     }
+    @Override
+    public Control cloneForSpatial(
+    	Spatial		pSpatial
+    ) {
+    	CSGLightControl aCopy = (CSGLightControl)super.cloneForSpatial( pSpatial );
+    	if ( pSpatial instanceof CSGElement ) {
+    		// Replace any local light we are controlling with an appropriate clone
+    		aCopy.mLight = ((CSGElement)pSpatial).cloneLocalLight( aCopy.mLight );
+    	}
+    	return( aCopy );
+    }
+    
+    /** Accessor to the InitialPositionOnly control flag */
+    public boolean isInitialPostitionOnly() { return mInitialPositionOnly; }
+    public void setInitialPositionOnly( boolean pFlag ) { mInitialPositionOnly = pFlag; }
+    
     
     /** Accessor to the transform */
     public Transform getLocalTransform() { return mLocalTransform; }
@@ -138,6 +197,13 @@ public class CSGLightControl
         if ( (this.spatial != null) && (this.mLight != null) ) {
         	// A Transform affects every kind of light, which we must define in World coordinates
         	Transform aTransform = spatial.getWorldTransform();
+        	if ( (mLastWorldTransform != null) && mLastWorldTransform.equals( aTransform ) ) {
+        		// Nothing moved
+        		return;
+        	} else {
+        		// Remember where we were
+        		mLastWorldTransform = aTransform.clone();
+        	}
         	if ( mLocalTransform != null ) {
         		aTransform = mLocalTransform.clone().combineWithParent( aTransform );
         	}
@@ -171,6 +237,13 @@ public class CSGLightControl
 	        		mOriginalDirection = aLight.getDirection().clone();
 	        	}
 	            aLight.setDirection( aTransform.getRotation().mult( mOriginalDirection ) );
+	        }
+	        if ( mInitialPositionOnly ) {
+	        	// This control is no longer needed
+	        	// @todo - eliminate the control entirely
+	        	this.setEnabled( false );
+	        	
+	        	//this.spatial.removeControl( this );
 	        }
         }
     }

@@ -47,6 +47,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.light.Light;
+import com.jme3.light.LightList;
 import com.jme3.material.MatParamTexture;
 import com.jme3.material.Material;
 import com.jme3.math.Transform;
@@ -122,6 +123,10 @@ public class CSGGeometry
 	protected boolean					mDeferSceneChanges;
 	/** How long did it take to regenerate this shape (nanoseconds) */
 	protected long						mRegenNS;
+	/** A list of arbitrary elements that can be named and referenced during
+	 	XML load processing via id='somename' and ref='somename',
+	 	and subsequently referenced programmatically via its inherent name. */
+	protected Map<String,Savable>		mLibraryItems;
 	/** Control flag for the special 'debug' mode */
 	protected boolean					mDebugMesh;
 	
@@ -136,6 +141,9 @@ public class CSGGeometry
 		String	pName
 	) {
 		super( pName );
+		
+		// Empty library until explicitly set
+		mLibraryItems = Collections.EMPTY_MAP;
 	}
 	/** Constructor on a name and given mesh */
 	public CSGGeometry(
@@ -144,8 +152,11 @@ public class CSGGeometry
 	) {
 		super( pName, pMesh );
 		mInstanceKey = CSGShape.assignInstanceKey( "CSGGeometry" );
+		
+		// Empty library until explicitly set
+		mLibraryItems = Collections.EMPTY_MAP;
 	}
-	
+
 	/** Return the JME aspect of this element */
 	@Override
 	public Spatial asSpatial() { return this; }
@@ -184,6 +195,21 @@ public class CSGGeometry
 			return( null );
 		}
 	}
+	
+	/** Access to library elements */
+	@Override
+	public Savable getLibraryItem(
+		String		pItemName
+	) {
+		Savable anItem = mLibraryItems.get( pItemName );
+		if ( anItem == null ) {
+			CSGElement aParent = this.getParentElement();
+			if ( aParent != null ) {
+				anItem = aParent.getLibraryItem( pItemName );
+			} 
+		}
+		return( anItem );
+	}
 
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
@@ -206,6 +232,30 @@ public class CSGGeometry
 			// CSGGeometry is inherently single material
 			throw new IllegalArgumentException( "CSGGeometry is inherently single material" );
 		}
+	}
+	
+	/** Scan the local light list and make a clone if matched */
+	@Override
+    public Light cloneLocalLight(
+    	Light	pLight	
+    ) {
+        LightList localLights = getLocalLightList();
+        for( int i = localLights.size() -1; i >= 0; i -= 1 ) {
+        	Light aLight = localLights.get( i );
+        	if ( aLight == pLight ) {
+        		// Replace with a CLONED copy
+        		aLight = CSGLightControl.cloneLight( aLight ); // aLight.clone();
+        		
+        		// Unfortunately, there is no replace, so the clone will slide
+        		// to the end of the list
+        		localLights.remove( i );
+        		localLights.add( aLight );
+        		
+        		pLight = aLight;
+        		break;
+        	}
+        }
+        return( pLight );
 	}
 
     /** Test if this Spatial has its own custom physics defined */
@@ -503,6 +553,13 @@ public class CSGGeometry
 		JmeImporter		pImporter
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
+		
+		// Support arbitrary Library items, defined BEFORE we process the rest of the items
+        // Such items can be referenced within the XML stream itself via the
+        //		id='name' and ref='name'
+        // mechanism, and can be reference programmatically via their inherent names
+		Savable[] libraryItems = aCapsule.readSavableArray( "library", null );
+		mLibraryItems = CSGShape.fillLibrary( libraryItems, pImporter.getAssetManager() );
 		
 		// Let the super do its thing
 		super.read( pImporter );

@@ -44,7 +44,9 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.math.CSGTransform;
 
+import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
+import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.bullet.PhysicsSpace;
@@ -426,42 +428,57 @@ public class CSGGeonode
 	public void read(
 		JmeImporter		pImporter
 	) throws IOException {
+    	AssetManager aManager = pImporter.getAssetManager();
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 
 		// Let the super do its thing
 		super.read( pImporter );
 		// But ensure we rebuild the children list from scratch based on "shapes"
-		this.children.clear();;
+		this.children.clear();
 		
-        // Multi-materials can be suppressed
-        mForceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  false );
-        
 		// Look for the list of shapes
 		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
-		
-		// Look for specially defined tranform 
-		if ( this.localTransform == Transform.IDENTITY ) {
-			// No explicit transform, look for a proxy
-			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
-			if ( proxyTransform != null ) {
-				localTransform = proxyTransform.getTransform();
+		if ( mShapes == null ) {
+			// If no shapes, then possibly an external reference
+			AssetKey aKey = (AssetKey)aCapsule.readSavable( "model", null );
+			if ( aKey != null ) {
+				AssetInfo keyInfo = aManager.locateAsset( aKey );
+				if ( keyInfo != null ) {
+					Object aModel = pImporter.load( keyInfo );
+					if ( aModel instanceof CSGGeonode ) {
+						// Absorb the referenced entity into this one
+						throw new IllegalStateException( "CSGGeonode 'model' not yet supported" );
+					}
+				}				
 			}
-		}
-		// Rebuild based on the shapes just loaded, which sets the mValid status
-        try {
-        	regenerate();
-        } catch( CSGConstructionException ex ) {
-        	// This error should already be registered with this element
-        }
-		if ( this.isValid() ) {
-	        // TangentBinormalGenerator directive
-	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
-	        if ( generate ) {
-	        	// The Generator understands working the children of a Node
-	        	TangentBinormalGenerator.generate( this );
-	        }
 		} else {
-			CSGEnvironment.sLogger.log( Level.WARNING, "Invalid Geonode: " + this );
+	        // Multi-materials can be suppressed
+	        mForceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  false );
+	        
+			// Look for specially defined tranform 
+			if ( this.localTransform == Transform.IDENTITY ) {
+				// No explicit transform, look for a proxy
+				CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
+				if ( proxyTransform != null ) {
+					localTransform = proxyTransform.getTransform();
+				}
+			}
+			// Rebuild based on the shapes just loaded, which sets the mValid status
+	        try {
+	        	regenerate();
+	        } catch( CSGConstructionException ex ) {
+	        	// This error should already be registered with this element
+	        }
+			if ( this.isValid() ) {
+		        // TangentBinormalGenerator directive
+		        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
+		        if ( generate ) {
+		        	// The Generator understands working the children of a Node
+		        	TangentBinormalGenerator.generate( this );
+		        }
+			} else {
+				CSGEnvironment.sLogger.log( Level.WARNING, "Invalid Geonode: " + this );
+			}
 		}
 	}
 	

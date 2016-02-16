@@ -46,6 +46,8 @@ import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.control.PhysicsControl;
 import com.jme3.export.InputCapsule;
+import com.jme3.export.Savable;
+import com.jme3.light.Light;
 import com.jme3.light.LightList;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
@@ -180,6 +182,10 @@ public interface ConstructiveSolidGeometry
 		
 		/** This there an active parent to this element */
 		public CSGElement getParentElement();
+		/** Access to library elements */
+		public Savable getLibraryItem(
+			String		pItemName
+		);
 		
 		/** Unique keystring identifying this element */
 		public String getInstanceKey();
@@ -200,7 +206,11 @@ public interface ConstructiveSolidGeometry
 		
 		/** Accessor to the light list (ala Spatial) */
 		public LightList getLocalLightList();
-		
+		/** Scan the local light list and make a clone if matched */
+	    public Light cloneLocalLight(
+	    	Light	pLight	
+	    );
+	 
 		/** Accessor to the transform */
 		public Transform getLocalTransform();
 		

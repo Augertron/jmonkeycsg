@@ -42,7 +42,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
@@ -55,6 +57,9 @@ import net.wcomohundro.jme3.csg.shape.CSGMesh;
 import net.wcomohundro.jme3.csg.shape.CSGSphere;
 import net.wcomohundro.jme3.math.CSGTransform;
 
+import com.jme3.asset.AssetInfo;
+import com.jme3.asset.AssetKey;
+import com.jme3.asset.AssetManager;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
@@ -65,6 +70,8 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.light.Light;
+import com.jme3.light.LightList;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -218,7 +225,7 @@ public class CSGShape
 
 	}
 	
-	/** Service routine to assing unique identifiers */
+	/** Service routine to assigning unique identifiers */
 	protected static int sInstanceCounter;
 	public static synchronized String assignInstanceKey(
 		String		pSeed
@@ -226,6 +233,53 @@ public class CSGShape
 		return( pSeed +  ++sInstanceCounter );
 	}
 	
+	/** Service routine to populate a library */
+	public static Map<String,Savable> fillLibrary(
+		Savable[]		pLibraryItems
+	,	AssetManager	pAssetManager
+	) {
+		Map<String,Savable> aLibrary;
+		if ( pLibraryItems != null ) {
+			// Register every item in the library
+			//	NOTE for now, use a TreeMap to preserve the insert order
+			aLibrary = new TreeMap();
+			for( Savable anItem : pLibraryItems ) {
+				String itemName = null, altName = null;
+				if ( anItem instanceof AssetKey ) {
+					// The key name becomes the default item name
+					itemName = ((AssetKey)anItem).getName();
+					altName = itemName;
+					
+					// Interpret/Load the underlying asset
+					AssetInfo keyInfo = pAssetManager.locateAsset( (AssetKey)anItem );
+					if ( keyInfo != null ) {
+						// NOTE - using the pImporter to load the asset seems to destroy
+						//		  the 'currentElement' context
+						//anItem = (Savable)pImporter.load( keyInfo );
+						anItem = pAssetManager.loadAsset( (AssetKey)anItem );
+					}
+				}
+				if ( (anItem instanceof Spatial) && (((Spatial)anItem).getName() != null) ) {
+					itemName = ((Spatial)anItem).getName();
+				} else if ((anItem instanceof Light) && (((Light)anItem).getName() != null) ) {
+					itemName = ((Light)anItem).getName();
+				} else if ( (anItem instanceof Material) && (((Material)anItem).getName() != null) ) {
+					itemName = ((Material)anItem).getName();
+				} else if ( itemName == null ) {
+					itemName = CSGShape.assignInstanceKey( anItem.getClass().getSimpleName() );
+				}
+				aLibrary.put( itemName, anItem );
+				if ( (altName != null) && (altName != itemName) ) {
+					aLibrary.put( altName,  anItem );
+				}
+			}
+		} else {
+			// Nothing defined
+			aLibrary = Collections.EMPTY_MAP;
+		}
+		return( aLibrary );
+	}
+
 	/** Service to create a vector buffer for a given List */
     public static FloatBuffer createVector3Buffer(
     	List<Vector3f> 	pVectors
@@ -316,6 +370,10 @@ public class CSGShape
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Nanoseconds needed to regenerate this shape */
 	protected long						mRegenNS;
+	/** A list of arbitrary elements that can be named and referenced during
+	 	XML load processing via id='somename' and ref='somename',
+	 	and subsequently referenced programmatically via its inherent name. */
+	protected Map<String,Savable>		mLibraryItems;
 	/** Debug support */
 	protected List<Savable>				mDebug;
 
@@ -341,6 +399,9 @@ public class CSGShape
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;
 		mSurface = CSGShapeSurface.USE_MESH;
+		
+		// Empty library until explicitly set
+		mLibraryItems = Collections.EMPTY_MAP;
 	}
 	public CSGShape(
 		String	pShapeName
@@ -350,6 +411,9 @@ public class CSGShape
 		mOrder = pOrder;
 		mOperator = CSGGeometry.CSGOperator.UNION;		
 		mSurface = CSGShapeSurface.USE_MESH;
+		
+		// Empty library until explicitly set
+		mLibraryItems = Collections.EMPTY_MAP;
 	}
 	
 	/** Constructor based on a Spatial, rather than a Mesh */
@@ -489,6 +553,30 @@ public class CSGShape
 		return( aClone );
 	}
 	
+	/** Scan the local light list and make a clone if matched */
+	@Override
+    public Light cloneLocalLight(
+    	Light	pLight	
+    ) {
+        LightList localLights = getLocalLightList();
+        for( int i = localLights.size() -1; i >= 0; i -= 1 ) {
+        	Light aLight = localLights.get( i );
+        	if ( aLight == pLight ) {
+        		// Replace with a CLONED copy
+        		aLight = CSGLightControl.cloneLight( aLight ); // aLight.clone();
+        		
+        		// Unfortunately, there is no replace, so the clone will slide
+        		// to the end of the list
+        		localLights.remove( i );
+        		localLights.add( aLight );
+        		
+        		pLight = aLight;
+        		break;
+        	}
+        }
+        return( pLight );
+	}
+	
 	/** Unique keystring identifying this element */
 	@Override
 	public String getInstanceKey(
@@ -536,6 +624,21 @@ public class CSGShape
 		}
 	}
 	public void setParentElement( CSGElement pParent ) { mParentElement = pParent; }
+	
+	/** Access to library elements */
+	@Override
+	public Savable getLibraryItem(
+		String		pItemName
+	) {
+		Savable anItem = mLibraryItems.get( pItemName );
+		if ( anItem == null ) {
+			CSGElement aParent = this.getParentElement();
+			if ( aParent != null ) {
+				anItem = aParent.getLibraryItem( pItemName );
+			} 
+		}
+		return( anItem );
+	}
 	
 	/** Ready a list of shapes for processing */
 	public List<CSGShape> prepareShapeList(
@@ -795,10 +898,18 @@ public class CSGShape
 	public void read(
 		JmeImporter		pImporter
 	) throws IOException {
+		InputCapsule aCapsule = pImporter.getCapsule(this);
+		
+		// Support arbitrary Library items, defined BEFORE we process the rest of the items
+        // Such items can be referenced within the XML stream itself via the
+        //		id='name' and ref='name'
+        // mechanism, and can be reference programmatically via their inherent names
+		Savable[] libraryItems = aCapsule.readSavableArray( "library", null );
+		mLibraryItems = CSGShape.fillLibrary( libraryItems, pImporter.getAssetManager() );
+
 		// Let the geometry do its thing, which includes Mesh, Material, and LocalTransform
 		super.read( pImporter );
 		
-		InputCapsule aCapsule = pImporter.getCapsule(this);
 		mOrder = aCapsule.readInt( "order", 0 );
 		mOperator = aCapsule.readEnum( "operator", CSGOperator.class, CSGOperator.UNION );
 		mSurface = aCapsule.readEnum( "surface", CSGShapeSurface.class, CSGShapeSurface.USE_MESH );

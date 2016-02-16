@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Queue;
+import java.util.TreeMap;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
@@ -62,6 +63,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
 import com.jme3.light.Light;
+import com.jme3.light.LightList;
 import com.jme3.material.MatParamTexture;
 import com.jme3.material.Material;
 import com.jme3.math.Transform;
@@ -112,8 +114,9 @@ public class CSGNode
 	/** Processing environment to apply */
 	protected CSGEnvironment			mEnvironment;
 	/** A list of arbitrary elements that can be named and referenced during
-	 	XML load processing via id='somename' and ref='somename' */
-	protected Savable[]		mLibraryItems;
+	 	XML load processing via id='somename' and ref='somename',
+	 	and subsequently referenced programmatically via its inherent name. */
+	protected Map<String,Savable>		mLibraryItems;
 
 
 	/** Basic null constructor */
@@ -126,8 +129,11 @@ public class CSGNode
 		String	pName
 	) {
 		super( pName );
+		
+		// Empty library until explicitly set
+		mLibraryItems = Collections.EMPTY_MAP;
 	}
-	
+		
 	/** Return the JME aspect of this element */
 	@Override
 	public Spatial asSpatial() { return this; }
@@ -158,6 +164,21 @@ public class CSGNode
 		}
 	}
 	
+	/** Access to library elements */
+	@Override
+	public Savable getLibraryItem(
+		String		pItemName
+	) {
+		Savable anItem = mLibraryItems.get( pItemName );
+		if ( anItem == null ) {
+			CSGElement aParent = this.getParentElement();
+			if ( aParent != null ) {
+				anItem = aParent.getLibraryItem( pItemName );
+			} 
+		}
+		return( anItem );
+	}
+	
 	/** Unique keystring identifying this element */
 	@Override
 	public String getInstanceKey(
@@ -183,6 +204,31 @@ public class CSGNode
     	super.setMaterial( pMaterial );
         this.mMaterial = pMaterial;
     }
+    
+	/** Scan the local light list and make a clone if matched */
+	@Override
+    public Light cloneLocalLight(
+    	Light	pLight	
+    ) {
+        LightList localLights = getLocalLightList();
+        for( int i = localLights.size() -1; i >= 0; i -= 1 ) {
+        	Light aLight = localLights.get( i );
+        	if ( aLight == pLight ) {
+        		// Replace with a CLONED copy
+        		aLight = CSGLightControl.cloneLight( aLight ); // aLight.clone();
+        		
+        		// Unfortunately, there is no replace, so the clone will slide
+        		// to the end of the list
+        		localLights.remove( i );
+        		localLights.add( aLight );
+        		
+        		pLight = aLight;
+        		break;
+        	}
+        }
+        return( pLight );
+	}
+
 	
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
@@ -346,7 +392,11 @@ public class CSGNode
         	mEnvironment = CSGEnvironment.resolveEnvironment( mEnvironment, this );
         }
 		// Support arbitrary Library items, defined BEFORE we process the rest of the items
-		mLibraryItems = aCapsule.readSavableArray( "library", null );
+        // Such items can be referenced within the XML stream itself via the
+        //		id='name' and ref='name'
+        // mechanism, and can be reference programmatically via their inherent names
+		Savable[] libraryItems = aCapsule.readSavableArray( "library", null );
+		mLibraryItems = CSGShape.fillLibrary( libraryItems, aManager );
 
 		// Let the super do its thing
 		super.read( pImporter );
@@ -356,7 +406,7 @@ public class CSGNode
         if ( matName != null ) {
             // Material name is set, attempt to load material via J3M
             try {
-                mMaterial = pImporter.getAssetManager().loadMaterial( matName );
+                mMaterial = aManager.loadMaterial( matName );
             } catch( AssetNotFoundException ex ) {
                 throw new IllegalArgumentException( "Cannot locate material: " + matName );
             }
@@ -406,13 +456,24 @@ public class CSGNode
 		// Individual CSGSpatials will regenerate as part of read(), so now scan the list
 		// looking for any oddness.
 		mInError = null;
-		for( Spatial aSpatial : this.getChildren() ) {
+		List<Spatial> aChildList =  this.getChildren();
+		for( int i = 0, j = aChildList.size(); i < j; i += 1 ) {
+			Spatial aSpatial = aChildList.get( i );
 			if ( aSpatial instanceof CSGElement ) {
+				// Check on the construction of this element
 				CSGElement csgSpatial = (CSGElement)aSpatial;
 				mRegenNS += csgSpatial.getShapeRegenerationNS();
 				if ( !csgSpatial.isValid() ) {
 					mInError = CSGConstructionException.registerError( mInError, csgSpatial.getError() );
 				}
+			} else if ( aSpatial instanceof CSGPlaceholderSpatial ) {
+				// Resolve the placeholder to its real element
+				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveSpatial( this );
+				this.detachChildAt( i );
+				this.attachChildAt( realSpatial, i );
+				
+				// And check it again
+				i -= 1;
 			}
 		}		
         if ( mLightControl != null ) {
