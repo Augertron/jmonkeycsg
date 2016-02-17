@@ -133,7 +133,24 @@ public class CSGNode
 		// Empty library until explicitly set
 		mLibraryItems = Collections.EMPTY_MAP;
 	}
-		
+	
+	/** OVERRIDE: to keep things tidy */
+    @Override
+    public CSGNode clone(
+    	boolean 	pCloneMaterials
+    ){
+        CSGNode aCopy = (CSGNode)super.clone( pCloneMaterials );
+        
+        // Keep the instance key unique
+		mInstanceKey = CSGShape.assignInstanceKey( this.name );
+
+        // Ensure we have our own copy of the physics
+        if ( aCopy.mPhysics != null ) {
+        	aCopy.mPhysics = (PhysicsControl)this.mPhysics.cloneForSpatial( aCopy );
+        }
+        return( aCopy );
+    }
+
 	/** Return the JME aspect of this element */
 	@Override
 	public Spatial asSpatial() { return this; }

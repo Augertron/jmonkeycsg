@@ -156,6 +156,25 @@ public class CSGGeometry
 		// Empty library until explicitly set
 		mLibraryItems = Collections.EMPTY_MAP;
 	}
+	
+	/** OVERRIDE: to keep things tidy */
+    @Override
+    public CSGGeometry clone(
+    	boolean 	pCloneMaterials
+    ){
+    	CSGGeometry aCopy = (CSGGeometry)super.clone( pCloneMaterials );
+        
+        // Keep the instance key unique
+		mInstanceKey = CSGShape.assignInstanceKey( this.name );
+
+		// @todo - what about the shapes???
+		
+        // Ensure we have our own copy of the physics
+        if ( aCopy.mPhysics != null ) {
+        	aCopy.mPhysics = (PhysicsControl)this.mPhysics.cloneForSpatial( aCopy );
+        }
+        return( aCopy );
+    }
 
 	/** Return the JME aspect of this element */
 	@Override

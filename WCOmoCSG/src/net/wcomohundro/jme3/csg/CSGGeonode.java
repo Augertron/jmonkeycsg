@@ -127,6 +127,19 @@ public class CSGGeonode
 		super( pName );
 	}
 	
+	/** OVERRIDE: to keep things tidy */
+    @Override
+    public CSGGeonode clone(
+    	boolean 	pCloneMaterials
+    ){
+    	CSGGeonode aCopy = (CSGGeonode)super.clone( pCloneMaterials );
+    	
+    	// @todo - what about the shapes????
+    	// @todo - what about master geometry???
+    	return( aCopy );
+    }
+
+	
 	/** Access to the MasterGeometry that defines the overall shape */
 	public CSGGeometry getMasterGeometry() { return mMasterGeometry; }
 	
