@@ -155,8 +155,6 @@ public class CSGVertexIOB
 		mStatus = CSGVertexStatus.UNKNOWN;
 		
 		if ( pEnvironment.mRationalizeValues ) {
-			// NOTE if you do NOT rationalize the position vector, you can get some
-			//		strange artifacts (probably due to 'near zero' processing)
 			CSGEnvironment.rationalizeVector( mPosition, pEnvironment.mEpsilonMagnitudeRange );
 		}
 		double d1 = pVertexA.getPosition().distance( pNewPosition );
@@ -224,19 +222,6 @@ public class CSGVertexIOB
 	,	Vector2f		pTextureCoordinate
 	,	CSGEnvironment	pEnvironment
 	) {
-		if ( !pEnvironment.mDoublePrecision ) {
-			// IOB processing is inherently 'double', but if we mark it 'float', then 
-			// adjust the given values to match single precision only
-			float xValue = (float)pPosition.x;
-			float yValue = (float)pPosition.y;
-			float zValue = (float)pPosition.z;
-			pPosition.set( xValue, yValue, zValue );
-			
-			xValue = (float)pNormal.x;
-			yValue = (float)pNormal.y;
-			zValue = (float)pNormal.z;
-			pNormal.set( xValue, yValue, zValue );
-		}
 		return( new CSGVertexIOB( pPosition, pNormal, pTextureCoordinate, pEnvironment ) );
 	}
 	

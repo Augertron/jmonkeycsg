@@ -170,85 +170,6 @@ public class CSGFace
 		public boolean isEdge() { return( (this.mValue >= EDGE12.mValue) && (this.mValue <= EDGE31.mValue) ); }
 	}
 	
-
-	/** Gets the position of a point relative to a line in the x plane */
-/** OBSOLETE
-	protected static CSGPointStatus linePositionInX(
-		Vector3d 		pPoint
-	, 	Vector3d 		pPointLine1
-	, 	Vector3d 		pPointLine2
-	,	CSGEnvironment	pEnvironment
-	) {
-		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
-		
-		if ( (Math.abs( pPointLine1.y - pPointLine2.y ) > tolerance )
-		&& ( ((pPoint.y >= pPointLine1.y) && (pPoint.y <= pPointLine2.y))
-			 || ((pPoint.y <= pPointLine1.y) && (pPoint.y >= pPointLine2.y)) ) ) {
-			double a = (pPointLine2.z - pPointLine1.z) / (pPointLine2.y - pPointLine1.y);
-			double b = pPointLine1.z - a * pPointLine1.y;
-			double z = a * pPoint.y + b;
-			if ( z > pPoint.z + tolerance ) {
-				return CSGPointStatus.UP;			
-			} else if ( z < pPoint.z - tolerance ) {
-				return CSGPointStatus.DOWN;
-			} else {
-				return CSGPointStatus.ON;
-			}
-		} else {
-			return CSGPointStatus.NONE;
-		}
-	}
-	protected static CSGPointStatus linePositionInY(
-		Vector3d 		pPoint
-	, 	Vector3d 		pPointLine1
-	, 	Vector3d 		pPointLine2
-	,	CSGEnvironment	pEnvironment
-	) {
-		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
-
-		if ( (Math.abs( pPointLine1.x - pPointLine2.x ) > tolerance)
-		&& ( ((pPoint.x >= pPointLine1.x) && (pPoint.x <= pPointLine2.x))
-			 || ((pPoint.x <= pPointLine1.x) && (pPoint.x >= pPointLine2.x)) ) ) {
-			double a = (pPointLine2.z - pPointLine1.z) / (pPointLine2.x - pPointLine1.x);
-			double b = pPointLine1.z - a * pPointLine1.x;
-			double z = a * pPoint.x + b;
-			if ( z > pPoint.z + tolerance ) {
-				return CSGPointStatus.UP;			
-			} else if ( z < pPoint.z - tolerance ) {
-				return CSGPointStatus.DOWN;
-			} else {
-				return CSGPointStatus.ON;
-			}
-		} else {
-			return CSGPointStatus.NONE;
-		}
-	}
-	protected static CSGPointStatus linePositionInZ(
-		Vector3d 		pPoint
-	, 	Vector3d 		pPointLine1
-	, 	Vector3d 		pPointLine2
-	,	CSGEnvironment	pEnvironment
-	) {
-		double tolerance = pEnvironment.mEpsilonBetweenPointsDbl; // TOL;
-
-		if ( (Math.abs( pPointLine1.x - pPointLine2.x ) > tolerance )
-		&& ( ((pPoint.x >= pPointLine1.x) && (pPoint.x <= pPointLine2.x))
-			 || ((pPoint.x <= pPointLine1.x) && (pPoint.x >= pPointLine2.x)) ) ) {
-			double a = (pPointLine2.y - pPointLine1.y) / (pPointLine2.x - pPointLine1.x);
-			double b = pPointLine1.y - a * pPointLine1.x;
-			double y = a * pPoint.x + b;
-			if ( y > pPoint.y + tolerance ) {
-				return CSGPointStatus.UP;			
-			} else if ( y < pPoint.y - tolerance ) {
-				return CSGPointStatus.DOWN;
-			} else {
-				return CSGPointStatus.ON;
-			}
-		} else {
-			return CSGPointStatus.NONE;
-		}
-	}
-***/
 	
 	/** Bounds of this face */
 	protected CSGBounds			mBounds;
@@ -289,14 +210,14 @@ public class CSGFace
 				.equalVector3d( pV3.getPosition(), pV1.getPosition(), pEnvironment.mEpsilonBetweenPointsDbl )) {
 			// Not a meaningful face, do not bother with checking the plane
 			if ( pEnvironment.mStructuralDebug ) {
-				pEnvironment.log( Level.WARNING, "Degenerate face: " + this );
+				pEnvironment.log( Level.WARNING, "Degenerate CSGFace: " + this );
 			}
 			return;
 		}
 		mPlane = CSGPlaneDbl.fromVertices( mVertices, pTempVars, pEnvironment );
 		if ( pEnvironment.mStructuralDebug && (mPlane == null) ) {
 			// The given points do not produce a valid plane
-			pEnvironment.log( Level.WARNING, "Invalid face: " + this );
+			pEnvironment.log( Level.WARNING, "Invalid CSGFace: " + this );
 		}			
 	}
 	public CSGFace(
@@ -560,7 +481,7 @@ public class CSGFace
 				// Something not right about this intersection... Possibly things are too close
 				if ( pEnvironment.mStructuralDebug ) {
 					// NOTE that .lineIntersection() may well have logged this problem as well
-					pEnvironment.log( Level.WARNING, "CSGFace.extrapolate failed: " + pNewPosition + "\n" + this );
+					pEnvironment.log( Level.INFO, "CSGFace: no extrapolation: " + pNewPosition + "\n" + this );
 				}
 				return( null );
 			}
@@ -628,7 +549,7 @@ public class CSGFace
 				// close but just different enough
 				if ( pEnvironment.mStructuralDebug ) {
 					pEnvironment.log( Level.WARNING
-									, "CSGFace.simpleClassify - inconsistent vertex status: " + this );
+									, "CSGFace.simpleClassify - inconsistent vertex status:\n" + this );
 				}
 				faceStatus = null;
 			}

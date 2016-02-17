@@ -232,6 +232,19 @@ public class CSGEnvironment<ShapeProcessorT>
 		return( true );
 	}
 	
+	/** Service routine to impose 'float' level precision to a Vector3d */
+	public static Vector3d toFloat(
+		Vector3d	pVector
+	,	double		pTolerance
+	) {
+		float xValue = ((pVector.x > -pTolerance) && (pVector.x < pTolerance)) ? 0f : (float)pVector.x;
+		float yValue = ((pVector.y > -pTolerance) && (pVector.y < pTolerance)) ? 0f : (float)pVector.y;
+		float zValue = ((pVector.z > -pTolerance) && (pVector.z < pTolerance)) ? 0f : (float)pVector.z;
+		
+		pVector.set( xValue, yValue, zValue );
+		return( pVector );
+	}
+	
 	/** Service routine to 'rationalize' a vector to keep all its components within the same
 	 	scale.  In other words, to have x,y,z values like 0.5, 0.4, 0.000000000001 with
 	 	wildly varying orders of magnitude is rather silly.

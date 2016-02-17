@@ -47,17 +47,17 @@ public class CSGEnvironmentIOB
 {
 	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
 	// Tolerance to decide if a given point in 'on' a plane
-	public static final float EPSILON_ONPLANE_FLT = 1.0e-5f;
+	public static final float EPSILON_ONPLANE_FLT = 1.0e-6f;
 	public static final double EPSILON_ONPLANE_DBL = 1.0e-8;
 
 	// Tolerance to determine if two points are close enough to be considered the same point
-	public static final float EPSILON_BETWEEN_POINTS_FLT = 1.0e-5f;
+	public static final float EPSILON_BETWEEN_POINTS_FLT = 1.0e-6f;
 	public static final double EPSILON_BETWEEN_POINTS_DBL = 2.0e-7; // FastMath.FLT_EPSILON;
 	// NOTE that if you use the FastMath value, then a value you pull from a float Mesh 
 	//		will NOT match its corresponding double in a vertex
 	
 	// Tolerance if a given value is near enough to zero to be treated as zero
-	public static final float EPSILON_NEAR_ZERO_FLT = 1.0e-7f;
+	public static final float EPSILON_NEAR_ZERO_FLT = FastMath.FLT_EPSILON;
 	public static final double EPSILON_NEAR_ZERO_DBL = 1.0e-9;
 	
 	// Limits on points
@@ -146,6 +146,11 @@ public class CSGEnvironmentIOB
 			mEpsilonNearZeroFlt = aCapsule.readFloat( "epsilonNearZero", EPSILON_NEAR_ZERO_FLT );
 			mEpsilonBetweenPointsFlt = aCapsule.readFloat( "epsilonBetweenPoints", EPSILON_BETWEEN_POINTS_FLT );
 			mEpsilonOnPlaneFlt = aCapsule.readFloat( "epsilonOnPlane", EPSILON_ONPLANE_FLT );
+			
+			// IOB operates inherently with doubles, so limit the Epsilons to the float equivalents
+			mEpsilonNearZeroDbl = mEpsilonNearZeroFlt;
+			mEpsilonBetweenPointsDbl = mEpsilonBetweenPointsFlt;
+			mEpsilonOnPlaneDbl = mEpsilonOnPlaneFlt;
 		}
 		mEpsilonMaxPointPositionFlt = aCapsule.readFloat( "epsilonMaxPointPosition", EPSILON_MAX_POINT_POSITION );
 		mEpsilonMaxPointTextureFlt = aCapsule.readFloat( "epsilonMaxPointTexture", EPSILON_MAX_POINT_TEXTURE );

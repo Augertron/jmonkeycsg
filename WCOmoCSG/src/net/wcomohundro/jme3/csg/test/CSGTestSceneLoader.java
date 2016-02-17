@@ -147,18 +147,35 @@ public class CSGTestSceneLoader
     	// Do the standard setup
 		super.commonApplicationInit();   
 		
+		mLastScene = null;
+		mLoadedSpatial = null;
+
 		if ( mInitArgs == null ) {
 			// Nothing defaulted
 		} else if ( mInitArgs.length == 1 ) {
 			// Singleton read of a file (possibly an Asset)
-			CSGTestDriver.readStrings( mInitArgs[ 0 ], mSceneList, null, assetManager );		
+			Object anAsset = CSGTestDriverBase.readStrings( mInitArgs[ 0 ], mSceneList, null, assetManager );
+			if ( anAsset instanceof Spatial ) {
+				// Use the element just loaded
+				mLoadedSpatial = (Spatial)anAsset;
+				mSceneIndex = 1;
+				
+				if ( (mPhysicsState != null) && (mLoadedSpatial instanceof CSGElement) ) {
+					this.applyPhysics( (CSGElement)mLoadedSpatial );
+				}
+			}
 		} else if ( mInitArgs.length > 1 ) {
 			// Literal list of scenes in the arguments
 			mSceneList.addAll( Arrays.asList( mInitArgs ) );
 		}
         // Load the scene, leveraging the XMLImporter
-		mLastScene = null;
-	    loadScene();
+		if ( mLoadedSpatial == null ) {
+			// Start the process of loading scenes
+			loadScene();
+		} else {
+			mPostText.push( mNullSceneMsg );
+			mRefreshText = true;
+		}
     }
     
     /** Service routine to load the scene */

@@ -95,8 +95,16 @@ public class CSGVertexDbl
 		mNormal = pNormal;
 		mTextureCoordinate = pTextureCoordinate;
 		
-		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			CSGEnvironment.confirmVertex( this, pEnvironment );
+		if ( pEnvironment != null ) {
+			if ( !pEnvironment.mDoublePrecision ) {
+				// VertexDbl is inherently 'double', but if we mark it 'float', then 
+				// adjust the given values to match single precision only
+				CSGEnvironment.toFloat( mPosition, pEnvironment.mEpsilonNearZeroDbl );
+				CSGEnvironment.toFloat( mNormal, pEnvironment.mEpsilonNearZeroDbl );
+			}
+			if ( pEnvironment.mStructuralDebug ) {
+				CSGEnvironment.confirmVertex( this, pEnvironment );
+			}
 		}
 	}
 	

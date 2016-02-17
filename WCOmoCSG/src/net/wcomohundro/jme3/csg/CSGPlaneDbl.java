@@ -211,25 +211,21 @@ public class CSGPlaneDbl
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		// Only the normal is adjusted due to rotation
+		// The point on the plane must obey the transform
+		Vector3f aPosition = pTempVars.vect4.set( (float)mPointOnPlane.x, (float)mPointOnPlane.y, (float)mPointOnPlane.z );
+		aPosition = pTransform.transformVector( aPosition, aPosition );
+		Vector3d newPosition = new Vector3d( aPosition.x, aPosition.y, aPosition.z );
+
+		// The normal must follow any rotation
+		Vector3d newNormal = this.getNormal();
 		Quaternion aRotation = pTransform.getRotation();
 		if ( !Quaternion.IDENTITY.equals( aRotation ) ) {
 			// Adjust the normal
-			Vector3d dNormal = this.getNormal();
-			Vector3f aNormal = pTempVars.vect3.set( (float)dNormal.x, (float)dNormal.y, (float)dNormal.z );
+			Vector3f aNormal = pTempVars.vect3.set( (float)newNormal.x, (float)newNormal.y, (float)newNormal.z );
 			aNormal = aRotation.multLocal( aNormal );
-			Vector3d newNormal = new Vector3d( aNormal.x, aNormal.y, aNormal.z );
-			
-			// Adjust the point
-			Vector3f aPosition = pTempVars.vect4.set( (float)mPointOnPlane.x, (float)mPointOnPlane.y, (float)mPointOnPlane.z );
-			aPosition = pTransform.transformVector( aPosition, aPosition );
-			Vector3d newPosition = new Vector3d( aPosition.x, aPosition.y, aPosition.z );
-
-			return( new CSGPlaneDbl( newNormal, newPosition, newNormal.dot( newPosition ), -1, pEnvironment ) );
-		} else {
-			// The plane does not move
-			return( this );
+			newNormal = new Vector3d( aNormal.x, aNormal.y, aNormal.z );
 		}
+		return( new CSGPlaneDbl( newNormal, newPosition, newNormal.dot( newPosition ), -1, pEnvironment ) );
 	}
 	
 	/** DOT value for this plane */

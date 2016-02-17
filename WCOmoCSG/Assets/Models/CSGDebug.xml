@@ -1,17 +1,22 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGDebug'>
 	<csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB'
-		doublePrecision='false' structuralDebug='true' preTransform='true'
+		doublePrecision='false' structuralDebug='true' preTransform='false'
 		XepsilonNearZero='1.0e-10' XepsilonBetweenPoints='1.0e-7' XepsilonOnPlane='1.0e-7'
-		rationalizeValues='false' XepsilonMagnitudeRange='22' />
+		XrationalizeValues='false' XepsilonMagnitudeRange='22' />
 		
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
-        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0.5' a='1'/>
         	</com.jme3.light.AmbientLight>
         </lights>
     </lights>
+    
+	<assetLoaderKeyList>
+		<!-- Just a corridor -->
+		<com.jme3.asset.NonCachingKey name='Models/CSGSimpleCorridor.xml'/>
+	</assetLoaderKeyList>
 	<children>
 <?ignore
 	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox'
@@ -51,8 +56,7 @@
                     </transform>
 	            </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
-        </net.wcomohundro.jme3.csg.CSGGeonode>
-?>     
+        </net.wcomohundro.jme3.csg.CSGGeonode>     
      		
 <net.wcomohundro.jme3.csg.CSGGeonode name='ArchwayCorridor' id='ACorridor'
        		singleMaterial='true' 
@@ -281,7 +285,6 @@
     </shapes>
 </net.wcomohundro.jme3.csg.CSGGeonode>
 
-<?ignore
 		<!-- A corridor, with a small missing triangle tucked behind the front cutout to the left -->
 		<net.wcomohundro.jme3.csg.CSGGeonode name='ACorridor'
         		singleMaterial='false' 

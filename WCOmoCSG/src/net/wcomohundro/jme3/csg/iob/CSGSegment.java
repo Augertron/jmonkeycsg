@@ -191,16 +191,6 @@ public class CSGSegment
 			// No overlap (or an invalid segment that we treat like no overlap)
 			return false;
 		}
-/**
-		if ( (this.mEndDist < pOther.mStartDist + tolerance )
-		||    (pOther.mEndDist < this.mStartDist + tolerance ) ) {
-			// No overlap
-			return false;
-		} else {
-			// Overlap
-			return true;
-		}
-**/
 	}
 	
 	/** Accessors */

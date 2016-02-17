@@ -126,7 +126,7 @@ public class CSGSolid
 			// The face is too small to be pertinent, so if another face is added, 
 			// just overuse the given slot
 			if ( pEnvironment.mStructuralDebug ) {
-				pEnvironment.log( Level.WARNING, "CSGSolid discarding miniscule face:\n\t" + pV1 + "\n\t" + pV2 + "\n\t" + pV3 );
+				pEnvironment.log( Level.INFO, "CSGSolid discarding miniscule face:\n\t" + pV1 + "\n\t" + pV2 + "\n\t" + pV3 );
 			}
 			return( pFaceIndex );
 		} else {
@@ -155,7 +155,7 @@ public class CSGSolid
 			} else {
 				// A face is invalid if the given points are NOT on the given plane
 				if ( pEnvironment.mStructuralDebug ) {
-					pEnvironment.log( Level.WARNING, "CSGSolid invalid new face:\n" + this );
+					pEnvironment.log( Level.INFO, "CSGSolid discarding invalid face:\n" + this );
 				}
 				return( pFaceIndex );
 			}
@@ -163,7 +163,7 @@ public class CSGSolid
 	}
 	
 	/** Add an appropriate vertex 
-	 * 
+
 	  	****** TempVars used: vectd1, vectd2, vectd3, vectd4, vectd5, vectd6
 	 */
 	protected CSGVertexIOB addVertex(
@@ -173,6 +173,9 @@ public class CSGSolid
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
+		if ( !pEnvironment.mDoublePrecision ) {
+			CSGEnvironment.toFloat( pNewPosition, pEnvironment.mEpsilonNearZeroDbl );
+		}
 		// NOTE that once upon a time, a list of unique vertices was kept and scanned
 		//		to only add a vertex that was not yet defined.  I am assuming this was
 		//		done to optimize processing during the 'status' phase, but since we
@@ -612,7 +615,7 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 			// Nothing actually added, but the original is still in its slot
 			// Once upon a time, I thought it should be removed, but now I am not so sure
 			if ( pEnvironment.mStructuralDebug ) {
-				pEnvironment.log( Level.WARNING, "CSGSolid.splitFace: no face remains:\n" + aFace );
+				pEnvironment.log( Level.INFO, "CSGSolid.splitFace: no face remains:\n" + aFace );
 			}
 			if ( pEnvironment.mRemoveUnsplitFace ) {
 				// Eliminate the face that could not be split

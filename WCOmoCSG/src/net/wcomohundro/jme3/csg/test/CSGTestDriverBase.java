@@ -69,6 +69,7 @@ import com.jme3.asset.NonCachingKey;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
@@ -120,40 +121,16 @@ public class CSGTestDriverBase
 	    app.setShowSettings( false );
 	    app.start();
 	}
-
-	/** Service routine to display a bit of text */
-	public static BitmapText defineTextDisplay(
-		SimpleApplication	pApplication
-	,	BitmapFont 			pGuiFont
-	) {
-		BitmapText textDisplay = new BitmapText( pGuiFont, false );
-    	textDisplay.setSize( pGuiFont.getCharSet().getRenderedSize() );
-
-    	pApplication.getGuiNode().attachChild( textDisplay );
-    	return( textDisplay );
-	}
 	
-	/** Service routine to post a bit of text */
-    public static void postText(
-    	SimpleApplication	pApplication
-    ,	BitmapText			pTextDisplay
-    ,	String				pMessage
-    ) {
-        pTextDisplay.setText( pMessage );
-        
-        Camera aCam = pApplication.getCamera();
-        pTextDisplay.setLocalTranslation( (aCam.getWidth() - pTextDisplay.getLineWidth()) / 2, aCam.getHeight(), 0);
-
-        pTextDisplay.render( pApplication.getRenderManager(), null );
-    }
-
-    /** Service routine to fill a list of strings */
-    public static List<String> readStrings(
+    /** Service routine to fill a list of strings, possibly loading a scene along the way */
+    public static Object readStrings(
     	String			pFileName
     ,	List<String>	pSeedValues
     ,	String[]		pDefaultValues
     ,	AssetManager	pAssetManager
     ) {
+    	Object loadedAsset = null;
+    	
     	if ( pSeedValues == null ) pSeedValues = new ArrayList();
     	int initialCount = pSeedValues.size();
     	
@@ -180,9 +157,10 @@ public class CSGTestDriverBase
 		} else if ( pAssetManager != null ) try {
 			// Load as an asset
 	    	NonCachingKey aKey = new NonCachingKey( pFileName );
-	    	Object scenes = pAssetManager.loadAsset( aKey );
-	    	if ( scenes instanceof CSGTestSceneList ) {
-	    		pSeedValues.addAll( Arrays.asList( ((CSGTestSceneList)scenes).getSceneList() ) );
+	    	loadedAsset = pAssetManager.loadAsset( aKey );
+	    	if ( loadedAsset instanceof CSGTestSceneList ) {
+	    		// XML defined list of scenes to load
+	    		pSeedValues.addAll( Arrays.asList( ((CSGTestSceneList)loadedAsset).getSceneList() ) );
 	    	} else {
 	    		// Treat as a single file reference
 	    		pSeedValues.add( pFileName );
@@ -193,15 +171,40 @@ public class CSGTestDriverBase
 	    } catch( Exception ex ) {
 	    	// Report on problems loading the asset
 			System.out.println( "*** Initialization failed: " + ex );
-	    	
-	    } else 
+	    }
 		// If nothing was loaded, then revert back to canned list
 		if ( (pSeedValues.size() == initialCount) && (pDefaultValues != null) ) {
 			Collections.addAll( pSeedValues, pDefaultValues );
 		}
-    	return( pSeedValues );
+    	return( loadedAsset );
     }
     
+	/** Service routine to display a bit of text */
+	public static BitmapText defineTextDisplay(
+		SimpleApplication	pApplication
+	,	BitmapFont 			pGuiFont
+	) {
+		BitmapText textDisplay = new BitmapText( pGuiFont, false );
+    	textDisplay.setSize( pGuiFont.getCharSet().getRenderedSize() );
+
+    	pApplication.getGuiNode().attachChild( textDisplay );
+    	return( textDisplay );
+	}
+	
+	/** Service routine to post a bit of text */
+    public static void postText(
+    	SimpleApplication	pApplication
+    ,	BitmapText			pTextDisplay
+    ,	String				pMessage
+    ) {
+        pTextDisplay.setText( pMessage );
+        
+        Camera aCam = pApplication.getCamera();
+        pTextDisplay.setLocalTranslation( (aCam.getWidth() - pTextDisplay.getLineWidth()) / 2, aCam.getHeight(), 0);
+
+        pTextDisplay.render( pApplication.getRenderManager(), null );
+    }
+
     /** Post the application picker dialog */
     protected static CSGTestDriverAppItem showAppPickerDialog(
     	CSGTestDriverAppItem[]	pAppChoices
