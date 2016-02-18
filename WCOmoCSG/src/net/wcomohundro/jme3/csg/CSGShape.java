@@ -366,7 +366,7 @@ public class CSGShape
 	protected CSGElement				mParentElement;
 	/** Physics that applies to this shape */
 	protected PhysicsControl			mPhysics;
-	/** The list of custom Propertes to apply to the various faces of the interior components */
+	/** The list of custom Properties to apply to the various faces of the interior components */
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Nanoseconds needed to regenerate this shape */
 	protected long						mRegenNS;
@@ -374,6 +374,10 @@ public class CSGShape
 	 	XML load processing via id='somename' and ref='somename',
 	 	and subsequently referenced programmatically via its inherent name. */
 	protected Map<String,Savable>		mLibraryItems;
+	/** The result of regeneration of this shape */
+	protected CSGShape					mPriorResult;
+	/** Proxy element that supplies the element behind this shape */
+	protected CSGPlaceholderSpatial		mProxy;
 	/** Debug support */
 	protected List<Savable>				mDebug;
 
@@ -463,6 +467,17 @@ public class CSGShape
 			// Carry forward any transform that the Spatial knows of
 			this.localTransform = pSpatial.getLocalTransform().clone();
 			
+			if ( pSpatial instanceof CSGPlaceholderSpatial ) {
+				// A stand-in for a true 'spatial', which we will resolve when we can
+				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveSpatial( this );
+				if ( useSpatial == null ) {
+					// Nothing can be resolved at this time, maybe later????
+					this.mProxy = (CSGPlaceholderSpatial)pSpatial;
+				} else {
+					// Use what we resolved to
+					pSpatial = useSpatial;
+				}
+			}
 			if ( pSpatial instanceof CSGGeonode ) {
 				// Use the overall Geometry as the representation of the Geonode
 				pSpatial = ((CSGGeonode)pSpatial).getMasterGeometry();
@@ -859,17 +874,22 @@ public class CSGShape
 	@Override
 	public CSGShape regenerate(
 	) {
-		return( regenerate( CSGEnvironment.resolveEnvironment( null, this ) ) );		
+		return( regenerate( false, CSGEnvironment.resolveEnvironment( null, this ) ) );		
 	}
 	@Override
 	public CSGShape regenerate(
-		CSGEnvironment		pEnvironment
+		boolean				pOnlyIfNeeded
+	,	CSGEnvironment		pEnvironment
 	) {
+		if ( pOnlyIfNeeded && (mPriorResult != null) ) {
+			// Use what we generated last time
+			return( mPriorResult );
+		}
 		CSGTempVars tempVars = CSGTempVars.get();
 		CSGMeshManager meshManager = new CSGMeshManager( this, false );
 		try {
 			CSGShape aShape = regenerateShape( mSubShapes, meshManager, tempVars, pEnvironment );
-			return( aShape );
+			return( mPriorResult = aShape );
 		} finally {
 			tempVars.release();
 		}
@@ -976,8 +996,12 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
+		if ( mProxy != null ) {
+			// Resolve the proxy now
+			setSpatial( mProxy, null );
+		}
 		if ( mSubShapes == null ) {
-			// This shape is represented directly by a mesh.
+			// NOT based on subshapes, so we rely on a spatial
 			// If we have face properties here at the Shape level, apply scaling now
 			if ( mesh instanceof CSGMesh ) {
 				// We are wrapping around a Mesh that supports per-face texture scale

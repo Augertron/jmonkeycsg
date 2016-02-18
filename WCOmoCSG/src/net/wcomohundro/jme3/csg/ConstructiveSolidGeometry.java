@@ -232,7 +232,8 @@ public interface ConstructiveSolidGeometry
 		/** Action to generate the mesh based on the given shapes */
 		public CSGShape regenerate() throws CSGConstructionException;
 		public CSGShape regenerate(
-			CSGEnvironment		pEnvironment
+			boolean				pOnlyIfNeeded
+		,	CSGEnvironment		pEnvironment
 		)  throws CSGConstructionException;
 		/** How long did it take to build the last shape 
 		 		NOTE that a negative value means that regeneration is actively processing  */

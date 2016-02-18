@@ -332,11 +332,12 @@ public class CSGNode
     @Override
 	public CSGShape regenerate(
 	) throws CSGConstructionException {
-		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
+		return( regenerate( false, CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
 	public CSGShape regenerate(
-		CSGEnvironment		pEnvironment
+		boolean				pOnlyIfNeeded
+	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
 		mRegenNS = -1;
 		long totalNS = 0;
@@ -350,7 +351,7 @@ public class CSGNode
 			if ( aSpatial instanceof CSGElement ) try {
 				// Trigger the regeneration
 				CSGElement csgSpatial = (CSGElement)aSpatial;
-				CSGShape aShape = csgSpatial.regenerate( pEnvironment );
+				CSGShape aShape = csgSpatial.regenerate( pOnlyIfNeeded, pEnvironment );
 				
 				totalNS += csgSpatial.getShapeRegenerationNS();
 				if ( csgSpatial.isValid() ) {

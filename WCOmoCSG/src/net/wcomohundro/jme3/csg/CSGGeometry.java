@@ -121,12 +121,15 @@ public class CSGGeometry
 	/** Management of the generated meshes */
 	protected CSGMeshManager			mMeshManager;
 	protected boolean					mDeferSceneChanges;
+	protected CSGShape					mPriorResult;
 	/** How long did it take to regenerate this shape (nanoseconds) */
 	protected long						mRegenNS;
 	/** A list of arbitrary elements that can be named and referenced during
 	 	XML load processing via id='somename' and ref='somename',
 	 	and subsequently referenced programmatically via its inherent name. */
 	protected Map<String,Savable>		mLibraryItems;
+	/** TangentBinormal generation control */
+	protected boolean					mGenerateTangentBinormal;
 	/** Control flag for the special 'debug' mode */
 	protected boolean					mDebugMesh;
 	
@@ -313,6 +316,10 @@ public class CSGGeometry
 	public boolean isDebugMesh() { return mDebugMesh; }
 	public void setDebugMesh( boolean pFlag ) { mDebugMesh = pFlag; }
 	
+	/** Accessor to the TangentBinormal generation flag */
+	public boolean getGenerateTangentBinormal() { return mGenerateTangentBinormal; }
+	public void setGenerateTangentBinormal( boolean pFlag ) { mGenerateTangentBinormal = pFlag; }
+	
     /** Include a shape */
 	@Override
     public void addShape(
@@ -419,19 +426,43 @@ public class CSGGeometry
 	) {
 		// Apply the scene updates now
 		this.setMesh( pMeshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
+		
+		if ( this.isValid() ) {
+	        // TangentBinormalGenerator directive
+	        if ( mGenerateTangentBinormal ) {
+	        	TangentBinormalGenerator.generate( this );
+	        }
+	        if ( mLightControl != null ) {
+	        	// Build a control for every local light to keep its position in synch
+	        	// with transforms applied to this Node
+				CSGLightControl.applyLightControl( mLightControl
+													, this.getLocalLightList()
+													, null
+													, this
+													, false );
+	        }
+		}
 	}
 
 	/** Action to generate the mesh based on the given shapes */
 	@Override
 	public CSGShape regenerate(
 	) throws CSGConstructionException {
-		return( regenerate( CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
+		return( regenerate( false, CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
 	}
 	@Override
 	public CSGShape regenerate(
-		CSGEnvironment		pEnvironment
+		boolean				pOnlyIfNeeded
+	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
-		mRegenNS = 0;
+		if ( pOnlyIfNeeded && (mRegenNS > 0) ) {
+			// Regeneration already complete
+			return( mPriorResult );
+		} else {
+			// Force regeneration from scratch
+			mRegenNS = 0;
+			mPriorResult = null;
+		}
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction
 			mRegenNS = -1;						// Flag REGEN in progress
@@ -512,7 +543,7 @@ public class CSGGeometry
 						// Update the scene NOW
 						applySceneChanges( meshManager );
 					}
-					return( aProduct );
+					return( mPriorResult = aProduct );
 				} else {
 					// Nothing interesting produced, but we have no explicit error
 					setError( null );
@@ -640,30 +671,25 @@ public class CSGGeometry
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
         
-		// Rebuild based on the shapes just loaded
-        try {
-        	regenerate();
-        } catch( CSGConstructionException ex ) {
-        	// This error should already be registered with this element
-        }
-		if ( this.isValid() ) {
-	        // TangentBinormalGenerator directive
-	        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
-	        if ( generate ) {
-	        	TangentBinormalGenerator.generate( this );
+        // Do generation?
+	    mGenerateTangentBinormal = aCapsule.readBoolean( "generateTangentBinormal", false );
+
+	    // Rebuild based on the shapes just loaded
+	    boolean doLater = aCapsule.readBoolean( "deferRegeneration", false );
+	    if ( doLater ) {
+	    	// No regeneration at this time
+	    	this.mRegenNS = 0;
+	    } else {
+	    	// Do the regeneration, capturing any errors
+	        try {
+	        	regenerate();
+	        } catch( CSGConstructionException ex ) {
+	        	// This error should already be registered with this element
 	        }
-	        if ( mLightControl != null ) {
-	        	// Build a control for every local light to keep its position in synch
-	        	// with transforms applied to this Node
-				CSGLightControl.applyLightControl( mLightControl
-													, this.getLocalLightList()
-													, null
-													, this
-													, false );
-	        }
-		} else {
-			CSGEnvironment.sLogger.log( Level.WARNING, "Geometry invalid: " + this );
-		}
+			if ( !this.isValid() ) {
+				CSGEnvironment.sLogger.log( Level.WARNING, "Geometry invalid: " + this );
+			}
+	    }
 	}
 	
 	/////// Implement ConstructiveSolidGeometry

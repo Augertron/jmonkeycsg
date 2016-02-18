@@ -27,9 +27,11 @@ package net.wcomohundro.jme3.csg;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
+import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
@@ -104,6 +106,22 @@ public class CSGLinkNode
 		// Let the super do its thing
 		super.read( pImporter );
 		
+	    // Rebuild the shapes just loaded
+	    boolean doLater = aCapsule.readBoolean( "deferRegeneration", false );
+	    if ( doLater ) {
+	    	// No regeneration at this time
+	    	this.mRegenNS = 0;
+	    } else {
+	    	// Do the regeneration, capturing any errors
+	        try {
+	        	regenerate( true, CSGEnvironment.resolveEnvironment( mEnvironment, null) );
+	        } catch( CSGConstructionException ex ) {
+	        	// This error should already be registered with this element
+	        }
+			if ( !this.isValid() ) {
+				CSGEnvironment.sLogger.log( Level.WARNING, "Geometry invalid: " + this );
+			}
+	    }
 	}
 
 	/////// Implement ConstructiveSolidGeometry

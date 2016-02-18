@@ -96,8 +96,8 @@ public class CSGPlaceholderSpatial
 				return( useSpatial );
 				
 			} else {
-				throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
-													, "No such Spatial: " + mReference );
+				// Nothing can be resolved at this time
+				return( null );
 			}
 		} else {
 			throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED

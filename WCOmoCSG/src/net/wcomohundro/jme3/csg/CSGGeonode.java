@@ -113,6 +113,9 @@ public class CSGGeonode
 	/** Management of the generated meshes */
 	protected CSGMeshManager	mMeshManager;
 	protected boolean			mDeferSceneChanges;
+	protected CSGShape			mPriorResult;
+	/** TangetBinormal generation control flag */
+	protected boolean			mGenerateTangentBinormal;
 
 	
 	/** Basic null constructor */
@@ -147,7 +150,10 @@ public class CSGGeonode
 	@Override
 	public void forceSingleMaterial( boolean pFlag ) { mForceSingleMaterial = pFlag; }
 
-	
+	/** Accessor to the TangentBinormal generation flag */
+	public boolean getGenerateTangentBinormal() { return mGenerateTangentBinormal; }
+	public void setGenerateTangentBinormal( boolean pFlag ) { mGenerateTangentBinormal = pFlag; }
+
     /** If physics is active for the shape, connect it all up now */
     @Override
     public void applyPhysics(
@@ -265,14 +271,29 @@ public class CSGGeonode
 			//	This means we could have positioning issues if the CSGGeonode moves and we 
 			//	then use mMasterGeometry for other processing, like collision detection
 		}
+		if ( this.isValid() ) {
+	        // TangentBinormalGenerator directive
+	        if ( mGenerateTangentBinormal ) {
+	        	// The Generator understands working the children of a Node
+	        	TangentBinormalGenerator.generate( this );
+	        }
+		}
 	}
 
 	/** Action to generate the mesh based on the given shapes */
 	@Override
 	public CSGShape regenerate(
-		CSGEnvironment		pEnvironment
+		boolean				pOnlyIfNeeded
+	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
-		mRegenNS = 0;
+		if ( pOnlyIfNeeded && (mRegenNS > 0) ) {
+			// Regeneration already complete
+			return( mPriorResult );
+		} else {
+			// Force regeneration from scratch
+			mRegenNS = 0;
+			mPriorResult = null;
+		}
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction operation
 			mRegenNS = -1;
@@ -360,7 +381,7 @@ public class CSGGeonode
 						// Update the scene NOW
 						applySceneChanges( meshManager );
 					}
-					return( aProduct );
+					return( mPriorResult = aProduct );
 				} else {
 					// Nothing produced
 					setError( null );
@@ -451,48 +472,37 @@ public class CSGGeonode
 		
 		// Look for the list of shapes
 		mShapes = (List<CSGShape>)aCapsule.readSavableArrayList( "shapes", null );
-		if ( mShapes == null ) {
-			// If no shapes, then possibly an external reference
-			AssetKey aKey = (AssetKey)aCapsule.readSavable( "model", null );
-			if ( aKey != null ) {
-				AssetInfo keyInfo = aManager.locateAsset( aKey );
-				if ( keyInfo != null ) {
-					Object aModel = pImporter.load( keyInfo );
-					if ( aModel instanceof CSGGeonode ) {
-						// Absorb the referenced entity into this one
-						throw new IllegalStateException( "CSGGeonode 'model' not yet supported" );
-					}
-				}				
+
+        // Multi-materials can be suppressed
+        mForceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  false );
+        
+		// Look for specially defined tranform 
+		if ( this.localTransform == Transform.IDENTITY ) {
+			// No explicit transform, look for a proxy
+			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
+			if ( proxyTransform != null ) {
+				localTransform = proxyTransform.getTransform();
 			}
-		} else {
-	        // Multi-materials can be suppressed
-	        mForceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  false );
-	        
-			// Look for specially defined tranform 
-			if ( this.localTransform == Transform.IDENTITY ) {
-				// No explicit transform, look for a proxy
-				CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
-				if ( proxyTransform != null ) {
-					localTransform = proxyTransform.getTransform();
-				}
-			}
-			// Rebuild based on the shapes just loaded, which sets the mValid status
+		}
+		// Are we generating the tangents?
+	    mGenerateTangentBinormal = aCapsule.readBoolean( "generateTangentBinormal", false );
+
+		// Rebuild based on the shapes just loaded, which sets the mValid status
+	    boolean doLater = aCapsule.readBoolean( "deferRegeneration", false );
+	    if ( doLater ) {
+	    	// No regeneration at this time
+	    	this.mRegenNS = 0;
+	    } else {
+	    	// Do the regeneration now and capture any errors
 	        try {
 	        	regenerate();
 	        } catch( CSGConstructionException ex ) {
 	        	// This error should already be registered with this element
 	        }
-			if ( this.isValid() ) {
-		        // TangentBinormalGenerator directive
-		        boolean generate = aCapsule.readBoolean( "generateTangentBinormal", false );
-		        if ( generate ) {
-		        	// The Generator understands working the children of a Node
-		        	TangentBinormalGenerator.generate( this );
-		        }
-			} else {
+			if ( !this.isValid() ) {
 				CSGEnvironment.sLogger.log( Level.WARNING, "Invalid Geonode: " + this );
 			}
-		}
+	    }
 	}
 	
 	/////// Implement ConstructiveSolidGeometry

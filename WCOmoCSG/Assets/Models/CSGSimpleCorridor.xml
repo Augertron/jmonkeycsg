@@ -1,5 +1,6 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <net.wcomohundro.jme3.csg.CSGGeonode name='ArchwayCorridor' id='ACorridor'
+			deferRegeneration='true'
        		singleMaterial='false' 
        		generateTangentBinormal='true'
        		shadow_mode='CastAndReceive'
@@ -31,7 +32,7 @@
 	</library>
 	
     <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
-        <translation class='com.jme3.math.Vector3f' x='0' y='1' z='-5.0'/>
+        <translation class='com.jme3.math.Vector3f' x='0' y='1' z='0.0'/>
         <XXXrot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
     </csgtransform>
     <physics class='com.jme3.bullet.control.RigidBodyControl'
