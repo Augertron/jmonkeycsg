@@ -170,6 +170,15 @@ public class CSGGeometry
         // Keep the instance key unique
 		mInstanceKey = CSGShape.assignInstanceKey( this.name );
 
+		// Keep local lights strictly local and NOT shared
+		if ( this.localLights.size() > 0 ) {
+			LightList copyLights = new LightList( this );
+			for( Light aLight : this.localLights ) {
+				copyLights.add( aLight.clone() );
+			}
+			this.localLights = copyLights;
+		}
+
 		// @todo - what about the shapes???
 		
         // Ensure we have our own copy of the physics
@@ -256,30 +265,6 @@ public class CSGGeometry
 		}
 	}
 	
-	/** Scan the local light list and make a clone if matched */
-	@Override
-    public Light cloneLocalLight(
-    	Light	pLight	
-    ) {
-        LightList localLights = getLocalLightList();
-        for( int i = localLights.size() -1; i >= 0; i -= 1 ) {
-        	Light aLight = localLights.get( i );
-        	if ( aLight == pLight ) {
-        		// Replace with a CLONED copy
-        		aLight = CSGLightControl.cloneLight( aLight ); // aLight.clone();
-        		
-        		// Unfortunately, there is no replace, so the clone will slide
-        		// to the end of the list
-        		localLights.remove( i );
-        		localLights.add( aLight );
-        		
-        		pLight = aLight;
-        		break;
-        	}
-        }
-        return( pLight );
-	}
-
     /** Test if this Spatial has its own custom physics defined */
     @Override
     public boolean hasPhysics() { return mPhysics != null; }

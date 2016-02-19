@@ -143,7 +143,15 @@ public class CSGNode
         
         // Keep the instance key unique
 		mInstanceKey = CSGShape.assignInstanceKey( this.name );
-
+		
+		// Keep local lights strictly local and NOT shared
+		if ( this.localLights.size() > 0 ) {
+			LightList copyLights = new LightList( this );
+			for( Light aLight : this.localLights ) {
+				copyLights.add( aLight.clone() );
+			}
+			this.localLights = copyLights;
+		}
         // Ensure we have our own copy of the physics
         if ( aCopy.mPhysics != null ) {
         	aCopy.mPhysics = (PhysicsControl)this.mPhysics.cloneForSpatial( aCopy );
@@ -222,31 +230,6 @@ public class CSGNode
         this.mMaterial = pMaterial;
     }
     
-	/** Scan the local light list and make a clone if matched */
-	@Override
-    public Light cloneLocalLight(
-    	Light	pLight	
-    ) {
-        LightList localLights = getLocalLightList();
-        for( int i = localLights.size() -1; i >= 0; i -= 1 ) {
-        	Light aLight = localLights.get( i );
-        	if ( aLight == pLight ) {
-        		// Replace with a CLONED copy
-        		aLight = CSGLightControl.cloneLight( aLight ); // aLight.clone();
-        		
-        		// Unfortunately, there is no replace, so the clone will slide
-        		// to the end of the list
-        		localLights.remove( i );
-        		localLights.add( aLight );
-        		
-        		pLight = aLight;
-        		break;
-        	}
-        }
-        return( pLight );
-	}
-
-	
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
 	 	a material

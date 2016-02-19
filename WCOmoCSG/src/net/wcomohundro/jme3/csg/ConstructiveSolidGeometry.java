@@ -206,10 +206,6 @@ public interface ConstructiveSolidGeometry
 		
 		/** Accessor to the light list (ala Spatial) */
 		public LightList getLocalLightList();
-		/** Scan the local light list and make a clone if matched */
-	    public Light cloneLocalLight(
-	    	Light	pLight	
-	    );
 	 
 		/** Accessor to the transform */
 		public Transform getLocalTransform();

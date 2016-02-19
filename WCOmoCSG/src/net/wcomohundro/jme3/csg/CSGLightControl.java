@@ -94,37 +94,6 @@ public class CSGLightControl
 		}
 	}
 	
-	/** Light.clone() does not really work very well--- so here is a hack */
-	public static Light cloneLight(
-		Light		pLight
-	) {
-		Light aCopy;
-		if ( pLight instanceof SpotLight ) {
-			SpotLight aSpot = (SpotLight)pLight;
-			aCopy = new SpotLight( aSpot.getPosition()
-									, aSpot.getDirection()
-									, aSpot.getSpotRange()
-									, aSpot.getColor()
-									, aSpot.getSpotInnerAngle()
-									, aSpot.getSpotOuterAngle() );
-		} else if ( pLight instanceof PointLight ) {
-			PointLight aSpot = (PointLight)pLight;
-			aCopy = new PointLight( aSpot.getPosition()
-									, aSpot.getColor()
-									, aSpot.getRadius() );
-		} else if ( pLight instanceof DirectionalLight ) {
-			DirectionalLight aSpot = (DirectionalLight)pLight;
-			aCopy = new DirectionalLight( aSpot.getDirection()
-									, aSpot.getColor() );			
-		} else if ( pLight instanceof AmbientLight ) {
-			AmbientLight aSpot = (AmbientLight)pLight;
-			aCopy = new AmbientLight( aSpot.getColor() );						
-		} else {
-			aCopy = null;
-		}
-		return( aCopy );
-	}
-	
 	/** The Light that is local to the Spatial */
     protected Light		mLight;
     /** Local transform to apply */
@@ -135,7 +104,7 @@ public class CSGLightControl
     protected Vector3f	mOriginalDirection;
     /** What was the last transform we applied */
     protected Transform	mLastWorldTransform;
-    /** Control flag to adjust the light only on the intial position */
+    /** Control flag to adjust the light only on the initial position */
     protected boolean	mInitialPositionOnly;
     
 
@@ -155,9 +124,9 @@ public class CSGLightControl
     
     /** Clone this control for a given light */
     public CSGLightControl clone(
-    	Light	pLight
+    	Light		pLight
     ) {
-    	CSGLightControl aCopy = (CSGLightControl)this.cloneForSpatial( null );
+    	CSGLightControl aCopy = (CSGLightControl)super.cloneForSpatial( null );
     	aCopy.mLight = pLight;
     	return( aCopy );
     }
@@ -166,10 +135,6 @@ public class CSGLightControl
     	Spatial		pSpatial
     ) {
     	CSGLightControl aCopy = (CSGLightControl)super.cloneForSpatial( pSpatial );
-    	if ( pSpatial instanceof CSGElement ) {
-    		// Replace any local light we are controlling with an appropriate clone
-    		aCopy.mLight = ((CSGElement)pSpatial).cloneLocalLight( aCopy.mLight );
-    	}
     	return( aCopy );
     }
     

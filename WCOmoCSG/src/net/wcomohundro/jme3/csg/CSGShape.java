@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
@@ -370,6 +371,8 @@ public class CSGShape
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Nanoseconds needed to regenerate this shape */
 	protected long						mRegenNS;
+	/** Flag if underlying mesh has already been prepared */
+	protected AtomicBoolean				mMeshIsPrepared;
 	/** A list of arbitrary elements that can be named and referenced during
 	 	XML load processing via id='somename' and ref='somename',
 	 	and subsequently referenced programmatically via its inherent name. */
@@ -404,6 +407,8 @@ public class CSGShape
 		mOperator = CSGGeometry.CSGOperator.UNION;
 		mSurface = CSGShapeSurface.USE_MESH;
 		
+		mMeshIsPrepared = new AtomicBoolean();
+		
 		// Empty library until explicitly set
 		mLibraryItems = Collections.EMPTY_MAP;
 	}
@@ -416,6 +421,8 @@ public class CSGShape
 		mOperator = CSGGeometry.CSGOperator.UNION;		
 		mSurface = CSGShapeSurface.USE_MESH;
 		
+		mMeshIsPrepared = new AtomicBoolean();
+
 		// Empty library until explicitly set
 		mLibraryItems = Collections.EMPTY_MAP;
 	}
@@ -444,6 +451,11 @@ public class CSGShape
 		
 		setError( pAnError );
 		setError( pOtherError );
+		
+		mMeshIsPrepared = new AtomicBoolean();
+
+		// Empty library until explicitly set
+		mLibraryItems = Collections.EMPTY_MAP;
 	}
 	
 	/** Return the JME aspect of this element */
@@ -464,20 +476,22 @@ public class CSGShape
 	,	CSGOperator		pOperator
 	) {
 		if ( pSpatial != null ) {
-			// Carry forward any transform that the Spatial knows of
-			this.localTransform = pSpatial.getLocalTransform().clone();
-			
+			// Special proxy handling
 			if ( pSpatial instanceof CSGPlaceholderSpatial ) {
 				// A stand-in for a true 'spatial', which we will resolve when we can
 				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveSpatial( this );
 				if ( useSpatial == null ) {
-					// Nothing can be resolved at this time, maybe later????
+					// Nothing can be resolved at this time, remember for later
 					this.mProxy = (CSGPlaceholderSpatial)pSpatial;
 				} else {
 					// Use what we resolved to
 					pSpatial = useSpatial;
 				}
 			}
+			// Carry forward any transform that the Spatial knows of
+			this.localTransform = pSpatial.getLocalTransform().clone();
+			
+			// How to interpret the mesh of the given spatial
 			if ( pSpatial instanceof CSGGeonode ) {
 				// Use the overall Geometry as the representation of the Geonode
 				pSpatial = ((CSGGeonode)pSpatial).getMasterGeometry();
@@ -561,35 +575,15 @@ public class CSGShape
 		aClone.setShapeSurface( this.mSurface );
 //		aClone.setLodLevel( pLODLevel );
 		
+		// NOTE that since clones share the same underlying Mesh, they all share
+		//		the same MeshIsPrepared instance
+		aClone.mMeshIsPrepared = this.mMeshIsPrepared;
+		
 		// Register this shape's standard Material
 		pMeshManager.resolveMeshIndex( null, aClone.getMaterial(), null, aClone );
 		
 		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
 		return( aClone );
-	}
-	
-	/** Scan the local light list and make a clone if matched */
-	@Override
-    public Light cloneLocalLight(
-    	Light	pLight	
-    ) {
-        LightList localLights = getLocalLightList();
-        for( int i = localLights.size() -1; i >= 0; i -= 1 ) {
-        	Light aLight = localLights.get( i );
-        	if ( aLight == pLight ) {
-        		// Replace with a CLONED copy
-        		aLight = CSGLightControl.cloneLight( aLight ); // aLight.clone();
-        		
-        		// Unfortunately, there is no replace, so the clone will slide
-        		// to the end of the list
-        		localLights.remove( i );
-        		localLights.add( aLight );
-        		
-        		pLight = aLight;
-        		break;
-        	}
-        }
-        return( pLight );
 	}
 	
 	/** Unique keystring identifying this element */
@@ -835,14 +829,19 @@ public class CSGShape
 	@Override
     public Mesh getMesh(
     ) {
-		if ( this.mesh != null ) {
+		Mesh useMesh = this.mesh;
+		if ( useMesh != null ) {
 			if ( mSurface == CSGShapeSurface.USE_MESH ) {
 				// Use what we know
-				return( this.mesh );
+				return( useMesh );
 			}
 			// Determine the span of the underlying mesh
+			// NOTE that the localTransform applied to this shape should account
+			//		for any positioning of the BoundingVolume.  No extra manipulation
+			//		of the Volume is needed.
 			Vector3f extent = new Vector3f();
-			BoundingVolume aVolume = this.mesh.getBound();
+			BoundingVolume aVolume = this.mesh.getBound(); //.transform( this.getLocalTransform() );
+			
 			switch( aVolume.getType() ) {
 			case AABB:
 				((BoundingBox)aVolume).getExtent( extent );
@@ -855,16 +854,16 @@ public class CSGShape
 			if ( !extent.equals( Vector3f.ZERO ) ) {
 				switch( mSurface ) {
 				case USE_BOUNDING_BOX:
-					CSGBox aBox = new CSGBox( extent.x, extent.y, extent.z );
-					return( aBox );
+					useMesh = new CSGBox( extent.x, extent.y, extent.z );
+					break;
 				case USE_BOUNDING_SPHERE:
-					CSGSphere aSphere = new CSGSphere( 32, 32, extent.x );
-					return( aSphere );
+					useMesh = new CSGSphere( 32, 32, extent.x );
+					break;
 				}
 			}
 		}
 		// Looks like an empty shape
-		return( null );
+		return( useMesh );
     }
 	
 	/** Action to generate the mesh based on the given shapes
@@ -1002,8 +1001,10 @@ public class CSGShape
 		}
 		if ( mSubShapes == null ) {
 			// NOT based on subshapes, so we rely on a spatial
-			// If we have face properties here at the Shape level, apply scaling now
-			if ( mesh instanceof CSGMesh ) {
+			// If we have face properties here at the Shape level, apply scaling now.
+			// If cloning was involved, then the mesh may already have been scaled.  We
+			// only need to prep the mesh once.
+			if ( !mMeshIsPrepared.getAndSet( true ) && (mesh instanceof CSGMesh) ) {
 				// We are wrapping around a Mesh that supports per-face texture scale
 				CSGMesh thisMesh = (CSGMesh)mesh;
 				

@@ -38,7 +38,7 @@
 		<net.wcomohundro.jme3.csg.CSGPlaceholderSpatial 
 				reference='Models/CSGSimpleCorridor.xml'>
             <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-3' y='-0.25' z='0'/>
+                <translation class='com.jme3.math.Vector3f' x='-3' y='0' z='0'/>
             </transform>
 		</net.wcomohundro.jme3.csg.CSGPlaceholderSpatial>
 		
@@ -71,10 +71,7 @@
 		        <net.wcomohundro.jme3.csg.CSGShape name='ACorridorHole' 
 		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
 		        	<spatial class='net.wcomohundro.jme3.csg.CSGPlaceholderSpatial' 
-		        		reference='Models/CSGSimpleCorridor.xml'/>
-		        	<transform class='com.jme3.math.Transform'>
-                		<translation class='com.jme3.math.Vector3f' x='-3' y='0' z='0'/>
-            		</transform>
+		        			reference='Models/CSGSimpleCorridor.xml' />
 		        </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeometry>
