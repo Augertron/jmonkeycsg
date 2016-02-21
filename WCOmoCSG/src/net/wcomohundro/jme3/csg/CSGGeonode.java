@@ -137,8 +137,13 @@ public class CSGGeonode
     ){
     	CSGGeonode aCopy = (CSGGeonode)super.clone( pCloneMaterials );
     	
-    	// @todo - what about the shapes????
-    	// @todo - what about master geometry???
+    	// A shallow clone of the shape list will suffice since a shared
+    	// shape will produce an appropriate mesh.  But we will need to 
+    	// be careful with lights....
+    	
+    	// I am going to assume that any clone will still be regenerated
+    	// and the MasterGeometry will be rebuilt
+    	//aCopy.mMasterGeometry = null;
     	return( aCopy );
     }
 
@@ -294,6 +299,7 @@ public class CSGGeonode
 			mRegenNS = 0;
 			mPriorResult = null;
 		}
+		pEnvironment = CSGEnvironment.resolveEnvironment( (pEnvironment == null) ? mEnvironment : pEnvironment, this );
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction operation
 			mRegenNS = -1;

@@ -367,6 +367,8 @@ public class CSGShape
 	protected CSGElement				mParentElement;
 	/** Physics that applies to this shape */
 	protected PhysicsControl			mPhysics;
+	/** Special 'shared' lights that are really defined/controlled by another shape */
+	protected String[]					mSharedLights;
 	/** The list of custom Properties to apply to the various faces of the interior components */
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** Nanoseconds needed to regenerate this shape */
@@ -481,7 +483,7 @@ public class CSGShape
 				// A stand-in for a true 'spatial', which we will resolve when we can
 				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveSpatial( this );
 				if ( useSpatial == null ) {
-					// Nothing can be resolved at this time, remember for later
+					// Nothing can be resolved at this time, remember it for later
 					this.mProxy = (CSGPlaceholderSpatial)pSpatial;
 				} else {
 					// Use what we resolved to
@@ -649,6 +651,11 @@ public class CSGShape
 		return( anItem );
 	}
 	
+	/** Accessor to the shared light list */
+	public String[] getSharedLights() { return mSharedLights; }
+	public void setSharedLights( String[] pSharedLights ) { mSharedLights = pSharedLights; }
+	
+	
 	/** Ready a list of shapes for processing */
 	public List<CSGShape> prepareShapeList(
 		List<CSGShape>	pShapeList
@@ -691,6 +698,8 @@ public class CSGShape
 			aTransform = null;
 		}
 		// If we are a subshape of a SHAPE, then the parent's transform applies as well
+		// during 'preTransform' processing.  This is when a mesh is totally transformed
+		// before any shape blending is applied.
 		if ( pEnvironment.mPreTransform && (mParentElement instanceof CSGShape) ) {
 			Transform parentTransform = ((CSGShape)mParentElement).getCSGTransform( pEnvironment );
 			if ( parentTransform != null ) {
@@ -873,7 +882,7 @@ public class CSGShape
 	@Override
 	public CSGShape regenerate(
 	) {
-		return( regenerate( false, CSGEnvironment.resolveEnvironment( null, this ) ) );		
+		return( regenerate( false, null ) );		
 	}
 	@Override
 	public CSGShape regenerate(
@@ -884,6 +893,7 @@ public class CSGShape
 			// Use what we generated last time
 			return( mPriorResult );
 		}
+		pEnvironment = CSGEnvironment.resolveEnvironment( pEnvironment, this );
 		CSGTempVars tempVars = CSGTempVars.get();
 		CSGMeshManager meshManager = new CSGMeshManager( this, false );
 		try {
@@ -972,6 +982,9 @@ public class CSGShape
 		}
         // Any physics?
         mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
+        
+        // Special shared lights
+        mSharedLights = aCapsule.readStringArray( "sharedLights", null );
 
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );

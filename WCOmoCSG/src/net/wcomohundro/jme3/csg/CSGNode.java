@@ -315,7 +315,7 @@ public class CSGNode
     @Override
 	public CSGShape regenerate(
 	) throws CSGConstructionException {
-		return( regenerate( false, CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
+		return( regenerate( false, null ) );
 	}
 	@Override
 	public CSGShape regenerate(
@@ -324,6 +324,7 @@ public class CSGNode
 	) throws CSGConstructionException {
 		mRegenNS = -1;
 		long totalNS = 0;
+		pEnvironment = CSGEnvironment.resolveEnvironment( (pEnvironment == null) ? mEnvironment : pEnvironment, this );
 
 		// Operate on all CSG elements defined within this node, returning the last
 		// NOTE that we only detect first level children -- but you can always nest by
@@ -435,16 +436,6 @@ public class CSGNode
 				localTransform = proxyTransform.getTransform();
 			}
 		}
-        // Are the local lights truely local?
-        // Quite honestly, I do not understand the rationale behind how localLights
-        // are managed under standard jme3.  If I make a light local to a Node, I fully
-        // expect that light to move around as any transform is applied to the Node.
-        boolean transformLights = aCapsule.readBoolean( "transformLights", true );
-        if ( transformLights ) {
-        	mLightControl = new CSGLightControl();
-        } else {
-        	mLightControl = (Control)aCapsule.readSavable( "lightControl", null );
-        }
 		// Look to apply this material as a default for any elements with no material
 		this.setDefaultMaterial( mMaterial );
 
@@ -454,7 +445,7 @@ public class CSGNode
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
 
-		// Individual CSGSpatials will regenerate as part of read(), so now scan the list
+		// Individual CSGSpatials may regenerate as part of read(), so now scan the list
 		// looking for any oddness.
 		mInError = null;
 		List<Spatial> aChildList =  this.getChildren();
@@ -477,7 +468,17 @@ public class CSGNode
 				i -= 1;
 			}
 		}		
-        if ( mLightControl != null ) {
+        // Are the local lights truely local?
+        // Quite honestly, I do not understand the rationale behind how localLights
+        // are managed under standard jme3.  If I make a light local to a Node, I fully
+        // expect that light to move around as any transform is applied to the Node.
+        boolean transformLights = aCapsule.readBoolean( "transformLights", true );
+        if ( transformLights ) {
+        	mLightControl = new CSGLightControl();
+        } else {
+        	mLightControl = (Control)aCapsule.readSavable( "lightControl", null );
+        }
+       if ( mLightControl != null ) {
         	// Build a control for every local light to keep its position in synch
         	// with transforms applied to this Node
 			CSGLightControl.applyLightControl( mLightControl

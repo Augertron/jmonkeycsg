@@ -417,15 +417,6 @@ public class CSGGeometry
 	        if ( mGenerateTangentBinormal ) {
 	        	TangentBinormalGenerator.generate( this );
 	        }
-	        if ( mLightControl != null ) {
-	        	// Build a control for every local light to keep its position in synch
-	        	// with transforms applied to this Node
-				CSGLightControl.applyLightControl( mLightControl
-													, this.getLocalLightList()
-													, null
-													, this
-													, false );
-	        }
 		}
 	}
 
@@ -433,7 +424,7 @@ public class CSGGeometry
 	@Override
 	public CSGShape regenerate(
 	) throws CSGConstructionException {
-		return( regenerate( false, CSGEnvironment.resolveEnvironment( mEnvironment, this ) ) );
+		return( regenerate( false, null ) );
 	}
 	@Override
 	public CSGShape regenerate(
@@ -448,6 +439,7 @@ public class CSGGeometry
 			mRegenNS = 0;
 			mPriorResult = null;
 		}
+		pEnvironment = CSGEnvironment.resolveEnvironment( (pEnvironment == null) ? mEnvironment : pEnvironment, this );
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction
 			mRegenNS = -1;						// Flag REGEN in progress
@@ -589,10 +581,16 @@ public class CSGGeometry
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
 		
+        // Any custom environment?
+        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
+        if ( mEnvironment != null ) {
+        	// Incorporate this name AND define the standard as needed
+        	mEnvironment = CSGEnvironment.resolveEnvironment( mEnvironment, this );
+        }
 		// Support arbitrary Library items, defined BEFORE we process the rest of the items
         // Such items can be referenced within the XML stream itself via the
         //		id='name' and ref='name'
-        // mechanism, and can be reference programmatically via their inherent names
+        // mechanism, and can be referenced programmatically via their inherent names
 		Savable[] libraryItems = aCapsule.readSavableArray( "library", null );
 		mLibraryItems = CSGShape.fillLibrary( libraryItems, pImporter.getAssetManager() );
 		
@@ -634,6 +632,15 @@ public class CSGGeometry
         		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
         	}
         }
+        // Any physics?
+        mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
+
+        // Look for possible face properties to apply to interior mesh/subgroup
+        mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
+        
+        // Do generation?
+	    mGenerateTangentBinormal = aCapsule.readBoolean( "generateTangentBinormal", false );
+	    
         // Are the local lights truely local?
         // Quite honestly, I do not understand the rationale behind how localLights
         // are managed under standard jme3.  If I make a light local to a Node, I fully
@@ -644,21 +651,15 @@ public class CSGGeometry
         } else {
         	mLightControl = (Control)aCapsule.readSavable( "lightControl", null );
         }
-        // Any physics?
-        mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );
-
-        // Any custom environment?
-        mEnvironment = (CSGEnvironment)aCapsule.readSavable( "csgEnvironment", null );
-        if ( mEnvironment != null ) {
-        	// Incorporate this name AND define the standard as needed
-        	mEnvironment = CSGEnvironment.resolveEnvironment( mEnvironment, this );
+        if ( mLightControl != null ) {
+        	// Build a control for every local light to keep its position in synch
+        	// with transforms applied to this Node
+			CSGLightControl.applyLightControl( mLightControl
+												, this.getLocalLightList()
+												, null
+												, this
+												, false );
         }
-        // Look for possible face properties to apply to interior mesh/subgroup
-        mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
-        
-        // Do generation?
-	    mGenerateTangentBinormal = aCapsule.readBoolean( "generateTangentBinormal", false );
-
 	    // Rebuild based on the shapes just loaded
 	    boolean doLater = aCapsule.readBoolean( "deferRegeneration", false );
 	    if ( doLater ) {

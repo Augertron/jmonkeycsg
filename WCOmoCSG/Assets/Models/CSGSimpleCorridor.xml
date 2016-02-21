@@ -1,4 +1,7 @@
 <?xml  version='1.0' encoding='UTF-8'?>
+<!-- This shape is designed to be 'included' as part of another construct,
+	 so its regeneration is 'deferrred'
+ -->
 <net.wcomohundro.jme3.csg.CSGGeonode name='ArchwayCorridor' id='ACorridor'
 			deferRegeneration='true'
        		singleMaterial='false' 
@@ -24,11 +27,38 @@
        		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
        	</com.jme3.light.AmbientLight>
        	
-        <com.jme3.light.DirectionalLight name='DLight' id='DLight' enabled='true' 
-       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+       	<com.jme3.light.AmbientLight name='ColoredLightDim' id='ColoredLightDim' enabled='true'>
+       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.00' a='1'/>
+       	</com.jme3.light.AmbientLight>
+       	
+        <com.jme3.light.DirectionalLight name='DLight' id='DLight' enabled='true'>
+       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0' a='1'/>
        		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
        	</com.jme3.light.DirectionalLight>
+       	
+       	<lights class='com.jme3.light.LightList' id='InteriorLights'>
+   			<lights>
+		      	<com.jme3.light.SpotLight name='SpotLightGreen' enabled='true' 
+		      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
+		      		<color class='com.jme3.math.ColorRGBA' r='0' g='1' b='0' a='1'/>
+		      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.0'/>
+		      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+		      	</com.jme3.light.SpotLight>
+		      	<com.jme3.light.SpotLight name='SpotLightRed' enabled='true' 
+		      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
+		      		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
+		      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='-0.34'/>
+		      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+		      	</com.jme3.light.SpotLight>
+		      	<com.jme3.light.SpotLight name='SpotLightBlue' enabled='true' 
+		      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
+		      		<color class='com.jme3.math.ColorRGBA' r='0' g='0' b='1' a='1'/>
+		      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.34'/>
+		      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+		      	</com.jme3.light.SpotLight>
+     			</lights>
+   		</lights>
+       	
 	</library>
 	
     <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
@@ -75,6 +105,12 @@
 			<transform class='com.jme3.math.Transform'>
            		<translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/>
            	</transform>
+           	<!-- Special light on the exterior only -->
+		    <lights class='com.jme3.light.LightList'>
+				<lights>
+					<com.jme3.light.AmbientLight ref='DLight'/>
+				</lights>
+		    </lights>
        </net.wcomohundro.jme3.csg.CSGShape>
                
        <!-- NOTE that we build the 'unit' interior arch to be 1 long, and adjust
@@ -83,28 +119,7 @@
                  within the 'unit' interior as well. -->
        <net.wcomohundro.jme3.csg.CSGShape name='InteriorArch' operator='DIFFERENCE' >
        		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
-     		<lights class='com.jme3.light.LightList'>
-    			<lights>
-			      	<com.jme3.light.SpotLight name='SpotLightGreen' enabled='true' 
-			      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
-			      		<color class='com.jme3.math.ColorRGBA' r='0' g='1' b='0' a='1'/>
-			      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.0'/>
-			      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
-			      	</com.jme3.light.SpotLight>
-			      	<com.jme3.light.SpotLight name='SpotLightRed' enabled='true' 
-			      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
-			      		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
-			      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='-0.34'/>
-			      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
-			      	</com.jme3.light.SpotLight>
-			      	<com.jme3.light.SpotLight name='SpotLightBlue' enabled='true' 
-			      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
-			      		<color class='com.jme3.math.ColorRGBA' r='0' g='0' b='1' a='1'/>
-			      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.34'/>
-			      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
-			      	</com.jme3.light.SpotLight>
-      			</lights>
-    		</lights>
+       		<lights class='com.jme3.light.LightList' ref='InteriorLights'/>
        		<shapes>
 	        	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom'>
 	              	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
@@ -155,8 +170,8 @@
            	<transform class='com.jme3.math.Transform'>
                  <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
            	</transform>
-       </net.wcomohundro.jme3.csg.CSGShape> 
-            
+       </net.wcomohundro.jme3.csg.CSGShape>  
+                 
        <net.wcomohundro.jme3.csg.CSGShape name='BackDoor' operator='DIFFERENCE'>
        			<!-- materialName='Textures/Debug/Normals.xml' -->
            	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
@@ -167,6 +182,11 @@
            		<translation class='com.jme3.math.Vector3f' x='0.7' y='-0.475' z='-9.0'/>
                	<rot class='net.wcomohundro.jme3.math.CSGQuaternion' yawl='PI/2' pitch='PI/32'/>
            	</csgtransform>
-       </net.wcomohundro.jme3.csg.CSGShape>
+           	<!-- Let the interior lights shine here as well -->
+     		<sharedLights>
+     			<String value='Exterior'/>
+     			<String value='InteriorArch'/>
+     		</sharedLights>
+       	</net.wcomohundro.jme3.csg.CSGShape>
     </shapes>
 </net.wcomohundro.jme3.csg.CSGGeonode>

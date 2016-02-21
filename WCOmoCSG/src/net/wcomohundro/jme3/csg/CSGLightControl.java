@@ -73,7 +73,8 @@ public class CSGLightControl
 		// Walk the list of lights
 		for( Light aLight : pLightList ) {
 			if ( pAttachToNode ) {
-				// Attach the light to the node
+				// Attach a copy of the light to the node.  This covers us for a 
+				// cloned Spatial with shared Shapes.
 				aLight = aLight.clone();
 				pNode.addLight( aLight );
 			}
@@ -104,7 +105,7 @@ public class CSGLightControl
     protected Vector3f	mOriginalDirection;
     /** What was the last transform we applied */
     protected Transform	mLastWorldTransform;
-    /** Control flag to adjust the light only on the initial position */
+    /** Control flag to adjust the light only on the initial positioning */
     protected boolean	mInitialPositionOnly;
     
 
