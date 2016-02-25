@@ -37,9 +37,11 @@
 		<!-- Simple corridor -->
 		<net.wcomohundro.jme3.csg.CSGPlaceholderSpatial 
 				reference='Models/CSGSimpleCorridor.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-3' y='0' z='0'/>
-            </transform>
+			<!-- Move/Rotate confirms that the interior lights are managed correctly -->
+		    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+		        <translation class='com.jme3.math.Vector3f' x='5' y='5' z='0'/>
+		        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
+		    </csgtransform>
 		</net.wcomohundro.jme3.csg.CSGPlaceholderSpatial>
 		
 		<!-- The floor -->

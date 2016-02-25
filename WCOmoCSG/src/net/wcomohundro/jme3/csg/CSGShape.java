@@ -82,6 +82,8 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
+import com.jme3.scene.control.Control;
+import com.jme3.scene.control.LightControl;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.scene.Mesh.Mode;
 import com.jme3.material.Material;
@@ -112,20 +114,37 @@ import com.jme3.util.TempVars;
  	different materials to different faces.  Therefore, if CSGShape can figure out how
  	multiple materials are assigned, then it keeps track of them.
  	
+ 	Similar to multiple materials, a CSGShape can also keep track of custom Physics to
+ 	apply to various faces.
+ 	
  	A CSGShape can act as a 'grouping' point for blending together a set of subshapes. This
  	allows you to build up a 'piece' with the group, and then apply a single transform 
  	to size the entire piece.  This is typically much easier than trying to individually 
  	size each component within the 'piece' and then blend it into the master.
+ 	
+ 	Lighting applied to a CSGShape is reflected in the Node constructed to represent the
+ 	faces this shape provides to the final result.  This is useful for lighting only 
+ 	the interior of the result.
+ 	
+ 	A CSGShape can also have a set of 'decorations'.  These decorations are Spatials
+ 	that are attached to this shape's Node in the final result.  By definition, local
+ 	lighting defined on a decoration is transferred to the result Node.  This allows
+ 	a complex entity like a Lamp to be attached to an interior shape, whose lighting
+ 	only applies to the interior.
  	
  	A CSGShape can be constructed from any Spatial.  If the Spatial is a Geometry, then
  	the Geometry's Mesh is used.  If the Spatial is a Node, then the CSGShape becomes a
  	parent group, and all the Node's children are added as subshapes.  In either case,
  	the Spatial's Material is retained, along with its transform.
  	
- 	So a CSGShape is based on 1) a Mesh,  2) a set of subshapes,  3) a boolean blend
+ 	So a CSGShape is based on 1) a Mesh,  2) a grouping of subshapes,  3) a boolean blend
  	In the case of a 'clone' or a 'prepare' as part of regeneration, cases 1 & 2 reset the
  	generated set polygons back to empty and rebuild from scratch.  For case 3, regeneration
  	is using the result of a previous blend, so the polygons must be retained.
+ 	
+ 	In most cases, the mesh behind the shape is used in boolean operations.  However, you
+ 	can select which 'surface' to use in the blend.  In addition to the basic Mesh, you 
+ 	can choose to use a bounding Box or Sphere to represent the shape.
  	
  	The boolean processing is based on either:
  	
@@ -346,8 +365,9 @@ public class CSGShape
         return aBuffer;
     }
     
-    /** Unique instance marker */
+    /** Unique instance counter */
     protected static int sInstanceMarker;
+    
     
     /** Unique instance marker, suitable as a key */
     protected String					mShapeKey;
@@ -359,7 +379,7 @@ public class CSGShape
 	protected CSGGeometry.CSGOperator	mOperator;
 	/** Arbitrary 'ordering' of operations within the geometry */
 	protected int						mOrder;
-	/** The surface to use for the shape */
+	/** Which surface to use for the shape */
 	protected CSGShapeSurface			mSurface;
 	/** If this shape represents a group of blended shapes, these are the subshapes */
 	protected List<CSGShape>			mSubShapes;
@@ -367,10 +387,14 @@ public class CSGShape
 	protected CSGElement				mParentElement;
 	/** Physics that applies to this shape */
 	protected PhysicsControl			mPhysics;
+	/** Controls of any local lights that apply to this shape */
+	protected List<Control>				mLightControls;
 	/** Special 'shared' lights that are really defined/controlled by another shape */
 	protected String[]					mSharedLights;
 	/** The list of custom Properties to apply to the various faces of the interior components */
 	protected List<CSGFaceProperties>	mFaceProperties;
+	/** List of optional 'decorations' attached to this shape, which transfer to the resultant Mesh */
+	protected List<Spatial>				mDecorations;
 	/** Nanoseconds needed to regenerate this shape */
 	protected long						mRegenNS;
 	/** Flag if underlying mesh has already been prepared */
@@ -565,7 +589,8 @@ public class CSGShape
 				((CSGMesh)aClone.mesh).registerFaceProperties( pMeshManager, aClone );
 			}
 		} else if ( this.mSubShapes != null ) {
-			// No mesh, but use a shallow copy of the subshapes
+			// No mesh, but use a SHALLOW copy of the subshapes.  The shared subshapes should
+			// regenerate properly, but watch out for non-cloned lights.
 			aClone = (CSGShape)super.clone( false );
 			aClone.setOrder( mOrder );
 		} else {
@@ -578,7 +603,8 @@ public class CSGShape
 //		aClone.setLodLevel( pLODLevel );
 		
 		// NOTE that since clones share the same underlying Mesh, they all share
-		//		the same MeshIsPrepared instance
+		//		the same MeshIsPrepared instance.  This allows us to 'prepare' the
+		//		underlying mesh once and only once
 		aClone.mMeshIsPrepared = this.mMeshIsPrepared;
 		
 		// Register this shape's standard Material
@@ -650,6 +676,9 @@ public class CSGShape
 		}
 		return( anItem );
 	}
+	
+	/** Accessor to the list of active LightControls */
+	public List<Control> getLightControls() { return mLightControls; }
 	
 	/** Accessor to the shared light list */
 	public String[] getSharedLights() { return mSharedLights; }
@@ -756,7 +785,18 @@ public class CSGShape
 	@Override
 	public List<CSGFaceProperties>	getFaceProperties() { return mFaceProperties; }
 
-	
+    /** Accessor to the decorations */
+    public boolean hasDecorations() { return( mDecorations != null ); }
+    public List<Spatial> getDecorations() { return( mDecorations ); }
+    public void setDecorations( 
+    	List<Spatial> pDecorations 
+    ) {
+		if ( mDecorations == null ) {
+			mDecorations = new ArrayList( pDecorations.size() );
+		}
+		mDecorations.addAll( pDecorations );
+	}
+
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
 	 	a material
@@ -989,6 +1029,9 @@ public class CSGShape
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
         
+        // Any decorations?
+        mDecorations = aCapsule.readSavableArrayList( "decorations", null );
+        
         // Special debug??
         mDebug = aCapsule.readSavableArrayList( "debug", null );
 	}
@@ -1008,9 +1051,40 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
+		// If a proxy is involved, resolve it now
 		if ( mProxy != null ) {
-			// Resolve the proxy now
 			setSpatial( mProxy, null );
+		}
+		// Resolve all local lights
+		if ( mLightControls == null ) {
+			// Ready a place to stash all the lights
+			mLightControls = CSGLightControl.configureLightControls( mLightControls
+																	, null
+																	, getLocalLightList()
+																	, getLocalTransform() );
+			// Ensure all the decorations are ready for use
+			if ( mDecorations != null ) {
+				for( int i = 0, j = mDecorations.size(); i < j; i += 1 ) {
+					Spatial aSpatial = mDecorations.get( i );
+					
+					// If we are dealing with a placeholder, resolve it to the real component now
+					if ( aSpatial instanceof CSGPlaceholderSpatial ) {
+						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveSpatial( this );
+						mDecorations.set( i, aSpatial );
+					}
+					// By definition, any local lighting in the decoration really applies to the shape
+					// BUT decoration based lights are not affected by the local transform, only 
+					// the transform within the decoration itself.
+					mLightControls = CSGLightControl.configureLightControls( mLightControls
+																			, null
+																			, aSpatial.getLocalLightList()
+																			, aSpatial.getLocalTransform() );
+					// The decoration retains no lights of its own
+					aSpatial.getLocalLightList().clear();
+					aSpatial.removeControl( LightControl.class );
+					aSpatial.removeControl( CSGLightControl.class );
+				}
+			}
 		}
 		if ( mSubShapes == null ) {
 			// NOT based on subshapes, so we rely on a spatial

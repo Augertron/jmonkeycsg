@@ -1,6 +1,8 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <!-- This shape is designed to be 'included' as part of another construct,
 	 so its regeneration is 'deferrred'
+	 
+	 This allows us to reference other elements via Placeholders....
  -->
 <net.wcomohundro.jme3.csg.CSGGeonode name='ArchwayCorridor' id='ACorridor'
 			deferRegeneration='true'

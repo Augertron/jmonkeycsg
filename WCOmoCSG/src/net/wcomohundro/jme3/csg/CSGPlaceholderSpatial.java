@@ -42,6 +42,7 @@ import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 
@@ -54,7 +55,8 @@ public class CSGPlaceholderSpatial
 	extends Spatial
 {
 	/** The true Spatial we are referencing */
-	protected String	mReference;
+	protected String	mReference;				// Expected up in the library chain
+	protected Spatial	mModel;					// Externally defined and loaded
 	/** If the Spatial is to be cloned, then this is its new name */
 	protected String	mCloneAs;
 	
@@ -69,36 +71,37 @@ public class CSGPlaceholderSpatial
 	public Spatial resolveSpatial(
 		CSGElement		pContext
 	) throws CSGConstructionException {
+		Object aSpatial = mModel;
 		if ( mReference != null ) {
 			// Look up the reference within the given context
-			Object aSpatial = pContext.getLibraryItem( mReference );
-			if ( aSpatial instanceof Spatial ) {
-				// Found the spatial, what are we doing to it?
-				Spatial useSpatial;
-				if ( mCloneAs != null ) {
-					// Make a copy
-					useSpatial = ((Spatial)aSpatial).clone( true );
-					useSpatial.setName( mCloneAs );
-				} else {
-					// Directly use the spatial given
-					useSpatial = (Spatial)aSpatial;
-				}
-				// Apply any special movement
-				Transform placeholderTransform = this.getLocalTransform();
-				if ( !Transform.IDENTITY.equals( placeholderTransform ) ) {
-					// Apply the transform given
-					useSpatial.move( placeholderTransform.getTranslation() );
-					useSpatial.rotate( placeholderTransform.getRotation() );
-					
-					Vector3f aScale = placeholderTransform.getScale();
-					useSpatial.scale( aScale.x, aScale.y, aScale.z );
-				}
-				return( useSpatial );
-				
-			} else {
+			aSpatial = pContext.getLibraryItem( mReference );
+			if ( aSpatial == null ) {
 				// Nothing can be resolved at this time
 				return( null );
 			}
+		}
+		if ( aSpatial instanceof Spatial ) {
+			// Found the spatial, what are we doing to it?
+			Spatial useSpatial;
+			if ( mCloneAs != null ) {
+				// Make a copy
+				useSpatial = ((Spatial)aSpatial).clone( true );
+				useSpatial.setName( mCloneAs );
+			} else {
+				// Directly use the spatial given
+				useSpatial = (Spatial)aSpatial;
+			}
+			// Apply any special movement
+			Transform placeholderTransform = this.getLocalTransform();
+			if ( !Transform.IDENTITY.equals( placeholderTransform ) ) {
+				// Apply the transform given
+				useSpatial.move( placeholderTransform.getTranslation() );
+				useSpatial.rotate( placeholderTransform.getRotation() );
+				
+				Vector3f aScale = placeholderTransform.getScale();
+				useSpatial.scale( aScale.x, aScale.y, aScale.z );
+			}
+			return( useSpatial );
 		} else {
 			throw new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
 												, "Null Spatial reference" );
@@ -125,6 +128,14 @@ public class CSGPlaceholderSpatial
 		}
 		// What are we referencing 
 		mReference = aCapsule.readString( "reference", null );
+		if ( mReference == null ) {
+			// Not a library reference, how about an external model
+			String modelName = aCapsule.readString( "model", null );
+			if ( modelName != null ) {
+	    		// Load the given model
+	        	mModel = pImporter.getAssetManager().loadModel( modelName );
+			}
+		}
 		// Are we cloning it?
 		mCloneAs = aCapsule.readString( "cloneAs", null );
 	}

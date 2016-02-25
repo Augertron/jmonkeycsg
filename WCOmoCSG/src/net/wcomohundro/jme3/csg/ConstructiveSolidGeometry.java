@@ -214,7 +214,7 @@ public interface ConstructiveSolidGeometry
 		public boolean hasPhysics();
 		public PhysicsControl getPhysics();
 	    public void setPhysics( PhysicsControl pPhysics );
-
+	    
 		/** If physics is active for the element, connect it all up now */
 		public void applyPhysics(
 			PhysicsSpace		pPhysicsSpace

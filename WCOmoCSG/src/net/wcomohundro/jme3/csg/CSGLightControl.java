@@ -29,6 +29,9 @@
 **/
 package net.wcomohundro.jme3.csg;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 
 import com.jme3.light.AmbientLight;
@@ -60,39 +63,95 @@ public class CSGLightControl
 	extends AbstractControl
 	implements Cloneable
 {
-	/** Factory level service routine that understands applying a light control to a 
-	 	set of lights
-	 */
-	public static void applyLightControl(
-		Control			pLightControl
-	,	LightList		pLightList
-	,	Transform		pLocalTransform
-	,	Spatial			pNode
-	,	boolean			pAttachToNode
+	/** Service routine that understands adjusting a Light based on a transform */
+	public static Light applyLightTransform(
+		Light			pLight
+	,	Transform		pTransform
 	) {
-		// Walk the list of lights
-		for( Light aLight : pLightList ) {
-			if ( pAttachToNode ) {
-				// Attach a copy of the light to the node.  This covers us for a 
-				// cloned Spatial with shared Shapes.
-				aLight = aLight.clone();
-				pNode.addLight( aLight );
+        if ( pLight instanceof PointLight ) {
+        	// A PointLight has a position that we drag along with the change
+        	PointLight aLight = (PointLight)pLight;
+        	Vector3f newPosition = pTransform.transformVector( aLight.getPosition(), null );
+            aLight.setPosition( newPosition );
+            
+        } else if ( pLight instanceof DirectionalLight ) {
+        	// A DirectionalLight has a direction that must follow any rotation
+        	DirectionalLight aLight = (DirectionalLight)pLight;
+            aLight.setDirection( pTransform.getRotation().mult( aLight.getDirection() ) );
+            
+        } else if ( pLight instanceof SpotLight ) {
+        	// A SpotLight has a position and direction that must be kept up to date
+        	SpotLight aLight = (SpotLight)pLight;
+        	Vector3f newPosition = pTransform.transformVector( aLight.getPosition(), null );
+            aLight.setPosition( newPosition );
+            aLight.setDirection( pTransform.getRotation().mult( aLight.getDirection() ) );
+        }
+        return( pLight );
+	}
+	
+	/** Factory level service routine that understands applying a light control to a 
+	 	set of lights.
+	 	The lights are tracked via a list of 'controls' that apply to each light.
+	 */
+	public static List<Control> configureLightControls(
+		List<Control>	pControlList
+	,	Control			pControlTemplate
+	,	LightList		pLights
+	,	Transform		pLocalTransform
+	) {
+		// Ensure we have a place to stash the controls
+		if ( pControlList == null ) {
+			pControlList = new ArrayList( pLights.size() );
+		}
+		// Produce a control for every light in the list
+		for( Light aLight : pLights ) {
+			AbstractControl aControl = null;
+			
+			// Clone the light, which covers us for shared shapes
+			aLight = aLight.clone();
+			if ( pControlTemplate == null ) {
+				// Use a standard 
+				aControl = new CSGLightControl( aLight, true );
+				((CSGLightControl)aControl).setLocalTransform( pLocalTransform );
+				
+			} else if ( pControlTemplate instanceof CSGLightControl ) {
+				// Use the CSGLightControl supplied
+				aControl = ((CSGLightControl)pControlTemplate).clone( aLight );
+				((CSGLightControl)aControl).setLocalTransform( pLocalTransform );
+				
+			} else if ( pControlTemplate instanceof LightControl ) {
+				// Use the LightControll supplied
+				aControl = (LightControl)pControlTemplate.cloneForSpatial( null );
+				((LightControl)aControl).setLight( aLight );
 			}
-    		// Match the light to this node so that transforms apply
-			// NOTE that Ambient lights are not affected by any control and can be skipped
-			if ( !(aLight instanceof AmbientLight) ) {
-				if ( pLightControl instanceof CSGLightControl ) {
-					CSGLightControl aControl = ((CSGLightControl)pLightControl).clone( aLight );
-					aControl.setLocalTransform( pLocalTransform );
-					pNode.addControl( aControl );
-					
-				} else if ( pLightControl instanceof LightControl ) {
-					LightControl aControl = (LightControl)pLightControl.cloneForSpatial( null );
-					aControl.setLight( aLight );
-					pNode.addControl( aControl );
+			if ( aControl != null ) {
+				if ( aLight instanceof AmbientLight ) {
+					// NOTE that Ambient lights are not affected by the control, but the control
+					//		is used to remember the light itself
+					aControl.setEnabled( false );
 				}
+				pControlList.add( aControl );
 			}
 		}
+		return( (pControlList.isEmpty() ) ? null : pControlList );
+	}
+	
+	/** Resolve the light behind a given light control */
+	public static Light resolveLight(
+		Control		pLightControl
+	) {
+		Light aLight;
+		
+		if ( pLightControl instanceof CSGLightControl ) {
+			aLight = ((CSGLightControl)pLightControl).getLight();
+			
+		} else if ( pLightControl instanceof LightControl ) {
+			aLight = ((LightControl)pLightControl).getLight();
+			
+		} else {
+			aLight = null;
+		}
+		return( aLight );
 	}
 	
 	/** The Light that is local to the Spatial */
@@ -139,6 +198,11 @@ public class CSGLightControl
     	return( aCopy );
     }
     
+    /** Accessor to the light */
+    public Light getLight() { return mLight; }
+    public void setLight( Light pLight ) { mLight = pLight; }
+    
+    
     /** Accessor to the InitialPositionOnly control flag */
     public boolean isInitialPostitionOnly() { return mInitialPositionOnly; }
     public void setInitialPositionOnly( boolean pFlag ) { mInitialPositionOnly = pFlag; }
@@ -161,6 +225,9 @@ public class CSGLightControl
     	float tpf
     ) {
         if ( (this.spatial != null) && (this.mLight != null) ) {
+        	// @todo - think about eliminating the various .clone() operations below
+        	//		   if this is a use-only-once control
+        	
         	// A Transform affects every kind of light, which we must define in World coordinates
         	Transform aTransform = spatial.getWorldTransform();
         	if ( (mLastWorldTransform != null) && mLastWorldTransform.equals( aTransform ) ) {
@@ -173,37 +240,32 @@ public class CSGLightControl
         	if ( mLocalTransform != null ) {
         		aTransform = mLocalTransform.clone().combineWithParent( aTransform );
         	}
-	        if ( mLight instanceof PointLight ) {
-	        	// A PointLight has a position that we drag along with the change
-	        	PointLight aLight = (PointLight)mLight;
-	        	if ( mOriginalPosition == null ) {
-	        		mOriginalPosition = aLight.getPosition().clone();
-	        	}
-	        	Vector3f newPosition = aTransform.transformVector( mOriginalPosition, null );
-	            aLight.setPosition( newPosition );
-	            
-	        } else if ( mLight instanceof DirectionalLight ) {
-	        	// A DirectionalLight has a direction that must follow any rotation
-	        	DirectionalLight aLight = (DirectionalLight)mLight;
-	        	if ( mOriginalDirection == null ) {
-	        		mOriginalDirection = aLight.getDirection().clone();
-	        	}
-	            aLight.setDirection( aTransform.getRotation().mult( mOriginalDirection ) );
-	            
-	        } else if ( mLight instanceof SpotLight ) {
-	        	// A SpotLight has a position and direction that must be kept up to date
-	        	SpotLight aLight = (SpotLight)mLight;
-	        	if ( mOriginalPosition == null ) {
-	        		mOriginalPosition = aLight.getPosition().clone();
-	        	}
-	        	Vector3f newPosition = aTransform.transformVector( mOriginalPosition, null );
-	            aLight.setPosition( newPosition );
-	            
-	        	if ( mOriginalDirection == null ) {
-	        		mOriginalDirection = aLight.getDirection().clone();
-	        	}
-	            aLight.setDirection( aTransform.getRotation().mult( mOriginalDirection ) );
-	        }
+        	// Apply the transform according to the type of light, after keeping 
+        	// track of the lights current position/direction
+            if ( mLight instanceof PointLight ) {
+            	// A PointLight has a position that we drag along with the change
+            	PointLight aLight = (PointLight)mLight;
+            	if ( mOriginalPosition == null ) {
+            		mOriginalPosition = aLight.getPosition().clone();
+            	}
+            } else if ( mLight instanceof DirectionalLight ) {
+            	// A DirectionalLight has a direction that must follow any rotation
+            	DirectionalLight aLight = (DirectionalLight)mLight;
+            	if ( mOriginalDirection == null ) {
+            		mOriginalDirection = aLight.getDirection().clone();
+            	}
+            } else if ( mLight instanceof SpotLight ) {
+            	// A SpotLight has a position and direction that must be kept up to date
+            	SpotLight aLight = (SpotLight)mLight;
+            	if ( mOriginalPosition == null ) {
+            		mOriginalPosition = aLight.getPosition().clone();
+            	}
+            	if ( mOriginalDirection == null ) {
+            		mOriginalDirection = aLight.getDirection().clone();
+            	}
+            }
+         	applyLightTransform( mLight, aTransform );
+        	
 	        if ( mInitialPositionOnly ) {
 	        	// This control is no longer needed
 	        	// @todo - eliminate the control entirely

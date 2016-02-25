@@ -146,11 +146,11 @@ public class CSGNode
 		
 		// Keep local lights strictly local and NOT shared
 		if ( this.localLights.size() > 0 ) {
-			LightList copyLights = new LightList( this );
+			LightList copyLights = new LightList( aCopy );
 			for( Light aLight : this.localLights ) {
 				copyLights.add( aLight.clone() );
 			}
-			this.localLights = copyLights;
+			aCopy.localLights = copyLights;
 		}
         // Ensure we have our own copy of the physics
         if ( aCopy.mPhysics != null ) {
@@ -256,9 +256,17 @@ public class CSGNode
     	}
     }
     
-    /** Test if this Spatial has its own custom physics defined */
+    /** Accessor to the physics */
     @Override
     public boolean hasPhysics() { return mPhysics != null; }
+    @Override
+    public PhysicsControl getPhysics() { return mPhysics; }
+    @Override
+    public void setPhysics(
+    	PhysicsControl		pPhysics
+    ) {
+    	mPhysics = pPhysics;
+    }
     
     /** If physics is active for the shape, connect it all up now */
     @Override
@@ -294,22 +302,11 @@ public class CSGNode
     	mLightControl = pLightControl;
     }
     
-    /** Accessor to the physics */
-    @Override
-    public PhysicsControl getPhysics() { return mPhysics; }
-    @Override
-    public void setPhysics(
-    	PhysicsControl		pPhysics
-    ) {
-    	mPhysics = pPhysics;
-    }
-    
 	/** Accessor to Face oriented properties */
 	@Override
 	public boolean hasFaceProperties() { return( (mFaceProperties != null) && !mFaceProperties.isEmpty() ); }
 	@Override
 	public List<CSGFaceProperties>	getFaceProperties() { return mFaceProperties; }
-
 
 	/** Action to generate the mesh based on the given shapes */
     @Override
@@ -445,29 +442,6 @@ public class CSGNode
         // Look for possible face properties to apply to interior mesh/subgroup
         mFaceProperties = aCapsule.readSavableArrayList( "faceProperties", null );
 
-		// Individual CSGSpatials may regenerate as part of read(), so now scan the list
-		// looking for any oddness.
-		mInError = null;
-		List<Spatial> aChildList =  this.getChildren();
-		for( int i = 0, j = aChildList.size(); i < j; i += 1 ) {
-			Spatial aSpatial = aChildList.get( i );
-			if ( aSpatial instanceof CSGElement ) {
-				// Check on the construction of this element
-				CSGElement csgSpatial = (CSGElement)aSpatial;
-				mRegenNS += csgSpatial.getShapeRegenerationNS();
-				if ( !csgSpatial.isValid() ) {
-					mInError = CSGConstructionException.registerError( mInError, csgSpatial.getError() );
-				}
-			} else if ( aSpatial instanceof CSGPlaceholderSpatial ) {
-				// Resolve the placeholder to its real element
-				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveSpatial( this );
-				this.detachChildAt( i );
-				this.attachChildAt( realSpatial, i );
-				
-				// And check it again
-				i -= 1;
-			}
-		}		
         // Are the local lights truely local?
         // Quite honestly, I do not understand the rationale behind how localLights
         // are managed under standard jme3.  If I make a light local to a Node, I fully
@@ -481,11 +455,20 @@ public class CSGNode
        if ( mLightControl != null ) {
         	// Build a control for every local light to keep its position in synch
         	// with transforms applied to this Node
+/**
 			CSGLightControl.applyLightControl( mLightControl
 												, this.getLocalLightList()
 												, null
 												, this
 												, false );
+**/
+    	   List<Control> controls 
+    	   		= CSGLightControl.configureLightControls( null, mLightControl, this.getLocalLightList(), null );
+    	   if ( controls != null ) {
+	    	   for( Control aControl : controls ) {
+	    		   this.addControl( aControl );
+	    	   }
+    	   }
         }
 	}
 	

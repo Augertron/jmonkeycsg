@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
@@ -106,6 +107,29 @@ public class CSGLinkNode
 		// Let the super do its thing
 		super.read( pImporter );
 		
+		// Individual CSGSpatials may regenerate as part of read(), so now scan the list
+		// looking for any oddness.
+		mInError = null;
+		List<Spatial> aChildList =  this.getChildren();
+		for( int i = 0, j = aChildList.size(); i < j; i += 1 ) {
+			Spatial aSpatial = aChildList.get( i );
+			if ( aSpatial instanceof CSGElement ) {
+				// Check on the construction of this element
+				CSGElement csgSpatial = (CSGElement)aSpatial;
+				mRegenNS += csgSpatial.getShapeRegenerationNS();
+				if ( !csgSpatial.isValid() ) {
+					mInError = CSGConstructionException.registerError( mInError, csgSpatial.getError() );
+				}
+			} else if ( aSpatial instanceof CSGPlaceholderSpatial ) {
+				// Resolve the placeholder to its real element
+				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveSpatial( this );
+				this.detachChildAt( i );
+				this.attachChildAt( realSpatial, i );
+				
+				// And check it again
+				i -= 1;
+			}
+		}		
 	    // Rebuild the shapes just loaded
 	    boolean doLater = aCapsule.readBoolean( "deferRegeneration", false );
 	    if ( doLater ) {

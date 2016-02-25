@@ -97,7 +97,7 @@ public class CSGMeshManager
 	/** Control flag to force a single material */
 	protected boolean					mForceSingleMaterial;
 	/** Mapping to resolve 'shared' lights */
-	protected Map<String,CSGMeshInfo>	mLightingMap;
+	protected Map<String,List<Control>>	mLightingMap;
 	
 	
 	/** Constructor based on a given 'generic' material */
@@ -183,6 +183,10 @@ public class CSGMeshManager
 					// Custom physics have been defined
 					shapeKey.append( meshInfo.mPhysicsKey );
 				}
+				if ( (shapeKey.length() == 0) && (meshInfo.mDecorations != null) ) {
+					// We need a parent Node to hold the decorations
+					shapeKey.append( CSGShape.assignInstanceKey( "Decorations" ) );
+				}
 				if ( shapeKey.length() > 0 ) {
 					// In anticipation of multiple meshes sharing the same set of lights
 					// and/or physics, attach it all to a Node
@@ -195,27 +199,24 @@ public class CSGMeshManager
 						nodeMap.put( stringKey, aNode );
 						
 						// Include the lights at this new node level
-						// Remember that the meshInfo.mLightList was set based on the local lights
+						// Remember that the meshInfo.mLightControls was set based on the lights
 						// associated with the shape/mesh that caused the creation of this
 						// particular info entry.
-						if ( meshInfo.mLightList != null ) {
-							CSGLightControl.applyLightControl( pLightControl
-															, meshInfo.mLightList
-															, meshInfo.mLightListTransform
-															, aNode
-															, true );
-							// Reset the meshInfo light list to follow the lights in the mesh node,
-							// not from the underlying shape
-							meshInfo.mLightList = aNode.getLocalLightList();
+						if ( meshInfo.mLightControls != null ) {
+							// Attach every light to the node, and register its control
+							for( Control aLightControl : meshInfo.mLightControls ) {
+								aNode.addLight( CSGLightControl.resolveLight( aLightControl ) );
+								aNode.addControl( aLightControl );
+							}
 						}
 						if ( meshInfo.mSharedLights != null ) {
 							// Share in the shared lights 
 							// (NOT copies, and not controlled - that is the province of the original)
 							for( String aLightReference : meshInfo.mSharedLights ) {
-								CSGMeshInfo lightInfo = this.mLightingMap.get( aLightReference );
-								if ( (lightInfo != null) && (lightInfo.mLightList != null) ) {
-									for( Light aLight : lightInfo.mLightList ) {
-										aNode.addLight( aLight );
+								List<Control> sharedControls = this.mLightingMap.get( aLightReference );
+								if ( sharedControls != null ) {
+									for( Control aLightControl : sharedControls ) {
+										aNode.addLight( CSGLightControl.resolveLight( aLightControl ) );
 									}
 								}
 							}
@@ -223,6 +224,12 @@ public class CSGMeshManager
 						if ( meshInfo.mPhysics != null ) {
 							// Remember the active physics that was registered with this mesh
 							aNode.setPhysics( meshInfo.mPhysics );
+						}
+						if ( meshInfo.mDecorations != null ) {
+							// All decorations applied to this mesh are included within the Node
+							for( Spatial aDecoration : meshInfo.mDecorations ) {
+								aNode.attachChild( aDecoration );
+							}
 						}
 					}
 					// Attach the mesh/material to the node with the lights/physics
@@ -364,29 +371,27 @@ public class CSGMeshManager
 	,	CSGShape		pShape
 	) {
 		// Decide which 'key' we are looking up
+		CSGMeshInfo useInfo;
+		
 		// NOTE that pMeshName will only be non-null if a custom name was defined
 		//		via face properties
 		CSGMeshInfo genericInfo = mGenericIndexStack.peek();
 
 		// Which lights apply?
 		String aLightListKey;
-		LightList aLightList;
+		List<Control> lightControls = pShape.getLightControls();
 		String[] sharedLights = pShape.getSharedLights();
-		Transform aLightListTransform;
 		boolean customLights;
-		if ( pShape.getLocalLightList().size() > 0 ) {
-			// This shape has custom lights, remember it
+		if ( lightControls != null ) {
+			// This shape has custom lights
 			customLights = true;
-			aLightList = pShape.getLocalLightList();
-			aLightListTransform = pShape.getLocalTransform();
 			aLightListKey = CSGMeshInfo.createLightListKey( pShape, false );
 		} else {
 			// If the given shape has no local lights, then use the lights of the shape
 			// who has defined the active 'generic'
 			customLights = false;
-			aLightList = genericInfo.mLightList;
-			aLightListTransform = genericInfo.mLightListTransform;
-			
+			lightControls = genericInfo.mLightControls;
+
 			// Use the generic light list, and leverage its key
 			aLightListKey = genericInfo.mLightListKey;
 		}
@@ -416,14 +421,13 @@ public class CSGMeshManager
 		// Look for custom material
 		if ( meshKey == null ) {
 			// By definition, the null material is the generic material
-			return( mGenericIndexStack.peek() );
+			useInfo = genericInfo;
 			
 		} else {
 			// The material's key is used to share the same material/lights/physics
-			CSGMeshInfo meshInfo;
 			if ( (meshKey != null) && mMeshMap.containsKey( meshKey ) ) {
 				// Use the info already found
-				meshInfo = mMeshMap.get( meshKey );
+				useInfo = mMeshMap.get( meshKey );
 			} else {
 				// Use the next index in sequence
 				Integer meshIndex = new Integer( ++mMeshCount );
@@ -433,25 +437,36 @@ public class CSGMeshManager
 				if ( pMaterial == null ) {
 					pMaterial = mGenericIndexStack.peek().mMaterial;
 				}
-				meshInfo = new CSGMeshInfo( meshIndex
+				useInfo = new CSGMeshInfo( meshIndex
 											, (pMeshName == null) ? pShape.getName() : pMeshName
 											, (pMeshName != null)
 											, pMaterial
-											, aLightList, sharedLights, aLightListTransform, aLightListKey
+											, lightControls, sharedLights, aLightListKey
 											, aPhysics, aPhysicsKey );
 				if ( meshKey != null ) {
 					// Track the material by its AssetKey
-					mMeshMap.put( meshKey, meshInfo );
+					mMeshMap.put( meshKey, useInfo );
 				}
-				mMeshMap.put( meshIndex, meshInfo );
+				mMeshMap.put( meshIndex, useInfo );
 				
 				if ( customLights && (pShape.getName() != null) ) {
 					// This shape defines lights that may be used by someone else
-					mLightingMap.put( pShape.getName(), meshInfo );
+					mLightingMap.put( pShape.getName(), lightControls );
 				}
 			}
-			return( meshInfo );
 		}
+		// Retain the decorations
+		if ( pShape.hasDecorations() ) {
+			// Remember the decorations that apply to this mesh
+			List<Spatial> decorations = pShape.getDecorations();
+			if ( useInfo.mDecorations == null ) { 
+				useInfo.mDecorations = new ArrayList( decorations.size() );
+			}
+			for( Spatial aSpatial : decorations ) {
+				useInfo.mDecorations.add( aSpatial );
+			}
+		}
+		return( useInfo );
 	}
 
 
@@ -486,13 +501,14 @@ class CSGMeshInfo
 	/** The Material that applies */
 	protected Material			mMaterial;
 	/** The custom lighting that applies */
-	protected LightList			mLightList;
-	protected String[]			mSharedLights;
-	protected Transform			mLightListTransform;
 	protected String			mLightListKey;
+	protected List<Control>		mLightControls;
+	protected String[]			mSharedLights;
 	/** The custom physics that applies */
 	protected PhysicsControl	mPhysics;
 	protected String			mPhysicsKey;
+	/** Special decorations to attach to the generated mesh */
+	protected List<Spatial>		mDecorations;
 	/** The generated mesh */
 	protected Mesh				mMesh;
 	
@@ -508,15 +524,9 @@ class CSGMeshInfo
 		// Track the material
 		this.mMaterial = pElement.getMaterial();
 		
-		// Track the local light list
-		this.mLightList = pElement.getLocalLightList();
-		if ( mLightList.size() > 0 ) {
-			// Remember the active lights
-			this.mLightListTransform = pElement.getLocalTransform();
-			this.mLightListKey = createLightListKey( pElement, false );
-		} else {
-			mLightList = null;
-		}
+		// @todo ???? Track the local light list
+		this.mLightControls = null;
+		
 		// Track the local physics via its KEY, which keeps the physics
 		// unique but do NOT retain mPhysics itself, since it will only ever
 		// apply to the outer node, never an inner construct
@@ -531,9 +541,8 @@ class CSGMeshInfo
 	,	String				pName
 	,	boolean				pUniqueMesh
 	,	Material			pMaterial
-	,	LightList			pLightList
+	,	List<Control>		pLightControls
 	,	String[]			pSharedLights
-	,	Transform			pLightListTransform
 	,	String				pLightListKey
 	,	PhysicsControl		pPhysics
 	,	String				pPhysicsKey
@@ -545,10 +554,9 @@ class CSGMeshInfo
 		this.mMaterial = pMaterial;
 		
 		// Remember the active lights
-		this.mLightList = pLightList;
-		this.mSharedLights = pSharedLights;
-		this.mLightListTransform = pLightListTransform;
 		this.mLightListKey = pLightListKey;
+		this.mLightControls = pLightControls;
+		this.mSharedLights = pSharedLights;
 
 		// Remember the active physics
 		this.mPhysics = pPhysics;

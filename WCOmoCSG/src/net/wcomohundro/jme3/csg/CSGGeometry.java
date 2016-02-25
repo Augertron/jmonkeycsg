@@ -172,14 +172,15 @@ public class CSGGeometry
 
 		// Keep local lights strictly local and NOT shared
 		if ( this.localLights.size() > 0 ) {
-			LightList copyLights = new LightList( this );
+			LightList copyLights = new LightList( aCopy );
 			for( Light aLight : this.localLights ) {
 				copyLights.add( aLight.clone() );
 			}
-			this.localLights = copyLights;
+			aCopy.localLights = copyLights;
 		}
 
-		// @todo - what about the shapes???
+		// A SHALLOW copy of any shapes should suffice. Regeneration can proceed with
+		// a shared shape, so long as the Lights are managed properly
 		
         // Ensure we have our own copy of the physics
         if ( aCopy.mPhysics != null ) {
@@ -292,7 +293,7 @@ public class CSGGeometry
 	public boolean hasFaceProperties() { return( (mFaceProperties != null) && !mFaceProperties.isEmpty() ); }
 	@Override
 	public List<CSGFaceProperties>	getFaceProperties() { return mFaceProperties; }
-	
+		
 	/** How long did it take to regenerate this shape */
 	@Override
 	public long getShapeRegenerationNS() { return mRegenNS; }
@@ -654,11 +655,20 @@ public class CSGGeometry
         if ( mLightControl != null ) {
         	// Build a control for every local light to keep its position in synch
         	// with transforms applied to this Node
+/***
 			CSGLightControl.applyLightControl( mLightControl
 												, this.getLocalLightList()
 												, null
 												, this
 												, false );
+***/
+        	List<Control> controls 
+    	   		= CSGLightControl.configureLightControls( null, mLightControl, this.getLocalLightList(), null );
+        	if ( controls != null ) {
+	        	for( Control aControl : controls ) {
+	        		this.addControl( aControl );
+	        	}
+        	}
         }
 	    // Rebuild based on the shapes just loaded
 	    boolean doLater = aCapsule.readBoolean( "deferRegeneration", false );
