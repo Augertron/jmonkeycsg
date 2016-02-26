@@ -19,48 +19,60 @@
        		
     <!-- Define some common items for later reference  -->
     <library>
-       	<com.jme3.light.AmbientLight name='ALightBright' id='ALightBright' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	<com.jme3.light.AmbientLight name='ALight' id='ALight' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	<com.jme3.light.AmbientLight name='ALightDim' id='ALightDim' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
-       	</com.jme3.light.AmbientLight>
+    	<MapEntry key='ALightBright'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightBright' id='ALightBright' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALight'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALightDim'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightDim' id='ALightDim' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+	       	
+    	<MapEntry key='DLight'>
+	        <Savable class='com.jme3.light.DirectionalLight' name='DLight' id='DLight' enabled='true' 
+	       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+	       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+	       	</Savable>
+	    </MapEntry>
        	
-       	<com.jme3.light.AmbientLight name='ColoredLightDim' id='ColoredLightDim' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.00' a='1'/>
-       	</com.jme3.light.AmbientLight>
+       	<MapEntry key='ColoredLightDim'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ColoredLightDim' id='ColoredLightDim' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.00' a='1'/>
+	       	</Savable>
+       	</MapEntry>
        	
-        <com.jme3.light.DirectionalLight name='DLight' id='DLight' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0' a='1'/>
-       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
-       	</com.jme3.light.DirectionalLight>
-       	
-       	<lights class='com.jme3.light.LightList' id='InteriorLights'>
-   			<lights>
-		      	<com.jme3.light.SpotLight name='SpotLightGreen' enabled='true' 
-		      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
-		      		<color class='com.jme3.math.ColorRGBA' r='0' g='1' b='0' a='1'/>
-		      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.0'/>
-		      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
-		      	</com.jme3.light.SpotLight>
-		      	<com.jme3.light.SpotLight name='SpotLightRed' enabled='true' 
-		      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
-		      		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
-		      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='-0.34'/>
-		      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
-		      	</com.jme3.light.SpotLight>
-		      	<com.jme3.light.SpotLight name='SpotLightBlue' enabled='true' 
-		      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
-		      		<color class='com.jme3.math.ColorRGBA' r='0' g='0' b='1' a='1'/>
-		      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.34'/>
-		      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
-		      	</com.jme3.light.SpotLight>
-     			</lights>
-   		</lights>
-       	
+       	<MapEntry key='InteriorLights'>
+	       	<Savable class='com.jme3.light.LightList' id='InteriorLights'>
+	   			<lights>
+			      	<com.jme3.light.SpotLight name='SpotLightGreen' enabled='true' 
+			      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
+			      		<color class='com.jme3.math.ColorRGBA' r='0' g='1' b='0' a='1'/>
+			      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.0'/>
+			      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+			      	</com.jme3.light.SpotLight>
+			      	<com.jme3.light.SpotLight name='SpotLightRed' enabled='true' 
+			      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
+			      		<color class='com.jme3.math.ColorRGBA' r='1' g='0' b='0' a='1'/>
+			      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='-0.34'/>
+			      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+			      	</com.jme3.light.SpotLight>
+			      	<com.jme3.light.SpotLight name='SpotLightBlue' enabled='true' 
+			      			spotRange='20' spotInnerAngle='0.5' spotOuterAngle='0.7'>
+			      		<color class='com.jme3.math.ColorRGBA' r='0' g='0' b='1' a='1'/>
+			      		<position class='com.jme3.math.Vector3f' x='0.0' y='1.1' z='0.34'/>
+			      		<direction class='com.jme3.math.Vector3f' x='0.0' y='-1.0' z='0.0'/>
+			      	</com.jme3.light.SpotLight>
+	     		</lights>
+	   		</Savable>
+       	</MapEntry>
 	</library>
 	
     <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>

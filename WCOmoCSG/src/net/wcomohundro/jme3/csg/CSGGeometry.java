@@ -592,8 +592,8 @@ public class CSGGeometry
         // Such items can be referenced within the XML stream itself via the
         //		id='name' and ref='name'
         // mechanism, and can be referenced programmatically via their inherent names
-		Savable[] libraryItems = aCapsule.readSavableArray( "library", null );
-		mLibraryItems = CSGShape.fillLibrary( libraryItems, pImporter.getAssetManager() );
+		mLibraryItems = (Map<String,Savable>)aCapsule.readStringSavableMap( "library", null );
+		mLibraryItems = CSGShape.fillLibrary( this, mLibraryItems, pImporter.getAssetManager(), true );
 		
 		// Let the super do its thing
 		super.read( pImporter );
@@ -663,7 +663,7 @@ public class CSGGeometry
 												, false );
 ***/
         	List<Control> controls 
-    	   		= CSGLightControl.configureLightControls( null, mLightControl, this.getLocalLightList(), null );
+    	   		= CSGLightControl.configureLightControls( null, mLightControl, this.getLocalLightList(), false, null );
         	if ( controls != null ) {
 	        	for( Control aControl : controls ) {
 	        		this.addControl( aControl );

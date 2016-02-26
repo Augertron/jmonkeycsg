@@ -6,23 +6,33 @@
 		XrationalizeValues='false' XepsilonMagnitudeRange='22' />
 		
     <library>
-    	<com.jme3.asset.NonCachingKey name='Models/CSGSimpleCorridor.xml'/>
-
-       	<com.jme3.light.AmbientLight name='ALightBright' id='ALightBright' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	<com.jme3.light.AmbientLight name='ALight' id='ALight' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	<com.jme3.light.AmbientLight name='ALightDim' id='ALightDim' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	
-        <com.jme3.light.DirectionalLight name='DLight' id='DLight' enabled='true' 
-       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
-       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
-       	</com.jme3.light.DirectionalLight>
+    	<MapEntry key='ACorridor'>
+    		<Savable class='com.jme3.asset.NonCachingKey' name='Models/CSGSimpleCorridor.xml'/>
+		</MapEntry>
+		
+    	<MapEntry key='ALightBright'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightBright' id='ALightBright' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALight'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALightDim'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightDim' id='ALightDim' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+	       	
+    	<MapEntry key='DLight'>
+	        <Savable class='com.jme3.light.DirectionalLight' name='DLight' id='DLight' enabled='true' 
+	       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+	       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+	       	</Savable>
+	    </MapEntry>
 	</library>
 	
 	<children>
@@ -35,8 +45,7 @@
 		</net.wcomohundro.jme3.csg.shape.CSGSkyDome>
 		
 		<!-- Simple corridor -->
-		<net.wcomohundro.jme3.csg.CSGPlaceholderSpatial 
-				reference='Models/CSGSimpleCorridor.xml'>
+		<net.wcomohundro.jme3.csg.CSGPlaceholderSpatial reference='ACorridor'>
 			<!-- Move/Rotate confirms that the interior lights are managed correctly -->
 		    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
 		        <translation class='com.jme3.math.Vector3f' x='5' y='5' z='0'/>

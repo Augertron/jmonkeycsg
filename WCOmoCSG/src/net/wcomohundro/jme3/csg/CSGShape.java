@@ -1,6 +1,6 @@
 /** Copyright (c) 2011 Evan Wallace (http://madebyevan.com/)
- 	Copyright (c) 2003-2014 jMonkeyEngine
-	Copyright (c) 2015, WCOmohundro
+ 	Copyright (c) 2003-2014, jMonkeyEngine
+	Copyright (c) 2015-2016, WCOmohundro
 	All rights reserved.
 
 	Redistribution and use in source and binary forms, with or without modification, are permitted 
@@ -255,20 +255,26 @@ public class CSGShape
 	
 	/** Service routine to populate a library */
 	public static Map<String,Savable> fillLibrary(
-		Savable[]		pLibraryItems
-	,	AssetManager	pAssetManager
+		CSGElement			pContext
+	,	Map<String,Savable>	pLibraryMap
+	,	AssetManager		pAssetManager
+	,	boolean				pRegisterAlternates
 	) {
-		Map<String,Savable> aLibrary;
-		if ( pLibraryItems != null ) {
+		if ( pLibraryMap != null ) {
+			Map<String,Savable> altMap = null;
+			
 			// Register every item in the library
-			//	NOTE for now, use a TreeMap to preserve the insert order
-			aLibrary = new TreeMap();
-			for( Savable anItem : pLibraryItems ) {
-				String itemName = null, altName = null;
+			for( Map.Entry<String,Savable> anEntry : pLibraryMap.entrySet() ) {
+				String itemName = anEntry.getKey(), altName = null;
+				Savable anItem = anEntry.getValue();
+				
+				if ( anItem instanceof CSGPlaceholder ) {
+					// Resolve any placeholder items in the library
+					anItem = (Savable)((CSGPlaceholder)anItem).resolveItem( pContext );
+				}
 				if ( anItem instanceof AssetKey ) {
 					// The key name becomes the default item name
-					itemName = ((AssetKey)anItem).getName();
-					altName = itemName;
+					altName = ((AssetKey)anItem).getName();
 					
 					// Interpret/Load the underlying asset
 					AssetInfo keyInfo = pAssetManager.locateAsset( (AssetKey)anItem );
@@ -277,27 +283,33 @@ public class CSGShape
 						//		  the 'currentElement' context
 						//anItem = (Savable)pImporter.load( keyInfo );
 						anItem = pAssetManager.loadAsset( (AssetKey)anItem );
+						anEntry.setValue( anItem );
 					}
 				}
-				if ( (anItem instanceof Spatial) && (((Spatial)anItem).getName() != null) ) {
-					itemName = ((Spatial)anItem).getName();
-				} else if ((anItem instanceof Light) && (((Light)anItem).getName() != null) ) {
-					itemName = ((Light)anItem).getName();
-				} else if ( (anItem instanceof Material) && (((Material)anItem).getName() != null) ) {
-					itemName = ((Material)anItem).getName();
-				} else if ( itemName == null ) {
-					itemName = CSGShape.assignInstanceKey( anItem.getClass().getSimpleName() );
+				if ( altName == null ) {
+					if ( (anItem instanceof Spatial) && (((Spatial)anItem).getName() != null) ) {
+						altName = ((Spatial)anItem).getName();
+					} else if ((anItem instanceof Light) && (((Light)anItem).getName() != null) ) {
+						altName = ((Light)anItem).getName();
+					} else if ( (anItem instanceof Material) && (((Material)anItem).getName() != null) ) {
+						altName = ((Material)anItem).getName();
+					}
 				}
-				aLibrary.put( itemName, anItem );
-				if ( (altName != null) && (altName != itemName) ) {
-					aLibrary.put( altName,  anItem );
+				// If we have an alternate name, register the item for a second time
+				if ( pRegisterAlternates && (altName != null) && !altName.equals( itemName ) ) {
+					if ( altMap == null ) altMap = new HashMap();
+					altMap.put( altName,  anItem );
 				}
+			}
+			// Once out of the iterator, add back all the alternates
+			if ( altMap != null ) {
+				pLibraryMap.putAll( altMap );
 			}
 		} else {
 			// Nothing defined
-			aLibrary = Collections.EMPTY_MAP;
+			pLibraryMap = Collections.EMPTY_MAP;
 		}
-		return( aLibrary );
+		return( pLibraryMap );
 	}
 
 	/** Service to create a vector buffer for a given List */
@@ -505,7 +517,7 @@ public class CSGShape
 			// Special proxy handling
 			if ( pSpatial instanceof CSGPlaceholderSpatial ) {
 				// A stand-in for a true 'spatial', which we will resolve when we can
-				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveSpatial( this );
+				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveItem( this );
 				if ( useSpatial == null ) {
 					// Nothing can be resolved at this time, remember it for later
 					this.mProxy = (CSGPlaceholderSpatial)pSpatial;
@@ -973,8 +985,8 @@ public class CSGShape
         // Such items can be referenced within the XML stream itself via the
         //		id='name' and ref='name'
         // mechanism, and can be reference programmatically via their inherent names
-		Savable[] libraryItems = aCapsule.readSavableArray( "library", null );
-		mLibraryItems = CSGShape.fillLibrary( libraryItems, pImporter.getAssetManager() );
+		mLibraryItems = (Map<String,Savable>)aCapsule.readStringSavableMap( "library", null );
+		mLibraryItems = CSGShape.fillLibrary( this, mLibraryItems, pImporter.getAssetManager(), true );
 
 		// Let the geometry do its thing, which includes Mesh, Material, and LocalTransform
 		super.read( pImporter );
@@ -1061,6 +1073,7 @@ public class CSGShape
 			mLightControls = CSGLightControl.configureLightControls( mLightControls
 																	, null
 																	, getLocalLightList()
+																	, true
 																	, getLocalTransform() );
 			// Ensure all the decorations are ready for use
 			if ( mDecorations != null ) {
@@ -1069,7 +1082,7 @@ public class CSGShape
 					
 					// If we are dealing with a placeholder, resolve it to the real component now
 					if ( aSpatial instanceof CSGPlaceholderSpatial ) {
-						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveSpatial( this );
+						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this );
 						mDecorations.set( i, aSpatial );
 					}
 					// By definition, any local lighting in the decoration really applies to the shape
@@ -1078,6 +1091,7 @@ public class CSGShape
 					mLightControls = CSGLightControl.configureLightControls( mLightControls
 																			, null
 																			, aSpatial.getLocalLightList()
+																			, true
 																			, aSpatial.getLocalTransform() );
 					// The decoration retains no lights of its own
 					aSpatial.getLocalLightList().clear();

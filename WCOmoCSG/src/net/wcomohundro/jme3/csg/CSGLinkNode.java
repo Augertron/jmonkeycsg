@@ -122,7 +122,7 @@ public class CSGLinkNode
 				}
 			} else if ( aSpatial instanceof CSGPlaceholderSpatial ) {
 				// Resolve the placeholder to its real element
-				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveSpatial( this );
+				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this );
 				this.detachChildAt( i );
 				this.attachChildAt( realSpatial, i );
 				

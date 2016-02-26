@@ -394,8 +394,8 @@ public class CSGNode
         // Such items can be referenced within the XML stream itself via the
         //		id='name' and ref='name'
         // mechanism, and can be reference programmatically via their inherent names
-		Savable[] libraryItems = aCapsule.readSavableArray( "library", null );
-		mLibraryItems = CSGShape.fillLibrary( libraryItems, aManager );
+		mLibraryItems = (Map<String,Savable>)aCapsule.readStringSavableMap( "library", null );
+		mLibraryItems = CSGShape.fillLibrary( this, mLibraryItems, aManager, true );
 
 		// Let the super do its thing
 		super.read( pImporter );
@@ -463,7 +463,7 @@ public class CSGNode
 												, false );
 **/
     	   List<Control> controls 
-    	   		= CSGLightControl.configureLightControls( null, mLightControl, this.getLocalLightList(), null );
+    	   		= CSGLightControl.configureLightControls( null, mLightControl, this.getLocalLightList(), false, null );
     	   if ( controls != null ) {
 	    	   for( Control aControl : controls ) {
 	    		   this.addControl( aControl );

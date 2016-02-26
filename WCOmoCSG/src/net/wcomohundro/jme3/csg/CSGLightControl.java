@@ -97,6 +97,7 @@ public class CSGLightControl
 		List<Control>	pControlList
 	,	Control			pControlTemplate
 	,	LightList		pLights
+	,	boolean			pCloneLights
 	,	Transform		pLocalTransform
 	) {
 		// Ensure we have a place to stash the controls
@@ -107,8 +108,10 @@ public class CSGLightControl
 		for( Light aLight : pLights ) {
 			AbstractControl aControl = null;
 			
-			// Clone the light, which covers us for shared shapes
-			aLight = aLight.clone();
+			if ( pCloneLights ) {
+				// Clone the light, which covers us for shared shapes
+				aLight = aLight.clone();
+			}
 			if ( pControlTemplate == null ) {
 				// Use a standard 
 				aControl = new CSGLightControl( aLight, true );
