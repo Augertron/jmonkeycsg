@@ -655,13 +655,6 @@ public class CSGGeometry
         if ( mLightControl != null ) {
         	// Build a control for every local light to keep its position in synch
         	// with transforms applied to this Node
-/***
-			CSGLightControl.applyLightControl( mLightControl
-												, this.getLocalLightList()
-												, null
-												, this
-												, false );
-***/
         	List<Control> controls 
     	   		= CSGLightControl.configureLightControls( null, mLightControl, this.getLocalLightList(), false, null );
         	if ( controls != null ) {

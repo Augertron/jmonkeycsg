@@ -5,7 +5,7 @@
 	 This allows us to reference other elements via Placeholders....
  -->
 <net.wcomohundro.jme3.csg.CSGGeonode name='ArchwayCorridor' id='ACorridor'
-			deferRegeneration='true'
+			deferRegeneration='false'
        		singleMaterial='false' 
        		generateTangentBinormal='true'
        		shadow_mode='CastAndReceive'

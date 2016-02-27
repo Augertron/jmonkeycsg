@@ -189,10 +189,13 @@ public abstract class CSGTestSceneBase
         ,   new MouseButtonTrigger( 3 ) );
         inputManager.addMapping( "wireframe"
         ,   new MouseButtonTrigger( 4 ) );
+        inputManager.addMapping( "bump"
+        ,	new KeyTrigger( KeyInput.KEY_B ) );
         
         ActionListener aListener = new CSGTestActionListener(); 
         inputManager.addListener( aListener, "pickItem" );
         inputManager.addListener( aListener, "wireframe" );
+        inputManager.addListener( aListener, "bump" );
         
         if ( mCapturePath != null ) {
         	inputManager.addListener( aListener, "video" );
@@ -214,6 +217,11 @@ public abstract class CSGTestSceneBase
                 	mPostText.push( resolveSelectedItem() );
                 	mRefreshText = true;
                 	
+                } else if ( pName.equals( "bump" ) ) {
+                	// Move the scene a bit
+                	if ( mLastScene != null ) {
+                		mLastScene.move( 5,  5,  -5 );
+                	}
                 } else if ( pName.equals( "wireframe" ) ) {
                 	// Report on the click
                 	CollisionResults aCollisions = resolveSelectedCollision();
