@@ -122,7 +122,7 @@ public class CSGLinkNode
 				}
 			} else if ( aSpatial instanceof CSGPlaceholderSpatial ) {
 				// Resolve the placeholder to its real element
-				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this );
+				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this, false );
 				this.detachChildAt( i );
 				this.attachChildAt( realSpatial, i );
 				
@@ -130,7 +130,7 @@ public class CSGLinkNode
 				i -= 1;
 			}
 		}		
-	    // Rebuild the shapes just loaded
+	    // Rebuild the shapes just loaded, as needed
 	    boolean doLater = aCapsule.readBoolean( "deferRegeneration", false );
 	    if ( doLater ) {
 	    	// No regeneration at this time

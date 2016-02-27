@@ -32,5 +32,6 @@ public interface CSGPlaceholder<TOTYPE>
 	/** Resolve to the desired type */
 	public TOTYPE resolveItem(
 		CSGElement		pContext
+	,	boolean			pSearchFromTop
 	);
 }

@@ -95,13 +95,12 @@ public class CSGPlaceholderSpatial
 	@Override
 	public Spatial resolveItem(
 		CSGElement		pContext
+	,	boolean			pSearchFromTop
 	) throws CSGConstructionException {
 		Object aSpatial = mModel;
 		if ( mReference != null ) {
 			// Look up the reference within the given context
-			if ( pContext != null ) {
-				aSpatial = pContext.getLibraryItem( mReference );
-			}
+			aSpatial = CSGLibrary.getLibraryItem( pContext, mReference, pSearchFromTop );
 			if ( aSpatial == null ) {
 				// Nothing can be resolved at this time
 				return( null );
@@ -322,7 +321,7 @@ public class CSGPlaceholderSpatial
 		
 		// Fixups to apply
 		mFixup = (Map<String,Savable>)aCapsule.readStringSavableMap( "fixup", null );
-		mFixup = CSGShape.fillLibrary( null, mFixup, aManager, false );
+		mFixup = CSGLibrary.fillLibrary( null, mFixup, aManager, false );
 	}
 	
     /** IMPLEMENT abstract Spatial Methods */

@@ -253,65 +253,6 @@ public class CSGShape
 		return( pSeed +  ++sInstanceCounter );
 	}
 	
-	/** Service routine to populate a library */
-	public static Map<String,Savable> fillLibrary(
-		CSGElement			pContext
-	,	Map<String,Savable>	pLibraryMap
-	,	AssetManager		pAssetManager
-	,	boolean				pRegisterAlternates
-	) {
-		if ( pLibraryMap != null ) {
-			Map<String,Savable> altMap = null;
-			
-			// Register every item in the library
-			for( Map.Entry<String,Savable> anEntry : pLibraryMap.entrySet() ) {
-				String itemName = anEntry.getKey(), altName = null;
-				Savable anItem = anEntry.getValue();
-				
-				if ( anItem instanceof CSGPlaceholder ) {
-					// Resolve any placeholder items in the library
-					anItem = (Savable)((CSGPlaceholder)anItem).resolveItem( pContext );
-				}
-				if ( anItem instanceof AssetKey ) {
-					// The key name becomes the default item name
-					altName = ((AssetKey)anItem).getName();
-					
-					// Interpret/Load the underlying asset
-					AssetInfo keyInfo = pAssetManager.locateAsset( (AssetKey)anItem );
-					if ( keyInfo != null ) {
-						// NOTE - using the pImporter to load the asset seems to destroy
-						//		  the 'currentElement' context
-						//anItem = (Savable)pImporter.load( keyInfo );
-						anItem = pAssetManager.loadAsset( (AssetKey)anItem );
-						anEntry.setValue( anItem );
-					}
-				}
-				if ( altName == null ) {
-					if ( (anItem instanceof Spatial) && (((Spatial)anItem).getName() != null) ) {
-						altName = ((Spatial)anItem).getName();
-					} else if ((anItem instanceof Light) && (((Light)anItem).getName() != null) ) {
-						altName = ((Light)anItem).getName();
-					} else if ( (anItem instanceof Material) && (((Material)anItem).getName() != null) ) {
-						altName = ((Material)anItem).getName();
-					}
-				}
-				// If we have an alternate name, register the item for a second time
-				if ( pRegisterAlternates && (altName != null) && !altName.equals( itemName ) ) {
-					if ( altMap == null ) altMap = new HashMap();
-					altMap.put( altName,  anItem );
-				}
-			}
-			// Once out of the iterator, add back all the alternates
-			if ( altMap != null ) {
-				pLibraryMap.putAll( altMap );
-			}
-		} else {
-			// Nothing defined
-			pLibraryMap = Collections.EMPTY_MAP;
-		}
-		return( pLibraryMap );
-	}
-
 	/** Service to create a vector buffer for a given List */
     public static FloatBuffer createVector3Buffer(
     	List<Vector3f> 	pVectors
@@ -517,7 +458,7 @@ public class CSGShape
 			// Special proxy handling
 			if ( pSpatial instanceof CSGPlaceholderSpatial ) {
 				// A stand-in for a true 'spatial', which we will resolve when we can
-				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveItem( this );
+				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveItem( this, false );
 				if ( useSpatial == null ) {
 					// Nothing can be resolved at this time, remember it for later
 					this.mProxy = (CSGPlaceholderSpatial)pSpatial;
@@ -676,18 +617,8 @@ public class CSGShape
 	
 	/** Access to library elements */
 	@Override
-	public Savable getLibraryItem(
-		String		pItemName
-	) {
-		Savable anItem = mLibraryItems.get( pItemName );
-		if ( anItem == null ) {
-			CSGElement aParent = this.getParentElement();
-			if ( aParent != null ) {
-				anItem = aParent.getLibraryItem( pItemName );
-			} 
-		}
-		return( anItem );
-	}
+	public Map<String,Savable> getLibrary() { return mLibraryItems; }
+	public void setLibrary( Map<String,Savable> pLibraryItems ) { mLibraryItems = pLibraryItems; } 
 	
 	/** Accessor to the list of active LightControls */
 	public List<Control> getLightControls() { return mLightControls; }
@@ -986,7 +917,7 @@ public class CSGShape
         //		id='name' and ref='name'
         // mechanism, and can be reference programmatically via their inherent names
 		mLibraryItems = (Map<String,Savable>)aCapsule.readStringSavableMap( "library", null );
-		mLibraryItems = CSGShape.fillLibrary( this, mLibraryItems, pImporter.getAssetManager(), true );
+		mLibraryItems = CSGLibrary.fillLibrary( this, mLibraryItems, pImporter.getAssetManager(), true );
 
 		// Let the geometry do its thing, which includes Mesh, Material, and LocalTransform
 		super.read( pImporter );
@@ -1082,7 +1013,7 @@ public class CSGShape
 					
 					// If we are dealing with a placeholder, resolve it to the real component now
 					if ( aSpatial instanceof CSGPlaceholderSpatial ) {
-						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this );
+						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this, false );
 						mDecorations.set( i, aSpatial );
 					}
 					// By definition, any local lighting in the decoration really applies to the shape

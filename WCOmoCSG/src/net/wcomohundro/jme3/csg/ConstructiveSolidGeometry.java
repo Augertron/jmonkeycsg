@@ -33,6 +33,7 @@ package net.wcomohundro.jme3.csg;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -182,10 +183,8 @@ public interface ConstructiveSolidGeometry
 		
 		/** This there an active parent to this element */
 		public CSGElement getParentElement();
-		/** Access to library elements */
-		public Savable getLibraryItem(
-			String		pItemName
-		);
+		/** Access to library within the element */
+		public Map<String,Savable> getLibrary();
 		
 		/** Unique keystring identifying this element */
 		public String getInstanceKey();

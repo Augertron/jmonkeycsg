@@ -191,18 +191,9 @@ public class CSGNode
 	
 	/** Access to library elements */
 	@Override
-	public Savable getLibraryItem(
-		String		pItemName
-	) {
-		Savable anItem = mLibraryItems.get( pItemName );
-		if ( anItem == null ) {
-			CSGElement aParent = this.getParentElement();
-			if ( aParent != null ) {
-				anItem = aParent.getLibraryItem( pItemName );
-			} 
-		}
-		return( anItem );
-	}
+	public Map<String,Savable> getLibrary() { return mLibraryItems; }
+	public void setLibrary( Map<String,Savable> pLibraryItems ) { mLibraryItems = pLibraryItems; } 
+
 	
 	/** Unique keystring identifying this element */
 	@Override
@@ -395,7 +386,7 @@ public class CSGNode
         //		id='name' and ref='name'
         // mechanism, and can be reference programmatically via their inherent names
 		mLibraryItems = (Map<String,Savable>)aCapsule.readStringSavableMap( "library", null );
-		mLibraryItems = CSGShape.fillLibrary( this, mLibraryItems, aManager, true );
+		mLibraryItems = CSGLibrary.fillLibrary( this, mLibraryItems, aManager, true );
 
 		// Let the super do its thing
 		super.read( pImporter );

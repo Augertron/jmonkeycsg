@@ -230,19 +230,10 @@ public class CSGGeometry
 	
 	/** Access to library elements */
 	@Override
-	public Savable getLibraryItem(
-		String		pItemName
-	) {
-		Savable anItem = mLibraryItems.get( pItemName );
-		if ( anItem == null ) {
-			CSGElement aParent = this.getParentElement();
-			if ( aParent != null ) {
-				anItem = aParent.getLibraryItem( pItemName );
-			} 
-		}
-		return( anItem );
-	}
+	public Map<String,Savable> getLibrary() { return mLibraryItems; }
+	public void setLibrary( Map<String,Savable> pLibraryItems ) { mLibraryItems = pLibraryItems; } 
 
+	
     /** Special provisional setMaterial() that does NOT override anything 
 	 	already in force, but supplies a default if any element is missing 
 	 	a material
@@ -593,7 +584,7 @@ public class CSGGeometry
         //		id='name' and ref='name'
         // mechanism, and can be referenced programmatically via their inherent names
 		mLibraryItems = (Map<String,Savable>)aCapsule.readStringSavableMap( "library", null );
-		mLibraryItems = CSGShape.fillLibrary( this, mLibraryItems, pImporter.getAssetManager(), true );
+		mLibraryItems = CSGLibrary.fillLibrary( this, mLibraryItems, pImporter.getAssetManager(), true );
 		
 		// Let the super do its thing
 		super.read( pImporter );

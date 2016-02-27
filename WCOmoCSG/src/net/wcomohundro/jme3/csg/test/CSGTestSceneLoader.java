@@ -77,6 +77,7 @@ import com.jme3.font.BitmapText;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGGeometry;
+import net.wcomohundro.jme3.csg.CSGLibrary;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -271,6 +272,17 @@ public class CSGTestSceneLoader
     protected void attachLoadedSpatial(
     	Spatial		pSpatial
     ) {
+    	if ( pSpatial instanceof CSGElement ) {
+	    	// Accept Processors/Filters
+	    	FilterPostProcessor aFilterProcessor = new FilterPostProcessor( assetManager );
+	    	CSGLibrary.filtersAndProcessors( pSpatial, aFilterProcessor, viewPort, assetManager );
+	    	
+	    	if ( aFilterProcessor.getFilterList().size() > 0 ) {
+	    		// Filters were added
+	    		viewPort.addProcessor( aFilterProcessor );
+	    	}
+    	}
+    	// Include this element in the view
 		rootNode.attachChild( pSpatial );
 		mLastScene = pSpatial; 
 		

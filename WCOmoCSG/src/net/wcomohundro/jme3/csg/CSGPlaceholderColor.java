@@ -61,14 +61,13 @@ public class CSGPlaceholderColor
 	@Override
 	public ColorRGBA resolveItem(
 		CSGElement		pContext
+	,	boolean			pSearchFromTop
 	) throws CSGConstructionException {
 		Savable aColor = null;
 	
 		if ( mReference != null ) {
 			// Look up the reference within the given context
-			if ( pContext != null ) {
-				aColor = pContext.getLibraryItem( mReference );
-			}
+			aColor = CSGLibrary.getLibraryItem( pContext, mReference, pSearchFromTop );
 			if ( aColor instanceof ColorRGBA ) {
 				// Use this color
 				return( (ColorRGBA)aColor );

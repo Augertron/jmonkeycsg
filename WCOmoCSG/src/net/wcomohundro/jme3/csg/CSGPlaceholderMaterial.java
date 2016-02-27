@@ -65,14 +65,13 @@ public class CSGPlaceholderMaterial
 	@Override
 	public Material resolveItem(
 		CSGElement		pContext
+	,	boolean			pSearchFromTop
 	) throws CSGConstructionException {
 		Savable aMaterial = null;
 	
 		if ( mReference != null ) {
 			// Look up the reference within the given context
-			if ( pContext != null ) {
-				aMaterial = pContext.getLibraryItem( mReference );
-			}
+			aMaterial = CSGLibrary.getLibraryItem( pContext, mReference, pSearchFromTop );
 			if ( aMaterial instanceof Material ) {
 				// Use this color
 				return( (Material)aMaterial );
