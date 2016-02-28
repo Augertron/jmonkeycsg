@@ -376,8 +376,9 @@ public class CSGGeonode
 					// Use the master mesh to describe the overall geometry
 					mMasterGeometry 
 						= new CSGGeometry( this.getName(), meshManager.resolveMesh( CSGMeshManager.sMasterMeshIndex ) );
-					mMasterGeometry.setMaterial( mMaterial.clone() );
-					
+					if ( mMaterial != null ) {
+						mMasterGeometry.setMaterial( mMaterial.clone() );
+					}
 					// Return the product
 					setError( aProduct.getError() );
 					if ( mDeferSceneChanges ) synchronized( this ) {

@@ -1012,8 +1012,10 @@ public class CSGShape
 					Spatial aSpatial = mDecorations.get( i );
 					
 					// If we are dealing with a placeholder, resolve it to the real component now
+					// NOTE that when resolving decorations, we start from the top of the hierarchy
+					//		to allow outer layers to override inner defaults
 					if ( aSpatial instanceof CSGPlaceholderSpatial ) {
-						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this, false );
+						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this, true );
 						mDecorations.set( i, aSpatial );
 					}
 					// By definition, any local lighting in the decoration really applies to the shape
