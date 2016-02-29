@@ -1,31 +1,41 @@
 <?xml  version='1.0' encoding='UTF-8'?>
 <net.wcomohundro.jme3.csg.CSGLinkNode fname='FloorSamples'>
+    <!-- Define some common items for later reference  -->
     <library>
-       	<com.jme3.light.AmbientLight name='ALightBright' id='ALightBright' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	<com.jme3.light.AmbientLight name='ALight' id='ALight' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	<com.jme3.light.AmbientLight name='ALightDim' id='ALightDim' enabled='true'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
-       	</com.jme3.light.AmbientLight>
-       	
-        <com.jme3.light.DirectionalLight name='DLight' id='DLight' enabled='true' 
-       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
-       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
-       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
-       	</com.jme3.light.DirectionalLight>
-
+    	<MapEntry key='ALightBright'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightBright' id='ALightBright' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALight'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALightDim'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightDim' id='ALightDim' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+	       	
+    	<MapEntry key='DLight'>
+	        <Savable class='com.jme3.light.DirectionalLight' name='DLight' id='DLight' enabled='true' 
+	       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+	       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+	       	</Savable>
+	    </MapEntry>
+	    
     	<!-- Just a cube -->
-        <com.jme3.scene.Geometry name='ABox' id='ABox'
-        		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
-            </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' />
-        </com.jme3.scene.Geometry>
-
+    	<MapEntry key='ABox'>
+	        <Savable class='com.jme3.scene.Geometry' name='ABox' id='ABox'
+        				materialName='Textures/BrickWall/BrickWall.xml'>
+	            <transform class='com.jme3.math.Transform'>
+	                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+	            </transform>
+	            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' yExtent='10'/>
+	        </Savable>
+	    </MapEntry>
 	</library>
     <children>
         <com.jme3.scene.Geometry name='SimpleFlatFloor'

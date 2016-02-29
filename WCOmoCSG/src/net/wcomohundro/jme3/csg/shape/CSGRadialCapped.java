@@ -109,7 +109,7 @@ public abstract class CSGRadialCapped
     ,	@Deprecated UNIFORM_LINEAR	// Flat, uniform end caps, curved surface is linear front-to-back
     
     // Newer names that are more reflective of what is really going on
-    ,	CAN				// Image the shape rotated to sit on is back surface (like soup can).  
+    ,	CAN				// Image the shape rotated to sit on is back surface (like a soup can).  
     					// Then X moves around the circumference, and Y increases upwards on the can
     ,	ROLLER			// Image the shape rotated so that the back is to left and the front is
     					// to the right.  Then X increases linearly from left to right, and 
@@ -458,7 +458,10 @@ public abstract class CSGRadialCapped
     ,	int					pSurface
     ) {
     	// Account for differing radii, spread evenly along the z
-    	float aRadius = ((mRadius - mRadiusBack) * pContext.mZAxisFraction) + mRadiusBack;
+    	float midRadius = (mRadius + mRadiusBack) / 2.0f;
+    	float halfSpan = (mRadius - mRadiusBack) / 2.0f;
+    	float aRadius = midRadius + (halfSpan * pContext.mZAxisFraction);
+    					//((mRadius - mRadiusBack) * pContext.mZAxisFraction) + mRadiusBack;
     	return( aRadius );
     }
     
@@ -586,10 +589,12 @@ public abstract class CSGRadialCapped
             if ( vHeight != null ) {
             	// If the radii are different, then the surface slants in the z Plane
             	Vector3f vRadiusFront = pTempVector.mult( pRadiusFront );
-            	Vector3f vRadiusBack = pTempVector.mult( pRadiusFront );
+            	Vector3f vRadiusBack = pTempVector.mult( pRadiusBack );
             	
             	// Account for how the height differs across the entire extent
-            	Vector3f vHeightDifference = vRadiusBack.subtractLocal( vRadiusFront );
+            	Vector3f vHeightDifference = (pRadiusFront < pRadiusBack)
+												?	vRadiusBack.subtractLocal( vRadiusFront )
+												:	vRadiusFront.subtractLocal( vRadiusBack );
             	Vector3f vMantle = vHeight.subtract( vHeightDifference );
             	
             	Vector3f vTangent = pTempVector.cross( Vector3f.UNIT_Z );

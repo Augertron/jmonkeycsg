@@ -143,7 +143,10 @@ public class CSGConstructionException
 	public CSGExceptionI addError( 
 		CSGExceptionI pError
 	) {
-		if ( mNextError == null ) {
+		if ( this == pError ) {
+			// Do NOT add to yourself
+			return( null );
+		} else if ( mNextError == null ) {
 			// This becomes the first
 			mNextError = pError;
 		} else {
