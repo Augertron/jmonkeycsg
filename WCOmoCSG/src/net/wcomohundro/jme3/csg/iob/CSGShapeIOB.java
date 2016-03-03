@@ -54,12 +54,12 @@ import net.wcomohundro.jme3.csg.CSGMeshManager;
 import net.wcomohundro.jme3.csg.CSGShape;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
-import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
+import net.wcomohundro.jme3.csg.math.CSGVertex;
 
 /** Constructive Solid Geometry (CSG)
 

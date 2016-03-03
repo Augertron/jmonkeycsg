@@ -41,15 +41,15 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
-import net.wcomohundro.jme3.csg.CSGPlaneDbl;
-import net.wcomohundro.jme3.csg.CSGPolygonDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
-import net.wcomohundro.jme3.csg.CSGVertex;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
+import net.wcomohundro.jme3.csg.math.CSGPlaneDbl;
+import net.wcomohundro.jme3.csg.math.CSGPolygonDbl;
+import net.wcomohundro.jme3.csg.math.CSGVertex;
 
 /** A "FACE" describes a triangular surface on a solid, as defined by 3 vertices.  In addition,
  	every face tracks its own status about being inside, outside, or on the boundary of another

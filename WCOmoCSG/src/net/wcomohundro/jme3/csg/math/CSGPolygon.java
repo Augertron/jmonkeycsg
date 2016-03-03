@@ -28,7 +28,7 @@
 	and http://hub.jmonkeyengine.org/users/fabsterpal, which apparently was taken from 
 	https://github.com/evanw/csg.js
 **/
-package net.wcomohundro.jme3.csg;
+package net.wcomohundro.jme3.csg.math;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
+
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;

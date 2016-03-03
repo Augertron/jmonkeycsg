@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
-import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
@@ -44,6 +43,7 @@ import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
+import net.wcomohundro.jme3.csg.math.CSGPlaneDbl;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;

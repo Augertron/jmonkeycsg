@@ -52,8 +52,8 @@ import java.util.ArrayList;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
-import net.wcomohundro.jme3.csg.CSGPlane;
-import net.wcomohundro.jme3.csg.CSGPlaneFlt;
+import net.wcomohundro.jme3.csg.math.CSGPlane;
+import net.wcomohundro.jme3.csg.math.CSGPlaneFlt;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 
 

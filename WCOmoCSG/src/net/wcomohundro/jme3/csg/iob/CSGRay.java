@@ -38,12 +38,12 @@ import com.jme3.scene.plugins.blender.math.Vector3d;
 import com.jme3.util.TempVars;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
-import net.wcomohundro.jme3.csg.CSGPlaneDbl;
 import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
+import net.wcomohundro.jme3.csg.math.CSGPlaneDbl;
 
 /** This class is a variant of the basic jme3 Ray, but relying on 'double' coordinates rather than floats.
  	A ray is a 3D construct represented by a direction and an origin.

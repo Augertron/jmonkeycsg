@@ -28,14 +28,17 @@
 	and http://hub.jmonkeyengine.org/users/fabsterpal, which apparently was taken from 
 	https://github.com/evanw/csg.js
 **/
-package net.wcomohundro.jme3.csg;
+package net.wcomohundro.jme3.csg.math;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
-import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
+import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.math.CSGPolygon.CSGPolygonPlaneMode;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;

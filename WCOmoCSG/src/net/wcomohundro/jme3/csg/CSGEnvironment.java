@@ -33,8 +33,10 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
+import net.wcomohundro.jme3.csg.math.CSGVertexDbl;
+import net.wcomohundro.jme3.csg.math.CSGVertexFlt;
+import net.wcomohundro.jme3.csg.math.CSGPolygon.CSGPolygonPlaneMode;
 
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
@@ -335,25 +337,28 @@ public class CSGEnvironment<ShapeProcessorT>
 		
 		// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
 		//		false comparisons
+		Vector3f aPosition = pVertex.getPosition();
 		if ( !(
-			   (Math.abs( pVertex.mPosition.x ) < maxBetweenPoints ) 
-			&& (Math.abs( pVertex.mPosition.y ) < maxBetweenPoints ) 
-			&& (Math.abs( pVertex.mPosition.z ) < maxBetweenPoints )
+			   (Math.abs( aPosition.x ) < maxBetweenPoints ) 
+			&& (Math.abs( aPosition.y ) < maxBetweenPoints ) 
+			&& (Math.abs( aPosition.z ) < maxBetweenPoints )
 			) ) {
-			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pVertex.mPosition );
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + aPosition );
 			return( false );
 		}
 		// Upon further research, I am not seeing a requirement for the normal to be a unit vector
-		double normalLength = pVertex.mNormal.length();
+		Vector3f aNormal = pVertex.getNormal();
+		double normalLength = aNormal.length();
 		if ( !(normalLength != 0.0f) ) {
-			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + pVertex.mNormal + ", " + normalLength );
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + aNormal + ", " + normalLength );
 			return( false );
 		}
+		Vector2f aTexureCoord = pVertex.getTextureCoordinate();
 		if ( !(
-			   (Math.abs( pVertex.mTextureCoordinate.x ) <= maxTexCoord ) 
-			&& (Math.abs( pVertex.mTextureCoordinate.y ) <= maxTexCoord )
+			   (Math.abs( aTexureCoord.x ) <= maxTexCoord ) 
+			&& (Math.abs( aTexureCoord.y ) <= maxTexCoord )
 			) ) {
-			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + pVertex.mTextureCoordinate );
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + aTexureCoord );
 			return( false );
 		}
 		return( true );
@@ -368,25 +373,28 @@ public class CSGEnvironment<ShapeProcessorT>
 		
 		// NOTE use of negative boolean logic to accommodate NaN and Infinity always producing
 		//		false comparisons
+		Vector3d aPosition = pVertex.getPosition();
 		if ( !(
-			   (Math.abs( pVertex.mPosition.x ) < maxBetweenPoints ) 
-			&& (Math.abs( pVertex.mPosition.y ) < maxBetweenPoints ) 
-			&& (Math.abs( pVertex.mPosition.z ) < maxBetweenPoints )
+			   (Math.abs( aPosition.x ) < maxBetweenPoints ) 
+			&& (Math.abs( aPosition.y ) < maxBetweenPoints ) 
+			&& (Math.abs( aPosition.z ) < maxBetweenPoints )
 			) ) {
-			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + pVertex.mPosition );
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Vertex: " + aPosition );
 			return( false );
 		}
 		// Upon further research, I am not seeing a requirement for the normal to be a unit vector
-		double normalLength = pVertex.mNormal.length();
+		Vector3d aNormal = pVertex.getNormal();
+		double normalLength = aNormal.length();
 		if ( !(normalLength != 0.0f) ) {
-			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + pVertex.mNormal + ", " + normalLength );
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Normal: " + aNormal + ", " + normalLength );
 			return( false );
 		}
+		Vector2f aTextureCoord = pVertex.getTextureCoordinate();
 		if ( !(
-			   (Math.abs( pVertex.mTextureCoordinate.x ) <= maxTexCoord ) 
-			&& (Math.abs( pVertex.mTextureCoordinate.y ) <= maxTexCoord )
+			   (Math.abs( aTextureCoord.x ) <= maxTexCoord ) 
+			&& (Math.abs( aTextureCoord.y ) <= maxTexCoord )
 			) ) {
-			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + pVertex.mTextureCoordinate );
+			CSGEnvironment.sLogger.log( Level.SEVERE, "Bogus Tex: " + aTextureCoord );
 			return( false );
 		}
 		return( true );

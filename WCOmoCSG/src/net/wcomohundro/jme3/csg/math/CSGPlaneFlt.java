@@ -28,219 +28,177 @@
 	and http://hub.jmonkeyengine.org/users/fabsterpal, which apparently was taken from 
 	https://github.com/evanw/csg.js
 **/
-package net.wcomohundro.jme3.csg;
+package net.wcomohundro.jme3.csg.math;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
-import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
+import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.math.CSGPolygon.CSGPolygonPlaneMode;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Transform;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.plugins.blender.math.Vector3d;
+import com.jme3.math.Vector2f;
+import com.jme3.util.TempVars;
 
 /**  Constructive Solid Geometry (CSG)
  
-  	A CSGPlaneDbl is the DOUBLE variant of CSGPlane
+  	A CSGPlaneFlt is the FLOAT variant of CSGPlane
  */
-public class CSGPlaneDbl 
-	extends CSGPlane<Vector3d,CSGVertexDbl>
+public class CSGPlaneFlt 
+	extends CSGPlane<Vector3f,CSGVertexFlt>
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGPlaneDblRevision="$Rev$";
-	public static final String sCSGPlaneDblDate="$Date$";
+	public static final String sCSGPlaneFltRevision="$Rev$";
+	public static final String sCSGPlaneFltDate="$Date$";
 
 	/** Factory method to produce a plane from a minimal set of points 
-	
-	 	TempVars Usage: vectd4, vectd5
+	 * 
+	 	TempVars Usage:
+	 		vect4
+	 		vect5
 	 */
-	public static CSGPlaneDbl fromPoints(
-		Vector3d		pA
-	, 	Vector3d 		pB
-	, 	Vector3d 		pC
+	public static CSGPlaneFlt fromPoints(
+		Vector3f		pA
+	, 	Vector3f 		pB
+	, 	Vector3f 		pC
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
 		// Compute the normal vector
-		Vector3d temp1 = pB.subtract( pA, pTempVars.vectd4 );
-		Vector3d temp2 = pC.subtract( pA, pTempVars.vectd5 );
-		Vector3d aNormal = temp1.cross( temp2 ).normalizeLocal();
-		//Vector3d aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
-		if ( pEnvironment.mRationalizeValues ) {
-			pEnvironment.rationalizeVector( aNormal, pEnvironment.mEpsilonMagnitudeRange );
-		}
+		Vector3f temp1 = pB.subtract( pA, pTempVars.vect4 );
+		Vector3f temp2 = pC.subtract( pA, pTempVars.vect5 );
+		Vector3f aNormal = temp1.cross( temp2 ).normalizeLocal();
+		//Vector3f aNormal = pB.subtract( pA ).cross( pC.subtract( pA ) ).normalizeLocal();
+		
 		// I am defintely NOT understanding something here...
 		// I had thought that a normalDot of zero was indicating congruent points.  But
 		// apparently, the pattern (x, y, 0) (-x, y, 0) (0, 0, z) produces a valid normal
-		// but with a normalDot of 0.  So check for a zero normal vector instead, which
-		// indicates all points on a straight line
-		if ( aNormal.equals( Vector3d.ZERO ) ) {
+		// but with a normalDot of 0.  So check for a zero normal vector instead,
+		// which indicates 3 points in a line
+		if ( aNormal.equals( Vector3f.ZERO ) ) {
 			// Not a valid normal
 			return( null );
 		}
-		double normalDot = aNormal.dot( pA ) + aNormal.dot( pB ) + aNormal.dot( pC );
-		CSGPlaneDbl aPlane = new CSGPlaneDbl( aNormal, pA, normalDot / 3.0, -1, pEnvironment );
-		
-		if ( pEnvironment.mStructuralDebug ) {
-			// NOTE that the rationalization of the normal could make the points look off the plane
-			double aDistance = aPlane.pointDistance( pA );
-			double bDistance = aPlane.pointDistance( pB );
-			double cDistance = aPlane.pointDistance( pC );
-			if ( (aDistance > pEnvironment.mEpsilonOnPlaneDbl)
-			||   (bDistance > pEnvironment.mEpsilonOnPlaneDbl)
-			||   (cDistance> pEnvironment.mEpsilonOnPlaneDbl) ) {
-				pEnvironment.log( Level.SEVERE
-				, 	"CSGPlaneDbl, points NOT on plane: " + aPlane
-					+ ": " + aDistance + ", " + bDistance + ", " + cDistance );				
-			}
-		}
-		return( aPlane );
+		float normalDot = aNormal.dot( pA );
+		return new CSGPlaneFlt( aNormal, pA, normalDot, -1, pEnvironment );
 	}
 	/** Factory method to produce a plane from a set of vertices */
-	public static CSGPlaneDbl fromVertices(
+	public static CSGPlaneFlt fromVertices(
 		List<CSGVertex>		pVertices
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( pVertices.size() >= 3 ) {
 			// Use the position of the first 3 vertices to define the plane
-			Vector3d aVector = ((CSGVertexDbl)pVertices.get(0)).getPosition();
-			Vector3d bVector = ((CSGVertexDbl)pVertices.get(1)).getPosition();
-			Vector3d cVector = ((CSGVertexDbl)pVertices.get(2)).getPosition();
+			Vector3f aVector = ((CSGVertexFlt)pVertices.get(0)).getPosition();
+			Vector3f bVector = ((CSGVertexFlt)pVertices.get(1)).getPosition();
+			Vector3f cVector = ((CSGVertexFlt)pVertices.get(2)).getPosition();
 			return( fromPoints( aVector, bVector, cVector, pTempVars, pEnvironment ) );
 		} else {
 			// Not enough info to define a plane
 			return( null );
 		}
 	}
-	public static CSGPlaneDbl fromVertices(
+	public static CSGPlaneFlt fromVertices(
 		CSGVertex[]			pVertices
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		if ( pVertices.length >= 3 ) {
 			// Use the position of the first 3 vertices to define the plane
-			Vector3d aVector = ((CSGVertexDbl)pVertices[ 0 ]).getPosition();
-			Vector3d bVector = ((CSGVertexDbl)pVertices[ 1 ]).getPosition();
-			Vector3d cVector = ((CSGVertexDbl)pVertices[ 2 ]).getPosition();
+			Vector3f aVector = ((CSGVertexFlt)pVertices[ 0 ]).getPosition();
+			Vector3f bVector = ((CSGVertexFlt)pVertices[ 1 ]).getPosition();
+			Vector3f cVector = ((CSGVertexFlt)pVertices[ 2 ]).getPosition();
 			return( fromPoints( aVector, bVector, cVector, pTempVars, pEnvironment ) );
 		} else {
 			// Not enough info to define a plane
 			return( null );
 		}
 	}
-	
+
 	/** Quick access to its DOT for comparison purposes */
-	protected double	mDot;
+	protected float	mDot;
 
 	/** Standard null constructor */
-	public CSGPlaneDbl(
+	public CSGPlaneFlt(
 	) {
-		mSurfaceNormal = Vector3d.ZERO;
-		mPointOnPlane = Vector3d.ZERO;
-		mDot = Double.NaN;
+		mSurfaceNormal = Vector3f.ZERO;
+		mPointOnPlane = Vector3f.ZERO;
+		mDot = Float.NaN;
 		mMark = -1;
 	}
 	/** Constructor based on a given normal and point on the plane */
-	public CSGPlaneDbl(
-		Vector3d	pNormal
-	,	Vector3d	pPointOnPlane
+	public CSGPlaneFlt(
+		Vector3f	pNormal
+	,	Vector3f	pPointOnPlane
 	) {
 		// From the BSP FAQ paper, the 'D' value is calculated from the normal and a point on the plane.
 		this( pNormal, pPointOnPlane, pNormal.dot( pPointOnPlane ), -1, CSGEnvironment.resolveEnvironment() );
 	}
 	/** Internal constructor for a given normal and dot */
-	protected CSGPlaneDbl(
-		Vector3d		pNormal
-	,	Vector3d		pPointOnPlane
-	,	double			pDot
+	protected CSGPlaneFlt(
+		Vector3f		pNormal
+	,	Vector3f		pPointOnPlane
+	,	float			pDot
 	,	int				pMarkValue
 	,	CSGEnvironment	pEnvironment
 	) {
+		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
+			// Remember that NaN always returns false for any comparison, so structure the logic accordingly
+			float normalLength = pNormal.length();
+			if ( !(
+			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
+			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZeroFlt) 
+			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroFlt)
+			&& CSGEnvironment.isFinite( pDot )
+			) ) {
+				pEnvironment.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
+				pDot =  Float.NaN;
+			}
+		}
 		mSurfaceNormal = pNormal;
 		mPointOnPlane = pPointOnPlane;
 		mDot = pDot;
 		mMark = pMarkValue;
-		
-		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			// Remember that NaN always returns false for any comparison, so structure the logic accordingly
-			double normalLength = pNormal.length();
-			if ( !(
-			   (Math.abs( pNormal.x ) <= 1) && (Math.abs( pNormal.y ) <= 1) && (Math.abs( pNormal.z ) <= 1) 
-			&& (normalLength < 1.0f + pEnvironment.mEpsilonNearZeroDbl) 
-			&& (normalLength > 1.0f - pEnvironment.mEpsilonNearZeroDbl)
-			&& CSGEnvironment.isFinite( pDot )
-			) ) {
-				pEnvironment.log( Level.SEVERE, "Bogus Plane: " + pNormal + ", " + normalLength + ", " + pDot );
-				pDot =  Double.NaN;
-			}
-			double aDistance = this.pointDistance( pPointOnPlane );
-			if ( aDistance > pEnvironment.mEpsilonOnPlaneDbl ) {
-				pEnvironment.log( Level.SEVERE, "CSGPlaneDbl, point NOT on plane: " + this );				
-			}
-		}
 	}
 	
 	/** Return a copy */
-	@Override
-	public CSGPlaneDbl clone(
+	public CSGPlaneFlt clone(
 		boolean		pFlipIt
 	) {
 		if ( pFlipIt ) {
 			// Flipped copy
-			return( new CSGPlaneDbl( mSurfaceNormal.negate(), mPointOnPlane, -mDot, -1, null ) );
+			return( new CSGPlaneFlt( mSurfaceNormal.negate(), mPointOnPlane, -mDot, -1, null ) );
 		} else {
 			// Standard use of this immutable copy
 			return( this );
 		}
 	}
 	
-	/** Return a plane that has been transformed */
-	public CSGPlaneDbl applyTransform(
-		Transform		pTransform
-	,	CSGTempVars		pTempVars
-	,	CSGEnvironment	pEnvironment
-	) {
-		// The point on the plane must obey the transform
-		Vector3f aPosition = pTempVars.vect4.set( (float)mPointOnPlane.x, (float)mPointOnPlane.y, (float)mPointOnPlane.z );
-		aPosition = pTransform.transformVector( aPosition, aPosition );
-		Vector3d newPosition = new Vector3d( aPosition.x, aPosition.y, aPosition.z );
-
-		// The normal must follow any rotation
-		Vector3d newNormal = this.getNormal();
-		Quaternion aRotation = pTransform.getRotation();
-		if ( !Quaternion.IDENTITY.equals( aRotation ) ) {
-			// Adjust the normal
-			Vector3f aNormal = pTempVars.vect3.set( (float)newNormal.x, (float)newNormal.y, (float)newNormal.z );
-			aNormal = aRotation.multLocal( aNormal );
-			newNormal = new Vector3d( aNormal.x, aNormal.y, aNormal.z );
-		}
-		return( new CSGPlaneDbl( newNormal, newPosition, newNormal.dot( newPosition ), -1, pEnvironment ) );
-	}
-	
 	/** DOT value for this plane */
-	public double getDot() { return( mDot ); }
+	public float getDot() { return( mDot ); }
 	
 	/** Ensure we have something valid */
 	@Override
 	public boolean isValid() { return( CSGEnvironment.isFinite( mDot ) ); }
-	
+
 	/** Check if a given point is in 'front' or 'behind' this plane  */
-	public double pointDistance(
-		Vector3d	pPoint
+	public float pointDistance(
+		Vector3f	pPoint
 	) {
 		// How far away is the given point
-		double distanceToPlane = mSurfaceNormal.dot( pPoint ) - (double)mDot;
+		float distanceToPlane = mSurfaceNormal.dot( pPoint ) - (float)mDot;
 		return( distanceToPlane );
 	}
 	
@@ -250,27 +208,21 @@ public class CSGPlaneDbl
 	 			   +1 if in front
 	 */
 	public int pointPosition(
-		Vector3d	pPoint
+		Vector3f	pPoint
 	,	double		pTolerance
 	) {
 		// How far away is the given point
-		double distanceToPlane = mSurfaceNormal.dot( pPoint ) - mDot;
+		float distanceToPlane = mSurfaceNormal.dot( pPoint ) - ((float)mDot);
 		
 		// If within a given tolerance, it is the same plane
 		int aPosition = (distanceToPlane < -pTolerance) ? -1 : (distanceToPlane > pTolerance) ? 1 : 0;
 		return( aPosition );
 	}
-	public int pointPosition(
-		CSGVertex		pVertex
-	,	CSGEnvironment	pEnvironment
-	) {
-		return( pointPosition( (Vector3d)pVertex.getPosition(), pEnvironment.mEpsilonOnPlaneDbl ) );
-	}
 	
 	/** Find the projection of a given point onto this plane */
-	public Vector3d pointProjection(
-		Vector3d	pPoint
-	,	Vector3d	pPointStore
+	public Vector3f pointProjection(
+		Vector3f	pPoint
+	,	Vector3f	pPointStore
 	) {
 		// Digging around the web, I found the following:
 		//		q_proj = q - dot(q - p, n) * n
@@ -279,39 +231,38 @@ public class CSGPlaneDbl
 		//		planar_x = point_x - a*normal_dx;
 		//		planar_y = point_y - a*normal_dy;
 		//		planar_z = point_z - a*normal_dz;
-		double aFactor = pPoint.dot( mSurfaceNormal ) - mDot;
+		float aFactor = pPoint.dot( mSurfaceNormal ) - ((float)mDot);
 		pPointStore = mSurfaceNormal.mult( aFactor, pPointStore );
 		pPointStore.set( pPoint.x - pPointStore.x, pPoint.y - pPointStore.y, pPoint.z - pPointStore.z );
 		return( pPointStore );
 	}
 	
-
 	/** Intersection of a line and this plane 
 	 	Based on code fragment from: 
 	 		http://math.stackexchange.com/questions/83990/line-and-plane-intersection-in-3d
 	 */
-	public Vector3d intersectLine(
-		Vector3d		pPointA
-	,	Vector3d		pPointB
-	,	CSGTempVars		pTempVars
+	public Vector3f intersectLine(
+		Vector3f		pPointA
+	,	Vector3f		pPointB
+	,	Vector3f		pTemp
 	,	CSGEnvironment	pEnvironment
 	) {
 		// Use the temp
-		Vector3d lineFrag = pPointB.subtract( pPointA, pTempVars.vectd1 );
-		double nDotA = mSurfaceNormal.dot( pPointA );
-		double nDotFrag = mSurfaceNormal.dot( lineFrag );
+		Vector3f lineFrag = pPointB.subtract( pPointA, pTemp );
+		float nDotA = mSurfaceNormal.dot( pPointA );
+		float nDotFrag = mSurfaceNormal.dot( lineFrag );
 		
-		double distance = (mDot - nDotA) / nDotFrag;
+		float distance = (((float)mDot) - nDotA) / nDotFrag;
 		lineFrag.multLocal( distance );
 		
 		// Produce a new vector for subsequent use
-		Vector3d intersection = pPointA.add( lineFrag );
+		Vector3f intersection = pPointA.add( lineFrag );
 		
 		if ( pEnvironment.mStructuralDebug ) {
-			double confirmDistance = pointDistance( intersection );
-			if ( confirmDistance > pEnvironment.mEpsilonNearZeroDbl ) {
+			float confirmDistance = pointDistance( intersection );
+			if ( confirmDistance > pEnvironment.mEpsilonNearZeroFlt ) {
 				// Try to force back onto the plane
-				Vector3d pointOnPlane = this.pointProjection( intersection, null );
+				Vector3f pointOnPlane = this.pointProjection( intersection, null );
 				intersection = pointOnPlane;
 				
 				pEnvironment.log( Level.WARNING, "Line intersect failed: "+ confirmDistance );
@@ -326,7 +277,7 @@ public class CSGPlaneDbl
 		JmeExporter		pExporter
 	) throws IOException {
 		OutputCapsule aCapsule = pExporter.getCapsule( this );
-		aCapsule.write( mSurfaceNormal, "Normal", Vector3d.ZERO );
+		aCapsule.write( mSurfaceNormal, "Normal", Vector3f.ZERO );
 		aCapsule.write( mDot, "Dot", 0 );
 	}
 	@Override
@@ -334,24 +285,24 @@ public class CSGPlaneDbl
 		JmeImporter		pImporter
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule( this );
-		mSurfaceNormal = (Vector3d)aCapsule.readSavable( "Normal", Vector3d.ZERO );
-		mDot = aCapsule.readDouble( "Dot", 0 );
+		mSurfaceNormal = (Vector3f)aCapsule.readSavable( "Normal", Vector3f.ZERO );
+		mDot = aCapsule.readFloat( "Dot", 0 );
 	}
 	
 	/** Treat two planes as equal if they happen to be close */
 	public boolean equals(
 		Object		pOther
-	,	double		pTolerance
+	,	float		pTolerance
 	) {
 		if ( pOther == this ) {
 			// By definition, if the plane is the same
 			return true;
-		} else if ( pOther instanceof CSGPlaneDbl ) {
+		} else if ( pOther instanceof CSGPlaneFlt ) {
 			// Two planes that are close are equal
-			if ( this.mDot != ((CSGPlaneDbl)pOther).mDot ) {
+			if ( this.mDot != ((CSGPlaneFlt)pOther).mDot ) {
 				return( false );
-			} else if ( CSGEnvironment.equalVector3d( this.mSurfaceNormal
-														, ((CSGPlaneDbl)pOther).mSurfaceNormal
+			} else if ( CSGEnvironment.equalVector3f( this.mSurfaceNormal
+														, ((CSGPlaneFlt)pOther).mSurfaceNormal
 														, pTolerance ) ) {
 				return( true );
 			} else {
@@ -367,18 +318,7 @@ public class CSGPlaneDbl
 	@Override
 	public String toString(
 	) {
-		return( toString( null ).toString() );
-	}
-	public StringBuilder toString(
-		StringBuilder	pBuffer
-	) {
-		if ( pBuffer == null ) pBuffer = new StringBuilder( 128 );
-		pBuffer.append( "Plane: " )
-				.append( mSurfaceNormal.toString() )
-				.append( " (" )
-				.append( mDot )
-				.append( ")" );
-		return( pBuffer );
+		return( super.toString() + " - " + mSurfaceNormal + "(" + mDot + ")" );
 	}
 	
 	/////// Implement ConstructiveSolidGeometry
@@ -387,8 +327,8 @@ public class CSGPlaneDbl
 		StringBuilder	pBuffer
 	) {
 		return( CSGVersion.getVersion( this.getClass()
-													, sCSGPlaneDblRevision
-													, sCSGPlaneDblDate
+													, sCSGPlaneFltRevision
+													, sCSGPlaneFltDate
 													, pBuffer ) );
 	}
 

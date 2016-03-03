@@ -28,7 +28,7 @@
 	and http://hub.jmonkeyengine.org/users/fabsterpal, which apparently was taken from 
 	https://github.com/evanw/csg.js
 **/
-package net.wcomohundro.jme3.csg;
+package net.wcomohundro.jme3.csg.math;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -37,7 +37,11 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
-import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
+import net.wcomohundro.jme3.csg.CSGEnvironment;
+import net.wcomohundro.jme3.csg.CSGTempVars;
+import net.wcomohundro.jme3.csg.CSGVersion;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.csg.math.CSGPolygon.CSGPolygonPlaneMode;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -47,11 +51,13 @@ import com.jme3.export.Savable;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.plugins.blender.math.Vector3d;
+
 
 /** Constructive Solid Geometry (CSG)
 	
 	A CSG Vertex is a point in space, know by its position, its normal, and its texture coordinate
-	This is the FLOAT based variant that is based on Vector3f
+	This is the DOUBLE variant based on Vector3d
 
 	NOTE
 		that a vertex is expected to be immutable with no internally moving parts.  Once created, you
@@ -59,32 +65,32 @@ import com.jme3.math.Vector3f;
 		THEREFORE, be careful with Vertex internal Vectors used in Mesh construction which could be 
 		adjusted/altered. .
   */
-public class CSGVertexFlt 
-	extends CSGVertex<Vector3f>
+public class CSGVertexDbl 
+	extends CSGVertex<Vector3d>
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGVertexFltRevision="$Rev$";
-	public static final String sCSGVertexFltDate="$Date$";
-		
+	public static final String sCSGVertexDblRevision="$Rev$";
+	public static final String sCSGVertexDblDate="$Date$";
+
 	
 	/** Standard null constructor */
-	public CSGVertexFlt(
+	public CSGVertexDbl(
 	) {
-		this( Vector3f.ZERO, Vector3f.ZERO, Vector2f.ZERO, null );
+		this( Vector3d.ZERO, Vector3d.ZERO, Vector2f.ZERO, null );
 	}
 	
 	/** Constructor based on the given components */
-	public CSGVertexFlt(
-		Vector3f		pPosition
-	,	Vector3f		pNormal
+	public CSGVertexDbl(
+		Vector3d		pPosition
+	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
 	) {
 		this( pPosition, pNormal, pTextureCoordinate, CSGEnvironment.resolveEnvironment() );
 	}
-	public CSGVertexFlt(
-		Vector3f		pPosition
-	,	Vector3f		pNormal
+	public CSGVertexDbl(
+		Vector3d		pPosition
+	,	Vector3d		pNormal
 	,	Vector2f		pTextureCoordinate
 	,	CSGEnvironment	pEnvironment
 	) {
@@ -93,43 +99,67 @@ public class CSGVertexFlt
 		mNormal = pNormal;
 		mTextureCoordinate = pTextureCoordinate;
 		
-		if ( (pEnvironment != null) && pEnvironment.mStructuralDebug ) {
-			CSGEnvironment.confirmVertex( this, pEnvironment );
+		if ( pEnvironment != null ) {
+			if ( !pEnvironment.mDoublePrecision ) {
+				// VertexDbl is inherently 'double', but if we mark it 'float', then 
+				// adjust the given values to match single precision only
+				CSGEnvironment.toFloat( mPosition, pEnvironment.mEpsilonNearZeroDbl );
+				CSGEnvironment.toFloat( mNormal, pEnvironment.mEpsilonNearZeroDbl );
+			}
+			if ( pEnvironment.mStructuralDebug ) {
+				CSGEnvironment.confirmVertex( this, pEnvironment );
+			}
 		}
 	}
 	
 	/** Make a copy */
-	public CSGVertexFlt clone(
+	@Override
+	public CSGVertexDbl clone(
 		boolean		pFlipIt
 	) {
 		if ( pFlipIt ) {
 			// Make a flipped copy (invert the normal)
-			return( new CSGVertexFlt( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null ));
+			return( new CSGVertexDbl( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null ));
 		} else {
 			// Standard copy, which is currently this same immutable instance
 			return( this ); // new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));
 		}
 	}
-	
+	/** Make an instance of the same class with the given parameters */
+	public CSGVertexDbl sibling(
+		Vector3d		pPosition
+	,	Vector3d		pNormal
+	,	Vector2f		pTextureCoordinate
+	,	CSGEnvironment	pEnvironment
+	) {
+		return( new CSGVertexDbl( pPosition, pNormal, pTextureCoordinate, null ) );
+	}
+		
 	/** Access as Floats */
 	@Override
-	public Vector3f getPositionFlt() { return mPosition; }
+	public Vector3f getPositionFlt(
+	) { 
+		return new Vector3f( (float)mPosition.x, (float)mPosition.y, (float)mPosition.z ); 
+	}
 	@Override
-	public Vector3f getNormalFlt() { return mNormal; }
+	public Vector3f getNormalFlt(
+	) { 
+		return new Vector3f( (float)mNormal.x, (float)mNormal.y, (float)mNormal.z ); 
+	}
 
 	/** Interpolate between this vertex and another */
-	public CSGVertexFlt interpolate(
-		CSGVertexFlt 	pOther
-	, 	float			pPercentage
-	,	Vector3f		pNewPosition
+	public CSGVertexDbl interpolate(
+		CSGVertexDbl 	pOther
+	, 	double			pPercentage
+	,	Vector3d		pNewPosition
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) {
-		CSGVertexFlt aVertex = null;
+		CSGVertexDbl aVertex = null;
 		
 		// NOTE that by Java spec definition, NaN always returns false in any comparison, so 
 		// 		structure your bound checks accordingly
-		if ( (pPercentage < 0.0f) || (pPercentage > 1.0f) ) {
+		if ( (pPercentage < 0.0) || (pPercentage > 1.0) ) {
 			// Not sure what to make of this....
 		
 		// Once upon a time, I had tolerance checks here to check for near zero and near
@@ -137,18 +167,18 @@ public class CSGVertexFlt
 		// which means we could not compute plane.  So punt that and always use the percentage.
 		} else if ( CSGEnvironment.isFinite( pPercentage ) ){
 			// What is its normal?
-			Vector3f newNormal 
+			Vector3d newNormal 
 				= this.mNormal.add( 
-					pTempVars.vect1.set( pOther.getNormal() )
+					pTempVars.vectd1.set( pOther.getNormal() )
 						.subtractLocal( this.mNormal ).multLocal( pPercentage ) ).normalizeLocal();
 			
 			// What is its texture?
 			Vector2f newTextureCoordinate 
 				= this.mTextureCoordinate.add( 
 					pTempVars.vect2d1.set( pOther.getTextureCoordinate() )
-						.subtractLocal( this.mTextureCoordinate ).multLocal( pPercentage ) );
+						.subtractLocal( this.mTextureCoordinate ).multLocal( (float)pPercentage ) );
 			
-			aVertex = new CSGVertexFlt( pNewPosition, newNormal, newTextureCoordinate );
+			aVertex = this.sibling( pNewPosition, newNormal, newTextureCoordinate, pEnvironment );
 		}
 		if ( aVertex == null ) {
 			// Not a percentage we can deal with
@@ -158,16 +188,16 @@ public class CSGVertexFlt
 	}
 	
 	/** Calculate the distance of this vertex to another */
-	public float distance(
-		CSGVertexFlt	pOtherVertex
+	public double distance(
+		CSGVertexDbl	pOtherVertex
 	) {
-		float aDistance = this.mPosition.distance( pOtherVertex.mPosition );
+		double aDistance = this.mPosition.distance( pOtherVertex.mPosition );
 		return( aDistance );
 	}
-	public float distanceSquared(
-		CSGVertexFlt	pOtherVertex
+	public double distanceSquared(
+		CSGVertexDbl	pOtherVertex
 	) {
-		float aDistance = this.mPosition.distanceSquared( pOtherVertex.mPosition );
+		double aDistance = this.mPosition.distanceSquared( pOtherVertex.mPosition );
 		return( aDistance );
 	}
 
@@ -177,8 +207,8 @@ public class CSGVertexFlt
 		JmeExporter		pExporter
 	) throws IOException {
 		OutputCapsule aCapsule = pExporter.getCapsule(this);
-		aCapsule.write( mPosition, "position", Vector3f.ZERO );
-		aCapsule.write( mNormal, "normal", Vector3f.ZERO );
+		aCapsule.write( mPosition, "position", Vector3d.ZERO );
+		aCapsule.write( mNormal, "normal", Vector3d.ZERO );
 		super.write( pExporter );
 	}
 	@Override
@@ -186,8 +216,8 @@ public class CSGVertexFlt
 		JmeImporter		pImporter
 	) throws IOException {
 		InputCapsule aCapsule = pImporter.getCapsule(this);
-		mPosition = (Vector3f)aCapsule.readSavable( "position", Vector3f.ZERO );
-		mNormal = (Vector3f)aCapsule.readSavable( "normal", Vector3f.ZERO );
+		mPosition = (Vector3d)aCapsule.readSavable( "position", Vector3d.ZERO );
+		mNormal = (Vector3d)aCapsule.readSavable( "normal", Vector3d.ZERO );
 		super.read( pImporter );
 	}
 	
@@ -197,17 +227,17 @@ public class CSGVertexFlt
 		CSGVertex		pOther
 	,	CSGEnvironment	pEnvironment
 	) {
-		if ( pOther instanceof CSGVertexFlt ) {
-			CSGVertexFlt other = (CSGVertexFlt)pOther;
-			if ( CSGEnvironment.equalVector3f( this.getPosition()
+		if ( pOther instanceof CSGVertexDbl ) {
+			CSGVertexDbl other = (CSGVertexDbl)pOther;
+			if ( CSGEnvironment.equalVector3d( this.getPosition()
 															, other.getPosition()
-															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
-				if ( CSGEnvironment.equalVector3f( this.getNormal()
+															, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
+				if ( CSGEnvironment.equalVector3d( this.getNormal()
 															, other.getNormal()
-															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
+															, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 					if ( CSGEnvironment.equalVector2f( this.getTextureCoordinate()
 															, pOther.getTextureCoordinate()
-															, pEnvironment.mEpsilonBetweenPointsFlt ) ) {
+															, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 						return( true );
 					}
 				}
@@ -216,15 +246,14 @@ public class CSGVertexFlt
 		return( false );
 	}
 
-
 	/////// Implement ConstructiveSolidGeometry
 	@Override
 	public StringBuilder getVersion(
 		StringBuilder	pBuffer
 	) {
 		return( CSGVersion.getVersion( this.getClass()
-													, sCSGVertexFltRevision
-													, sCSGVertexFltDate
+													, sCSGVertexDblRevision
+													, sCSGVertexDblDate
 													, pBuffer ) );
 	}
 

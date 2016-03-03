@@ -36,6 +36,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
+import net.wcomohundro.jme3.csg.math.CSGPlaneFlt;
+import net.wcomohundro.jme3.csg.math.CSGPolygonFlt;
+import net.wcomohundro.jme3.csg.math.CSGVertexFlt;
 import net.wcomohundro.jme3.csg.shape.*;
 
 import com.jme3.asset.AssetManager;

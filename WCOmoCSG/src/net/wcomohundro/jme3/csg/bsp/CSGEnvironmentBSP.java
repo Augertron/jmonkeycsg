@@ -38,8 +38,8 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
-import net.wcomohundro.jme3.csg.CSGPolygon;
-import net.wcomohundro.jme3.csg.CSGPolygon.CSGPolygonPlaneMode;
+import net.wcomohundro.jme3.csg.math.CSGPolygon;
+import net.wcomohundro.jme3.csg.math.CSGPolygon.CSGPolygonPlaneMode;
 
 public class CSGEnvironmentBSP 
 	extends CSGEnvironment<CSGShapeBSP>

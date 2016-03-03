@@ -28,7 +28,7 @@
 	and http://hub.jmonkeyengine.org/users/fabsterpal, which apparently was taken from 
 	https://github.com/evanw/csg.js
 **/
-package net.wcomohundro.jme3.csg;
+package net.wcomohundro.jme3.csg.math;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,6 +36,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
+
+import net.wcomohundro.jme3.csg.CSGVersion;
+import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -47,29 +50,28 @@ import com.jme3.util.TempVars;
 
 /**  Constructive Solid Geometry (CSG)
 
-  	CSGPolygon variant based on FLOATS
+  	CSGPolygon variant based on DOUBLES
  */
-public class CSGPolygonFlt 
-	extends CSGPolygon<CSGVertexFlt,CSGPlaneFlt>
+public class CSGPolygonDbl 
+	extends CSGPolygon<CSGVertexDbl,CSGPlaneDbl>
 	implements Savable, ConstructiveSolidGeometry
 {
 	/** Version tracking support */
-	public static final String sCSGPolygonFltRevision="$Rev$";
-	public static final String sCSGPolygonFltDate="$Date$";
+	public static final String sCSGPolygonDblRevision="$Rev$";
+	public static final String sCSGPolygonDblDate="$Date$";
 
-	
 	/** Standard null constructor */
-	public CSGPolygonFlt(
+	public CSGPolygonDbl(
 	) {
-		mVertices = CSGVertexFlt.sEmptyVertices;
+		mVertices = CSGVertex.sEmptyVertices;
 		mPlane = null;
 		mMeshIndex = 0;
 	}
 	
 	/** Constructor based on given vertices and plane */
-	public CSGPolygonFlt(
+	public CSGPolygonDbl(
 		List<CSGVertex>		pVertices
-	,	CSGPlaneFlt			pPlane
+	,	CSGPlaneDbl			pPlane
 	,	int					pMeshIndex
 	) {
 		mVertices = pVertices;
@@ -79,9 +81,9 @@ public class CSGPolygonFlt
 		}
 		mMeshIndex = pMeshIndex;
 	}
-	public CSGPolygonFlt(
+	public CSGPolygonDbl(
 		CSGVertex[]			pVertices
-	,	CSGPlaneFlt			pPlane
+	,	CSGPlaneDbl			pPlane
 	,	int					pMeshIndex
 	) {
 		mVertices = Arrays.asList( pVertices );
@@ -91,21 +93,21 @@ public class CSGPolygonFlt
 	
 	/** Make a copy */
 	@Override
-	public CSGPolygonFlt clone(
+	public CSGPolygonDbl clone(
 		boolean 	pFlipIt
 	) {
 		if ( pFlipIt ) {
 			// Flip all the components
 			List<CSGVertex> newVertices = new ArrayList<CSGVertex>( mVertices.size() );
 			for( CSGVertex aVertex : mVertices ) {
-				CSGVertexFlt bVertex = (CSGVertexFlt)aVertex.clone( pFlipIt );
+				CSGVertexDbl bVertex = ((CSGVertexDbl)aVertex).clone( pFlipIt );
 				newVertices.add( bVertex );
 			}
 			// Flip the order of the vertices as well
 			// NOTE that we are assuming that .reverse() is more efficient than repeatedly inserting
 			//		new items at the start of the list (which forces things to copy and slide)
 			Collections.reverse( newVertices );
-			return( new CSGPolygonFlt( newVertices, mPlane.clone( pFlipIt ), mMeshIndex ) );
+			return( new CSGPolygonDbl( newVertices, mPlane.clone( pFlipIt ), mMeshIndex ) );
 		} else {
 			// The polygon is immutable, so its clone is just itself
 			return( this );
@@ -143,8 +145,8 @@ public class CSGPolygonFlt
 		StringBuilder	pBuffer
 	) {
 		return( CSGVersion.getVersion( this.getClass()
-													, sCSGPolygonFltRevision
-													, sCSGPolygonFltDate
+													, sCSGPolygonDblRevision
+													, sCSGPolygonDblDate
 													, pBuffer ) );
 	}
 

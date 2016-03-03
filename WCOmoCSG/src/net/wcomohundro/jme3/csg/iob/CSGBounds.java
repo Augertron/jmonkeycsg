@@ -34,9 +34,9 @@ import java.util.List;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGVersion;
-import net.wcomohundro.jme3.csg.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
-import net.wcomohundro.jme3.csg.CSGVertex;
+import net.wcomohundro.jme3.csg.math.CSGVertex;
+import net.wcomohundro.jme3.csg.math.CSGVertexDbl;
 
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
