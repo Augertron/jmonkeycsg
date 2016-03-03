@@ -82,7 +82,7 @@
     </csgtransform>
     <physics class='com.jme3.bullet.control.RigidBodyControl'
     		mass='0.0' restitution='0.5' applyLocalPhysics='true' >
-    	<collisionShape class='net.wcomohundro.jme3.csg.CSGPlaceholderCollisionShape'/>
+    	<collisionShape class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape'/>
     </physics>
     
     <!-- This light will apply to everything, both inside and out -->

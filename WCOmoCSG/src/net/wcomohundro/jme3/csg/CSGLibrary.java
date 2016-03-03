@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
+import net.wcomohundro.jme3.csg.placeholder.CSGPlaceholder;
 
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;

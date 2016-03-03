@@ -51,6 +51,7 @@ import net.wcomohundro.jme3.csg.bsp.CSGShapeBSP;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
+import net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial;
 import net.wcomohundro.jme3.csg.shape.CSGBox;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;

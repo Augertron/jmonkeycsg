@@ -45,13 +45,13 @@
 		</net.wcomohundro.jme3.csg.shape.CSGSkyDome>
 		
 		<!-- Simple corridor -->
-		<net.wcomohundro.jme3.csg.CSGPlaceholderSpatial reference='ACorridor'>
+		<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial reference='ACorridor'>
 			<!-- Move/Rotate confirms that the interior lights are managed correctly -->
 		    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
 		        <translation class='com.jme3.math.Vector3f' x='5' y='5' z='0'/>
 		        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
 		    </csgtransform>
-		</net.wcomohundro.jme3.csg.CSGPlaceholderSpatial>
+		</net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial>
 		
 		<!-- The floor -->
 		<net.wcomohundro.jme3.csg.CSGGeometry name='Flooring' 
@@ -66,7 +66,7 @@
         	</lights>
             <physics class='com.jme3.bullet.control.RigidBodyControl'
             		mass='0.0' restitution='0' friction='0.9' applyLocalPhysics='true' >
-            	<collisionShape class='net.wcomohundro.jme3.csg.CSGPlaceholderCollisionShape'/>
+            	<collisionShape class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape'/>
             </physics>
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGShape name='Surface'>
@@ -81,7 +81,7 @@
 		        </net.wcomohundro.jme3.csg.CSGShape>
 		        <net.wcomohundro.jme3.csg.CSGShape name='ACorridorHole' 
 		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
-		        	<spatial class='net.wcomohundro.jme3.csg.CSGPlaceholderSpatial' 
+		        	<spatial class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial' 
 		        			reference='Models/CSGSimpleCorridor.xml' />
 		        </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
@@ -171,7 +171,7 @@
     </csgtransform>
     <physics class='com.jme3.bullet.control.RigidBodyControl'
     		mass='0.0' restitution='0.5' applyLocalPhysics='true' >
-    	<collisionShape class='net.wcomohundro.jme3.csg.CSGPlaceholderCollisionShape'/>
+    	<collisionShape class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape'/>
     </physics>
     <lights class='com.jme3.light.LightList'>
 		<lights>

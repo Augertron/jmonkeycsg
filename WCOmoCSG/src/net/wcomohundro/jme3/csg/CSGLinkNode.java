@@ -33,6 +33,7 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial;
 
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;

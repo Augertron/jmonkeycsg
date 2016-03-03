@@ -42,6 +42,7 @@ import java.util.logging.Level;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape;
 import net.wcomohundro.jme3.math.CSGTransform;
 
 import com.jme3.asset.AssetInfo;
