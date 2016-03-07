@@ -168,6 +168,7 @@ public class CSGSolid
 	 */
 	protected CSGVertexIOB addVertex(
 		Vector3d			pNewPosition
+	,	CSGVertexStatus		pNewStatus
 	, 	CSGFace				pFace
 	,	CSGFaceCollision	pEdge
 	,	CSGTempVars			pTempVars
@@ -182,7 +183,7 @@ public class CSGSolid
 		//		are building a new vertex that is extrapolated between two others, I do not
 		//		think the odds of this new vertex overlapping a previously existing one
 		//		are very good.  So do not bother looking.
-		CSGVertexIOB vertex = pFace.extrapolate( pNewPosition, pEdge, pTempVars, pEnvironment );
+		CSGVertexIOB vertex = pFace.extrapolate( pNewPosition, pNewStatus, pEdge, pTempVars, pEnvironment );
 		return( vertex );	
 	}
 
@@ -348,9 +349,9 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 				if ( aStatus != null ) {
 					// Mark the vertices to reflect the face status, 
 					// which can speed up the classification of other faces that share a vertex.
-					aFace.v1().mark( aFace );
-					aFace.v2().mark( aFace );
-					aFace.v3().mark( aFace );
+					aFace.v1().mark( aFace, pEnvironment );
+					aFace.v2().mark( aFace, pEnvironment );
+					aFace.v3().mark( aFace, pEnvironment );
 				}
 			}
 		}
@@ -374,7 +375,7 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 	) throws CSGConstructionException {
 		CSGFace.CSGFaceCollision startCollision, endCollision;
 		
-		double tolerance = pEnvironment.mEpsilonNearZeroDbl; // TOL
+		double tolerance = pEnvironment.mEpsilonOnPlaneDbl; // TOL
 		CSGFace aFace = mFaces.get( pFaceIndex );
 
 		// We can keep track of how far through the secondary face list we are
@@ -385,32 +386,61 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		//		both segments represent different portions of the same intersection
 		//		line, the positions apply to both faces.
 		Vector3d startPos, endPos;
+		CSGVertexStatus startStatus, endStatus;
 
 		// We now need to restrict the intersection 'line' from the planes of the faces
 		// to that portion which actually is bounded by the current face
-		if ( pOtherSegment.getStartDistance() > pFaceSegment.getStartDistance() ) { //(pFaceSegment.getStartDistance() + tolerance)) {
+		double startDelta = pOtherSegment.getStartDistance() - pFaceSegment.getStartDistance();
+		if ( startDelta > tolerance ) {
+		//pOtherSegment.getStartDistance() > pFaceSegment.getStartDistance() ) { 
+		//(pFaceSegment.getStartDistance() + tolerance)) {
 			// The 'other' segment start is deeper so it determines the start point
 			startPos = pOtherSegment.getStartPosition();
+			startStatus = pOtherSegment.getStartStatus();
 			
 			// The other segment collision point is not pertinent.  The face segment can
 			// tell us if an edge is involved or not
 			startCollision = pFaceSegment.getOtherCollision( pOtherSegment, startPos, pEnvironment );
-		} else {
+		} else if ( startDelta < -tolerance ) {
 			// This face segment start is deeper, so it determines the start point
 			startPos = pFaceSegment.getStartPosition();
+			startStatus = pFaceSegment.getStartStatus();
 			startCollision = pFaceSegment.getStartCollision();
-		}		
-		if ( pOtherSegment.getEndDistance() < pFaceSegment.getEndDistance() ) { //(pFaceSegment.getEndDistance() - tolerance)) {
-			// The 'other' segment end is deeper, so it determines the end point
+		} else {
+			// The segments start at effectively the same point, so pick the 'best' fit
+			startPos = pFaceSegment.getStartPosition();
+			startCollision = pFaceSegment.getStartCollision();	
+			startStatus = pFaceSegment.getStartStatus();
+			if ( pOtherSegment.getStartStatus() == CSGVertexStatus.BOUNDARY ) {
+				// Retain the fact we are on a boundary
+				startStatus = CSGVertexStatus.BOUNDARY;
+			}
+		}
+		double endDelta = pOtherSegment.getEndDistance() - pFaceSegment.getEndDistance();
+		if ( endDelta < -tolerance ) {
+		// pOtherSegment.getEndDistance() < pFaceSegment.getEndDistance() ) { 
+		//(pFaceSegment.getEndDistance() - tolerance)) {
+			// The 'other' segment end is nearer, so it determines the end point
 			endPos = pOtherSegment.getEndPosition();
+			endStatus = pOtherSegment.getEndStatus();
 			
 			// The other segment collision point is not pertinent.  The face segment can
 			// tell us if an edge is involved or not
 			endCollision = pFaceSegment.getOtherCollision( pOtherSegment, endPos, pEnvironment );
+		} else if ( endDelta > tolerance ) {
+			// This face segment end is nearer, so it determines the end point
+			endPos = pFaceSegment.getEndPosition();
+			endStatus = pFaceSegment.getEndStatus();
+			endCollision = pFaceSegment.getEndCollision();
 		} else {
-			// This face segment end is deeper, to it determines the end point
+			// The segments start at effectively the same point, so pick the 'best' fit
 			endPos = pFaceSegment.getEndPosition();
 			endCollision = pFaceSegment.getEndCollision();
+			endStatus = pFaceSegment.getEndStatus();
+			if ( pOtherSegment.getEndStatus() == CSGVertexStatus.BOUNDARY ) {
+				// Retain the fact we are on a boundary
+				endStatus = CSGVertexStatus.BOUNDARY;
+			}
 		}
 		if ( pEnvironment.mStructuralDebug ) {
 			// Confirm we have points on the expected plane
@@ -456,7 +486,7 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 //				} else {
 					// We have a line through a vertex, crossing an opposite edge.  The 
 					// new point must be on the given edge, so two new pieces will cover it.
-					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, endPos, endCollision, pTempVars, pEnvironment );
+					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, endPos, endStatus, endCollision, pTempVars, pEnvironment );
 //				}
 				break;
 				
@@ -464,7 +494,7 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 				// Start through one vertex and terminate in the middle of the face.
 				// This requires the face to be split into three pieces circling around
 				// the interior point.
-				pFaceIndex = breakFaceInThree( aFace, pFaceIndex, endPos, pTempVars, pEnvironment );
+				pFaceIndex = breakFaceInThree( aFace, pFaceIndex, endPos, endStatus, pTempVars, pEnvironment );
 				break;
 				
 			default:
@@ -490,7 +520,7 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 //				} else {
 					// We have a line through a vertex, crossing an opposite edge.  The 
 					// new point must be on the given edge, so two new pieces will cover it.
-					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, startPos, startCollision, pTempVars, pEnvironment );
+					pFaceIndex = breakFaceInTwo( aFace, pFaceIndex, startPos, startStatus, startCollision, pTempVars, pEnvironment );
 //				}
 				break;
 				
@@ -501,14 +531,14 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 					// Start through one edge and end via another edge.  This cuts the face 
 					// into three pieces with two new vertices at the edge split points.
 					pFaceIndex = breakFaceInThree( aFace, pFaceIndex
-												, startPos, startCollision
-												, endPos, endCollision
+												, startPos, startStatus, startCollision
+												, endPos, endStatus, endCollision
 												, pTempVars, pEnvironment );
 				} else {
 					// Collision along the same edge.  This cuts the face
 					// into three pieces with two new vertices along the same edge.
 					pFaceIndex = breakFaceInThree( aFace, pFaceIndex
-												, startPos, endPos, startCollision
+												, startPos, startStatus, endPos, endStatus, startCollision
 												, pTempVars, pEnvironment );
 				}
 				break;
@@ -518,8 +548,8 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 				// This requires the face to be split into four pieces circling around
 				// the interior point.
 				pFaceIndex = breakFaceInFour( aFace, pFaceIndex
-											, startPos, startCollision
-											, endPos
+											, startPos, startStatus, startCollision
+											, endPos, endStatus
 											, pTempVars, pEnvironment );
 				break;
 				
@@ -538,7 +568,7 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 				// Start from an interior point and end through a vertex.  This
 				// cuts the face into three pieces circling around the interior
 				// point.
-				pFaceIndex = breakFaceInThree( aFace, pFaceIndex, startPos, pTempVars, pEnvironment );
+				pFaceIndex = breakFaceInThree( aFace, pFaceIndex, startPos, startStatus, pTempVars, pEnvironment );
 				break;
 			
 			case EDGE12:
@@ -548,8 +578,8 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 				// This requires the face to be split into four pieces circling
 				// around the interior point.
 				pFaceIndex = breakFaceInFour( aFace, pFaceIndex
-											, endPos, endCollision
-											, startPos
+											, endPos, endStatus, endCollision
+											, startPos, startStatus
 											, pTempVars, pEnvironment );
 				break;
 
@@ -559,7 +589,7 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 				if ( CSGEnvironment
 					.equalVector3d( startPos, endPos, pEnvironment.mEpsilonBetweenPointsDbl ) ) {
 					// Start and end are effectively the same, so treat it as a single center point
-					pFaceIndex = breakFaceInThree( aFace, pFaceIndex, startPos, pTempVars, pEnvironment );
+					pFaceIndex = breakFaceInThree( aFace, pFaceIndex, startPos, startStatus, pTempVars, pEnvironment );
 				} else {
 					// Select the best vertex of the face to operate from
 					// I do not really understand the following -- but we do break the face into five
@@ -590,9 +620,17 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 					}
 					// Now find which of the intersection points is nearest to that vertex.
 					if ( toVertex.distance( startPos ) > toVertex.distance( endPos ) ) {
-						pFaceIndex = breakFaceInFive( aFace, pFaceIndex, startPos, endPos, pickVertex, pTempVars, pEnvironment );
+						pFaceIndex = breakFaceInFive( aFace, pFaceIndex
+													, startPos, startStatus
+													, endPos, endStatus
+													, pickVertex
+													, pTempVars, pEnvironment );
 					} else {
-						pFaceIndex = breakFaceInFive( aFace, pFaceIndex, endPos, startPos, pickVertex, pTempVars, pEnvironment );
+						pFaceIndex = breakFaceInFive( aFace, pFaceIndex
+													, endPos, endStatus
+													, startPos, startStatus
+													, pickVertex
+													, pTempVars, pEnvironment );
 					}
 				}
 				break;
@@ -636,11 +674,12 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		CSGFace				pFace
 	,	int					pFaceIndex
 	, 	Vector3d 			pNewPos
+	,	CSGVertexStatus		pNewStatus
 	, 	CSGFaceCollision	pEdge
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGVertexIOB vertex = addVertex( pNewPos, pFace, pEdge, pTempVars, pEnvironment ); 
+		CSGVertexIOB vertex = addVertex( pNewPos, pNewStatus, pFace, pEdge, pTempVars, pEnvironment ); 
 						
 		switch( pEdge ) {
 		case EDGE12:
@@ -685,14 +724,16 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		CSGFace				pFace
 	,	int					pFaceIndex
 	, 	Vector3d 			pEdgePosition1
+	,	CSGVertexStatus		pEdgeStatus1
 	,	CSGFaceCollision	pEdgeCollision1
 	, 	Vector3d 			pEdgePosition2
+	,	CSGVertexStatus		pEdgeStatus2
 	, 	CSGFaceCollision	pEdgeCollision2
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGVertexIOB vertex1 = addVertex( pEdgePosition1, pFace, pEdgeCollision1, pTempVars, pEnvironment );	
-		CSGVertexIOB vertex2 = addVertex( pEdgePosition2, pFace, pEdgeCollision2, pTempVars, pEnvironment );
+		CSGVertexIOB vertex1 = addVertex( pEdgePosition1, pEdgeStatus1, pFace, pEdgeCollision1, pTempVars, pEnvironment );	
+		CSGVertexIOB vertex2 = addVertex( pEdgePosition2, pEdgeStatus2, pFace, pEdgeCollision2, pTempVars, pEnvironment );
 						
 		switch( pEdgeCollision1 ) {
 		case EDGE12:
@@ -790,13 +831,15 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		CSGFace				pFace
 	,	int					pFaceIndex
 	, 	Vector3d 			pEdgePosition1
+	,	CSGVertexStatus		pEdgeStatus1
 	, 	Vector3d 			pEdgePosition2
+	,	CSGVertexStatus		pEdgeStatus2
 	, 	CSGFaceCollision	pEdge
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGVertexIOB vertex1 = addVertex( pEdgePosition1, pFace, pEdge, pTempVars, pEnvironment );	
-		CSGVertexIOB vertex2 = addVertex( pEdgePosition2, pFace, pEdge, pTempVars, pEnvironment );
+		CSGVertexIOB vertex1 = addVertex( pEdgePosition1, pEdgeStatus1, pFace, pEdge, pTempVars, pEnvironment );	
+		CSGVertexIOB vertex2 = addVertex( pEdgePosition2, pEdgeStatus2, pFace, pEdge, pTempVars, pEnvironment );
 						
 		switch( pEdge ) {
 		case EDGE12:
@@ -844,10 +887,11 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		CSGFace				pFace
 	,	int					pFaceIndex
 	, 	Vector3d 			pCenterPoint
+	,	CSGVertexStatus		pCenterStatus
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {	
-		CSGVertexIOB vertex = addVertex( pCenterPoint, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
+		CSGVertexIOB vertex = addVertex( pCenterPoint, pCenterStatus, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
 		if ( vertex == null ) {
 			// No valid interior point was generated
 			return( pFaceIndex );
@@ -871,13 +915,15 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		CSGFace				pFace
 	,	int					pFaceIndex
 	, 	Vector3d 			pPositionOnEdge
+	,	CSGVertexStatus		pEdgeStatus
 	, 	CSGFaceCollision	pEdgeCollision
 	, 	Vector3d 			pPositionOnFace
+	,	CSGVertexStatus		pFaceStatus
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGVertexIOB vtxEdge = addVertex( pPositionOnEdge, pFace, pEdgeCollision, pTempVars, pEnvironment );
-		CSGVertexIOB vtxCenter = addVertex( pPositionOnFace, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
+		CSGVertexIOB vtxEdge = addVertex( pPositionOnEdge, pEdgeStatus, pFace, pEdgeCollision, pTempVars, pEnvironment );
+		CSGVertexIOB vtxCenter = addVertex( pPositionOnFace, pFaceStatus, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
 		if ( vtxCenter == null ) {
 			// No valid interior point was generated
 			return( pFaceIndex );
@@ -934,13 +980,15 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 		CSGFace				pFace
 	,	int					pFaceIndex
 	, 	Vector3d 			pNewPosition1
+	,	CSGVertexStatus		pNewStatus1
 	, 	Vector3d 			pNewPosition2
+	,	CSGVertexStatus		pNewStatus2
 	, 	CSGFaceCollision	pPickVertex
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
-		CSGVertexIOB vertex1 = addVertex( pNewPosition1, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
-		CSGVertexIOB vertex2 = addVertex( pNewPosition2, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
+		CSGVertexIOB vertex1 = addVertex( pNewPosition1, pNewStatus1, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
+		CSGVertexIOB vertex2 = addVertex( pNewPosition2, pNewStatus1, pFace, CSGFaceCollision.INTERIOR, pTempVars, pEnvironment );
 		if ( (vertex1 == null) || (vertex2 == null) ) {
 			// No valid interior point was generated
 			return( pFaceIndex );

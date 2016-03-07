@@ -438,9 +438,9 @@ public class CSGFace
 		mStatus = CSGFaceStatus.UNKNOWN;
 		
 		// Reset the vertices as well
-		v1().mark( this );
-		v2().mark( this );
-		v3().mark( this );
+		v1().mark( this, null );
+		v2().mark( this, null );
+		v3().mark( this, null );
 	}
 	
 
@@ -451,6 +451,7 @@ public class CSGFace
     */
 	public CSGVertexIOB extrapolate( 
 		Vector3d			pNewPosition
+	,	CSGVertexStatus		pNewStatus
 	,	CSGFaceCollision	pEdge
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
@@ -461,13 +462,13 @@ public class CSGFace
 		// on a percentage of the distance the NewPosition is along the given edge.
 		switch( pEdge ) {
 		case EDGE12:
-			newVertex = new CSGVertexIOB( v1(), v2(), pNewPosition, pTempVars, pEnvironment );
+			newVertex = new CSGVertexIOB( v1(), v2(), pNewPosition, pNewStatus, pTempVars, pEnvironment );
 			break;
 		case EDGE23:
-			newVertex = new CSGVertexIOB( v2(), v3(), pNewPosition, pTempVars, pEnvironment );
+			newVertex = new CSGVertexIOB( v2(), v3(), pNewPosition, pNewStatus, pTempVars, pEnvironment );
 			break;
 		case EDGE31:
-			newVertex = new CSGVertexIOB( v3(), v1(), pNewPosition, pTempVars, pEnvironment );
+			newVertex = new CSGVertexIOB( v3(), v1(), pNewPosition, pNewStatus, pTempVars, pEnvironment );
 			break;
 		default:
 			// If not on an edge, then project a point onto an edge, and go from there.
@@ -486,10 +487,10 @@ public class CSGFace
 				return( null );
 			}
 			// Figure out the vertex on the edge
-			newVertex = new CSGVertexIOB( v1(), v2(), pointOnEdge, pTempVars, pEnvironment );
+			newVertex = new CSGVertexIOB( v1(), v2(), pointOnEdge, null, pTempVars, pEnvironment );
 			
 			// Figure out the vertex at the original point
-			newVertex = new CSGVertexIOB( newVertex, v3(), pNewPosition, pTempVars, pEnvironment );
+			newVertex = new CSGVertexIOB( newVertex, v3(), pNewPosition, pNewStatus, pTempVars, pEnvironment );
 			break;
 		}
 		return( newVertex );
@@ -551,6 +552,13 @@ public class CSGFace
 					pEnvironment.log( Level.WARNING
 									, "CSGFace.simpleClassify - inconsistent vertex status:\n" + this );
 				}
+				// Once we detect an inconsistency, then all vertices for this face
+				// are suspect, and must not influence any subsequent classification
+				v1().setStatus( CSGVertexStatus.BOUNDARY, true );
+				v2().setStatus( CSGVertexStatus.BOUNDARY, true );
+				v3().setStatus( CSGVertexStatus.BOUNDARY, true );
+				
+				// There is no 'simple' classification for this face
 				faceStatus = null;
 			}
 		}

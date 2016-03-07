@@ -43,7 +43,6 @@ import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
 import net.wcomohundro.jme3.csg.math.CSGVertex;
 import net.wcomohundro.jme3.csg.math.CSGVertexDbl;
-import net.wcomohundro.jme3.csg.test.CSGTestM;
 
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
@@ -90,8 +89,10 @@ public class CSGSegment
 	
 	/** Actual starting position, possibly interpolated from other vertices */
 	protected Vector3d			mStartPosition;
+	protected CSGVertexStatus	mStartStatus;
 	/** Actual ending position, possibly interpolated from other vertices */
 	protected Vector3d			mEndPosition;
+	protected CSGVertexStatus	mEndStatus;
 	
 	/** Null constructor */
 	public CSGSegment(
@@ -293,7 +294,10 @@ public class CSGSegment
 	}
 	
 	public Vector3d getStartPosition() { return mStartPosition; }
+	public CSGVertexStatus getStartStatus() { return mStartStatus; }
+	
 	public Vector3d getEndPosition() { return mEndPosition; }
+	public CSGVertexStatus getEndStatus() { return mEndStatus; }
 	
 	
 	/** Sets an end as vertex (starting point if none end were defined, ending point otherwise)
@@ -312,8 +316,9 @@ public class CSGSegment
 			// No end yet defined - define the starting point 
 			mStartPosition = pVertex.getPosition();
 			
-			// By definition, we recognize this vertex as on a boundary
-			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
+			// By definition, we recognize this vertex as on a boundary (whichever face we find it on)
+			mStartStatus = CSGVertexStatus.BOUNDARY;
+			pVertex.setStatus( mStartStatus, true );
 
 		 	mStartCollision = pCollision;
 		 	mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment );
@@ -323,8 +328,9 @@ public class CSGSegment
 			// Starting point already defined - define ending point as VERTEX
 			mEndPosition = pVertex.getPosition();
 			
-			// By definition, we recognize this vertex as on a boundary
-			pVertex.setStatus( CSGVertexStatus.BOUNDARY );
+			// By definition, we recognize this vertex as on a boundary (whichever face we find it on)
+			mEndStatus = CSGVertexStatus.BOUNDARY;
+			pVertex.setStatus( mEndStatus, true );
 
 			mEndCollision = pCollision;
 			mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
@@ -338,6 +344,7 @@ public class CSGSegment
 		case -1:
 			// The starting point is the only point on the other plane, this segment has no length
 			mEndPosition = mStartPosition;
+			mEndStatus = mStartStatus;
 			mEndDist = mStartDist;
 			mEndCollision = mStartCollision = pCollision;
 			return( 2 );
@@ -393,6 +400,7 @@ public class CSGSegment
 			} else {
 				mStartDist = mLine.computePointToPointDistance( mStartPosition, pTempVars, pEnvironment );
 			}
+			mStartStatus = CSGVertexStatus.UNKNOWN;
 			return( 1 );
 			
 		case 1:
@@ -411,6 +419,8 @@ public class CSGSegment
 			} else {	
 				mEndDist = mLine.computePointToPointDistance( mEndPosition, pTempVars, pEnvironment );
 			}
+			mEndStatus = CSGVertexStatus.UNKNOWN;
+
 			// The ending point distance should be 'farther' than starting point distance 
 			if ( mStartDist > mEndDist ) {
 			  	swapEnds();
@@ -445,7 +455,8 @@ public class CSGSegment
 	public String toString(
 	) {
 		return( "Seg:\t" + mStartPosition + "/" + mStartCollision + " : " + mStartDist
-				 + "\n\t" + mEndPosition + "/" + mEndCollision + " : " + mEndDist );
+				 + "\n\t" + mEndPosition + "/" + mEndCollision + " : " + mEndDist 
+				 + "\n" + mFace );
 	}
 
 

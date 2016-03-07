@@ -147,12 +147,17 @@ public class CSGVertexIOB
 		CSGVertexIOB	pVertexA
 	,	CSGVertexIOB	pVertexB
 	,	Vector3d		pNewPosition
+	,	CSGVertexStatus	pNewStatus
 	,	CSGTempVars		pTempVars
 	,	CSGEnvironment	pEnvironment
 	) throws CSGConstructionException {
 		// Suppress the vertex check
 		super( pNewPosition, new Vector3d(), new Vector2f(), null );
-		mStatus = CSGVertexStatus.UNKNOWN;
+		
+		// If the new position knows that it is on a boundary, retain that knowledge
+		mStatus = (pNewStatus == CSGVertexStatus.BOUNDARY) 
+					?	CSGVertexStatus.BOUNDARY
+					:	CSGVertexStatus.UNKNOWN;
 		
 		if ( pEnvironment.mRationalizeValues ) {
 			CSGEnvironment.rationalizeVector( mPosition, pEnvironment.mEpsilonMagnitudeRange );
@@ -257,9 +262,18 @@ public class CSGVertexIOB
 	public CSGVertexStatus getStatus() { return mStatus; }
 	public void setStatus(
 		CSGVertexStatus		pStatus
+	,	boolean				pAffectSame
 	) {
 		// Reset the status to whatever is given
 		mStatus = pStatus;
+		
+		if ( pAffectSame && (mSamePosition != null) ) {
+			for( CSGVertexIOB otherVertex : mSamePosition ) {
+				if ( otherVertex != this ) {
+					otherVertex.setStatus( pStatus, false );
+				}	
+			}
+		}
 	}
 	
 	/** If we detect another vertex with the same position as this one, then track it */
@@ -279,19 +293,32 @@ public class CSGVertexIOB
 		// The list itself can be shared across all the Vertex instances
 		pOtherVertex.mSamePosition = this.mSamePosition;
 	}
+	
+	/** Look if this vertex matches a given position */
+	public boolean matchPosition(
+		Vector3d		pPosition
+	,	CSGEnvironment	pEnvironment
+	) {
+		return( CSGEnvironment.equalVector3d( 	this.getPosition()
+											,	pPosition
+											,	pEnvironment.mEpsilonBetweenPointsDbl ) );
+	}
 
 	/** Resets the vertex status */
 	public void mark(
 		CSGFace 	pForFace
+	,	CSGEnvironmentIOB	pEnvironment
 	) {
-		mark( pForFace.getStatus(), this.mSamePosition );
+		mark( pForFace.getStatus(), this.mSamePosition, pEnvironment );
 	}	
 	protected void mark(
 		CSGFace.CSGFaceStatus 	pStatus
 	,	List<CSGVertexIOB>		pSamePosition
+	,	CSGEnvironmentIOB		pEnvironment
 	) {
 		// A BOUNDARY vacillates between inside/outside and is not reset
 		// due to what any face says. The vertex itself just stays on the boundary.
+		// LIKEWISE, if on the boundary, we cannot affect others at the same position
 		if ( this.mStatus != CSGVertexStatus.BOUNDARY ) {
 			// Mark this vertex according to the face just given
 			switch( pStatus ) {
@@ -312,20 +339,20 @@ public class CSGVertexIOB
 				this.mStatus = CSGVertexStatus.UNKNOWN;
 				break;
 			}
-		}
-		if ( pSamePosition != null ) {
-			// Here is what I think is happening.
-			//	At this point in the process, all the faces have been split so that no two
-			//	faces from the different solids overlap.  That means every face is either
-			//	entirely inside, outside, or coincident with the other solid.  If the 
-			//  status of the entire face is known,  then by definition, each of its vertices 
-			//  is known as well.
-			//	So any OTHER vertex at the exact same position must likewise have the 
-			//  same status.  This provides a bit of a short cut for the same positioned
-			//	vertex in two different faces. 
-			for( CSGVertexIOB otherVertex : pSamePosition ) {
-				if ( otherVertex != this ) {
-					otherVertex.mark( pStatus, null );
+			if ( pSamePosition != null ) {
+				// Here is what I think is happening.
+				//	At this point in the process, all the faces have been split so that no two
+				//	faces from the different solids overlap.  That means every face is either
+				//	entirely inside, outside, or coincident with the other solid.  If the 
+				//  status of the entire face is known,  then by definition, each of its vertices 
+				//  is known as well.
+				//	So any OTHER vertex at the exact same position must likewise have the 
+				//  same status.  This provides a bit of a short cut for the same positioned
+				//	vertex in two different faces. 
+				for( CSGVertexIOB otherVertex : pSamePosition ) {
+					if ( otherVertex != this ) {
+						otherVertex.mark( pStatus, null, pEnvironment );
+					}
 				}
 			}
 		}
@@ -335,7 +362,7 @@ public class CSGVertexIOB
 	@Override
 	public String toString()
 	{
-		return "Vtx(" + mPosition.x + ", " + mPosition.y + ", " + mPosition.z + ")";
+		return "Vtx(" + mPosition.x + ", " + mPosition.y + ", " + mPosition.z + ") : " + mStatus ;
 	}
 	
 	/** A vertex is equal if the position, normal, and texcoord match within a given

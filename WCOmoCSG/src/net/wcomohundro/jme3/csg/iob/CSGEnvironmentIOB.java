@@ -48,7 +48,9 @@ public class CSGEnvironmentIOB
 	/** Define a 'tolerance' for when two items are so close, they are effectively the same */
 	// Tolerance to decide if a given point in 'on' a plane
 	public static final float EPSILON_ONPLANE_FLT = 1.0e-6f;
-	public static final double EPSILON_ONPLANE_DBL = 1.0e-8;
+	public static final double EPSILON_ONPLANE_DBL = FastMath.FLT_EPSILON; // 1.0e-8;
+	// NOTE that using the e-8 value resulted in test case Debug2 including a bogus triangle
+	//      this was due to Segment processing not recognizing a vertex on a Boundary
 
 	// Tolerance to determine if two points are close enough to be considered the same point
 	public static final float EPSILON_BETWEEN_POINTS_FLT = 1.0e-6f;

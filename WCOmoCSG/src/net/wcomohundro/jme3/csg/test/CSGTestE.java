@@ -86,27 +86,41 @@ import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGSpatial;
 public class CSGTestE 
 	extends CSGTestSceneLoader 
 {
+	/////////////////// UNLESS ACTIVELY DEBUGGING - keep the following private //////////////////////
 	private static List<Vector3d> sDebugFace = new ArrayList(); 
 	private static List<Vector3d> sDebugFace2 = new ArrayList(); 
 	private static List<Vector3d> sDebugFace3 = new ArrayList(); 
 	private static Vector3d sDebugVertex 
 		= new Vector3d( 0.3635494112968445, -0.8776854872703552, -9.949999809265137 );
 	static {
-		sDebugFace2.add( new Vector3d( 0.3635494, -0.8776855, -9.95 ) );
-		sDebugFace2.add( new Vector3d( 0.0, 0.0, -9.95 ) );
-		sDebugFace2.add( new Vector3d( 0.6717517, -0.6717512, -9.95 ) );
+		// This one is from NCoH testing with a square notch @see CSGDebug2.xml
+		sDebugFace2.add( new Vector3d(-4.986087768745748, 3.3367482290642965, 3.1803375729241004) );
+		sDebugFace2.add( new Vector3d(-0.3583188056945801, 0.9252734184265137, 0.6195049285888672) );
+		sDebugFace2.add( new Vector3d(-4.8826188120392215, 3.4628253982515016, 3.179193830958982) );
+		
+		sDebugFace2.add( new Vector3d(-0.3583188056945801, 0.9252734184265137, 0.6195049285888672) );
+		sDebugFace2.add( new Vector3d(-0.9818084239959717, 0.14344191551208496, 0.6195049285888672) );
+		sDebugFace2.add( new Vector3d(-4.986087768745748, 3.3367482290642965, 3.1803375729241004) );
+		
+		sDebugFace2.add( new Vector3d(-4.986088, 3.3367481, 3.1803377) );
+		sDebugFace2.add( new Vector3d(-0.9818084, 0.14344192, 0.6195049) );
+		sDebugFace2.add( new Vector3d(-0.3583188, 0.9252734, 0.6195049) );
+		
+//		sDebugFace2.add( new Vector3d( 0.3635494, -0.8776855, -9.95 ) );
+//		sDebugFace2.add( new Vector3d( 0.0, 0.0, -9.95 ) );
+//		sDebugFace2.add( new Vector3d( 0.6717517, -0.6717512, -9.95 ) );
 		
 //		sDebugFace.add( new Vector3d( 0.3635494, -0.8776855, -9.95) );
 //		sDebugFace.add( new Vector3d( 0.0, 0.0, -9.95) );
 //		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.95) );
 		
-		sDebugFace.add( new Vector3d( -0.95, 0.0, -9.95 ) );
-		sDebugFace.add( new Vector3d( 0.95, 0.0, -9.95 ) );
-		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.95 ) );
+//		sDebugFace.add( new Vector3d( -0.95, 0.0, -9.95 ) );
+//		sDebugFace.add( new Vector3d( 0.95, 0.0, -9.95 ) );
+//		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.95 ) );
 				
-		sDebugFace.add( new Vector3d( -0.949999988079071, 0.0, -9.949999809265137 ) );
-		sDebugFace.add( new Vector3d( 0.949999988079071, 0.0, -9.949999809265137 ) );
-		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.949999809265137 ) );
+//		sDebugFace.add( new Vector3d( -0.949999988079071, 0.0, -9.949999809265137 ) );
+//		sDebugFace.add( new Vector3d( 0.949999988079071, 0.0, -9.949999809265137 ) );
+//		sDebugFace.add( new Vector3d( 0.6717517, -0.6717512, -9.949999809265137 ) );
 		
 		// This one seems to corrupt the status of the other....
 		sDebugFace3.add( new Vector3d( 1.1328636695395744E-8, -0.949999988079071, -9.949999809265137) );

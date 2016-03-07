@@ -450,6 +450,11 @@ public class CSGGeometry
 				// Operate on each shape in turn, blending it into the common
 				CSGShape aProduct = null;
 				for( CSGShape aShape : sortedShapes ) {
+					if ( !aShape.isValid() ) {
+						// We cannot use invalid shapes
+						this.setError( aShape.getError() );
+						continue;
+					}
 					aShape.setParentElement( this );
 
 					// Apply the operator

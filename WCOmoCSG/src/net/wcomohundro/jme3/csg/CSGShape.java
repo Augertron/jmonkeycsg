@@ -459,13 +459,17 @@ public class CSGShape
 			// Special proxy handling
 			if ( pSpatial instanceof CSGPlaceholderSpatial ) {
 				// A stand-in for a true 'spatial', which we will resolve when we can
-				Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveItem( this, false );
-				if ( useSpatial == null ) {
-					// Nothing can be resolved at this time, remember it for later
+				if ( this.mProxy == null ) {
+					// Remember this placeholder for later processing
 					this.mProxy = (CSGPlaceholderSpatial)pSpatial;
 				} else {
-					// Use what we resolved to
-					pSpatial = useSpatial;
+					// Resolve the placeholder now, looking from the top of the tree to
+					// override defaults with higher level specifications where appropriate
+					Spatial useSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveItem( this, true );
+					if ( useSpatial != null ) {
+						// Use what we resolved to
+						pSpatial = useSpatial;
+					}
 				}
 			}
 			// Carry forward any transform that the Spatial knows of
@@ -1077,6 +1081,11 @@ public class CSGShape
 			// Operate on each shape in turn, blending it into the common
 			CSGShape aProduct = null;
 			for( CSGShape aShape : sortedShapes ) {
+				if ( !aShape.isValid() ) {
+					// We cannot use invalid shapes
+					this.setError( aShape.getError() );
+					continue;
+				}
 				aShape.setParentElement( this );
 				
 				// Apply the operator
