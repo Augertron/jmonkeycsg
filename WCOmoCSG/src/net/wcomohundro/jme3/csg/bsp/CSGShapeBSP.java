@@ -432,7 +432,7 @@ public class CSGShapeBSP
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentBSP	pEnvironment
 	) {
-		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
+		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment, this );
 		CSGPartition a = new CSGPartition( this
 											, this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
@@ -463,7 +463,7 @@ public class CSGShapeBSP
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentBSP	pEnvironment
 	) {
-		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
+		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment, this );
 		CSGPartition a = new CSGPartition( this
 											, this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment )
 											, pTempVars
@@ -496,7 +496,7 @@ public class CSGShapeBSP
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentBSP	pEnvironment
 	) {
-		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
+		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment, this );
 		List<CSGPolygon> thisList = this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
 		
 	    List<CSGPolygon> otherList = otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
@@ -512,7 +512,7 @@ public class CSGShapeBSP
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentBSP	pEnvironment
 	) {
-		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment );
+		CSGShapeBSP otherBSP = (CSGShapeBSP)pOther.getHandler( pEnvironment, this );
 		List<CSGPolygon> thisList = this.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );
 		
 	    List<CSGPolygon> otherList = otherBSP.getPolygons( pMaterialManager, 0, pTempVars, pEnvironment );

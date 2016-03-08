@@ -186,7 +186,7 @@ public class CSGShapeIOB
 			CSGElement aParent = pForShape.getParentElement();
 			if ( aParent instanceof CSGShape ) {
 				// Maybe the parent has something
-				CSGShapeIOB parentHandler = (CSGShapeIOB)((CSGShape)aParent).getHandler( null );
+				CSGShapeIOB parentHandler = (CSGShapeIOB)((CSGShape)aParent).getHandler( null, null );
 				if ( parentHandler != null ) {
 					this.mStatistics = parentHandler.mStatistics;
 				}
@@ -304,7 +304,7 @@ public class CSGShapeIOB
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
-		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
+		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 		List<CSGFace> otherFaceList 
 			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
@@ -335,7 +335,7 @@ public class CSGShapeIOB
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
-		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
+		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 		List<CSGFace> otherFaceList 
 			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
@@ -366,7 +366,7 @@ public class CSGShapeIOB
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
-		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
+		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 		List<CSGFace> otherFaceList 
 			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
@@ -399,7 +399,7 @@ public class CSGShapeIOB
 				List<CSGFace> thisFaceList 
 					= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 				
-				CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
+				CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 				List<CSGFace> otherFaceList 
 					= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
 		

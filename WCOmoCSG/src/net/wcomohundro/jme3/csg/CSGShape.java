@@ -583,7 +583,7 @@ public class CSGShape
 		// Register this shape's standard Material
 		pMeshManager.resolveMeshIndex( null, aClone.getMaterial(), null, aClone );
 		
-		aClone.mHandler = this.getHandler( pEnvironment ).clone( aClone );
+		aClone.mHandler = this.getHandler( pEnvironment, null ).clone( aClone );
 		return( aClone );
 	}
 	
@@ -610,10 +610,15 @@ public class CSGShape
 	
 	/** Mostly internal access to the handler */
 	public CSGShapeProcessor getHandler(
-		CSGEnvironment	pEnvironment
+		CSGEnvironment		pEnvironment
+	,	CSGShapeProcessor	pBaseHandler
 	) {
 		if ( mHandler == null ) {
-			if ( pEnvironment != null ) {
+			if ( pBaseHandler != null ) {
+				// Use a copy of the base
+				mHandler = pBaseHandler.clone( this );
+			} else if ( pEnvironment != null ) {
+				// Start from scratch
 				mHandler = pEnvironment.resolveShapeProcessor().setShape( this );
 			}
 		}
@@ -655,7 +660,7 @@ public class CSGShape
 		List<CSGShape>	pShapeList
 	,	CSGEnvironment	pEnvironment
 	) {
-		return( getHandler( pEnvironment ).prepareShapeList( pShapeList, pEnvironment ) );
+		return( getHandler( pEnvironment, null ).prepareShapeList( pShapeList, pEnvironment ) );
 	}
 		
 	/** Accessor to the mesh that applies to the given surface */
@@ -784,7 +789,7 @@ public class CSGShape
 	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
-		return( useShape.getHandler( pEnvironment ).union( useOther, pMeshManager, pTempVars, pEnvironment ) );
+		return( useShape.getHandler( pEnvironment, null ).union( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
 	
 	/** Subtract a shape from this one */
@@ -796,7 +801,7 @@ public class CSGShape
 	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
-		return( useShape.getHandler( pEnvironment ).difference( useOther, pMeshManager, pTempVars, pEnvironment ) );
+		return( useShape.getHandler( pEnvironment, null ).difference( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
 
 	/** Find the intersection with another shape */
@@ -808,7 +813,7 @@ public class CSGShape
 	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
-		return( useShape.getHandler( pEnvironment ).intersection( useOther, pMeshManager, pTempVars, pEnvironment ) );
+		return( useShape.getHandler( pEnvironment, null ).intersection( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
 
 	/** Find the merge with another shape */
@@ -820,7 +825,7 @@ public class CSGShape
 	) throws CSGConstructionException {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
-		return( useShape.getHandler( pEnvironment ).merge( useOther, pMeshManager, pTempVars, pEnvironment ) );
+		return( useShape.getHandler( pEnvironment, null ).merge( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
 
 	/** Produce the mesh(es) that corresponds to this shape
@@ -836,7 +841,7 @@ public class CSGShape
 	,	CSGEnvironment		pEnvironment
 	) {
 		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
-		useShape.getHandler( pEnvironment ).toMesh( pMeshManager, pProduceSubelements, pTempVars, pEnvironment  );
+		useShape.getHandler( pEnvironment, null ).toMesh( pMeshManager, pProduceSubelements, pTempVars, pEnvironment  );
 	}
 		
 	/** Mediate access to the mesh representing this shape */
@@ -1161,7 +1166,7 @@ public class CSGShape
 			if ( !pEnvironment.mPreTransform && (shapeTransform != null) ) {
 				// If we did NOT apply the transform directly to the mesh, we must
 				// apply the shape transform now.
-				aProduct.getHandler( pEnvironment ).applyTransform( shapeTransform, pTempVars, pEnvironment );
+				aProduct.getHandler( pEnvironment, null ).applyTransform( shapeTransform, pTempVars, pEnvironment );
 			}
 			return( aProduct );
 			

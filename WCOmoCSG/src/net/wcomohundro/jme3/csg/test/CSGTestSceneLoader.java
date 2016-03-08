@@ -161,6 +161,10 @@ public class CSGTestSceneLoader
 			Object anAsset = CSGTestDriverBase.readStrings( mInitArgs[ 0 ], mSceneList, null, assetManager );
 			if ( anAsset instanceof Spatial ) {
 				// Use the element just loaded
+				if ( anAsset instanceof CSGElement ) {
+					// Apply any deferred regeneration NOW
+					((CSGElement)anAsset).regenerate( true, null );
+				}
 				mLoadedSpatial = (Spatial)anAsset;
 				mSceneIndex = 1;
 				
