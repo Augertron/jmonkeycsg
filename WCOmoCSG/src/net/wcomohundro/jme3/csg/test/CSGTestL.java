@@ -108,7 +108,9 @@ public class CSGTestL
 	    mShape2 = new CSGShape( "ACylinder", mesh2 );
 	    Material mat1 = new Material( assetManager, "Common/MatDefs/Misc/Unshaded.j3md" );
 	    mat1.setColor( "Color", ColorRGBA.Yellow );
+        mat1.getAdditionalRenderState().setWireframe( true );
 	    mShape2.setMaterial( mat1 );
+        rootNode.attachChild( mShape2 );
 
 	    if ( false ) {
 	    	// Exercise multiple materials
