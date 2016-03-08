@@ -85,9 +85,9 @@ public class CSGTestDriver
 		String[] args
 	) {
         CSGTestDriverAppItem[] appChoices = new CSGTestDriverAppItem[] {
-        	new CSGTestDriverAppItem( "Simple Shapes", CSGTestE.class, "Tests/CSGSimpleShapes.xml" )
+        	new CSGTestDriverAppItem( "Shapes", CSGTestE.class, "Tests/CSGTestShapes.xml" )
         ,	new CSGTestDriverAppItem( "LevelOfDetail", CSGTestG.class, "Models/CSGLoadLOD.xml" )
-        ,	new CSGTestDriverAppItem( "Blended Shapes", CSGTestE.class, "Tests/CSGBlendedShapes.xml" )
+        ,	new CSGTestDriverAppItem( "Blends", CSGTestE.class, "Tests/CSGTestSuite.xml" )
         ,	new CSGTestDriverAppItem( "Physics", CSGTestF.class, "Tests/CSGPhysics.xml" )
         ,	new CSGTestDriverAppItem( "Floors", CSGTestE.class, "Models/CSGLoadFloorBumpySurface.xml" )
         ,	new CSGTestDriverAppItem( "Animation", CSGTestJ.class )

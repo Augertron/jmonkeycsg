@@ -76,12 +76,37 @@ public class CSGLinkNode
 	public static final String sCSGLinkNodeRevision="$Rev$";
 	public static final String sCSGLinkNodeDate="$Date$";
 	
+	/** Which element is being reconstructed */
+	protected CSGElement	mActiveElement;
+	
 	
 	/** Null constructor */
 	public CSGLinkNode(
 	) {
 	}
 	
+	/** Get status about just what regenerate is doing */
+	@Override
+	public synchronized StringBuilder reportStatus( 
+		StringBuilder pBuffer
+	) {
+		if ( pBuffer == null ) pBuffer = new StringBuilder( 256 );
+		
+		// Where are we in the process?
+		if ( mRegenNS < 0 ) {
+			// Work in progress
+			if ( mActiveElement != null ) {
+				mActiveElement.reportStatus( pBuffer );
+			}
+		} else {
+			// Report on what happened
+			pBuffer.append( ": " )
+				   .append( mRegenNS / 1000000 )
+				   .append( "ms" );
+		}
+		return( pBuffer );
+	}
+
     /** If physics is active for any subelement, connect it all up now */
     @Override
     public void applyPhysics(
@@ -98,6 +123,45 @@ public class CSGLinkNode
     	}
     }
     
+    /** Apply regeneration to all subelements */
+	@Override
+	public CSGShape regenerate(
+		boolean				pOnlyIfNeeded
+	,	CSGEnvironment		pEnvironment
+	) throws CSGConstructionException {
+		mRegenNS = -1;
+		long totalNS = 0;
+		pEnvironment = CSGEnvironment.resolveEnvironment( (pEnvironment == null) ? mEnvironment : pEnvironment, this );
+
+		// Operate on all CSG elements defined within this node, returning the last
+		// NOTE that we only detect first level children -- but you can always nest by
+		//		using deeper levels of this class.
+		CSGShape lastValidShape = null;
+		mInError = null;
+		for( Spatial aSpatial : this.getChildren() ) {
+			if ( aSpatial instanceof CSGElement ) try {
+				// Trigger the regeneration
+				mActiveElement = (CSGElement)aSpatial;
+				CSGShape aShape = mActiveElement.regenerate( pOnlyIfNeeded, pEnvironment );
+				
+				totalNS += mActiveElement.getShapeRegenerationNS();
+				if ( mActiveElement.isValid() ) {
+					// Remember the last valid shape
+					lastValidShape = aShape;
+				} else {
+					// If any child shape is invalid, then this shape is invalid
+					setError( mActiveElement.getError() );
+				}
+			} catch( CSGConstructionException ex ) {
+				// Record the error and continue on???
+				setError( ex );
+			}
+		}
+		mRegenNS = totalNS;
+		return( lastValidShape );
+	}
+
+    ///////////////////////////////////////// Savable /////////////////////////////////////////////
 	@Override
 	public void read(
 		JmeImporter		pImporter

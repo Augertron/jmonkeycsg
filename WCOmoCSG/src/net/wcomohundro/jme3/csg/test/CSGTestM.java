@@ -776,7 +776,7 @@ sPositions.add( new Vector3f(0.04299396f,0.94793499f,0.06643200f)); // 123
                     	mCounter -= 1;
                     	mPositionIndex -= 1;
                     	mPreviousShape.pop();
-                		CSGTestDriver.postText( thisApp, mTextDisplay, "** Seq: " + mCounter );
+                		CSGTestDriver.postText( thisApp, mTextDisplay, "** Seq: " + mCounter, true );
                     }
                 } else {
                 	if ( pName.equals( "blend" ) ) {
@@ -795,7 +795,7 @@ sPositions.add( new Vector3f(0.04299396f,0.94793499f,0.06643200f)); // 123
         // Confirm we are NOT in the middle of a regen
     	if ( mAction == 0 ) synchronized( this ) {
     		mAction = pAction;
-    		CSGTestDriver.postText( this, mTextDisplay, "** Rebuilding Shape" );
+    		CSGTestDriver.postText( this, mTextDisplay, "** Rebuilding Shape", true );
     		this.notifyAll();
     	}
     }

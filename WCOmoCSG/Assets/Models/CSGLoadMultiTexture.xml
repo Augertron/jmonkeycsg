@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGLinkNode name='CSGSamples'>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='MultiTextures' deferRegeneration='true'>
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
@@ -11,7 +11,7 @@
 
     	<!--  ///////////// MIXED MATERIALS: brick/stone //////////////// -->
         <!-- Add a shorter box to a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry' deferRegeneration='true'
                 materialName='Textures/CobbleStone/CobbleStone.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
@@ -31,7 +31,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
         <!-- Add a shorter box to a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry' deferRegeneration='true'
                 materialName='Textures/CobbleStone/CobbleStone.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='5.0' y='0.0' z='0.0'/>
@@ -49,7 +49,7 @@
                </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry' deferRegeneration='true'
                 materialName='Textures/CobbleStone/CobbleStone.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-5.0' y='0.0' z='0.0'/>
@@ -67,7 +67,7 @@
                </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry' deferRegeneration='true'
                 materialName='Textures/CobbleStone/CobbleStone.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='0.0' z='0.0'/>
@@ -85,7 +85,7 @@
                </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry' deferRegeneration='true'
                 materialName='Textures/CobbleStone/CobbleStone.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-15.0' y='0.0' z='0.0'/>
@@ -107,7 +107,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
 		<!--  These two do not touch -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestSeparate'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestSeparate' deferRegeneration='true'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='5.0' z='10.0'/>
@@ -129,7 +129,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
         <!-- A simple union -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestBlended'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestBlended' deferRegeneration='true'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' z='10.0'/>
@@ -151,7 +151,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Primitive with per-face material -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestFaceTextures'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='TestFaceTextures' deferRegeneration='true'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-15.0' z='10.0'/>
@@ -173,7 +173,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox' deferRegeneration='true'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-10' y='0' z='10.0'/>
@@ -212,7 +212,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='PluggedBox2' deferRegeneration='true'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='-5' y='0' z='10.0'/>
@@ -252,7 +252,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
 		<!-- A corridor -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='Corridor'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='Corridor' deferRegeneration='true'
         		materialName='Textures/Rock/Rock1Rpt.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='10' y='0' z='10.0'/>
@@ -298,7 +298,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
      
 		<!-- A pipe in a box -->
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInABox'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInABox' deferRegeneration='true'
         		materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='20' y='0' z='10.0'/>
@@ -334,7 +334,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-        <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInAWireBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInAWireBox' deferRegeneration='true'
         		singleMaterial='false'
         		materialName='Textures/Debug/Wireframe.xml' >
         		<!-- aterialName='Textures/Rock/Rock2Rpt.xml' -->
@@ -371,7 +371,7 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
 
-        <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInABox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='HelixInABox' deferRegeneration='true'
         		materialName='Textures/Debug/Normals.xml' singleMaterial='false'>
        			<!-- materialName='Textures/Rock/Rock2Rpt.xml' singleMaterial='false'> -->
             <transform class='com.jme3.math.Transform'>

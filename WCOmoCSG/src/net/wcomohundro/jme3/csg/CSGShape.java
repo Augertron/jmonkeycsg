@@ -243,7 +243,11 @@ public class CSGShape
 		,	CSGTempVars			pTempVars
 		,	CSGEnvironmentT		pEnvironment
 		);
-
+		
+		/** Get status about just what regenerate is doing */
+		public StringBuilder reportStatus( 
+			StringBuilder pBuffer 
+		);
 	}
 	
 	/** Service routine to assigning unique identifiers */
@@ -514,6 +518,17 @@ public class CSGShape
 		return( (this.mesh == null) && (this.mSubShapes == null) );
 	}
 		
+	/** Get status about just what regenerate is doing */
+	@Override
+	public StringBuilder reportStatus( 
+		StringBuilder pBuffer 
+	) {
+		if ( this.mHandler != null ) {
+			pBuffer = this.mHandler.reportStatus( pBuffer );
+		}
+		return( pBuffer );
+	}
+
 	/** Ensure this shape is ready to be blended --
 	 		In particular, assume that the Mesh underlying this shape may have been 
 	 		altered between one regenerate() call and the next.
@@ -598,7 +613,9 @@ public class CSGShape
 		CSGEnvironment	pEnvironment
 	) {
 		if ( mHandler == null ) {
-			mHandler = pEnvironment.resolveShapeProcessor().setShape( this );
+			if ( pEnvironment != null ) {
+				mHandler = pEnvironment.resolveShapeProcessor().setShape( this );
+			}
 		}
 		return( mHandler );
 	}

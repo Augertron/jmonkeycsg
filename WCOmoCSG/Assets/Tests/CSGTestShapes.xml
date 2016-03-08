@@ -1,0 +1,18 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- Cycle through the various shapes -->
+<net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+	<scenes>
+		<String value='Models/CSGLoadSimpleUnitBoxes.xml'/>
+		<String value='Models/CSGLoadSimpleUnitCylinders.xml'/>
+		<String value='Models/CSGLoadSimpleUnitSpheres.xml'/>
+		<String value='Models/CSGLoadSimpleUnitPipes.xml'/>
+
+		<String value='Models/CSGLoadSimpleBoxes.xml'/>
+		<String value='Models/CSGLoadSimpleCylinders.xml'/>
+		<String value='Models/CSGLoadSimpleSpheres.xml'/>
+		<String value='Models/CSGLoadSimplePipes.xml'/>
+	
+		<String value='Models/CSGLoadSmoothedPipes.xml'/>
+	</scenes>
+</net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+

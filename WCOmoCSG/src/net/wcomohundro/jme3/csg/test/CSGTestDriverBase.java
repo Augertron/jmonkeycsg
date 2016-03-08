@@ -196,12 +196,16 @@ public class CSGTestDriverBase
     	SimpleApplication	pApplication
     ,	BitmapText			pTextDisplay
     ,	String				pMessage
+    ,	boolean				pCentered
     ) {
         pTextDisplay.setText( pMessage );
         
         Camera aCam = pApplication.getCamera();
-        pTextDisplay.setLocalTranslation( (aCam.getWidth() - pTextDisplay.getLineWidth()) / 2, aCam.getHeight(), 0);
-
+        if ( pCentered ) {
+        	pTextDisplay.setLocalTranslation( (aCam.getWidth() - pTextDisplay.getLineWidth()) / 2, aCam.getHeight(), 0);
+        } else {
+        	pTextDisplay.setLocalTranslation( 0, aCam.getHeight(), 0);
+        }
         pTextDisplay.render( pApplication.getRenderManager(), null );
     }
 

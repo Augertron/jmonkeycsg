@@ -116,8 +116,11 @@ public class CSGTestSceneLoader
 	/** Background loaded scene */
 	protected Spatial			mLoadedSpatial;
 	protected String			mNullSceneMsg;
+	protected CSGElement 		mActiveElement;
 	/** The world 'context' we operate in, as determined by the last loaded scene */
 	protected Node				mWorldContext;
+	/** Simple counter in the update loop */
+	protected int				mUpdateCounter;
 
 
 	/** Args are expected to tell us what to load */
@@ -196,11 +199,11 @@ public class CSGTestSceneLoader
     	if ( sceneName != null ) synchronized( this ) {
     		if ( mLoadingScene == null ) {
     			mLoadingScene = sceneName;
-    			CSGTestDriver.postText( this, mTextDisplay, "** LOADING ==> " + mLoadingScene );
+    			CSGTestDriver.postText( this, mTextDisplay, "** LOADING ==> " + mLoadingScene, false );
     			this.notifyAll();
     		}
     	} else {
-    		CSGTestDriver.postText( this, mTextDisplay, mNullSceneMsg );
+    		CSGTestDriver.postText( this, mTextDisplay, mNullSceneMsg, true );
     	}
     }
     
@@ -263,6 +266,20 @@ public class CSGTestSceneLoader
     ) {
     	super.update();
     	
+		String activeLoading = mLoadingScene;
+		if ( (activeLoading != null) && (mActiveElement != null) ) {
+	    	mUpdateCounter += 1;
+	        if ( mUpdateCounter == 10 ) {
+	        	StringBuilder aBuffer = new StringBuilder( 256 );
+	        	aBuffer.append( "** LOADING ==> " )
+	        	       .append( activeLoading )
+	        	       .append( " -- " );
+	        	mActiveElement.reportStatus( aBuffer );
+	        	
+				CSGTestDriver.postText( this, mTextDisplay, aBuffer.toString(), false );
+	            mUpdateCounter = 0;
+	        }
+		}	
     	if ( mLoadedSpatial != null ) {
     		attachLoadedSpatial( mLoadedSpatial );
     		mLoadedSpatial = null;
@@ -345,22 +362,26 @@ public class CSGTestSceneLoader
 	    	} else if ( aNode instanceof Spatial ) {
 	        	if ( aNode instanceof CSGElement ) {
 	        		// We know a bit more about Elements
-	        		CSGElement csgSpatial = (CSGElement)aNode;
-	    			if ( csgSpatial.isValid() ) {
+	        		mActiveElement = (CSGElement)aNode;
+	        		mActiveElement.regenerate( true, CSGEnvironment.resolveEnvironment() );
+	        		
+	    			if ( mActiveElement.isValid() ) {
 	    				// Include timing
-	    				pBuffer.append( " (" + (csgSpatial.getShapeRegenerationNS() / 1000000) + "ms)" );
+	    				pBuffer.append( " (" + (mActiveElement.getShapeRegenerationNS() / 1000000) + "ms)" );
 	    				
 	    				// Assign physics if active
 	    				if ( mPhysicsState != null ) {
-	    					this.applyPhysics( csgSpatial );
+	    					this.applyPhysics( mActiveElement );
 	    				}
 	    			} else {
 	    				// Something bogus in the construction
 	    				pBuffer.append( " *** Invalid shape: " );
-	    				CSGConstructionException.reportError( csgSpatial.getError(), " // ", pBuffer );
+	    				CSGConstructionException.reportError( mActiveElement.getError(), " // ", pBuffer );
 	    			}
-	    		}
-	    		mLoadedSpatial = (Spatial)aNode;
+	    			mActiveElement = null;
+	        	}
+	    		// Register this to be attached to the view scene
+		    	mLoadedSpatial = (Spatial)aNode;		    		
 	    		
 	    	} else if ( aNode instanceof SceneProcessor ) {
 	    		Light aLight = null;

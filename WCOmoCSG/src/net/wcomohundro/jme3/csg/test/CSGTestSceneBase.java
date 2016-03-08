@@ -265,14 +265,14 @@ public abstract class CSGTestSceneBase
                 } else if ( pName.equals( "video" ) ) {
                 	// Toggle the video capture
                 	if ( mVideoCapture == null ) {
-                    	CSGTestDriver.postText( CSGTestSceneBase.this, mTextDisplay, "Recording" );
+                    	CSGTestDriver.postText( CSGTestSceneBase.this, mTextDisplay, "***Recording", true );
 
                     	mVideoCapture = new VideoRecorderAppState( new File( mCapturePath + "CSGCapture.mpeg" ));
                 		stateManager.attach( mVideoCapture );
                 	} else {
                 		stateManager.detach( mVideoCapture );
                 		mVideoCapture = null;
-                    	CSGTestDriver.postText( CSGTestSceneBase.this, mTextDisplay, "Recording Complete" );
+                    	CSGTestDriver.postText( CSGTestSceneBase.this, mTextDisplay, "Recording Complete", true );
                 	}
                 }
             } else {
@@ -301,7 +301,7 @@ public abstract class CSGTestSceneBase
     	
     	if ( mRefreshText ) {
     		String aMessage = (mPostText.isEmpty()) ? "" : mPostText.peek();
-        	CSGTestDriver.postText( this, mTextDisplay, aMessage );    			
+        	CSGTestDriver.postText( this, mTextDisplay, aMessage, true );    			
         	mRefreshText = false;
     	}
     }

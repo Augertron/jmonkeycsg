@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGLinkNode name='CSGSamplesC'>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='CSGSamplesC' deferRegeneration='true'>
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
@@ -13,7 +13,7 @@
     <children>
     	<!--  ///////////// MIXED MATERIALS: normal/wireframe //////////////// -->
         <!-- Add a shorter box to a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='UnionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='UnionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-8.0'/>
@@ -33,7 +33,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='DifferenceBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='DifferenceBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='-8.0'/>
@@ -53,7 +53,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='IntersectionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='IntersectionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='-8.0'/>
@@ -74,7 +74,7 @@
     
     	<!--  ///////////// MIXED MATERIALS: brick/stone //////////////// -->
         <!-- Add a shorter box to a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='MixedUnionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='MixedUnionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-8.0' z='-5.0'/>
@@ -95,7 +95,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='MixedDifferenceBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='MixedDifferenceBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='-8.0' z='-5.0'/>
@@ -116,7 +116,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='MixedIntersectionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='MixedIntersectionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='-8.0' z='-5.0'/>
@@ -138,7 +138,7 @@
     
     	<!--  ///////////// NORMALS //////////////// -->
         <!-- Add a shorter box to a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='UnionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='UnionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
@@ -157,7 +157,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='DifferenceBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='DifferenceBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='0.0'/>
@@ -176,7 +176,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='IntersectionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='IntersectionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Normals.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='0.0'/>
@@ -196,7 +196,7 @@
         
     	<!--  ///////////// WIREFRAME //////////////// -->
         <!-- Add a shorter box to a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='WireUnionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='WireUnionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='0.0' y='-4.0'/>
@@ -215,7 +215,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Subtract shorter box from a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='WireDifferenceBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='WireDifferenceBox' deferRegeneration='true'
                 materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='3.0' y='-4.0'/>
@@ -234,7 +234,7 @@
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
         <!-- Intersection of a shorter box with a longer box -->
-        <net.wcomohundro.jme3.csg.CSGGeonode name='WireIntersectionBox'
+        <net.wcomohundro.jme3.csg.CSGGeonode name='WireIntersectionBox' deferRegeneration='true'
                 materialName='Textures/Debug/Wireframe.xml'>
             <transform class='com.jme3.math.Transform'>
                 <translation class='com.jme3.math.Vector3f' x='6.0' y='-4.0'/>

@@ -230,9 +230,13 @@ public interface ConstructiveSolidGeometry
 			boolean				pOnlyIfNeeded
 		,	CSGEnvironment		pEnvironment
 		)  throws CSGConstructionException;
+		
 		/** How long did it take to build the last shape 
 		 		NOTE that a negative value means that regeneration is actively processing  */
 		public long getShapeRegenerationNS();
+		
+		/** Get status about just what regenerate is doing */
+		public StringBuilder reportStatus( StringBuilder pBuffer );
 	}
 	
 	/** Basic Spatial/Geometry interface:

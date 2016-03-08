@@ -190,7 +190,7 @@ public class CSGTestL
         // Confirm we are NOT in the middle of a regen
     	if ( mAction == 0 ) synchronized( this ) {
     		mAction = pAction;
-    		CSGTestDriver.postText( this, mTextDisplay, "** Rebuilding Shape" );
+    		CSGTestDriver.postText( this, mTextDisplay, "** Rebuilding Shape", true );
     		this.notifyAll();
     	}
     }

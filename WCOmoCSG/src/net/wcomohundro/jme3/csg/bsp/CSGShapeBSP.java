@@ -273,6 +273,15 @@ public class CSGShapeBSP
 		mPolygons = pPolygons;
 	}
 	
+	/** Get status about just what regenerate is doing */
+	@Override
+	public StringBuilder reportStatus( 
+		StringBuilder pBuffer 
+	) {
+		pBuffer.append( "Status Not Implemented" );
+		return( pBuffer );
+	}
+
 	/** Ready a list of shapes for processing */
 	@Override
 	public List<CSGShape> prepareShapeList(

@@ -209,7 +209,14 @@ public class CSGNode
 	/** How long did it take to regenerate this shape */
 	@Override
 	public long getShapeRegenerationNS() { return mRegenNS; }
-	
+	/** Get status about just what regenerate is doing */
+	@Override
+	public synchronized StringBuilder reportStatus( 
+		StringBuilder pBuffer
+	) {
+		return( pBuffer );
+	}
+
     /** Accessor to the Material (ala Geometry) */
 	@Override
     public Material getMaterial() { return mMaterial; }
@@ -311,36 +318,8 @@ public class CSGNode
 		boolean				pOnlyIfNeeded
 	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
-		mRegenNS = -1;
-		long totalNS = 0;
-		pEnvironment = CSGEnvironment.resolveEnvironment( (pEnvironment == null) ? mEnvironment : pEnvironment, this );
-
-		// Operate on all CSG elements defined within this node, returning the last
-		// NOTE that we only detect first level children -- but you can always nest by
-		//		using deeper levels of this class.
-		CSGShape lastValidShape = null;
-		mInError = null;
-		for( Spatial aSpatial : this.getChildren() ) {
-			if ( aSpatial instanceof CSGElement ) try {
-				// Trigger the regeneration
-				CSGElement csgSpatial = (CSGElement)aSpatial;
-				CSGShape aShape = csgSpatial.regenerate( pOnlyIfNeeded, pEnvironment );
-				
-				totalNS += csgSpatial.getShapeRegenerationNS();
-				if ( csgSpatial.isValid() ) {
-					// Remember the last valid shape
-					lastValidShape = aShape;
-				} else {
-					// If any child shape is invalid, then this shape is invalid
-					setError( csgSpatial.getError() );
-				}
-			} catch( CSGConstructionException ex ) {
-				// Record the error and continue on???
-				setError( ex );
-			}
-		}
-		mRegenNS = totalNS;
-		return( lastValidShape );
+		// CSGNode is mostly abstract and does nothing with regenerate
+		return( null );
 	}
 	
 	/** Support the persistence of this Node */

@@ -123,6 +123,8 @@ public class CSGGeometry
 	protected CSGMeshManager			mMeshManager;
 	protected boolean					mDeferSceneChanges;
 	protected CSGShape					mPriorResult;
+	/** For monitoring the status */
+	protected CSGShape 					mActiveProduct;
 	/** How long did it take to regenerate this shape (nanoseconds) */
 	protected long						mRegenNS;
 	/** A list of arbitrary elements that can be named and referenced during
@@ -286,10 +288,6 @@ public class CSGGeometry
 	@Override
 	public List<CSGFaceProperties>	getFaceProperties() { return mFaceProperties; }
 		
-	/** How long did it take to regenerate this shape */
-	@Override
-	public long getShapeRegenerationNS() { return mRegenNS; }
-
 	/** Accessor to the debug mesh control flag */
 	public boolean isDebugMesh() { return mDebugMesh; }
 	public void setDebugMesh( boolean pFlag ) { mDebugMesh = pFlag; }
@@ -436,6 +434,7 @@ public class CSGGeometry
 		if ( (mShapes != null) && !mShapes.isEmpty() ) {
 			// Time the construction
 			mRegenNS = -1;						// Flag REGEN in progress
+			mActiveProduct = null;
 			long startTimer = System.nanoTime();
 			
 			// The mesh manager does not do much for a single mesh
@@ -448,7 +447,6 @@ public class CSGGeometry
 			CSGTempVars tempVars = CSGTempVars.get();
 			try {
 				// Operate on each shape in turn, blending it into the common
-				CSGShape aProduct = null;
 				for( CSGShape aShape : sortedShapes ) {
 					if ( !aShape.isValid() ) {
 						// We cannot use invalid shapes
@@ -460,31 +458,31 @@ public class CSGGeometry
 					// Apply the operator
 					switch( aShape.getOperator() ) {
 					case UNION:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.union( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.union( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case DIFFERENCE:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// NO PLACE TO START
 						} else {
 							// Blend together
-							aProduct = aProduct.difference( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.difference( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case INTERSECTION:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.intersection( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.intersection( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -493,24 +491,24 @@ public class CSGGeometry
 						break;
 						
 					case MERGE:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Treat a compound mesh as a single mesh
-							aProduct = aProduct.merge( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.merge( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 					}
 				}
-				if ( aProduct != null ) {
+				if ( mActiveProduct != null ) {
 					// The overall, blended mesh represents this Geometry
 					// The meshManager will retain the generated meshes and can provide
 					// any given mesh based on its index.  For a singleton, we want the master.
-					aProduct.toMesh( meshManager, false, tempVars, pEnvironment );
+					mActiveProduct.toMesh( meshManager, false, tempVars, pEnvironment );
 
 					// Return the final shape
-					setError( aProduct.getError() );
+					setError( mActiveProduct.getError() );
 					if ( mDeferSceneChanges ) synchronized( this ) {
 						// Update the scene later
 						mMeshManager = meshManager;
@@ -518,7 +516,9 @@ public class CSGGeometry
 						// Update the scene NOW
 						applySceneChanges( meshManager );
 					}
-					return( mPriorResult = aProduct );
+					mPriorResult = mActiveProduct;
+					mActiveProduct = null;
+					return( mPriorResult );
 				} else {
 					// Nothing interesting produced, but we have no explicit error
 					setError( null );
@@ -545,6 +545,37 @@ public class CSGGeometry
 		}
 		// Fall out to here only if no final Shape was produced
 		return( null );
+	}
+	
+	/** How long did it take to regenerate this shape */
+	@Override
+	public long getShapeRegenerationNS() { return mRegenNS; }
+	
+	/** Get status about just what regenerate is doing */
+	@Override
+	public synchronized StringBuilder reportStatus( 
+		StringBuilder pBuffer
+	) {
+		if ( pBuffer == null ) pBuffer = new StringBuilder( 256 );
+		
+		// What item are we working on?
+		pBuffer.append( this.getName() );
+		
+		// Where are we in the process?
+		if ( mRegenNS < 0 ) {
+			// Work in progress
+			if ( mActiveProduct != null ) {
+				pBuffer.append( "[" );
+				mActiveProduct.reportStatus( pBuffer );
+				pBuffer.append( "]" );
+			}
+		} else {
+			// Report on what happened
+			pBuffer.append( ": " )
+				   .append( mRegenNS / 1000000 )
+				   .append( "ms" );
+		}
+		return( pBuffer );
 	}
 
 	/** Support the persistence of this Geometry */

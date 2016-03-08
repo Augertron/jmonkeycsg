@@ -138,22 +138,25 @@ public class CSGShapeIOB
     protected CSGShape				mShape;
 	/** The list of faces that make up this shape */
 	protected List<CSGFace>			mFaces;
+	/** Statistics */
+	protected CSGStatsIOB			mStatistics;
     
     
 	/** Basic null constructor */
 	public CSGShapeIOB(
 	) {
-		this( null, sEmptyFaces );
+		this( null, sEmptyFaces, null );
 	}
 	/** Constructor based on an explicit list of faces, as determined by a blend of shapes */
 	protected CSGShapeIOB(
 		CSGShape			pForShape
 	,	List<CSGFace>		pFaces
+	,	CSGStatsIOB			pStatistics
 	) {
 		mShape = pForShape;
 		mFaces = pFaces;
+		mStatistics = pStatistics;
 	}
-
 
 	/** Ready a list of shapes for processing */
 	@Override
@@ -178,9 +181,52 @@ public class CSGShapeIOB
 		CSGShape		pForShape
 	) {
 		mShape = pForShape;
+		if ( mStatistics == null ) {
+			// Ensure we have statistics
+			CSGElement aParent = pForShape.getParentElement();
+			if ( aParent instanceof CSGShape ) {
+				// Maybe the parent has something
+				CSGShapeIOB parentHandler = (CSGShapeIOB)((CSGShape)aParent).getHandler( null );
+				if ( parentHandler != null ) {
+					this.mStatistics = parentHandler.mStatistics;
+				}
+			}
+			// If we still have not found statistics to share, start from scratch
+			if ( mStatistics == null ) {
+				mStatistics = new CSGStatsIOB();
+			}
+		}
 		return( this );
 	}
 	
+	/** Get status about just what regenerate is doing */
+	@Override
+	public StringBuilder reportStatus( 
+		StringBuilder pBuffer 
+	) {
+		int triangleCount = mStatistics.mTriangleCount;
+		if ( triangleCount > 0 ) {
+			pBuffer.append( " " ).append( triangleCount );
+
+			int faceCount = mStatistics.mFaceCount;
+			if ( faceCount > 0 ) {
+				pBuffer.append( " / " ).append( faceCount );
+				
+				int classificationCount = mStatistics.mClassificationCount;
+				if ( classificationCount > 0 ) {
+					pBuffer.append( " / " ).append( classificationCount );
+					
+					int filterCount = mStatistics.mFilterCount;
+					if ( filterCount > 0 ) {
+						pBuffer.append( " / " ).append( filterCount );
+					}
+				}
+			}
+			pBuffer.append( " " );
+		}
+		return( pBuffer );
+	}
+
 	/** Refresh this handler and ensure it is ready for blending */
 	@Override
 	public CSGShapeProcessor refresh(
@@ -214,7 +260,7 @@ public class CSGShapeIOB
 	public CSGShape.CSGShapeProcessor clone(
 		CSGShape	pForShape
 	) {
-		CSGShapeIOB aHandler = new CSGShapeIOB( pForShape, sEmptyFaces );
+		CSGShapeIOB aHandler = new CSGShapeIOB( pForShape, sEmptyFaces, this.mStatistics );
 		if ( pForShape.isBooleanBlend() ) {
 			// The shape is the result of a prior blend, so retain its faces
 			aHandler.mFaces = new ArrayList( this.mFaces.size() );
@@ -256,19 +302,19 @@ public class CSGShapeIOB
 	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
-		CSGSolid thisSolid = new CSGSolid( thisFaceList );
+		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
 		List<CSGFace> otherFaceList 
 			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
-		CSGSolid otherSolid = new CSGSolid( otherFaceList );
+		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
 		
 		List<CSGFace> newFaceList
 			= composeSolid( pOther, thisSolid, otherSolid, false
 							,	CSGFaceStatus.OUTSIDE, CSGFaceStatus.SAME, CSGFaceStatus.OUTSIDE
 							,	pTempVars, pEnvironment );
 		
-		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
+		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList, this.mStatistics );
 		CSGShape aShape = new CSGShape( aHandler
 										, this.mShape.getName()
 										, this.mShape.getOrder()
@@ -287,19 +333,19 @@ public class CSGShapeIOB
 	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
-		CSGSolid thisSolid = new CSGSolid( thisFaceList );
+		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
 		List<CSGFace> otherFaceList 
 			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
-		CSGSolid otherSolid = new CSGSolid( otherFaceList );
+		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
 		
 		List<CSGFace> newFaceList
 			= composeSolid( pOther, thisSolid, otherSolid, true
 							,	CSGFaceStatus.OUTSIDE, CSGFaceStatus.OPPOSITE, CSGFaceStatus.INSIDE
 							,	pTempVars, pEnvironment );
 		
-		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
+		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList, this.mStatistics );
 		CSGShape aShape = new CSGShape( aHandler
 										, this.mShape.getName()
 										, this.mShape.getOrder()
@@ -318,19 +364,19 @@ public class CSGShapeIOB
 	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
 			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
-		CSGSolid thisSolid = new CSGSolid( thisFaceList );
+		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment );
 		List<CSGFace> otherFaceList 
 			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
-		CSGSolid otherSolid = new CSGSolid( otherFaceList );
+		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
 		
 		List<CSGFace> newFaceList
 			= composeSolid( pOther, thisSolid, otherSolid, false
 							,	CSGFaceStatus.INSIDE, CSGFaceStatus.SAME, CSGFaceStatus.INSIDE
 							,	pTempVars, pEnvironment );
 
-		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList );
+		CSGShapeIOB aHandler = new CSGShapeIOB( null, newFaceList, this.mStatistics );
 		CSGShape aShape = new CSGShape( aHandler
 										, this.mShape.getName()
 										, this.mShape.getOrder()
@@ -437,7 +483,10 @@ public class CSGShapeIOB
 			// Too many vertices to track, the HashMap wastes more time than it saves
 			aVertexList = null;
 		}
+		CSGFace aFace = null;
 		for( int i = 0, j = 0; j < triangleCount; i += iAdjust, j += 1) {
+			mStatistics.mTriangleCount += 1;
+			
 			int idx1 = idxBuffer.get(i);
 			int idx2 = idxBuffer.get(i + 1);
 			int idx3 = idxBuffer.get(i + 2);
@@ -494,10 +543,9 @@ public class CSGShapeIOB
 				texCoord1 = texCoord2 = texCoord3 = Vector2f.ZERO;
 			}
 			// And build the appropriate face
-			CSGFace aFace 
-				= new CSGFace( CSGVertexIOB.makeVertex( pos1, norm1, texCoord1, pTransform, pEnvironment )
-								, CSGVertexIOB.makeVertex( pos2, norm2, texCoord2, pTransform, pEnvironment )
-								, CSGVertexIOB.makeVertex( pos3, norm3, texCoord3, pTransform, pEnvironment )
+			aFace = new CSGFace( CSGVertexIOB.makeVertex( aFace, pos1, norm1, texCoord1, pTransform, pEnvironment )
+								, CSGVertexIOB.makeVertex( aFace, pos2, norm2, texCoord2, pTransform, pEnvironment )
+								, CSGVertexIOB.makeVertex( aFace, pos3, norm3, texCoord3, pTransform, pEnvironment )
 								, mShape.getMeshIndex( pMeshManager, j )
 								, pTempVars
 								, pEnvironment );
@@ -600,6 +648,8 @@ public class CSGShapeIOB
 			// Produce as many triangles (all starting from vertex 0) as needed to
 			// include all the vertices  (3 yields 1 triangle, 4 yields 2 triangles, etc)
 			for( int ptr = 2; ptr < aVertexCount; ptr += 1 ) {
+				mStatistics.mTriangleCount += 1;
+
 				pIndexList.add( vertexPointers.get(0) );
 				pIndexList.add( vertexPointers.get(ptr-1) );
 				pIndexList.add( vertexPointers.get(ptr) );
@@ -663,6 +713,8 @@ public class CSGShapeIOB
 	) {
 		// Walk the faces and match the status
 		for( CSGFace aFace : pSourceList ) {
+			mStatistics.mFilterCount += 1;
+			
 			CSGFaceStatus faceStatus = aFace.getStatus();
 			if ( (faceStatus == pFaceStatus1) || (faceStatus == pFaceStatus2) ) {
 				// This is a keeper

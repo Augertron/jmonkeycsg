@@ -115,6 +115,8 @@ public class CSGGeonode
 	protected CSGMeshManager	mMeshManager;
 	protected boolean			mDeferSceneChanges;
 	protected CSGShape			mPriorResult;
+	/** Active tracking of the shape being worked on for status processing */
+	protected CSGShape 			mActiveProduct;
 	/** TangetBinormal generation control flag */
 	protected boolean			mGenerateTangentBinormal;
 
@@ -148,7 +150,33 @@ public class CSGGeonode
     	return( aCopy );
     }
 
-	
+	/** Get status about just what regenerate is doing */
+	@Override
+	public synchronized StringBuilder reportStatus( 
+		StringBuilder pBuffer
+	) {
+		if ( pBuffer == null ) pBuffer = new StringBuilder( 256 );
+		
+		// What item are we working on?
+		pBuffer.append( this.getName() );
+		
+		// Where are we in the process?
+		if ( mRegenNS < 0 ) {
+			// Work in progress
+			if ( mActiveProduct != null ) {
+				pBuffer.append( "[" );
+				mActiveProduct.reportStatus( pBuffer );
+				pBuffer.append( "]" );
+			}
+		} else {
+			// Report on what happened
+			pBuffer.append( ": " )
+				   .append( mRegenNS / 1000000 )
+				   .append( "ms" );
+		}
+		return( pBuffer );
+	}
+
 	/** Access to the MasterGeometry that defines the overall shape */
 	public CSGGeometry getMasterGeometry() { return mMasterGeometry; }
 	
@@ -316,7 +344,7 @@ public class CSGGeonode
 			CSGTempVars tempVars = CSGTempVars.get();
 			try {
 				// Operate on each shape in turn, blending it into the common
-				CSGShape aProduct = null;
+				mActiveProduct = null;
 				for( CSGShape aShape : sortedShapes ) {
 					if ( !aShape.isValid() ) {
 						// We cannot use invalid shapes
@@ -328,31 +356,31 @@ public class CSGGeonode
 					// Apply the operator
 					switch( aShape.getOperator() ) {
 					case UNION:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.union( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.union( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case DIFFERENCE:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// NO PLACE TO START
 						} else {
 							// Blend together
-							aProduct = aProduct.difference( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.difference( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
 					case INTERSECTION:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Blend together
-							aProduct = aProduct.intersection( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.intersection( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 						
@@ -361,23 +389,23 @@ public class CSGGeonode
 						break;
 
 					case MERGE:
-						if ( aProduct == null ) {
+						if ( mActiveProduct == null ) {
 							// A place to start
-							aProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
 						} else {
 							// Treat multiple meshes as a single mesh
-							aProduct = aProduct.merge( aShape.refresh(), meshManager, tempVars, pEnvironment );
+							mActiveProduct = mActiveProduct.merge( aShape.refresh(), meshManager, tempVars, pEnvironment );
 						}
 						break;
 					}
 				}
 				// Build up the mesh(es)
 				mMasterGeometry = null;
-				if ( aProduct != null ) {
+				if ( mActiveProduct != null ) {
 					// Transform the blended product into children
 					// The meshManager will retain the set of generated meshes and can provide
 					// any given mesh based on its index.
-					aProduct.toMesh( meshManager, true, tempVars, pEnvironment );
+					mActiveProduct.toMesh( meshManager, true, tempVars, pEnvironment );
 
 					// Use the master mesh to describe the overall geometry
 					mMasterGeometry 
@@ -386,7 +414,7 @@ public class CSGGeonode
 						mMasterGeometry.setMaterial( mMaterial.clone() );
 					}
 					// Return the product
-					setError( aProduct.getError() );
+					setError( mActiveProduct.getError() );
 					if ( mDeferSceneChanges ) synchronized( this ) {
 						// Update the scene later
 						mMeshManager = meshManager;
@@ -394,7 +422,9 @@ public class CSGGeonode
 						// Update the scene NOW
 						applySceneChanges( meshManager );
 					}
-					return( mPriorResult = aProduct );
+					mPriorResult = mActiveProduct;
+					mActiveProduct = null;
+					return( mPriorResult );
 				} else {
 					// Nothing produced
 					setError( null );

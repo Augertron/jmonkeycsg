@@ -311,11 +311,12 @@ public class CSGFace
 	
 	/** Match this given face to a list of other vertices, looking for any vertex that
 	 	shares its position.  Such vertices can be linked together since their 'status'
-	 	will be shared.
+	 	will be shared.  We only care about the position.  Vertices with shared
+	 	position can still retain their own unique normal/texture.
 	 	
 	 	NOTE
 	 		That an attempt to scan through a list of other faces was too slow to be 
-	 		useful.  Therefore we will live with the overhead of the HashMap.
+	 		useful.  Therefore, we will live with the overhead of the HashMap.
 	 */
 	public void matchVertices(
 		Map<Vector3d,CSGVertexIOB>	pVertexList
@@ -323,20 +324,44 @@ public class CSGFace
 	) {
 		for( CSGVertex aVertex : this.mVertices ) {
 			CSGVertexIOB thisVertex = (CSGVertexIOB)aVertex;
+			if ( thisVertex.hasSame() ) {
+				// This vertex has already been processed and is attached to another vertex
+				continue;
+			}
 			Vector3d thisPosition = thisVertex.getPosition();
 			CSGVertexIOB otherVertex = pVertexList.get( thisPosition );
 			
 			if ( otherVertex == null ) {
 				// No overlap, so add this vertex to the list
 				pVertexList.put( thisPosition, thisVertex );
-			} else if ( aVertex.equals( otherVertex ) ) {
-				// Same as another vertex (includes 'normal' check)
+			} else {
+				// Same position as another vertex
 				otherVertex.samePosition( thisVertex );
 			}
 		}
-		
 	}
-	/** Look if this faces matches a given position */
+	/** Match any vertex in this face against a given position */
+	public void matchVertex(
+		CSGVertexIOB		pOtherVertex
+	,	CSGEnvironment		pEnvironment
+	) {
+		Vector3d aPosition = pOtherVertex.getPosition();
+		
+		for( CSGVertex aVertex : this.mVertices ) {
+			CSGVertexIOB thisVertex = (CSGVertexIOB)aVertex;
+			if ( thisVertex.matchPosition( aPosition, pEnvironment ) ) {
+				// Link together vertices with the same position
+				thisVertex.samePosition( pOtherVertex );
+				
+				// And we should not match two vertices in the same face
+				break;
+			}
+		}
+	}
+	/** Look if this faces matches a given position 
+	 	(you may not find any 'active' references to this method in the codebase, but
+	 	 it is sure handy to have while debugging, looking to match errant triangles)
+	 */
 	public boolean matchPosition(
 		List<Vector3d>	pPosition
 	,	CSGEnvironment	pEnvironment

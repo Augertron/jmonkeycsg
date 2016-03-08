@@ -71,13 +71,17 @@ public class CSGSolid
 	protected List<CSGFace>		mFaces;
 	/** The overall volumetric 'bounds' of this solid */
 	protected CSGBounds			mBounds;
+	/** Statistics tracker */
+	protected CSGStatsIOB		mStatistics;
 	
 	
 	/** Constructor based on a given list of faces */
 	public CSGSolid(
 		List<CSGFace>		pFaces
+	,	CSGStatsIOB			pStatistics
 	) {
-		mFaces = new ArrayList<CSGFace>( pFaces );;
+		mFaces = new ArrayList<CSGFace>( pFaces );
+		mStatistics = pStatistics;
 	}
 	
 	/** Accessor to the face list */
@@ -95,7 +99,7 @@ public class CSGSolid
 				invertedList.add( invertedFace );
 			}
 		}
-		return( new CSGSolid( invertedList ) );
+		return( new CSGSolid( invertedList, this.mStatistics ) );
 	}
 	
 	/** Accessor this solid's bounds */
@@ -238,6 +242,9 @@ loop1:	for( int i = 0, j = sizeLimit; i < (j = mFaces.size()); i += 1 ) {
 													,	"CSGSolid.splitFaces - interrupted: " + j );
 				throw anError;
 			}
+			// Count this as a processed face
+			mStatistics.mFaceCount += 1;
+			
 			// Reset the face status for later classification
 			CSGFace face1 = mFaces.get( i );
 			face1.resetStatus();
@@ -342,6 +349,9 @@ loop2:				for( int m = face1.getScanStartIndex(), n = otherFaces.size(); m < n; 
 	) throws CSGConstructionException {
 		// Match every face against the other object
 		for( CSGFace aFace : mFaces ) {	
+			// Count this as a classified face
+			mStatistics.mClassificationCount += 1;
+			
 			// Status on the vertices can make the classification really simple
 			if ( aFace.simpleClassify( pEnvironment ) == false ) {
 				// Nothing simple about it, so use the ray trace classification

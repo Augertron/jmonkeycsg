@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+<net.wcomohundro.jme3.csg.CSGLinkNode fname='LightedCorridor' deferRegeneration='true'>
     <lights class='com.jme3.light.LightList'>
         <lights>
         <!-- 
@@ -17,7 +17,7 @@
         </lights>
     </lights>
 	<children>
-	    <net.wcomohundro.jme3.csg.CSGGeonode name='CSGGeometry'
+	    <net.wcomohundro.jme3.csg.CSGGeonode name='Corridor' deferRegeneration='true'
         		singleMaterial='false'
         		generateTangentBinormal='true'
         		materialName='Textures/Rock/Rock1NormalRpt.xml'>

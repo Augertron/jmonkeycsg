@@ -90,7 +90,8 @@ public class CSGVertexIOB
 
 	/** Factory construction of appropriate vertex */
 	public static CSGVertexIOB makeVertex(
-		Vector3f			pPosition
+		CSGFace				pPriorFace
+	,	Vector3f			pPosition
 	,	Vector3f			pNormal
 	,	Vector2f			pTextureCoordinate
 	,	Transform			pTransform
@@ -108,9 +109,13 @@ public class CSGVertexIOB
 		}
 		// NOTE that we are starting from 'float' precision, but working in 'double' hereafter
 		Vector3d aPosition = new Vector3d( pPosition.x, pPosition.y, pPosition.z );
-		Vector3d aNormal = new Vector3d( pNormal.x, pNormal.y, pNormal.z );
+		Vector3d aNormal = new Vector3d( pNormal.x, pNormal.y, pNormal.z );	
 		aVertex = new CSGVertexIOB( aPosition, aNormal, pTextureCoordinate, pEnvironment );
 
+		// Quick check against a 'prior' face to see if any vertices overlap
+		if ( pPriorFace != null ) {
+			pPriorFace.matchVertex( aVertex, pEnvironment );
+		}
 		return( aVertex );
 	}
 	
@@ -276,7 +281,11 @@ public class CSGVertexIOB
 		}
 	}
 	
-	/** If we detect another vertex with the same position as this one, then track it */
+	/** If we detect another vertex with the same position as this one, then link them
+	 	together to optimize the IOB processing.  Each vertex so linked will share the 
+	 	same vertex status, but retains its own normal/texture.
+	 */
+	public boolean hasSame() { return( this.mSamePosition != null ); }
 	public void samePosition(
 		CSGVertexIOB	pOtherVertex
 	) {
