@@ -1025,39 +1025,38 @@ public class CSGShape
 		if ( mProxy != null ) {
 			setSpatial( mProxy, null );
 		}
-		// Resolve all local lights
-		if ( mLightControls == null ) {
-			// Ready a place to stash all the lights
-			mLightControls = CSGLightControl.configureLightControls( mLightControls
-																	, null
-																	, getLocalLightList()
-																	, true
-																	, getLocalTransform() );
-			// Ensure all the decorations are ready for use
-			if ( mDecorations != null ) {
-				for( int i = 0, j = mDecorations.size(); i < j; i += 1 ) {
-					Spatial aSpatial = mDecorations.get( i );
-					
-					// If we are dealing with a placeholder, resolve it to the real component now
-					// NOTE that when resolving decorations, we start from the top of the hierarchy
-					//		to allow outer layers to override inner defaults
-					if ( aSpatial instanceof CSGPlaceholderSpatial ) {
-						aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this, true );
-						mDecorations.set( i, aSpatial );
-					}
-					// By definition, any local lighting in the decoration really applies to the shape
-					// BUT decoration based lights are not affected by the local transform, only 
-					// the transform within the decoration itself.
-					mLightControls = CSGLightControl.configureLightControls( mLightControls
-																			, null
-																			, aSpatial.getLocalLightList()
-																			, true
-																			, aSpatial.getLocalTransform() );
-					// The decoration retains no lights of its own
-					aSpatial.getLocalLightList().clear();
-					aSpatial.removeControl( LightControl.class );
-					aSpatial.removeControl( CSGLightControl.class );
+		// Ready a place to stash all the lights
+		// Since we rebuild the list on any 'prepare', then it is safe for a subshape list to 
+		// use shared copies of the shapes.
+		mLightControls = CSGLightControl.configureLightControls( null
+																, null
+																, getLocalLightList()
+																, true
+																, getLocalTransform() );
+		// Ensure all the decorations are ready for use
+		if ( mDecorations != null ) {
+			for( int i = 0, j = mDecorations.size(); i < j; i += 1 ) {
+				Spatial aSpatial = mDecorations.get( i );
+				
+				// If we are dealing with a placeholder, resolve it to the real component now
+				// NOTE that when resolving decorations, we start from the top of the hierarchy
+				//		to allow outer layers to override inner defaults
+				if ( aSpatial instanceof CSGPlaceholderSpatial ) {
+					aSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this, true );
+					mDecorations.set( i, aSpatial );
 				}
+				// By definition, any local lighting in the decoration really applies to the shape
+				// BUT decoration based lights are not affected by the local transform, only 
+				// the transform within the decoration itself.
+				mLightControls = CSGLightControl.configureLightControls( mLightControls
+																		, null
+																		, aSpatial.getLocalLightList()
+																		, true
+																		, aSpatial.getLocalTransform() );
+				// The decoration retains no lights of its own
+				aSpatial.getLocalLightList().clear();
+				aSpatial.removeControl( LightControl.class );
+				aSpatial.removeControl( CSGLightControl.class );
 			}
 		}
 		if ( mSubShapes == null ) {

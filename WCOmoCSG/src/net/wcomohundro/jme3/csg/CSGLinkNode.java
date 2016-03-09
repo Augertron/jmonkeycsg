@@ -138,7 +138,12 @@ public class CSGLinkNode
 		//		using deeper levels of this class.
 		CSGShape lastValidShape = null;
 		mInError = null;
-		for( Spatial aSpatial : this.getChildren() ) {
+		
+		List<Spatial> aChildList =  this.getChildren();
+		for( int i = 0, j = aChildList.size(); i < j; i += 1 ) {
+			Spatial aSpatial = aChildList.get( i );
+			aSpatial = resolveSpatial( aSpatial, i, true );
+			
 			if ( aSpatial instanceof CSGElement ) try {
 				// Trigger the regeneration
 				mActiveElement = (CSGElement)aSpatial;
@@ -160,6 +165,24 @@ public class CSGLinkNode
 		mRegenNS = totalNS;
 		return( lastValidShape );
 	}
+	
+	/** Service routine to resolve any placeholder in the child list */
+	protected Spatial resolveSpatial(
+		Spatial		pSpatial
+	,	int			pChildIndex
+	,	boolean		pResolveFromTop
+	) {
+		if ( pSpatial instanceof CSGPlaceholderSpatial ) {
+			// Resolve the placeholder to its real element (if possible)
+			Spatial realSpatial = ((CSGPlaceholderSpatial)pSpatial).resolveItem( this, pResolveFromTop );
+			if ( realSpatial != null ) {
+				this.detachChildAt( pChildIndex );
+				this.attachChildAt( realSpatial, pChildIndex );
+				return( realSpatial );
+			}	
+		}
+		return( pSpatial );
+	}
 
     ///////////////////////////////////////// Savable /////////////////////////////////////////////
 	@Override
@@ -178,6 +201,8 @@ public class CSGLinkNode
 		List<Spatial> aChildList =  this.getChildren();
 		for( int i = 0, j = aChildList.size(); i < j; i += 1 ) {
 			Spatial aSpatial = aChildList.get( i );
+			aSpatial = resolveSpatial( aSpatial, i, false );
+			
 			if ( aSpatial instanceof CSGElement ) {
 				// Check on the construction of this element
 				CSGElement csgSpatial = (CSGElement)aSpatial;
@@ -185,14 +210,6 @@ public class CSGLinkNode
 				if ( !csgSpatial.isValid() ) {
 					mInError = CSGConstructionException.registerError( mInError, csgSpatial.getError() );
 				}
-			} else if ( aSpatial instanceof CSGPlaceholderSpatial ) {
-				// Resolve the placeholder to its real element
-				Spatial realSpatial = ((CSGPlaceholderSpatial)aSpatial).resolveItem( this, false );
-				this.detachChildAt( i );
-				this.attachChildAt( realSpatial, i );
-				
-				// And check it again
-				i -= 1;
 			}
 		}		
 	    // Rebuild the shapes just loaded, as needed

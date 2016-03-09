@@ -42,6 +42,7 @@ import java.util.logging.Level;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGElement;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry.CSGOperator;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
+import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape;
 import net.wcomohundro.jme3.math.CSGTransform;
 
@@ -433,6 +434,14 @@ public class CSGGeonode
 				// Record the problem and toss it again
 				setError( ex );
 				throw ex;
+			} catch( Exception ex ) {
+				CSGConstructionException csgEx 
+					= new CSGConstructionException( CSGErrorCode.CONSTRUCTION_FAILED
+													, "Unexpected regeneration failure"
+													, this
+													, ex );
+				setError( csgEx );
+				throw csgEx;
 			} finally {
 				tempVars.release();
 				mRegenNS = System.nanoTime() - startTimer;
