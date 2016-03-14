@@ -92,6 +92,7 @@ import com.jme3.material.MatParamTexture;
 import com.jme3.terrain.Terrain;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
+import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.TempVars;
 
 /** Constructive Solid Geometry (CSG)
@@ -372,23 +373,24 @@ public class CSGShape
 	/** Generic constructor */
 	public CSGShape(
 	) {
-		this( (String)"CSGShape", 0 );
+		this( (String)"CSGShape", null, null, 0 );
 	}
 	/** Constructor based on a mesh */
 	public CSGShape(
 		String	pShapeName
 	,	Mesh	pMesh
 	) {
-		this( pShapeName, pMesh, 0 );
+		this( pShapeName, pMesh, null, 0 );
 	}
 	public CSGShape(
-		String	pShapeName
-	,	Mesh	pMesh
-	,	int		pOrder
+		String			pShapeName
+	,	Mesh			pMesh
+	,	CSGOperator		pOperator
+	,	int				pOrder
 	) {
 		super( pShapeName, pMesh );
 		mOrder = pOrder;
-		mOperator = CSGGeometry.CSGOperator.UNION;
+		mOperator = (pOperator == null) ? CSGGeometry.CSGOperator.UNION : pOperator;
 		mSurface = CSGShapeSurface.USE_MESH;
 		
 		mMeshIsPrepared = new AtomicBoolean();
@@ -411,6 +413,16 @@ public class CSGShape
 		mLibraryItems = Collections.EMPTY_MAP;
 	}
 	
+	/** Constructor based on a set of subshapes */
+	public CSGShape(
+		String				pShapeName
+    ,   List<CSGShape>		pSubShapes
+    ) {
+		this( pShapeName, 0 );
+		
+		mSubShapes = pSubShapes;
+	}
+
 	/** Constructor based on a Spatial, rather than a Mesh */
 	public CSGShape(
 		String		pShapeName

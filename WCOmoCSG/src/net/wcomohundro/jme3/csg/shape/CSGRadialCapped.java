@@ -148,6 +148,13 @@ public abstract class CSGRadialCapped
 	}
 
     /** Configuration accessors */
+	@Override
+	public void setRadius( 
+		float		pRadius
+	) {
+		super.setRadius( pRadius );
+		mRadiusBack = pRadius;
+	}
     public float getRadiusFront() { return mRadius; }
     public void setRadiusFront( float pRadius ) { mRadius = pRadius; }
     

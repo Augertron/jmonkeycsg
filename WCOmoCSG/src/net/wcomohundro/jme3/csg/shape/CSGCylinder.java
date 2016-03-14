@@ -66,7 +66,7 @@ public class CSGCylinder
 	/** Standard null constructor */
 	public CSGCylinder(
 	) {
-		this( 32, 32, 1, 1, 1, true, false, TextureMode.FLAT, false );
+		this( 32, 32, 1, 1, 1, true, false, TextureMode.CAN, false );
 	}
     public CSGCylinder(
     	int 		pAxisSamples
@@ -74,7 +74,7 @@ public class CSGCylinder
     ,	float 		pRadiusFront
     , 	float 		pZExtent
     ) {
-		this( pAxisSamples, pRadialSamples, pRadiusFront, pRadiusFront, pZExtent, true, false, TextureMode.FLAT, true );
+		this( pAxisSamples, pRadialSamples, pRadiusFront, pRadiusFront, pZExtent, true, false, TextureMode.CAN, true );
 	}
 	
     public CSGCylinder(

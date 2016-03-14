@@ -194,6 +194,14 @@ public class CSGFaceProperties
 	public CSGFaceProperties(
 	) {
 	}
+	/** Simple texture scaling constructor */
+	public CSGFaceProperties(
+		Face			pFace
+	,	Material		pMaterial
+	,	Vector2f		pTextureScale
+	) {
+		this( pFace, pMaterial, pTextureScale, null, false, null, null );
+	}
 	/** Constructor with all properties */
 	public CSGFaceProperties(
 		Face			pFace

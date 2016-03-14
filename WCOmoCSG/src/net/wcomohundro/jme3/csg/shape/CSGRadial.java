@@ -198,6 +198,11 @@ public abstract class CSGRadial
     public float getRadius() { return mRadius; }
     public void setRadius( float pRadius ) { mRadius = pRadius; }
     
+	@Override
+    public float getXExtent() { return mRadius; }
+    @Override
+    public float getYExtent() { return mRadius; }
+    
     public Vector2f getSliceScale() { return mScaleSlice; }
     public void setSliceScale( Vector2f pScaling ) { mScaleSlice = pScaling; }
     

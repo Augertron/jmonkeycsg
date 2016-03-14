@@ -112,6 +112,10 @@ public abstract class CSGAxial
     public float getHeight() { return mExtentZ * 2; }
     public void setHeight( float pHeight ) { mExtentZ = pHeight / 2.0f; }
     
+    public abstract float getXExtent();
+    public abstract float getYExtent();
+
+    
     /** An Axial is considered 'closed' if the front/back faces are generated */
     public boolean isClosed(
     ) { 

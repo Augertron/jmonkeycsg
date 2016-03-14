@@ -230,9 +230,11 @@ public class CSGAxialBox
 	}
 	
 	/** Accessors to the extents */
+	@Override
     public float getXExtent() { return mExtentX; }
     public void setXExtent( float pExtent ) { mExtentX = pExtent; }
     
+    @Override
     public float getYExtent() { return mExtentY; }
     public void setYExtent( float pExtent ) { mExtentY = pExtent; }
     
