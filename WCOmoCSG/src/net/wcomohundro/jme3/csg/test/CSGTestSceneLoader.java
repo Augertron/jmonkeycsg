@@ -278,7 +278,7 @@ public class CSGTestSceneLoader
 	        	aBuffer.append( "** LOADING ==> " )
 	        	       .append( activeLoading )
 	        	       .append( " -- " );
-	        	mActiveElement.reportStatus( aBuffer );
+	        	mActiveElement.reportStatus( aBuffer, false );
 	        	
 				CSGTestDriver.postText( this, mTextDisplay, aBuffer.toString(), false );
 	            mUpdateCounter = 0;

@@ -236,7 +236,7 @@ public interface ConstructiveSolidGeometry
 		public long getShapeRegenerationNS();
 		
 		/** Get status about just what regenerate is doing */
-		public StringBuilder reportStatus( StringBuilder pBuffer );
+		public StringBuilder reportStatus( StringBuilder pBuffer, boolean pBriefly );
 	}
 	
 	/** Basic Spatial/Geometry interface:

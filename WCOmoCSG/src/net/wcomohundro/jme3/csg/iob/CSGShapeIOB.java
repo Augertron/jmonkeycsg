@@ -202,27 +202,37 @@ public class CSGShapeIOB
 	/** Get status about just what regenerate is doing */
 	@Override
 	public StringBuilder reportStatus( 
-		StringBuilder pBuffer 
+		StringBuilder 	pBuffer
+	, 	boolean 		pBriefly	
 	) {
 		int triangleCount = mStatistics.mTriangleCount;
 		if ( triangleCount > 0 ) {
-			pBuffer.append( " " ).append( triangleCount );
-
-			int faceCount = mStatistics.mFaceCount;
-			if ( faceCount > 0 ) {
-				pBuffer.append( " / " ).append( faceCount );
-				
-				int classificationCount = mStatistics.mClassificationCount;
-				if ( classificationCount > 0 ) {
-					pBuffer.append( " / " ).append( classificationCount );
+			if ( pBriefly ) {
+				// Composite
+				triangleCount += mStatistics.mFaceCount;
+				triangleCount += mStatistics.mClassificationCount;
+				triangleCount += mStatistics.mFilterCount;
+				pBuffer.append( triangleCount );
+			} else {
+				// Individual stats
+				pBuffer.append( " " ).append( triangleCount );
+	
+				int faceCount = mStatistics.mFaceCount;
+				if ( faceCount > 0 ) {
+					pBuffer.append( " / " ).append( faceCount );
 					
-					int filterCount = mStatistics.mFilterCount;
-					if ( filterCount > 0 ) {
-						pBuffer.append( " / " ).append( filterCount );
+					int classificationCount = mStatistics.mClassificationCount;
+					if ( classificationCount > 0 ) {
+						pBuffer.append( " / " ).append( classificationCount );
+						
+						int filterCount = mStatistics.mFilterCount;
+						if ( filterCount > 0 ) {
+							pBuffer.append( " / " ).append( filterCount );
+						}
 					}
 				}
+				pBuffer.append( " " );
 			}
-			pBuffer.append( " " );
 		}
 		return( pBuffer );
 	}

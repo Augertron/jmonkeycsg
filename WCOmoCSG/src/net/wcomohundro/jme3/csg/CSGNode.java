@@ -212,7 +212,8 @@ public class CSGNode
 	/** Get status about just what regenerate is doing */
 	@Override
 	public synchronized StringBuilder reportStatus( 
-		StringBuilder pBuffer
+		StringBuilder 	pBuffer
+	, 	boolean 		pBriefly	
 	) {
 		return( pBuffer );
 	}

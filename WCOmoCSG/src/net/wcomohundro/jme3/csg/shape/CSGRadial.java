@@ -169,7 +169,7 @@ public abstract class CSGRadial
     
 	
     /** As abstract, it only makes sense to have protected constructors */
-	public CSGRadial(
+	protected CSGRadial(
 	) {
 		this( 32, 32, 1, true, false, false );
 	}
@@ -197,11 +197,18 @@ public abstract class CSGRadial
     
     public float getRadius() { return mRadius; }
     public void setRadius( float pRadius ) { mRadius = pRadius; }
-    
+   
+	/** Accessors to the extents */
 	@Override
     public float getXExtent() { return mRadius; }
+	@Override
+    public void setXExtent( float pExtent ) { mRadius = pExtent; }
+    
     @Override
     public float getYExtent() { return mRadius; }
+    @Override
+    public void setYExtent( float pExtent ) { mRadius = pExtent; }
+
     
     public Vector2f getSliceScale() { return mScaleSlice; }
     public void setSliceScale( Vector2f pScaling ) { mScaleSlice = pScaling; }
@@ -542,9 +549,11 @@ public abstract class CSGRadial
         
         InputCapsule inCapsule = pImporter.getCapsule( this );
         
+        // NOTE super radius defaults back to 0 to detect not-specified
+        if ( mRadius == 0 ) mRadius = 1;
+        
         mRadialSamples = inCapsule.readInt( "radialSamples", mRadialSamples );
         mFirstRadial = CSGEnvironment.readPiValue( inCapsule, "firstRadial", 0 );
-        mRadius = inCapsule.readFloat( "radius", mRadius );
         
         float scaleX = CSGEnvironment.readPiValue( inCapsule, "scaleSliceX", 1.0f );
         float scaleY = CSGEnvironment.readPiValue( inCapsule, "scaleSliceY", 1.0f );

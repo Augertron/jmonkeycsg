@@ -276,9 +276,10 @@ public class CSGShapeBSP
 	/** Get status about just what regenerate is doing */
 	@Override
 	public StringBuilder reportStatus( 
-		StringBuilder pBuffer 
+		StringBuilder 	pBuffer
+	, 	boolean 		pBriefly	
 	) {
-		pBuffer.append( "Status Not Implemented" );
+		pBuffer.append( "BSP Status Not Implemented" );
 		return( pBuffer );
 	}
 

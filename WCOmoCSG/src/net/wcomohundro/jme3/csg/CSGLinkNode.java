@@ -88,7 +88,8 @@ public class CSGLinkNode
 	/** Get status about just what regenerate is doing */
 	@Override
 	public synchronized StringBuilder reportStatus( 
-		StringBuilder pBuffer
+		StringBuilder 	pBuffer
+	, 	boolean 		pBriefly	
 	) {
 		if ( pBuffer == null ) pBuffer = new StringBuilder( 256 );
 		
@@ -96,13 +97,17 @@ public class CSGLinkNode
 		if ( mRegenNS < 0 ) {
 			// Work in progress
 			if ( mActiveElement != null ) {
-				mActiveElement.reportStatus( pBuffer );
+				mActiveElement.reportStatus( pBuffer, pBriefly );
 			}
 		} else {
 			// Report on what happened
-			pBuffer.append( ": " )
-				   .append( mRegenNS / 1000000 )
-				   .append( "ms" );
+			if ( pBriefly ) {
+				// ????
+			} else {
+				pBuffer.append( ": " )
+					   .append( mRegenNS / 1000000 )
+					   .append( "ms" );
+			}
 		}
 		return( pBuffer );
 	}

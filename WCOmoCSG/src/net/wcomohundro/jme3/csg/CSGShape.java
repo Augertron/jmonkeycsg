@@ -247,7 +247,8 @@ public class CSGShape
 		
 		/** Get status about just what regenerate is doing */
 		public StringBuilder reportStatus( 
-			StringBuilder pBuffer 
+			StringBuilder 	pBuffer 
+		,	boolean			pBriefly
 		);
 	}
 	
@@ -373,7 +374,7 @@ public class CSGShape
 	/** Generic constructor */
 	public CSGShape(
 	) {
-		this( (String)"CSGShape", null, null, 0 );
+		this( (String)"CSGShape", 0 );
 	}
 	/** Constructor based on a mesh */
 	public CSGShape(
@@ -533,10 +534,11 @@ public class CSGShape
 	/** Get status about just what regenerate is doing */
 	@Override
 	public StringBuilder reportStatus( 
-		StringBuilder pBuffer 
+		StringBuilder 	pBuffer
+	, 	boolean 		pBriefly	
 	) {
 		if ( this.mHandler != null ) {
-			pBuffer = this.mHandler.reportStatus( pBuffer );
+			pBuffer = this.mHandler.reportStatus( pBuffer, pBriefly );
 		}
 		return( pBuffer );
 	}

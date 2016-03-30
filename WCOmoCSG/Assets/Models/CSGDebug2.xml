@@ -1,88 +1,182 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGGeonode name='CircleE' id='CircleE'
-			deferRegeneration='false'
-       		singleMaterial='false' 
-       		generateTangentBinormal='false'
-       		shadow_mode='CastAndReceive'
-       		materialName='Textures/Debug/Normals.xml' >
-       		<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml' -->
-       		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml' -->
-       		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
-       		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
-       		<!-- materialName='Textures/Debug/Normals.xml' -->
-       		<!-- materialName='Textures/Debug/Wireframe.xml' -->
+<!-- Carving a notch out of a ring shows extreme sensitvity to the OnPlane epsilon -->
+<net.wcomohundro.jme3.csg.CSGLinkNode name='Cylinders'>
+    <!-- 1.0e-8 leaves a remnant, FastMath.FLT_EPSILON works fine on E but not F, 2.0e-7 works for both E and F -->
 	<csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB'
 		doublePrecision='true' structuralDebug='true' preTransform='true' 
-		XXepsilonOnPlane='2.0e-7'/>
-       		
-    <!-- Define some common items for later reference  -->
-    <library>
-    	<MapEntry key='TheNotch'>
-	    	<Savable class='com.jme3.scene.Node' name='Notch'>
-				<!-- This outer node allows the cylinder to be positioned internally below, and then again
-				     externally by the item that includes this notch -->
-				<children>
-					<net.wcomohundro.jme3.csg.CSGGeometry name='Notch' XXmaterialName='Textures/Debug/Wireframe.xml'>
-					   	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
-					   	 		xExtent='0.5' yExtent='0.5' zExtent='6.0' >
-						</mesh>
-						<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
-							<!-- y puts end of notch in the center, where the z height is 3.5 (plus a portion of the radius -->
-					        <translation class='com.jme3.math.Vector3f' x='0' y='6.0' z='3.75' zz='3.85'/>
-					        <!-- PITCH is the arctangent of width of a ring : difference in height between rings -->
-					        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='2.0344439368'/>
-					    </csgtransform>
-					</net.wcomohundro.jme3.csg.CSGGeometry>
-				</children>
-			</Savable>
-		</MapEntry>
-
-    	<MapEntry key='ALight'>
-	       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
-	       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0.5' a='1'/>
-	       	</Savable>
-	    </MapEntry>
-	       	
-	</library>
-    
-    <!-- This light will apply to everything, both inside and out -->
-    <lights class='com.jme3.light.LightList'>
-		<lights>
-			<com.jme3.light.AmbientLight ref='ALight'/>
-		</lights>
-    </lights>
-           
-    <shapes>
-    	<net.wcomohundro.jme3.csg.CSGShape name='Ring'>
-    		<shapes>
-		       	<net.wcomohundro.jme3.csg.CSGShape name='Exterior'>
-		        	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-		        	 		axisSamples='16' closed='true' zExtent='2.0' 
-		        	 		radialSamples='32' radius='7' 
-		        	 		firstRadial='0PI' textureMode='CAN'>
-			        </mesh>
-		   		</net.wcomohundro.jme3.csg.CSGShape>
-				<net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'>
-		        	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
-		        	 		axisSamples='16' closed='true' zExtent='2.1' 
-		        	 		radialSamples='32' radius='6' 
-		        	 		firstRadial='0PI' textureMode='CAN'>
-			        </mesh>
-				</net.wcomohundro.jme3.csg.CSGShape>
-			</shapes>
-			<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
-		        <translation class='com.jme3.math.Vector3f' x='0' y='0' z='2.0'/>
-		    </csgtransform>
-		</net.wcomohundro.jme3.csg.CSGShape>
+		epsilonOnPlane='2.0e-7' YYepsilonOnPlane='1.1920928955078125e-7' XXepsilonOnPlane='1.0e-8'/>
 		
-		<!-- Carve out the notches, this one leaves a unexpected remnant in the center -->
-		<net.wcomohundro.jme3.csg.CSGShape name='Notch2' operator='DIFFERENCE'>
-			<spatial class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial' 
-		        			reference='TheNotch' cloneAs='Notch2'>
-				<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
-			        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='2PI/7' />
-			    </csgtransform>
-			</spatial>
-		</net.wcomohundro.jme3.csg.CSGShape>
-    </shapes>
-</net.wcomohundro.jme3.csg.CSGGeonode>
+	<children>
+		<net.wcomohundro.jme3.csg.CSGGeonode name='CircleE' id='CircleE'
+					deferRegeneration='false'
+		       		singleMaterial='false' 
+		       		generateTangentBinormal='false'
+		       		shadow_mode='CastAndReceive'
+		       		materialName='Textures/Debug/Normals.xml' >
+		       		<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml' -->
+		       		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml' -->
+		       		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+		       		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
+		       		<!-- materialName='Textures/Debug/Normals.xml' -->
+		       		<!-- materialName='Textures/Debug/Wireframe.xml' -->
+		    <!-- Define some common items for later reference  -->
+		    <library>
+		    	<MapEntry key='TheNotch'>
+			    	<Savable class='com.jme3.scene.Node' name='Notch'>
+						<!-- This outer node allows the cylinder to be positioned internally below, and then again
+						     externally by the item that includes this notch -->
+						<children>
+							<net.wcomohundro.jme3.csg.CSGGeometry name='Notch' XXmaterialName='Textures/Debug/Wireframe.xml'>
+							   	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+							   	 		xExtent='0.5' yExtent='0.5' zExtent='6.0' >
+								</mesh>
+								<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+									<!-- y puts end of notch in the center, where the z height is 3.5 (plus a portion of the radius -->
+							        <translation class='com.jme3.math.Vector3f' x='0' y='6.0' z='3.75' zz='3.85'/>
+							        <!-- PITCH is the arctangent of width of a ring : difference in height between rings -->
+							        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='2.0344439368'/>
+							    </csgtransform>
+							</net.wcomohundro.jme3.csg.CSGGeometry>
+						</children>
+					</Savable>
+				</MapEntry>
+		
+		    	<MapEntry key='ALight'>
+			       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+			       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0.5' a='1'/>
+			       	</Savable>
+			    </MapEntry>
+			       	
+			</library>
+		    
+		    <!-- This light will apply to everything, both inside and out -->
+		    <lights class='com.jme3.light.LightList'>
+				<lights>
+					<com.jme3.light.AmbientLight ref='ALight'/>
+				</lights>
+		    </lights>
+		           
+		    <shapes>
+		    	<net.wcomohundro.jme3.csg.CSGShape name='Ring'>
+		    		<shapes>
+				       	<net.wcomohundro.jme3.csg.CSGShape name='Exterior'>
+				        	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+				        	 		axisSamples='16' closed='true' zExtent='2.0' 
+				        	 		radialSamples='32' radius='7' 
+				        	 		firstRadial='0PI' textureMode='CAN'>
+					        </mesh>
+				   		</net.wcomohundro.jme3.csg.CSGShape>
+						<net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'>
+				        	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+				        	 		axisSamples='16' closed='true' zExtent='2.1' 
+				        	 		radialSamples='32' radius='6' 
+				        	 		firstRadial='0PI' textureMode='CAN'>
+					        </mesh>
+						</net.wcomohundro.jme3.csg.CSGShape>
+					</shapes>
+					<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+				        <translation class='com.jme3.math.Vector3f' x='0' y='0' z='2.0'/>
+				    </csgtransform>
+				</net.wcomohundro.jme3.csg.CSGShape>
+				
+				<!-- Carve out the notches, this one leaves a unexpected remnant in the center -->
+				<net.wcomohundro.jme3.csg.CSGShape name='Notch2' operator='DIFFERENCE'>
+					<spatial class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial' 
+				        			reference='TheNotch' cloneAs='Notch2'>
+						<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+					        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='2PI/7' />
+					    </csgtransform>
+					</spatial>
+				</net.wcomohundro.jme3.csg.CSGShape>
+		    </shapes>
+		</net.wcomohundro.jme3.csg.CSGGeonode>
+		
+		<net.wcomohundro.jme3.csg.CSGGeonode name='CircleF' id='CircleF'
+					deferRegeneration='false'
+		       		singleMaterial='false' 
+		       		generateTangentBinormal='false'
+		       		shadow_mode='CastAndReceive'
+		       		materialName='Textures/Debug/Normals.xml' >
+		       		<!-- materialName='Textures/CobbleStone/CobbleStoneRpt.xml' -->
+		       		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml' -->
+		       		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+		       		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
+		       		<!-- materialName='Textures/Debug/Normals.xml' -->
+		       		<!-- materialName='Textures/Debug/Wireframe.xml' -->
+		    <!-- Define some common items for later reference  -->
+		    <library>
+		    	<MapEntry key='TheNotch'>
+			    	<Savable class='com.jme3.scene.Node' name='Notch'>
+						<!-- This outer node allows the cylinder to be positioned internally below, and then again
+						     externally by the item that includes this notch -->
+						<children>
+							<net.wcomohundro.jme3.csg.CSGGeometry name='Notch' XXmaterialName='Textures/Debug/Wireframe.xml'>
+							   	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+							   	 		xExtent='0.5' yExtent='0.5' zExtent='6.0' >
+								</mesh>
+								<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+									<!-- y puts end of notch in the center, where the z height is 3.5 (plus a portion of the radius -->
+							        <translation class='com.jme3.math.Vector3f' x='0' y='6.0' z='4.1' zz='3.85'/>
+							        <!-- PITCH is the arctangent of width of a ring : difference in height between rings -->
+							        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='2.0344439368'/>
+							    </csgtransform>
+							</net.wcomohundro.jme3.csg.CSGGeometry>
+						</children>
+					</Savable>
+				</MapEntry>
+		
+		    	<MapEntry key='ALight'>
+			       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+			       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0.5' a='1'/>
+			       	</Savable>
+			    </MapEntry>
+			       	
+			</library>
+			
+			<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+		        <translation class='com.jme3.math.Vector3f' x='30' y='0' z='0'/>
+		    </csgtransform>
+		    
+		    <!-- This light will apply to everything, both inside and out -->
+		    <lights class='com.jme3.light.LightList'>
+				<lights>
+					<com.jme3.light.AmbientLight ref='ALight'/>
+				</lights>
+		    </lights>
+		           
+		    <shapes>
+		    	<net.wcomohundro.jme3.csg.CSGShape name='Ring'>
+		    		<shapes>
+				       	<net.wcomohundro.jme3.csg.CSGShape name='Exterior'>
+				        	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+				        	 		axisSamples='16' closed='true' zExtent='4.2' 
+				        	 		radialSamples='32' radius='10.1' 
+				        	 		firstRadial='0PI' textureMode='CAN'>
+					        </mesh>
+				   		</net.wcomohundro.jme3.csg.CSGShape>
+						<net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'>
+				        	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+				        	 		axisSamples='16' closed='true' zExtent='4.3' 
+				        	 		radialSamples='32' radius='9.2' 
+				        	 		firstRadial='0PI' textureMode='CAN'>
+					        </mesh>
+						</net.wcomohundro.jme3.csg.CSGShape>
+					</shapes>
+					<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+				        <translation class='com.jme3.math.Vector3f' x='0' y='0' z='2.0'/>
+				    </csgtransform>
+				</net.wcomohundro.jme3.csg.CSGShape>
+				
+				<!-- Carve out the notches, this one leaves a unexpected remnant in the center -->
+				<net.wcomohundro.jme3.csg.CSGShape name='Notch2' operator='DIFFERENCE'>
+					<spatial class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial' 
+				        			reference='TheNotch' cloneAs='Notch2'>
+						<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+					        <rot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='16PI/11' />
+					    </csgtransform>
+					</spatial>
+				</net.wcomohundro.jme3.csg.CSGShape>
+		    </shapes>
+		</net.wcomohundro.jme3.csg.CSGGeonode>
+	</children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

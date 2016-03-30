@@ -554,7 +554,8 @@ public class CSGGeometry
 	/** Get status about just what regenerate is doing */
 	@Override
 	public synchronized StringBuilder reportStatus( 
-		StringBuilder pBuffer
+		StringBuilder 	pBuffer
+	, 	boolean 		pBriefly	
 	) {
 		if ( pBuffer == null ) pBuffer = new StringBuilder( 256 );
 		
@@ -566,14 +567,18 @@ public class CSGGeometry
 			// Work in progress
 			if ( mActiveProduct != null ) {
 				pBuffer.append( "[" );
-				mActiveProduct.reportStatus( pBuffer );
+				mActiveProduct.reportStatus( pBuffer, pBriefly );
 				pBuffer.append( "]" );
 			}
 		} else {
 			// Report on what happened
-			pBuffer.append( ": " )
-				   .append( mRegenNS / 1000000 )
-				   .append( "ms" );
+			if ( pBriefly ) {
+				pBuffer.append( " complete" );
+			} else {
+				pBuffer.append( ": " )
+					   .append( mRegenNS / 1000000 )
+					   .append( "ms" );
+			}
 		}
 		return( pBuffer );
 	}

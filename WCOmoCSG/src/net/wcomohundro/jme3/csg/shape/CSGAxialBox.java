@@ -232,11 +232,24 @@ public class CSGAxialBox
 	/** Accessors to the extents */
 	@Override
     public float getXExtent() { return mExtentX; }
+	@Override
     public void setXExtent( float pExtent ) { mExtentX = pExtent; }
     
     @Override
     public float getYExtent() { return mExtentY; }
+    @Override
     public void setYExtent( float pExtent ) { mExtentY = pExtent; }
+    
+    @Override
+    public float getRadius() { return( (mExtentX + mExtentY) / 2.0f ); }
+    @Override
+    public void setRadius( 
+    	float pRadius 
+    ) {
+    	mExtentX = pRadius;
+    	mExtentY = pRadius;
+    }
+
     
     /** Apply gradient vertex colors */
     @Override
@@ -441,9 +454,9 @@ public class CSGAxialBox
         // Let the super do its thing
         super.read( pImporter );
         
-        // Basic configuration (NOTE that z defaults to zero to detect not-supplied)
-        mExtentX = inCapsule.readFloat( "xExtent", 1 );
-        mExtentY = inCapsule.readFloat( "yExtent", 1 );
+        // NOTE that super x/y/z default to zero to detect not-supplied
+        if ( mExtentX == 0 ) mExtentX = 1.0f;
+        if ( mExtentY == 0 ) mExtentY = 1.0f;
         if ( mExtentZ == 0 ) mExtentZ = 1.0f;
 
         if ( mGeneratedFacesMask == 0 ) {

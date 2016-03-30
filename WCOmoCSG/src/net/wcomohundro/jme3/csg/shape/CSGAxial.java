@@ -68,6 +68,8 @@ import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
  	the iterations along Z, and callback methods determine the details of the shape 
  	being generated.  In particular, there are various ways of measuring how far along Z
  	the process has gone.
+ 	
+ 	The concepts of X/Y extent versus Radius are supported for subclass interpretation.
  */
 public abstract class CSGAxial 
 	extends CSGMesh
@@ -106,14 +108,23 @@ public abstract class CSGAxial
     public int getAxisSamples() { return mAxisSamples; }
     public void setAxisSamples( int pSampleCount ) { mAxisSamples = pSampleCount; }
     
+    /** X/Y/Radius are abstracted for subclass support */
+    public abstract float getXExtent();
+    public abstract void setXExtent( float pXExtent );
+    
+    public abstract float getYExtent();
+    public abstract void setYExtent( float pYExtent );
+    
+    public abstract float getRadius();
+    public abstract void setRadius( float pRadius );
+
+    /** Z extent is defined for all Axials */
     public float getZExtent() { return mExtentZ; }
     public void setZExtent( float pZExtent ) { mExtentZ = pZExtent; }
     
     public float getHeight() { return mExtentZ * 2; }
     public void setHeight( float pHeight ) { mExtentZ = pHeight / 2.0f; }
     
-    public abstract float getXExtent();
-    public abstract float getYExtent();
 
     
     /** An Axial is considered 'closed' if the front/back faces are generated */
@@ -366,6 +377,12 @@ public abstract class CSGAxial
         		// An explicit height sets the zExtent
         		mExtentZ = aHeight / 2.0f;
         	}
+        }
+        // Likewise for x/y/radius
+        setRadius( inCapsule.readFloat( "radius", 0 ) );
+        if ( getRadius() == 0 ) {
+        	setXExtent( inCapsule.readFloat( "xExtent", 0 ) );
+        	setYExtent( inCapsule.readFloat( "yExtent", 0 ) );
         }
     }
         
