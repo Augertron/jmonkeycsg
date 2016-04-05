@@ -49,10 +49,10 @@ public class CSGEnvironmentIOB
 	// Tolerance to decide if a given point in 'on' a plane
 	public static final float EPSILON_ONPLANE_FLT = 1.0e-6f;
 	public static final double EPSILON_ONPLANE_DBL = 2.0e-7; // FastMath.FLT_EPSILON; // 1.0e-8;
-	// NOTE that using the e-8 value resulted in test case Debug2 including a bogus triangle
-	//      this was due to Segment processing not recognizing a vertex on a Boundary
+	// NOTE that using the 1.0e-8 value resulted in test case Debug2 including a bogus triangle
+	//      which was due to Segment processing not recognizing a vertex on a Boundary.
 	//		Likewise, FastMath.FLT_EPSILON resulted in a bogus triangle with the expanded Debug2
-	//		with a larger ring.
+	//		with a larger ring.  As of 30Mar2016, the 2.0e-7 value is working.
 
 	// Tolerance to determine if two points are close enough to be considered the same point
 	public static final float EPSILON_BETWEEN_POINTS_FLT = 1.0e-6f;

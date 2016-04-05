@@ -178,19 +178,20 @@
             		textureMode='FLAT_LINEAR'>
             </mesh>
         </com.jme3.scene.Geometry>
-        <com.jme3.scene.Geometry name='DegenerateTriangleCylinder'
+        <net.wcomohundro.jme3.csg.CSGGeometry name='DegenerateTriangleCylinder'
        			materialName='Textures/BrickWall/BrickWallRpt.xml' >
        			<!--  materialName='Textures/Debug/Normals.xml' > -->
        			<!-- materialName='Textures/BrickWall/BrickWall.xml' > -->
         		<!-- materialName='Textures/Debug/Wireframe.xml'-->	
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='6.0' y='-3.0'/>
-            </transform>
+            <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+                <translation class='com.jme3.math.Vector3f' x='-10.0' y='-25.0'/>
+                <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='-1PI/2' />
+            </csgtransform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
             		closed='true' axisSamples='2' radialSamples='3' firstRadial='PI/2' radius='1.4' zExtent='1'
-            		textureMode='FLAT'>
+            		textureMode='CAN'>
             </mesh>
-        </com.jme3.scene.Geometry>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
         <com.jme3.scene.Geometry name='WireframeCylinder'
         		materialName='Textures/Debug/Wireframe.xml'>	
             <transform class='com.jme3.math.Transform'>

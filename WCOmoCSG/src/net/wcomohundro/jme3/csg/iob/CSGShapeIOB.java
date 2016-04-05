@@ -284,7 +284,7 @@ public class CSGShapeIOB
 	
 	/** Accessor to the list of faces */
 	protected List<CSGFace> getFaces(
-		CSGMeshManager		pMaterialManager
+		CSGMeshManager		pMeshManager
 	,	int					pLevelOfDetail
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
@@ -294,7 +294,7 @@ public class CSGShapeIOB
 			// Generate the faces
 			mFaces = fromMesh( aMesh
 								, mShape.getCSGTransform( pEnvironment )
-								, pMaterialManager
+								, pMeshManager
 								, pLevelOfDetail
 								, pTempVars
 								, pEnvironment );
@@ -306,17 +306,17 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape union(
 		CSGShape			pOther
-	,	CSGMeshManager		pMaterialManager
+	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
 	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
-			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+			= this.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 		List<CSGFace> otherFaceList 
-			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+			= otherIOB.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
 		
 		List<CSGFace> newFaceList
@@ -337,17 +337,17 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape difference(
 		CSGShape			pOther
-	,	CSGMeshManager		pMaterialManager
+	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
 	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
-			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+			= this.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 		List<CSGFace> otherFaceList 
-			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+			= otherIOB.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
 		
 		List<CSGFace> newFaceList
@@ -368,17 +368,17 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape intersection(
 		CSGShape			pOther
-	,	CSGMeshManager		pMaterialManager
+	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
 	)  throws CSGConstructionException {
 		List<CSGFace> thisFaceList 
-			= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+			= this.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		CSGSolid thisSolid = new CSGSolid( thisFaceList, mStatistics );
 		
 		CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 		List<CSGFace> otherFaceList 
-			= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+			= otherIOB.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		CSGSolid otherSolid = new CSGSolid( otherFaceList, mStatistics );
 		
 		List<CSGFace> newFaceList
@@ -399,7 +399,7 @@ public class CSGShapeIOB
 	@Override
 	public CSGShape merge(
 		CSGShape			pOther
-	,	CSGMeshManager		pMaterialManager
+	,	CSGMeshManager		pMeshManager
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironmentIOB	pEnvironment
 	)  throws CSGConstructionException {
@@ -407,11 +407,11 @@ public class CSGShapeIOB
 		if ( this.mShape.isValid() ) {
 			if ( pOther.isValid() ) {
 				List<CSGFace> thisFaceList 
-					= this.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+					= this.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 				
 				CSGShapeIOB otherIOB = (CSGShapeIOB)pOther.getHandler( pEnvironment, this );
 				List<CSGFace> otherFaceList 
-					= otherIOB.getFaces( pMaterialManager, 0, pTempVars, pEnvironment );
+					= otherIOB.getFaces( pMeshManager, 0, pTempVars, pEnvironment );
 		
 				this.mFaces.addAll( otherFaceList );
 			} else {

@@ -460,7 +460,7 @@ public class CSGGeometry
 					case UNION:
 						if ( mActiveProduct == null ) {
 							// A place to start
-							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), tempVars, pEnvironment );
 						} else {
 							// Blend together
 							mActiveProduct = mActiveProduct.union( aShape.refresh(), meshManager, tempVars, pEnvironment );
@@ -479,7 +479,7 @@ public class CSGGeometry
 					case INTERSECTION:
 						if ( mActiveProduct == null ) {
 							// A place to start
-							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), tempVars, pEnvironment );
 						} else {
 							// Blend together
 							mActiveProduct = mActiveProduct.intersection( aShape.refresh(), meshManager, tempVars, pEnvironment );
@@ -493,7 +493,7 @@ public class CSGGeometry
 					case MERGE:
 						if ( mActiveProduct == null ) {
 							// A place to start
-							mActiveProduct = aShape.clone( meshManager, getLodLevel(), pEnvironment );
+							mActiveProduct = aShape.clone( meshManager, getLodLevel(), tempVars, pEnvironment );
 						} else {
 							// Treat a compound mesh as a single mesh
 							mActiveProduct = mActiveProduct.merge( aShape.refresh(), meshManager, tempVars, pEnvironment );

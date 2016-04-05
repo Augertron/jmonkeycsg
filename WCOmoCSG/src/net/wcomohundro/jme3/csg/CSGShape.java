@@ -355,6 +355,8 @@ public class CSGShape
 	protected List<CSGFaceProperties>	mFaceProperties;
 	/** List of optional 'decorations' attached to this shape, which transfer to the resultant Mesh */
 	protected List<Spatial>				mDecorations;
+	/** Custom rendering node used within the final product */
+	protected CSGNode					mRenderNode;
 	/** Nanoseconds needed to regenerate this shape */
 	protected long						mRegenNS;
 	/** Flag if underlying mesh has already been prepared */
@@ -492,6 +494,10 @@ public class CSGShape
 			// Carry forward any transform that the Spatial knows of
 			this.localTransform = pSpatial.getLocalTransform().clone();
 			
+			// Carry forward any lights the Spatial knows of
+			for( Light aLight : pSpatial.getLocalLightList() ) {
+				this.addLight( aLight );
+			}
 			// How to interpret the mesh of the given spatial
 			if ( pSpatial instanceof CSGGeonode ) {
 				// Use the overall Geometry as the representation of the Geonode
@@ -557,11 +563,17 @@ public class CSGShape
 	@Override
 	public CSGShape clone(
 	) {
-		return( clone( null, this.getLodLevel(), CSGEnvironment.resolveEnvironment() ) );
+		CSGTempVars tempVars = CSGTempVars.get();
+		try {
+			return( clone( null, this.getLodLevel(), tempVars, CSGEnvironment.resolveEnvironment() ) );
+		} finally {
+			tempVars.release();
+		}
 	}
 	public CSGShape clone(
 		CSGMeshManager		pMeshManager
 	,	int					pLODLevel
+	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) {
 		CSGShape aClone;
@@ -598,6 +610,9 @@ public class CSGShape
 		pMeshManager.resolveMeshIndex( null, aClone.getMaterial(), null, aClone );
 		
 		aClone.mHandler = this.getHandler( pEnvironment, null ).clone( aClone );
+		
+		// Ensure the copy is ready for use 
+		aClone = aClone.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( aClone );
 	}
 	
@@ -668,6 +683,9 @@ public class CSGShape
 	public String[] getSharedLights() { return mSharedLights; }
 	public void setSharedLights( String[] pSharedLights ) { mSharedLights = pSharedLights; }
 	
+	/** Accessor to the custom rendering node used in the final product */
+	public CSGNode getRenderNode() { return mRenderNode; }
+	public void setRenderNode( CSGNode pNode ) { mRenderNode = pNode; }
 	
 	/** Ready a list of shapes for processing */
 	public List<CSGShape> prepareShapeList(
@@ -801,7 +819,7 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
-		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
+		CSGShape useShape = this; //this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment, null ).union( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
@@ -813,7 +831,7 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
-		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
+		CSGShape useShape = this; //this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment, null ).difference( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
@@ -825,7 +843,7 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
-		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
+		CSGShape useShape = this; // this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment, null ).intersection( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
@@ -837,7 +855,7 @@ public class CSGShape
 	,	CSGTempVars			pTempVars
 	,	CSGEnvironment		pEnvironment
 	) throws CSGConstructionException {
-		CSGShape useShape = this.prepareShape( pMeshManager, pTempVars, pEnvironment );
+		CSGShape useShape = this; // this.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		CSGShape useOther = pOtherShape.prepareShape( pMeshManager, pTempVars, pEnvironment );
 		return( useShape.getHandler( pEnvironment, null ).merge( useOther, pMeshManager, pTempVars, pEnvironment ) );
 	}
@@ -1128,7 +1146,7 @@ public class CSGShape
 				case UNION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( pMeshManager, this.getLodLevel(), pEnvironment );
+						aProduct = aShape.clone( pMeshManager, this.getLodLevel(), pTempVars, pEnvironment );
 					} else {
 						// Blend together
 						aProduct = aProduct.union( aShape.refresh(), pMeshManager, pTempVars, pEnvironment );
@@ -1147,7 +1165,7 @@ public class CSGShape
 				case INTERSECTION:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( pMeshManager, this.getLodLevel(), pEnvironment );
+						aProduct = aShape.clone( pMeshManager, this.getLodLevel(), pTempVars, pEnvironment );
 					} else {
 						// Blend together
 						aProduct = aProduct.intersection( aShape.refresh(), pMeshManager, pTempVars, pEnvironment );
@@ -1161,7 +1179,7 @@ public class CSGShape
 				case MERGE:
 					if ( aProduct == null ) {
 						// A place to start
-						aProduct = aShape.clone( pMeshManager, this.getLodLevel(), pEnvironment );
+						aProduct = aShape.clone( pMeshManager, this.getLodLevel(), pTempVars, pEnvironment );
 					} else {
 						// Treat multiple meshes as a single mesh
 						aProduct = aProduct.merge( aShape.refresh(), pMeshManager, pTempVars, pEnvironment );
@@ -1173,6 +1191,18 @@ public class CSGShape
 			if ( this.getName() != null ) {
 				// Apply the explicit name of 'this' shape to the resultant blend
 				aProduct.setName( this.getName() );
+			}
+			if ( this.getLocalLightList().size() > 0 ) {
+				// Local lights on this shape must be applied to the end product
+				// This can be done by duplicating the light controls from this shape
+				aProduct.mLightControls = CSGLightControl.configureLightControls( null
+																					, null
+																					, getLocalLightList()
+																					, true
+																					, getLocalTransform() );
+			}
+			if ( this.mRenderNode != null ) {
+				aProduct.mRenderNode = this.mRenderNode;
 			}
 			// Is there a per shape transform to apply?
 			Transform shapeTransform = this.getCSGTransform( pEnvironment );

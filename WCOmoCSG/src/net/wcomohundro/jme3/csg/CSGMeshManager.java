@@ -194,7 +194,10 @@ public class CSGMeshManager
 					CSGNode aNode = nodeMap.get( stringKey );
 					if ( aNode == null ) {
 						// This shape's Node has not yet been created
-						aNode = new CSGNode( meshInfo.resolveName( pCoreName + i + "Node" ) );
+						aNode = meshInfo.mRenderNode;
+						if ( aNode == null ) {
+							aNode = new CSGNode( meshInfo.resolveName( pCoreName + i + "Node" ) );
+						}
 						aList.add( aNode );
 						nodeMap.put( stringKey, aNode );
 						
@@ -424,7 +427,7 @@ public class CSGMeshManager
 			useInfo = genericInfo;
 			
 		} else {
-			// The material's key is used to share the same material/lights/physics
+			// The mesh key is used to share the same material/lights/physics
 			if ( (meshKey != null) && mMeshMap.containsKey( meshKey ) ) {
 				// Use the info already found
 				useInfo = mMeshMap.get( meshKey );
@@ -442,7 +445,8 @@ public class CSGMeshManager
 											, (pMeshName != null)
 											, pMaterial
 											, lightControls, sharedLights, aLightListKey
-											, aPhysics, aPhysicsKey );
+											, aPhysics, aPhysicsKey
+											, pShape.getRenderNode() );
 				if ( meshKey != null ) {
 					// Track the material by its AssetKey
 					mMeshMap.put( meshKey, useInfo );
@@ -509,6 +513,8 @@ class CSGMeshInfo
 	protected String			mPhysicsKey;
 	/** Special decorations to attach to the generated mesh */
 	protected List<Spatial>		mDecorations;
+	/** Custom node used for final rendering */
+	protected CSGNode			mRenderNode;
 	/** The generated mesh */
 	protected Mesh				mMesh;
 	
@@ -546,6 +552,7 @@ class CSGMeshInfo
 	,	String				pLightListKey
 	,	PhysicsControl		pPhysics
 	,	String				pPhysicsKey
+	,	CSGNode				pCustomRenderingNode
 	) {
 		this.mIndex = pIndex;
 		this.mName = pName;
@@ -561,6 +568,8 @@ class CSGMeshInfo
 		// Remember the active physics
 		this.mPhysics = pPhysics;
 		this.mPhysicsKey = pPhysicsKey;
+		
+		this.mRenderNode = pCustomRenderingNode;
 	}
 	CSGMeshInfo(
 		Integer			pIndex
@@ -579,10 +588,17 @@ class CSGMeshInfo
 	public String resolveName(
 		String		pDefault
 	) {
-		if ( this.mName == null ) {
+		String aName = null;
+		if ( this.mRenderNode != null ) {
+			aName = this.mRenderNode.getName();
+		}
+		if ( aName == null ) {
+			aName = this.mName;
+		}
+		if ( aName == null ) {
 			return( pDefault );
 		} else {
-			return( this.mName );
+			return( aName );
 		}
 	}
 	
