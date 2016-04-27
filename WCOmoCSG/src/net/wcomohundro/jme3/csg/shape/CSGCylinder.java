@@ -223,9 +223,10 @@ public class CSGCylinder
         // Let the super do its thing
         super.read( pImporter );
 
-        // Standard trigger of updateGeometry() to build the shape 
-        this.updateGeometry();
-        
+        // Standard trigger of updateGeometry() to build the shape, unless the radius tells us to defer
+        if ( mRadius > 0 ) {
+        	this.updateGeometry();
+        }        
         // Any special color processing?
         List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
         if ( colors != null ) {

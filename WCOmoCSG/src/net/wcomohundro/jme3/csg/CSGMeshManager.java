@@ -159,7 +159,7 @@ public class CSGMeshManager
 		
 		List<Spatial> aList = new ArrayList( mMeshCount + 1 );
 		for( int i = 0; i <= mMeshCount; i += 1 ) {
-			Spatial aSpatial;
+			Geometry aSpatial;
 			CSGMeshInfo meshInfo = mMeshMap.get( new Integer( i ) );
 			
 			// We are only interested in 'real' meshes
@@ -167,6 +167,8 @@ public class CSGMeshManager
 				// Build a Geometry that covers the given mesh with the desired Material,
 				// applying local lights/physics as needed
 				aSpatial = new Geometry( meshInfo.resolveName( pCoreName + i ), meshInfo.mMesh );
+				aSpatial.updateModelBound();			// I am not 100% sure this is needed
+				
 				if ( meshInfo.mMaterial != null ) {
 					aSpatial.setMaterial( meshInfo.mMaterial.clone() );
 				}

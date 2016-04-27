@@ -765,9 +765,10 @@ if ( true ) {
         mPipeEnds = inCapsule.readEnum( "pipeEnds", PipeEnds.class, PipeEnds.STANDARD );
         mSmoothSurface = inCapsule.readBoolean( "smoothSurface",  false );
 
-        // Standard trigger of updateGeometry() to build the shape 
-        this.updateGeometry();
-        
+        // Standard trigger of updateGeometry() to build the shape, unless the radius tells us to defer
+        if ( mRadius > 0 ) {
+        	this.updateGeometry();
+        }        
         // Any special color processing?
         List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
         if ( colors != null ) {

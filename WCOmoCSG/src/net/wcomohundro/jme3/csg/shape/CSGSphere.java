@@ -190,7 +190,8 @@ public class CSGSphere
             
             switch( mTextureMode ) {
             case POLAR:
-            	break;
+            	// I am not quite sure if the following applies to polar????
+            	// (but is better than nothing at this time)
             	
             case ZAXIS:
             case PROJECTED:
@@ -513,9 +514,10 @@ public class CSGSphere
         	// So what does this mean?
         	throw new IOException( "CSGSphere radius/zExtent mismatch" );
         }
-        // Standard trigger of updateGeometry() to build the shape 
-        this.updateGeometry();
-        
+        // Standard trigger of updateGeometry() to build the shape, unless the radius tells us to defer
+        if ( mRadius > 0 ) {
+        	this.updateGeometry();
+        }
         // Any special color processing?
         List<ColorRGBA> colors = inCapsule.readSavableArrayList( "colorGradient", null );
         if ( colors != null ) {
