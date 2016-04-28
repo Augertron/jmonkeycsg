@@ -164,8 +164,13 @@ public class CSGConstructionException
 			   .append( ": " )
 			   .append( this.getLocalizedMessage() );
 		if ( mElement != null ) {
-			pBuffer.append( ", element: " )
+			pBuffer.append( "\n\telement: " )
 			       .append( mElement.asSpatial().getName() );
+		}
+		Throwable aCause = this.getCause();
+		if ( aCause != null ) {
+			pBuffer.append( "\n\t" )
+				   .append( aCause.getLocalizedMessage() );
 		}
 	}
 
