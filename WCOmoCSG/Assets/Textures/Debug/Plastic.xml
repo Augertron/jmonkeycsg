@@ -1,0 +1,23 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<material class='com.jme3.material.Material' material_def='Common/MatDefs/Light/Lighting.j3md'>
+	<parameters>
+	    <MapEntry key='Shininess'>
+	        <Savable class='com.jme3.material.MatParam' name='Shininess' value_float='16.0' varType='Float'/>
+	    </MapEntry>
+	    <MapEntry key='Ambient'>
+	        <Savable class='com.jme3.material.MatParam' varType='Vector4' name='Ambient'>
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0.5' a='1.0'/>
+	        </Savable>
+	    </MapEntry>
+	    <MapEntry key='Diffuse'>
+	        <Savable class='com.jme3.material.MatParam' varType='Vector4' name='Diffuse'>
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='0.65' g='0.65' b='0.65' a='1.0'/>
+	        </Savable>
+	    </MapEntry>
+	    <MapEntry key='Specular'>
+	        <Savable class='com.jme3.material.MatParam' varType='Vector4' name='Specular'>
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='0.75' g='0.75' b='0.75' a='1.0'/>
+	        </Savable>
+	    </MapEntry>
+	</parameters>
+</material>

@@ -24,8 +24,11 @@
 **/
 package net.wcomohundro.jme3.csg.iob;
 
+import net.wcomohundro.jme3.csg.CSGShape.CSGShapeStatistics;
+
 /** Just a place to track some statistics */
 public class CSGStatsIOB 
+	implements CSGShapeStatistics
 {
 	/** Count of triangles processed */
 	protected int		mTriangleCount;
@@ -38,5 +41,15 @@ public class CSGStatsIOB
 	
 	/** Count of filtered faces */
 	protected int		mFilterCount;
-
+	
+	/** Statistics about what regenerate is doing */
+	public int getProgress(
+	) {
+		// Simple composite counter
+		int counter = mTriangleCount;
+		counter += mFaceCount;
+		counter += mClassificationCount;
+		counter += mFilterCount;
+		return( counter );
+	}
 }

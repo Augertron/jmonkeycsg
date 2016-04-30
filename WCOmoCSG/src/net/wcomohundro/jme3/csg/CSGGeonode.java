@@ -182,6 +182,11 @@ public class CSGGeonode
 		}
 		return( pBuffer );
 	}
+	@Override
+	public synchronized int getProgress(
+	) {
+		return( (mActiveProduct == null) ? 0 : mActiveProduct.getProgress() );
+	}
 
 	/** Access to the MasterGeometry that defines the overall shape */
 	public CSGGeometry getMasterGeometry() { return mMasterGeometry; }

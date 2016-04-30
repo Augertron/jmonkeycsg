@@ -56,6 +56,7 @@ import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
+import net.wcomohundro.jme3.csg.CSGShape.CSGShapeStatistics;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
@@ -199,6 +200,10 @@ public class CSGShapeIOB
 		return( this );
 	}
 	
+	/** Statistics about what regenerate is doing */
+	@Override
+	public CSGShapeStatistics getStaticstics() { return mStatistics; }
+
 	/** Get status about just what regenerate is doing */
 	@Override
 	public StringBuilder reportStatus( 

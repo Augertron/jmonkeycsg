@@ -237,6 +237,7 @@ public interface ConstructiveSolidGeometry
 		
 		/** Get status about just what regenerate is doing */
 		public StringBuilder reportStatus( StringBuilder pBuffer, boolean pBriefly );
+		public int getProgress();
 	}
 	
 	/** Basic Spatial/Geometry interface:

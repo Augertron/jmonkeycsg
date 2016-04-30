@@ -217,6 +217,9 @@ public class CSGNode
 	) {
 		return( pBuffer );
 	}
+	@Override
+	public synchronized int getProgress() { return 0; }
+
 
     /** Accessor to the Material (ala Geometry) */
 	@Override

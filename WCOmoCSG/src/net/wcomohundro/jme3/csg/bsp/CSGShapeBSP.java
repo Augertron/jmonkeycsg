@@ -47,6 +47,7 @@ import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
+import net.wcomohundro.jme3.csg.CSGShape.CSGShapeStatistics;
 import net.wcomohundro.jme3.csg.bsp.CSGPartition;
 import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
@@ -273,6 +274,10 @@ public class CSGShapeBSP
 		mPolygons = pPolygons;
 	}
 	
+	/** Statistics about what regenerate is doing */
+	@Override
+	public CSGShapeStatistics getStaticstics() { return null; }
+
 	/** Get status about just what regenerate is doing */
 	@Override
 	public StringBuilder reportStatus( 

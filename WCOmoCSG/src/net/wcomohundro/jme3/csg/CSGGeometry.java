@@ -582,6 +582,11 @@ public class CSGGeometry
 		}
 		return( pBuffer );
 	}
+	@Override
+	public synchronized int getProgress(
+	) {
+		return( (mActiveProduct == null) ? 0 : mActiveProduct.getProgress() );
+	}
 
 	/** Support the persistence of this Geometry */
 	@Override

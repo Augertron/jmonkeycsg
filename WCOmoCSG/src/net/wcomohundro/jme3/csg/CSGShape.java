@@ -174,6 +174,13 @@ public class CSGShape
 	,	USE_BOUNDING_SPHERE		// Use a sphere that encompasses the bounds
 	}
 	
+	/** Statistics interface */
+	public interface CSGShapeStatistics {	
+		/** Simple progress counter */
+		public int getProgress(
+		);
+	}
+
 	/** Handler interface */
 	public interface CSGShapeProcessor<CSGEnvironmentT> {
 		
@@ -250,7 +257,10 @@ public class CSGShape
 			StringBuilder 	pBuffer 
 		,	boolean			pBriefly
 		);
-	}
+		
+		/** Statistics about what regenerate is doing */
+		public CSGShapeStatistics getStaticstics();
+	}	
 	
 	/** Service routine to assigning unique identifiers */
 	protected static int sInstanceCounter;
@@ -547,6 +557,11 @@ public class CSGShape
 			pBuffer = this.mHandler.reportStatus( pBuffer, pBriefly );
 		}
 		return( pBuffer );
+	}
+	@Override
+	public int getProgress(
+	) {
+		return( (this.mHandler == null) ? 0 : this.mHandler.getStaticstics().getProgress() );
 	}
 
 	/** Ensure this shape is ready to be blended --

@@ -111,6 +111,11 @@ public class CSGLinkNode
 		}
 		return( pBuffer );
 	}
+	@Override
+	public synchronized int getProgress(
+	) {
+		return( (mActiveElement == null) ? 0 : mActiveElement.getProgress() );
+	}
 
     /** If physics is active for any subelement, connect it all up now */
     @Override
