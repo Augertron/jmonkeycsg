@@ -251,7 +251,9 @@ public class Application implements SystemListener {
     private void initDisplay(){
         // aquire important objects
         // from the context
-        settings = context.getSettings();
+// wco 23May2016 - blend via copyFrom rather than replacing instance, which allows the application to
+//  			   use an extension to the basic AppSettings
+        settings.copyFrom( context.getSettings() );
 
         // Only reset the timer if a user has not already provided one
         if (timer == null) {

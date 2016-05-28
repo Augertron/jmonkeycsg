@@ -53,7 +53,8 @@ import java.util.prefs.Preferences;
  *
  * @author Kirill Vainer
  */
-public final class AppSettings extends HashMap<String, Object> {
+//wco 23May2016 - I see no reason for this class to be final
+public class AppSettings extends HashMap<String, Object> {
 
     private static final long serialVersionUID = 1L;
     
