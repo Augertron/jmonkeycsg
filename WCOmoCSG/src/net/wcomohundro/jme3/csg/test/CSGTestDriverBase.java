@@ -86,9 +86,9 @@ public class CSGTestDriverBase
 	protected static void main(
 		CSGTestDriverAppItem[] 	pAppChoices
 	) {
-		System.out.println( "logging config: " 
+		System.out.println( "CSGTestDriverBase: logging config: " 
 					+ System.getProperty( "java.util.logging.config.file" )
-					+ "/" + System.getProperty( "java.util.logging.config.class" ) );
+					+ " -- " + System.getProperty( "java.util.logging.config.class" ) );
 		CSGVersion.reportVersion();
 		
 		// Display the standard JME startup dialog

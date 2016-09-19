@@ -1054,31 +1054,33 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         paramValues = new ListMap<String, MatParam>();
 
         // load the textures and update nextTexUnit
-        for (Map.Entry<String, MatParam> entry : params.entrySet()) {
-            MatParam param = entry.getValue();
-            if (param instanceof MatParamTexture) {
-                MatParamTexture texVal = (MatParamTexture) param;
-                // the texture failed to load for this param
-                // do not add to param values
-                if (texVal.getTextureValue() == null || texVal.getTextureValue().getImage() == null) {
-                    continue;
-                }
-            }
-
-            if (im.getFormatVersion() == 0 && param.getName().startsWith("m_")) {
-                // Ancient version of jME3 ...
-                param.setName(param.getName().substring(2));
-            }
-
-            if (def.getMaterialParam(param.getName()) == null) {
-                logger.log(Level.WARNING, "The material parameter is not defined: {0}. Ignoring..",
-                                          param.getName());
-            } else {
-                checkSetParam(param.getVarType(), param.getName());
-                paramValues.put(param.getName(), param);
-            }
+// 09Mar2015 - wco - handle NULL params
+        if ( params != null ) {
+	        for (Map.Entry<String, MatParam> entry : params.entrySet()) {
+	            MatParam param = entry.getValue();
+	            if (param instanceof MatParamTexture) {
+	                MatParamTexture texVal = (MatParamTexture) param;
+	                // the texture failed to load for this param
+	                // do not add to param values
+	                if (texVal.getTextureValue() == null || texVal.getTextureValue().getImage() == null) {
+	                    continue;
+	                }
+	            }
+	
+	            if (im.getFormatVersion() == 0 && param.getName().startsWith("m_")) {
+	                // Ancient version of jME3 ...
+	                param.setName(param.getName().substring(2));
+	            }
+	
+	            if (def.getMaterialParam(param.getName()) == null) {
+	                logger.log(Level.WARNING, "The material parameter is not defined: {0}. Ignoring..",
+	                                          param.getName());
+	            } else {
+	                checkSetParam(param.getVarType(), param.getName());
+	                paramValues.put(param.getName(), param);
+	            }
+	        }
         }
-
         if (applyDefaultValues) {
             // compatability with old versions where default vars were
             // not available

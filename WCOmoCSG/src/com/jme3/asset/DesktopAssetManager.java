@@ -32,7 +32,7 @@
 package com.jme3.asset;
 
 import com.jme3.asset.cache.AssetCache;
-import com.jme3.asset.cache.SimpleAssetCache;
+// change from mainline 7294: import com.jme3.asset.cache.SimpleAssetCache;
 import com.jme3.audio.AudioData;
 import com.jme3.audio.AudioKey;
 import com.jme3.font.BitmapFont;
@@ -42,9 +42,9 @@ import com.jme3.renderer.Caps;
 import com.jme3.scene.Spatial;
 import com.jme3.shader.Glsl100ShaderGenerator;
 import com.jme3.shader.Glsl150ShaderGenerator;
-import com.jme3.shader.Shader;
+//change from mainline 7294: import com.jme3.shader.Shader;
 import com.jme3.shader.ShaderGenerator;
-import com.jme3.shader.ShaderKey;
+//change from mainline 7294: import com.jme3.shader.ShaderKey;
 import com.jme3.system.JmeSystem;
 import com.jme3.texture.Texture;
 import java.io.IOException;
@@ -379,7 +379,7 @@ public class DesktopAssetManager implements AssetManager {
         T clone = (T) obj;
         
         if (obj instanceof CloneableSmartAsset) {
-        	// 28Feb2015 - wco - allow the key to suppress caching even on types that support it
+// 28Feb2015 - wco - allow the key to suppress caching even on types that support it
         	if ( cache != null ) {
             	clone = registerAndCloneSmartAsset(key, clone, proc, cache);
         	}
@@ -440,6 +440,7 @@ public class DesktopAssetManager implements AssetManager {
      * @param key
      * @return the loaded {@link Shader}
      */
+ /*** change from mainline 7294:
     public Shader loadShader(ShaderKey key){
         // cache abuse in method
         // that doesn't use loaders/locators
@@ -463,7 +464,7 @@ public class DesktopAssetManager implements AssetManager {
         }
         return shader;
     }
-
+***/
     /**
      * {@inheritDoc}
      */

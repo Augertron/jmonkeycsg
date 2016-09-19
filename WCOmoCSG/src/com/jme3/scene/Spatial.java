@@ -1626,7 +1626,9 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
 
         localTransform = (Transform) ic.readSavable("transform", Transform.IDENTITY);
 
-        localLights = (LightList) ic.readSavable("lights", null);
+//     	27Feb2015 - wco - retain original list if lights not included in the import
+//      localLights = (LightList) ic.readSavable("lights", null);
+        localLights = (LightList) ic.readSavable("lights", localLights);
         localLights.setOwner(this);
 
         ArrayList<MatParamOverride> localOverridesList = ic.readSavableArrayList("overrides", null);
@@ -1642,7 +1644,11 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
         //The SkeletonControl must be the last in the stack so we add the list of all other control before it.
         //When backward compatibility won't be needed anymore this can be replaced by :
         //controls = ic.readSavableArrayList("controlsList", null));
-        controls.addAll(0, ic.readSavableArrayList("controlsList", null));
+
+//     	27Feb2015 - wco - anticipate possibly null control list
+//      controls.addAll(0, ic.readSavableArrayList("controlsList", null));
+        ArrayList cntrlList = ic.readSavableArrayList("controlsList", null);
+        if ( cntrlList != null) controls.addAll(0, cntrlList);
 
         userData = (HashMap<String, Savable>) ic.readStringSavableMap("user_data", null);
     }

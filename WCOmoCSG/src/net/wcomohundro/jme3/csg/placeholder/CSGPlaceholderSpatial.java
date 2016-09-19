@@ -351,4 +351,7 @@ public class CSGPlaceholderSpatial
 	@Override
 	protected void breadthFirstTraversal(SceneGraphVisitor visitor, Queue<Spatial> queue) { }
 
+	@Override
+	public void depthFirstTraversal(SceneGraphVisitor visitor, DFSMode mode) { }
+
 }

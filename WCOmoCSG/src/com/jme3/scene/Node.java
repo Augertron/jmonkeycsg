@@ -741,9 +741,12 @@ public class Node extends Spatial {
         // XXX: Load children before loading itself!!
         // This prevents empty children list if controls query
         // it in Control.setSpatial().
-        children = new SafeArrayList( Spatial.class,
-                                      e.getCapsule(this).readSavableArrayList("children", null) );
-
+// wco - 18Mar2015 - protect against missing children
+    	ArrayList childList = e.getCapsule(this).readSavableArrayList("children", new ArrayList() );
+    	children = new SafeArrayList( Spatial.class, childList );
+    	    
+//    	        children = new SafeArrayList( Spatial.class, 
+//    	                                      e.getCapsule(this).readSavableArrayList("children", null) );
         // go through children and set parent to this node
         if (children != null) {
             for (Spatial child : children.getArray()) {
