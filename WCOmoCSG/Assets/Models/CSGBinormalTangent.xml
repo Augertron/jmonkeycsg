@@ -1,0 +1,130 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGNode fname='TestBinormalTangent'>
+	<library>
+		<MapEntry key='3DMaterial'>
+    		<Savable class='com.jme3.asset.MaterialKey' id='3DMaterial'   		
+    				name='Textures/CobbleStone/PebblesRpt.xml' />
+    				<!-- name='Textures/CobbleStone/CobbleStoneNormalRpt.xml' -->
+    				<!-- name='Textures/BrickWall/BrickWallRpt.xml' -->
+
+    				<!-- name='Textures/Terrain/Pond/Pond.j3m' /-->
+    				<!-- name='Textures/Terrain/BrickWall/BrickWall.j3m' /-->
+		</MapEntry>
+	</library>
+	
+    <lights class='com.jme3.light.LightList'>
+        <lights>
+        	<com.jme3.light.AmbientLight name='ALight' enabled='false'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        	</com.jme3.light.AmbientLight>
+        	<com.jme3.light.PointLight name='BLight' enabled='true'>
+        		<color class='com.jme3.math.ColorRGBA' r='1' g='0.5' b='0' a='1'/>
+        		<position class='com.jme3.math.Vector3f' x='20.0' y='20.0' z='30.0'/>>
+        	</com.jme3.light.PointLight>
+        </lights>
+    </lights>
+    
+    <transform class='com.jme3.math.Transform'>
+        <translation class='com.jme3.math.Vector3f' y='0.0'/>
+    </transform>
+    
+    <children>
+        <com.jme3.scene.Geometry name='Can'>
+        		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml' -->
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'/>
+        </com.jme3.scene.Geometry>
+
+        <com.jme3.scene.Geometry name='Roller'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' textureMode='ROLLER' />
+        </com.jme3.scene.Geometry>
+        
+        
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Can2'
+        		 generateTangentBinormal='true'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='6.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+            		radius='7.89012' zExtent='2.25'
+            		axisSamples='5' radialSamples='202'>
+	           	<faceProperties>
+	               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='2.0' scaleY='2.0'/>
+	               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='1.0' scaleY='1.0'/>
+	       		</faceProperties>
+	       	</mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <com.jme3.scene.Geometry name='Roller2'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='10.0' y='6.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' zExtent='2' textureMode='ROLLER'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+
+
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Can3'
+        		 generateTangentBinormal='true'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='-6.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' zExtent='2' radius2='1.5'/>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <com.jme3.scene.Geometry name='Roller3'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='10.0' y='-6.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' zExtent='2' radius2='1.5' textureMode='ROLLER'>
+                <scaleFaces>
+                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
+            	</scaleFaces>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Can4'
+        		generateTangentBinormal='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-20.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder'
+            		radius='11.674999' height='4.5'
+		        	axisSamples='5' radialSamples='202'
+		        	textureMode='CAN'>
+	           	<faceProperties>
+	               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='5.8374996' scaleY='5.8374996'/>
+	               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='18.0' scaleY='1.125'/>
+	       		</faceProperties>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+        <net.wcomohundro.jme3.csg.CSGGeometry name='Box1'
+        		 generateTangentBinormal='false'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='20.0' y='-6.0'/>
+            </transform>
+            <material ref='3DMaterial'/>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='2' yExtent='3'/>
+           	<faceProperties>
+               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SURFACE' scaleX='2.0' scaleY='3.0'/>
+       		</faceProperties>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+
+    </children>
+</net.wcomohundro.jme3.csg.CSGNode>

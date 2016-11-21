@@ -51,6 +51,7 @@ import com.jme3.light.LightList;
 import com.jme3.material.MatParamTexture;
 import com.jme3.material.Material;
 import com.jme3.math.Transform;
+import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
@@ -73,6 +74,7 @@ import net.wcomohundro.jme3.csg.exception.CSGExceptionI;
 import net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape;
 import net.wcomohundro.jme3.csg.shape.CSGFaceProperties;
 import net.wcomohundro.jme3.csg.shape.CSGMesh;
+import net.wcomohundro.jme3.csg.shape.CSGFaceProperties.Face;
 import net.wcomohundro.jme3.math.CSGTransform;
 
 
@@ -531,13 +533,21 @@ public class CSGGeometry
 				tempVars.release();
 				mRegenNS = System.nanoTime() - startTimer;
 			}
-		} else if ( this.mesh instanceof CSGMesh ) {
-			// If in 'debug' mode, look for a possible delegate
-			this.mesh = ((CSGMesh)this.mesh).resolveMesh( mDebugMesh );
-			setError( null );
-			
 		} else if ( this.mesh != null ) {
-			// Just a mesh
+			// Operate on the mesh
+			if ( this.mesh instanceof CSGMesh ) {
+				// If in 'debug' mode, look for a possible delegate
+				this.mesh = ((CSGMesh)this.mesh).resolveMesh( mDebugMesh );
+			}
+			// Any special texture processing?
+			Vector2f texScale = CSGFaceProperties.resolveTextureScale( this, Face.SURFACE.getMask() );
+			if ( texScale != null ) {
+				this.mesh.scaleTextureCoordinates( texScale );
+			}
+			// Generate the Tangents as needed
+			if ( this.isValid() && mGenerateTangentBinormal ) {
+		        TangentBinormalGenerator.generate( this );
+			}
 			setError( null );
 		} else {
 			// No really sure what this is if we have no shapes and not mesh????

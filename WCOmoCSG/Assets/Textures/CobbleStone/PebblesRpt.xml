@@ -3,23 +3,29 @@
 	<parameters>
 	    <MapEntry key='UseMaterialColors'>
 	        <Savable class='com.jme3.material.MatParam' 
-	        	name='UseMaterialColors' value_bool='false' varType='Boolean'/>
+	        	name='UseMaterialColors' value_bool='true' varType='Boolean'/>
 	    </MapEntry>
 	    <MapEntry key='Diffuse'>
 	        <Savable class='com.jme3.material.MatParam' 
 	        	name='Diffuse' varType='Vector4'>
-	        	<value_savable class='com.jme3.math.ColorRGBA' r='1.0' g='1.0' b='1.0' a='1.0'/> 
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='0.8' g='0.8' b='0.8' a='1.0'/> 
 	        </Savable>
 	    </MapEntry>
 	    <MapEntry key='Specular'>
 	        <Savable class='com.jme3.material.MatParam' 
 	        	name='Specular'  varType='Vector4'>
-	        	<value_savable class='com.jme3.math.ColorRGBA' r='1.0' g='1.0' b='1.0' a='1.0'/> 
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='0.3' g='0.3' b='0.3' a='1.0'/> 
+	        </Savable>
+	    </MapEntry>
+	    <MapEntry key='Ambient'>
+	        <Savable class='com.jme3.material.MatParam' 
+	        	name='Ambient'  varType='Vector4'>
+	        	<value_savable class='com.jme3.math.ColorRGBA' r='0.2' g='0.2' b='0.2' a='1.0'/> 
 	        </Savable>
 	    </MapEntry>
 	    <MapEntry key='Shininess'>
 	        <Savable class='com.jme3.material.MatParam' 
-	        	name='Shininess' value_float='20.0' varType='Float'/>
+	        	name='Shininess' value_float='32.0' varType='Float'/>
 	    </MapEntry>
 	    
 	    <MapEntry key='DiffuseMap'>
@@ -44,6 +50,7 @@
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/Terrain/Pond/Pond_normal.png' 
+	            		wrapS='Repeat' wrapT='Repeat'
 	            		reference_ID='com.jme3.texture.Texture2D@PebblesNormal'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 

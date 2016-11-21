@@ -202,7 +202,7 @@ public class CSGSurface
         FloatBuffer aBuffer = (FloatBuffer)tc.getData();
         aBuffer.clear();
         
-        // Nothing really custom yet
+        // Nothing really custom yet, this matches underlying 'Mesh' processing
         boolean doSurface = (pFaceMask & Face.SURFACE.getMask()) != 0;
 
         if ( doSurface ) {

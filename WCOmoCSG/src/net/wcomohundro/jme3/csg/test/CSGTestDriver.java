@@ -94,7 +94,7 @@ public class CSGTestDriver
         ,	new CSGTestDriverAppItem( "Progressive (mouse/cheese)", CSGTestM.class )
         ,	new CSGTestDriverAppItem( "Progressive (+/- cylinder)", CSGTestL.class )
         };
-        CSGTestDriverBase.main( appChoices );
+        CSGTestDriverBase.main( appChoices, "CSGTestDriver" );
 	    
 	    //app = new CSGTestA();			// Cube +/- sphere direct calls, no import
 	    //app = new CSGTestB();			// Cube +/- cylinder direct calls, no import

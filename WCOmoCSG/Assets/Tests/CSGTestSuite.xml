@@ -2,6 +2,7 @@
 <!-- Prep the ENVIRONMENT -->
 <net.wcomohundro.jme3.csg.test.CSGTestSceneList>
 	<scenes>
+		<String value='Models/CSGBinormalTangent.xml'/>
 		<String value='Models/CSGLoadCSGNormalTests.xml'/>
 		<String value='Models/CSGLoadNonMultiTexture.xml'/>
 		<String value='Models/CSGLoadMultiTexture.xml'/>

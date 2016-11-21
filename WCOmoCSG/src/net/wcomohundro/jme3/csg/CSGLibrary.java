@@ -75,7 +75,7 @@ public class CSGLibrary
 				String itemName = anEntry.getKey(), altName = null;
 				Savable anItem = anEntry.getValue();
 				
-				if ( anItem instanceof CSGPlaceholder ) {
+				if ( (anItem instanceof CSGPlaceholder) && (pContext != null) ) {
 					// Resolve any placeholder items in the library
 					Object resolvedItem = ((CSGPlaceholder)anItem).resolveItem( pContext, false );
 					if ( resolvedItem instanceof Savable ) {

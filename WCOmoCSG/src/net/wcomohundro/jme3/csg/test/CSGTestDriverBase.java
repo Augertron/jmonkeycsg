@@ -85,6 +85,7 @@ public class CSGTestDriverBase
 {
 	protected static void main(
 		CSGTestDriverAppItem[] 	pAppChoices
+	,	String					pAppName
 	) {
 		System.out.println( "CSGTestDriverBase: logging config: " 
 					+ System.getProperty( "java.util.logging.config.file" )
@@ -93,12 +94,18 @@ public class CSGTestDriverBase
 		
 		// Display the standard JME startup dialog
         AppSettings aSettings = new AppSettings( true );
+	    if ( pAppName != null ) {
+	    	aSettings.setTitle( pAppName );
+	    }
         if ( !JmeSystem.showSettingsDialog( aSettings, true ) ) {
         	// User cancel
             return;
+        } else if ( pAppName != null ) {
+        	// Restore the title
+        	aSettings.setTitle( pAppName );
         }
         // Show the AppPicker dialog
-        CSGTestDriverAppItem whichApp = showAppPickerDialog( pAppChoices );
+        CSGTestDriverAppItem whichApp = showAppPickerDialog( pAppChoices, aSettings );
         if ( whichApp == null ) {
         	// User cancel
         	return;
@@ -212,9 +219,10 @@ public class CSGTestDriverBase
     /** Post the application picker dialog */
     protected static CSGTestDriverAppItem showAppPickerDialog(
     	CSGTestDriverAppItem[]	pAppChoices
+    ,	AppSettings				pAppSettings
     ) {
         // Activate the dialog
-        CSGTestDriverBase aDriver = new CSGTestDriverBase( pAppChoices );
+        CSGTestDriverBase aDriver = new CSGTestDriverBase( pAppChoices, pAppSettings );
         SwingUtilities.invokeLater( aDriver );
         
         // Wait for the dialog to complete
@@ -244,6 +252,7 @@ public class CSGTestDriverBase
     
     public CSGTestDriverBase(
     	CSGTestDriverAppItem[]	pAppChoices
+    ,	AppSettings				pAppSettings
     ) {
     	// We are active until the dialog closes 
     	mIsActive = true;
@@ -262,7 +271,7 @@ public class CSGTestDriverBase
         } catch( Exception ex ) {
             throw new IllegalStateException( "Could not set native look and feel." );
         }
-        setTitle( "CSGTestDriver" );
+        setTitle( pAppSettings.getTitle() );
 
         // Monitor the window closing
         addWindowListener( new WindowAdapter() {

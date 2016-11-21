@@ -208,10 +208,13 @@ public class CSGAxialBox
 	}
 	
 	/** OVERRIDE to interpret SIDES */
+	@Override
 	public void setFaceProperties(
-		List<CSGFaceProperties>		pPropertyList
+		List<CSGFaceProperties>	pPropertyList
+	,	boolean					pRebuild
 	) {
-		super.setFaceProperties( pPropertyList );
+		super.setFaceProperties( pPropertyList, false );
+		
 		if ( mFaceProperties != null ) {
 			for( CSGFaceProperties aProperties : mFaceProperties ) {
 				// SIDES is meaningless, it is really LEFT/RIGHT/TOP/BOTTOM
@@ -219,7 +222,11 @@ public class CSGAxialBox
 					aProperties.setFaceMask( Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask() );
 				}
 			}
+			if ( pRebuild ) {
+				this.updateGeometryEpilog();
+			}
 		}
+		
 	}
 	
 	/** Accessor to the full range of faces supported by this mesh */

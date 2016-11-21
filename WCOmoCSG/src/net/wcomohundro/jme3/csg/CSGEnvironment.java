@@ -277,7 +277,9 @@ public class CSGEnvironment<ShapeProcessorT>
 	}
 	
 	/** Service routine to interpret a Savable.read() float value that can take the form
-			xxxPI/yyy
+	 * 
+			xx.xPI/yy.y    or   xx.x/yy.yPI    or  xxx/yyy
+			
 		that supports fractional values of PI
 	*/
 	public static float readPiValue(
@@ -291,35 +293,70 @@ public class CSGEnvironment<ShapeProcessorT>
 		String piText = pCapsule.readString( pValueName, null );
 		if ( piText != null ) {
 			// Something explicitly given, figure out what
+			float numerator = 1.0f;
+			float denominator = 1.0f;
+
 			piText = piText.toUpperCase();
-			int index = piText.indexOf( "PI" );
-			if ( index >= 0 ) {
-				// Decipher things like 3PI/4
-				float numerator = 1.0f;
-				float denominator = 1.0f;
-				if ( index > 0 ) {
+			int piIndex = piText.indexOf( "PI" );
+			int slashIndex = piText.indexOf( "/" );
+			if ( piIndex >= 0 ) {
+				// Decipher things like 3PI/4 and 3/4PI
+				int numeratorEnd, denominatorStart;
+				if ( slashIndex < 0 ) {
+					// Like 2PI
+					numerator = FastMath.PI;
+					numeratorEnd = piIndex;
+					denominatorStart = piIndex + 2;
+				} else if ( piIndex < slashIndex ) {
+					// Like 3PI/4
+					numerator = FastMath.PI;
+					numeratorEnd = piIndex;
+					denominatorStart = slashIndex + 1;
+				} else {
+					// Like 3/4PI
+					denominator = FastMath.PI;
+					piText = piText.substring( 0, piIndex );
+					numeratorEnd = slashIndex;
+					denominatorStart = slashIndex + 1;
+				}
+				if ( numeratorEnd > 0 ) {
 					// Some integer multiplier of PI
-					String numeratorTxt = piText.substring( 0, index );
+					String numeratorTxt = piText.substring( 0, numeratorEnd );
 					if ( numeratorTxt.indexOf( '.' ) < 0 ) {
-						numerator = Integer.parseInt( numeratorTxt );
+						numerator *= Integer.parseInt( numeratorTxt );
 					} else {
-						numerator = Float.parseFloat( numeratorTxt );
+						numerator *= Float.parseFloat( numeratorTxt );
 					}
 				}
-				index += 2;
-				if ( (index < piText.length() -1) 
-				&& (piText.charAt( index++ ) == '/') ) {
+				if ( denominatorStart < piText.length() ) {
 					// Some integer divisor of PI
-					String denominatorTxt = piText.substring( index );
+					String denominatorTxt = piText.substring( denominatorStart );
 					if ( denominatorTxt.indexOf( '.' ) < 0 ) {
-						denominator = Integer.parseInt( denominatorTxt );
+						denominator *= Integer.parseInt( denominatorTxt );
 					} else {
-						denominator = Float.parseFloat( denominatorTxt );
+						denominator *= Float.parseFloat( denominatorTxt );
 					}
 				}
-				aFloatValue = (numerator * FastMath.PI) / denominator;
+				aFloatValue = numerator / denominator;
+				
+			} else if ( slashIndex > 0 ) {
+				// Rational fraction like 3/4, but no PI
+				String numeratorTxt = piText.substring( 0, slashIndex );
+				if ( numeratorTxt.indexOf( '.' ) < 0 ) {
+					numerator = Integer.parseInt( numeratorTxt );
+				} else {
+					numerator = Float.parseFloat( numeratorTxt );
+				}
+				String denominatorTxt = piText.substring( slashIndex + 1 );
+				if ( denominatorTxt.indexOf( '.' ) < 0 ) {
+					denominator = Integer.parseInt( denominatorTxt );
+				} else {
+					denominator = Float.parseFloat( denominatorTxt );
+				}
+				aFloatValue = numerator / denominator;
+				
 			} else {
-				// If not PI, then its just a float
+				// If not PI or a rational fraction, then its just a float
 				aFloatValue = Float.parseFloat( piText );
 			}
 		}

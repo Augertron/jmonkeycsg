@@ -20,12 +20,14 @@
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickNRptDiffuse' />
 	        </Savable>
 	    </MapEntry>
+	    
 	    <MapEntry key='NormalMap'>
 	        <Savable class='com.jme3.material.MatParamTexture' 
 	        		name='NormalMap' texture_unit='1' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/Terrain/BrickWall/BrickWall_normal.jpg' 
+	            		wrapS='Repeat' wrapT='Repeat'
 	            		reference_ID='com.jme3.texture.Texture2D@BrickRptNormal'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
@@ -45,6 +47,7 @@
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/Terrain/BrickWall/BrickWall_height.jpg' 
+	            		wrapS='Repeat' wrapT='Repeat'
 	            		reference_ID='com.jme3.texture.Texture2D@BrickRptParallel'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                		generate_mips='true' 

@@ -150,9 +150,13 @@ public abstract class CSGMesh
 	/** Accessor to the per-face property configuration */
 	public List<CSGFaceProperties> getFaceProperties() { return mFaceProperties; }
 	public void setFaceProperties(
-		List<CSGFaceProperties>		pPropertyList
+		List<CSGFaceProperties>	pPropertyList
+	,	boolean					pRebuild
 	) {
 		mFaceProperties = pPropertyList;
+		if ( pRebuild && (mFaceProperties != null) ) {
+			this.updateGeometryEpilog();
+		}
 	}
 	public void addFaceProperties(
 		CSGFaceProperties	pProperties
@@ -554,7 +558,7 @@ public abstract class CSGMesh
         
         // Extended attributes
         mGeneratedFacesMask = inCapsule.readInt( "generateFaces", 0 );	// Subclasses must check for zero
-        setFaceProperties( inCapsule.readSavableArrayList( "faceProperties", null ) );
+        setFaceProperties( inCapsule.readSavableArrayList( "faceProperties", null ), false );
         mLODFactors = inCapsule.readFloatArray( "lodFactors", null );
         mInverted = inCapsule.readBoolean( "inverted", mInverted );
         mGenerateTangentBinormal = inCapsule.readBoolean( "generateTangentBinormal", false );

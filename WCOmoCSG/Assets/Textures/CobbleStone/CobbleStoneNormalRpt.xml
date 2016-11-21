@@ -23,6 +23,7 @@
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/CobbleStone/CobbleStoneNormal.png' 
+	            		wrapS='Repeat' wrapT='Repeat'
 	            		reference_ID='com.jme3.texture.Texture2D@1995915345'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
@@ -40,6 +41,7 @@
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/CobbleStone/CobbleStoneParallax.png' 
+	            		wrapS='Repeat' wrapT='Repeat'
 	            		reference_ID='com.jme3.texture.Texture2D@1854306836'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 

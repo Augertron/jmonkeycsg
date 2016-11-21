@@ -23,6 +23,7 @@
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/Terrain/Rock/Rock_normal.png' 
+	            		wrapS='Repeat' wrapT='Repeat'
 	            		reference_ID='com.jme3.texture.Texture2D@1995915332'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
