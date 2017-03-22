@@ -93,11 +93,11 @@ public class CSGTestDriverBase
 		CSGVersion.reportVersion();
 		
 		// Display the standard JME startup dialog
-        AppSettings aSettings = new AppSettings( true );
+        AppSettings aSettings = new AppSettings( false );
 	    if ( pAppName != null ) {
 	    	aSettings.setTitle( pAppName );
 	    }
-        if ( !JmeSystem.showSettingsDialog( aSettings, true ) ) {
+        if ( !JmeSystem.showSettingsDialog( aSettings, false ) ) {
         	// User cancel
             return;
         } else if ( pAppName != null ) {

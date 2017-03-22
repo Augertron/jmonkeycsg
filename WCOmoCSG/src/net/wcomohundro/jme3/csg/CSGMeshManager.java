@@ -118,12 +118,12 @@ public class CSGMeshManager
 		// possibly explicitly named material.  Remember that NULL is a valid key for the
 		// generic
 		Object genericKey
-			= selectKey( null, null, genericInfo.mLightListKey, genericInfo.mPhysicsKey );
+			= selectKey( null, null, genericInfo.mLightListKey, genericInfo.mPhysicsKey, null );
 		mMeshMap.put( genericKey, genericInfo );
 
 		if ( genericInfo.mMaterial != null ) {
 			genericKey
-				= selectKey( null, genericInfo.mMaterial, genericInfo.mLightListKey, genericInfo.mPhysicsKey );
+				= selectKey( null, genericInfo.mMaterial, genericInfo.mLightListKey, genericInfo.mPhysicsKey, null );
 			if ( genericKey != null ) {
 				mMeshMap.put( genericKey, genericInfo );
 			}
@@ -184,6 +184,10 @@ public class CSGMeshManager
 				if ( meshInfo.mPhysicsKey != null ) {
 					// Custom physics have been defined
 					shapeKey.append( meshInfo.mPhysicsKey );
+				}
+				if ( meshInfo.mRenderKey != null ) {
+					// Custom rendering has been defined
+					shapeKey.append( meshInfo.mRenderKey );
 				}
 				if ( (shapeKey.length() == 0) && (meshInfo.mDecorations != null) ) {
 					// We need a parent Node to hold the decorations
@@ -315,13 +319,14 @@ public class CSGMeshManager
 	}
 	
 	/** Service routine that constructs the appropriate lookup key to select
-	 	Mesh information based on the active material and active lighting
+	 	Mesh information based on the active material, lighting, and physics
 	 */
 	protected Object selectKey(
 		String		pMeshName
 	,	Material	pMaterial
 	,	String		pLightListKey
 	,	String		pPhysicsKey
+	,	String		pRenderingKey
 	) {
 		// Base the key on the material itself
 		AssetKey materialKey = null;
@@ -345,6 +350,10 @@ public class CSGMeshManager
 		if ( pPhysicsKey != null ) {
 			if ( aBuffer.length() > 0 ) aBuffer.append( "-" );
 			aBuffer.append( pPhysicsKey );
+		}
+		if ( pRenderingKey != null ) {
+			if ( aBuffer.length() > 0 ) aBuffer.append( "-" );
+			aBuffer.append( pRenderingKey );			
 		}
 		if ( materialKey != null ) {
 			if ( aBuffer.length() == 0 ) {
@@ -421,7 +430,14 @@ public class CSGMeshManager
 			// Use the explicit physics for this shape
 			aPhysicsKey = CSGMeshInfo.createPhysicsKey( pShape );
 		}
-		Object meshKey = selectKey( pMeshName, pMaterial, aLightListKey, aPhysicsKey );
+		// Custom rendering?
+		String aRenderKey;
+		if ( pShape.getRenderNode() == null ) {
+			aRenderKey = null;
+		} else {
+			aRenderKey = CSGMeshInfo.createRenderingKey( pShape.getRenderNode() );
+		}
+		Object meshKey = selectKey( pMeshName, pMaterial, aLightListKey, aPhysicsKey, aRenderKey );
 		
 		// Look for custom material
 		if ( meshKey == null ) {
@@ -448,7 +464,7 @@ public class CSGMeshManager
 											, pMaterial
 											, lightControls, sharedLights, aLightListKey
 											, aPhysics, aPhysicsKey
-											, pShape.getRenderNode() );
+											, pShape.getRenderNode(), aRenderKey );
 				if ( meshKey != null ) {
 					// Track the material by its AssetKey
 					mMeshMap.put( meshKey, useInfo );
@@ -498,6 +514,12 @@ class CSGMeshInfo
 	) {
 		return( "P" + pPhysics.toString() );
 	}
+	/** Service routine to define a custom rendering key */
+	public static String createRenderingKey(
+		CSGElement	pShape
+	) {
+		return( "CR" + pShape.getInstanceKey() );
+	}
 	
 	/** The index that selects this info */
 	protected Integer			mIndex;
@@ -517,6 +539,7 @@ class CSGMeshInfo
 	protected List<Spatial>		mDecorations;
 	/** Custom node used for final rendering */
 	protected CSGNode			mRenderNode;
+	protected String			mRenderKey;
 	/** The generated mesh */
 	protected Mesh				mMesh;
 	
@@ -555,6 +578,7 @@ class CSGMeshInfo
 	,	PhysicsControl		pPhysics
 	,	String				pPhysicsKey
 	,	CSGNode				pCustomRenderingNode
+	,	String				pRenderKey
 	) {
 		this.mIndex = pIndex;
 		this.mName = pName;
@@ -572,6 +596,7 @@ class CSGMeshInfo
 		this.mPhysicsKey = pPhysicsKey;
 		
 		this.mRenderNode = pCustomRenderingNode;
+		this.mRenderKey = pRenderKey;
 	}
 	CSGMeshInfo(
 		Integer			pIndex
