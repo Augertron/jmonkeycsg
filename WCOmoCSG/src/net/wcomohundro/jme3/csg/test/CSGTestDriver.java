@@ -58,8 +58,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import jme3test.light.TestPointLightShadows;
-
 import com.jme3.app.SettingsDialog;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.SettingsDialog.SelectionListener;

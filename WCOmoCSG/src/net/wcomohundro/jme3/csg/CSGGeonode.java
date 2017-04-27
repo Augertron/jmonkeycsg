@@ -65,6 +65,7 @@ import com.jme3.light.Light;
 import com.jme3.material.MatParamTexture;
 import com.jme3.material.Material;
 import com.jme3.math.Transform;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
@@ -324,6 +325,24 @@ public class CSGGeonode
 	        }
 		}
 	}
+	
+	/** Accept the given mesh as the master, mimics .setMesh() from Geometry */
+	public void setMesh(
+		Mesh		pMesh
+	) {
+		// The master geometry holds the given mesh
+		mMasterGeometry = new CSGGeometry( this.getName(), pMesh );
+		
+		// Nodes do not really have a material, so let the master geometry commandeer it
+		mMasterGeometry.setMaterial( mMaterial );
+
+		// Attach the master into the scene at the appropriate time
+		if ( mDeferSceneChanges ) {
+			mMeshManager = new CSGMeshManager( this, mForceSingleMaterial );
+		} else {
+			this.attachChild( mMasterGeometry );
+		}
+	}
 
 	/** Action to generate the mesh based on the given shapes */
 	@Override
@@ -464,6 +483,12 @@ public class CSGGeonode
 		return( null );
 	}
 	
+	/** The bounds are set by the master - this mimics the processing of a Geometry */
+	@Override
+	public BoundingVolume getWorldBound(
+	) {
+    	return( (mMasterGeometry == null) ? super.getWorldBound() : mMasterGeometry.getWorldBound() );		
+	}
     /**	Returns the number of triangles contained in all sub-branches of this node that contain geometry.
 		OVERRIDE to operate directly from the master 
 	*/

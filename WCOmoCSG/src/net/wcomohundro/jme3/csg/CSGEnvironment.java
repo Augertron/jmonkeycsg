@@ -209,6 +209,30 @@ public class CSGEnvironment<ShapeProcessorT>
 		}
 		return( true );
 	}
+	public static boolean equalVector3f(
+		Vector3f 	pVector1
+	,	Vector3f	pVector2
+	,	float		pTolerance
+	,	boolean		pCheckX
+	,	boolean		pCheckY
+	,	boolean		pCheckZ
+	) {
+		if ( pVector1 != pVector2 ) {
+	    	float deltaX = pVector1.x - pVector2.x;
+	    	if ( pCheckX && ((deltaX < -pTolerance) || (deltaX > pTolerance)) ) {
+	    		return false;
+	    	}
+	    	float deltaY = pVector1.y - pVector2.y;
+	    	if ( pCheckY && ((deltaY < -pTolerance) || (deltaY > pTolerance)) ) {
+	    		return false;
+	    	}
+	    	float deltaZ = pVector1.z - pVector2.z;
+	    	if ( pCheckZ && ((deltaZ < -pTolerance) || (deltaZ > pTolerance)) ) {
+	    		return false;
+	    	}
+		}
+		return( true );
+	}
 	/** Service routine to check two vectors and see if they are the same, within a given 
 	 	tolerance. (Typically EPSILON_BETWEEN_POINTS, but not required)
 	 */
