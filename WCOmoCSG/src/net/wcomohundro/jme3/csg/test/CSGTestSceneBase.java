@@ -163,7 +163,7 @@ public abstract class CSGTestSceneBase
         if ( aDir.isDirectory() ) {
         	assetManager.registerLocator( "./Assets", FileLocator.class );
         }
-        assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
+        assetManager.registerLoader( com.jme3.export.xml.XMLLoader.class, "xml" );
         
         // By default, assume the entire root is the scene we use for click-on
         mLastScene = this.rootNode;

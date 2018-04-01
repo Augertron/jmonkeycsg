@@ -80,7 +80,7 @@ public class CSGTestBinormalTangent
 	    flyCam.setMoveSpeed( 20 );			// Move a bit faster
 	    flyCam.setDragToRotate( true );		// Only use the mouse while it is clicked
 	    
-        assetManager.registerLoader( com.jme3.scene.plugins.XMLLoader.class, "xml" );
+        assetManager.registerLoader( com.jme3.export.xml.XMLLoader.class, "xml" );
 	    
     	Geometry aGeometry, bGeometry, cGeometry;
     	Box aBox, bBox, cBox;
