@@ -25,6 +25,7 @@
 package com.jme3.export.xml;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -56,10 +57,54 @@ import com.jme3.util.IntMap;
  	The basic premise is that every element in the DOM represents some Savable (or item within a
  	Savable)  We know which 'current' element we are working on, and the parent .read() processing
  	directs us from item to item, each item becoming the 'current' as it is worked on.
+ 	
+ 	Those Savables that are 'XMLInputCapsule' aware can use the call backs to process DOM
+ 	elements on their own.  This allows any given Savable to customize its XML support beyond
+ 	the standard jMonkey definitions of XML data types.
  */
 public class XMLInputCapsule 
 	implements InputCapsule
 {
+    /** DOM service routine:  scan for the first child Element within a parent */
+    public static Element findFirstChildElement(
+    	Element 	parent
+    ) {
+        Node ret = parent.getFirstChild();
+        while (ret != null && (!(ret instanceof Element))) {
+            ret = ret.getNextSibling();
+        }
+        return (Element) ret;
+    }
+
+    /** DOM service routine:  scan for the first child Element of a given name within a parent */
+    public static Element findChildElement(
+    	Element 	parent
+    , 	String 		name
+    ) {
+        if (parent == null) {
+            return null;
+        }
+        Node ret = parent.getFirstChild();
+        while (ret != null && (!(ret instanceof Element) || !ret.getNodeName().equals(name))) {
+            ret = ret.getNextSibling();
+        }
+        return (Element) ret;
+    }
+    
+    /** DOM service routine:  scan for the next sibling Element after the given one */
+    public static Element findNextSiblingElement(
+    	Element 	pCurrent
+    ) {
+        Node ret = pCurrent.getNextSibling();
+        while (ret != null) {
+            if (ret instanceof Element) {
+                return (Element) ret;
+            }
+            ret = ret.getNextSibling();
+        }
+        return null;
+    }
+    
     /** The importer that is driving this process */
     protected JmeImporter					mImporter;
     /** The DOM Document that is being processed */
@@ -95,6 +140,7 @@ public class XMLInputCapsule
     
     /** Allow predefined 'seed' values to be provided into the processing */
     public Map<String, Savable>	getReferencedSavables() { return mReferencedSavables; }
+    public Savable getReferencedSavable( String pRefID ) { return mReferencedSavables.get( pRefID ); }
     public void seedReferencedSavables(
     	Map<String,Savable>	pSeedValues
     ) {
@@ -107,9 +153,94 @@ public class XMLInputCapsule
     ) {
     	mResourceBundles = pBundles;
     }
+    
+    /** Allow direct access to the current element */
+    public Element getCurrentElement() { return mCurrentElement; }
+    
+    /** Callback processing to read a savable from the given element, instantiating 
+        from a given class name 
+     */
+    public Savable readSavableFromElem(
+    	Element		pElement
+    ,	Savable		pDefaultValue
+    ) throws InstantiationException, ClassNotFoundException, IOException, IllegalAccessException {
+    	// Prep what we find
+        Savable aResult = pDefaultValue;
 
-    /** DOM service routine:  clean up and interpret a string */
-    protected String decodeString(
+    	Element savedElement = mCurrentElement;
+    	Savable savedContext = mSavable;
+    	int[] savedVersions = mClassHierarchyVersions;
+    	try {
+            // Use the given element as the current context
+	    	mCurrentElement = pElement;
+	    	
+	        // A reference to a previously constructed item overrides all other processing
+	        String refID = mCurrentElement.getAttribute( "ref" );
+	        if ( refID.length() > 0 ) {
+	        	// Look up the reference
+	            aResult = mReferencedSavables.get( refID );
+	        } else {
+	        	// Process the current node, where the class='...' attribute tells us
+	        	// the class to instantiate, or else the node name is expected to be
+	        	// the class name.
+	            String className;
+	            if ( mCurrentElement.hasAttribute("class") ) {
+	            	// An explicit class attribute is the override
+	                className = mCurrentElement.getAttribute("class");
+	            } else if ( pDefaultValue != null ) {
+	            	// The given default value will direct the class to use
+	            	className = pDefaultValue.getClass().getName();
+	            } else {
+	            	// The node name itself is expected to direct the class
+	            	className = mCurrentElement.getNodeName();
+	            }
+	            // Instantiate the Savable instance, looking first for a custom constructor
+	            // NOTE that an explicit class reference to java.lang.Void will return a null
+	            aResult = SavableClassUtil.fromNameExtended( className, this.mImporter );
+
+	            // Check for version constraints
+	            String versionsStr = mCurrentElement.getAttribute( "savable_versions" );
+	            if ( (versionsStr != null) && !versionsStr.isEmpty() ) {
+	                String[] versions = versionsStr.split(",");
+	                mClassHierarchyVersions = new int[ versions.length ];
+	                for (int i = 0; i < mClassHierarchyVersions.length; i++){
+	                    mClassHierarchyVersions[i] = Integer.parseInt( versions[i].trim());
+	                }
+	            } else {
+	                mClassHierarchyVersions = null;
+	            }
+	            // If we have reference_ID='blah' or id='blah', then save this
+	            // instance for subsequent reference
+	            refID = mCurrentElement.getAttribute( "reference_ID" );
+	            if ( refID.isEmpty() ) refID = mCurrentElement.getAttribute("id");
+	            if ( refID.length() > 0 ) {
+	            	// Allow subsequent parsing to reference back to this item
+	            	mReferencedSavables.put( refID, aResult );
+	            }
+	            if ( aResult != null ) {
+		            // We fill the empty instance constructed above by letting
+		            // it read itself.  We save the current element 'context'
+		            // within mSavable
+		            mSavable = aResult;
+		            aResult.read( mImporter );
+	            }
+	        }
+    	} finally {
+    		// Restore all the saved values
+            mCurrentElement = savedElement;
+            mSavable = savedContext;
+            mClassHierarchyVersions = savedVersions;
+    	}
+        // Return whatever we have found so far
+        return aResult;
+    }
+
+
+    /** Callback processing to clean up and interpret a string 
+     	Use this hook to tidy up the XML character conventions AND to look for 
+     	ResourceBundle substitutions (like with Nifty)
+     */
+    public String decodeString(
     	String	pText
     ) {
         if ( pText == null ) {
@@ -119,7 +250,7 @@ public class XMLInputCapsule
         
         if ( mResourceBundles != null ) {
         	// Look for dynamic substitutions of the form ${bundle.key.key.key}
-        	int start = 0, prior = 0;
+        	int start, prior = 0;
         	StringBuilder aBuffer = null;
         	
         	while( (start = pText.indexOf( "${", prior )) >= prior ) {
@@ -128,7 +259,7 @@ public class XMLInputCapsule
         		int dot = pText.indexOf( ".", start );
         		
         		// We need a minimum of ${a.b}
-        		if ( (end > start) && ((end-start) >= 5) && (dot > start+1) && (dot < end-1) ) {
+        		if ( (end > start) && ((end-start) >= 3) && (dot > start) && (dot < end-1) ) {
         			// The a. portion picks the bundle
         			String libraryRef = pText.substring( start, dot );
         			ResourceBundle aBundle = mResourceBundles.get( libraryRef );
@@ -170,46 +301,6 @@ public class XMLInputCapsule
         return pText;
     }
 
-    /** DOM service routine:  scan for the first child Element within a parent */
-    protected Element findFirstChildElement(
-    	Element 	parent
-    ) {
-        Node ret = parent.getFirstChild();
-        while (ret != null && (!(ret instanceof Element))) {
-            ret = ret.getNextSibling();
-        }
-        return (Element) ret;
-    }
-
-    /** DOM service routine:  scan for the first child Element of a given name within a parent */
-    protected Element findChildElement(
-    	Element 	parent
-    , 	String 		name
-    ) {
-        if (parent == null) {
-            return null;
-        }
-        Node ret = parent.getFirstChild();
-        while (ret != null && (!(ret instanceof Element) || !ret.getNodeName().equals(name))) {
-            ret = ret.getNextSibling();
-        }
-        return (Element) ret;
-    }
-    
-    /** DOM service routine:  scan for the next sibling Element after the given one */
-    protected Element findNextSiblingElement(
-    	Element 	pCurrent
-    ) {
-        Node ret = pCurrent.getNextSibling();
-        while (ret != null) {
-            if (ret instanceof Element) {
-                return (Element) ret;
-            }
-            ret = ret.getNextSibling();
-        }
-        return null;
-    }
-    
     /** Service routine to break a string into multiple tokens */
     protected static final String[] zeroStrings = new String[0];
     protected String[] parseTokens(
@@ -225,66 +316,13 @@ public class XMLInputCapsule
 
     /** Service routine to read a savable, instantiating from a given class name */
     protected Savable readSavableFromCurrentElem(
-    	Savable defVal
+    	Savable		pDefaultValue
     ) throws InstantiationException, ClassNotFoundException, IOException, IllegalAccessException {
-        Savable ret = defVal;
-        Savable tmp = null;
-
         if ( (mCurrentElement == null) || mCurrentElement.getNodeName().equals("null") ) {
             return null;
         }
-        // A reference to a previously constructed item overrides all other processing
-        String reference = mCurrentElement.getAttribute("ref");
-        if (reference.length() > 0) {
-        	// Look up the reference
-            ret = mReferencedSavables.get(reference);
-        } else {
-        	// Process the current node, where the class='...' attribute tells us
-        	// the class to instantiate, or else the node name is expected to be
-        	// the class name.
-            String className;
-            if ( mCurrentElement.hasAttribute("class") ) {
-            	// An explicit class attribute is the override
-                className = mCurrentElement.getAttribute("class");
-            } else if ( defVal != null ) {
-            	// The given default value will direct the class to use
-            	className = defVal.getClass().getName();
-            } else {
-            	// The node name itself is expected to direct the class
-            	className = mCurrentElement.getNodeName();
-            }
-            // Instantiate the Savable instance
-            tmp = SavableClassUtil.fromName( className, null );
-            
-            // Check for version constraints
-            String versionsStr = mCurrentElement.getAttribute("savable_versions");
-            if (versionsStr != null && !versionsStr.equals("")){
-                String[] versionStr = versionsStr.split(",");
-                mClassHierarchyVersions = new int[versionStr.length];
-                for (int i = 0; i < mClassHierarchyVersions.length; i++){
-                    mClassHierarchyVersions[i] = Integer.parseInt(versionStr[i].trim());
-                }
-            } else {
-                mClassHierarchyVersions = null;
-            }
-            // If we have reference_ID='blah' or id='blah', then save this
-            // instance for subsequent reference
-            String refID = mCurrentElement.getAttribute( "reference_ID" );
-            if (refID.length() < 1) refID = mCurrentElement.getAttribute("id");
-            if (refID.length() > 0) mReferencedSavables.put( refID, tmp );
-            
-            if ( tmp != null ) {
-                // We fill the empty instance constructed above by letting
-            	// it read itself.  We save the current element 'context'
-            	// within mSavable
-                mSavable = tmp;
-                tmp.read( mImporter );
-                ret = tmp;
-            }
-        }
-        return ret;
+        return( readSavableFromElem( mCurrentElement, pDefaultValue ) );
     }
-
 
     //////////////////////////////////// Input Capsule ///////////////////////////////////////////
     /** Manage the versioning */
@@ -333,23 +371,13 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
-            String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of bytes for '" + name
-                            + "'.  size says " + requiredSize
-                            + ", data contains "
-                            + strings.length);
-            }
+            String[] strings = parseTokens( tmpEl.getAttribute("data") );
             byte[] tmp = new byte[strings.length];
             for (int i = 0; i < strings.length; i++) {
                 tmp[i] = Byte.parseByte(strings[i]);
             }
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -373,8 +401,6 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             NodeList nodes = mCurrentElement.getChildNodes();
             List<byte[]> byteArrays = new ArrayList<byte[]>();
 
@@ -384,14 +410,6 @@ public class XMLInputCapsule
                 // Very unsafe assumption
                     byteArrays.add(readByteArray(n.getNodeName(), null));
                                 }
-            }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (byteArrays.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + byteArrays.size());
             }
             mCurrentElement = (Element) mCurrentElement.getParentNode();
             return byteArrays.toArray(new byte[0][]);
@@ -438,22 +456,13 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of ints for '" + name
-                            + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             int[] tmp = new int[strings.length];
             for (int i = 0; i < tmp.length; i++) {
                 tmp[i] = Integer.parseInt(strings[i]);
             }
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -477,8 +486,6 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
-
             NodeList nodes = mCurrentElement.getChildNodes();
             List<int[]> intArrays = new ArrayList<int[]>();
 
@@ -486,19 +493,12 @@ public class XMLInputCapsule
                 Node n = nodes.item(i);
                 if (n instanceof Element && n.getNodeName().contains("array")) {
                 	// Very unsafe assumption
-                    intArrays.add(readIntArray(n.getNodeName(), null));
+                    intArrays.add( readIntArray( n.getNodeName(), null) );
                 }
-            }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (intArrays.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + intArrays.size());
             }
             mCurrentElement = (Element) mCurrentElement.getParentNode();
             return intArrays.toArray(new int[0][]);
+            
         } catch (IOException ioe) {
             throw ioe;
         } catch (NumberFormatException nfe) {
@@ -542,22 +542,13 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of floats for '" + name
-                            + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             float[] tmp = new float[strings.length];
             for (int i = 0; i < tmp.length; i++) {
                 tmp[i] = Float.parseFloat(strings[i]);
             }
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (DOMException de) {
             IOException io = new IOException(de.toString());
             io.initCause(de);
@@ -632,22 +623,13 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of doubles for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             double[] tmp = new double[strings.length];
             for (int i = 0; i < tmp.length; i++) {
                 tmp[i] = Double.parseDouble(strings[i]);
             }
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -671,26 +653,17 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             NodeList nodes = mCurrentElement.getChildNodes();
             List<double[]> doubleArrays = new ArrayList<double[]>();
 
             for (int i = 0; i < nodes.getLength(); i++) {
-                        Node n = nodes.item(i);
-                                if (n instanceof Element && n.getNodeName().contains("array")) {
-                // Very unsafe assumption
-                    doubleArrays.add(readDoubleArray(n.getNodeName(), null));
-                                }
+                Node n = nodes.item(i);
+                if (n instanceof Element && n.getNodeName().contains("array")) {
+                	// Very unsafe assumption
+                	doubleArrays.add(readDoubleArray(n.getNodeName(), null));
+                }
             }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (doubleArrays.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + doubleArrays.size());
-            }
-            mCurrentElement = (Element) mCurrentElement.getParentNode();
+            mCurrentElement = (Element)mCurrentElement.getParentNode();
             return doubleArrays.toArray(new double[0][]);
         } catch (IOException ioe) {
             throw ioe;
@@ -735,22 +708,13 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of longs for '" + name
-                            + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             long[] tmp = new long[strings.length];
             for (int i = 0; i < tmp.length; i++) {
                 tmp[i] = Long.parseLong(strings[i]);
             }
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -774,7 +738,6 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             NodeList nodes = mCurrentElement.getChildNodes();
             List<long[]> longArrays = new ArrayList<long[]>();
 
@@ -784,14 +747,6 @@ public class XMLInputCapsule
                 // Very unsafe assumption
                     longArrays.add(readLongArray(n.getNodeName(), null));
                                 }
-            }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (longArrays.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + longArrays.size());
             }
             mCurrentElement = (Element) mCurrentElement.getParentNode();
             return longArrays.toArray(new long[0][]);
@@ -838,22 +793,13 @@ public class XMLInputCapsule
              if (tmpEl == null) {
                  return defVal;
              }
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of shorts for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             short[] tmp = new short[strings.length];
             for (int i = 0; i < tmp.length; i++) {
                 tmp[i] = Short.parseShort(strings[i]);
             }
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -877,8 +823,6 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             NodeList nodes = mCurrentElement.getChildNodes();
             List<short[]> shortArrays = new ArrayList<short[]>();
 
@@ -888,14 +832,6 @@ public class XMLInputCapsule
                 // Very unsafe assumption
                     shortArrays.add(readShortArray(n.getNodeName(), null));
                                 }
-            }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (shortArrays.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + shortArrays.size());
             }
             mCurrentElement = (Element) mCurrentElement.getParentNode();
             return shortArrays.toArray(new short[0][]);
@@ -938,22 +874,13 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens( tmpEl.getAttribute("data") );
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of bools for '" + name
-                            + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             boolean[] tmp = new boolean[strings.length];
             for (int i = 0; i < tmp.length; i++) {
                 tmp[i] = Boolean.parseBoolean(strings[i]);
             }
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (DOMException de) {
             IOException io = new IOException(de.toString());
             io.initCause(de);
@@ -973,7 +900,6 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             NodeList nodes = mCurrentElement.getChildNodes();
             List<boolean[]> booleanArrays = new ArrayList<boolean[]>();
 
@@ -983,14 +909,6 @@ public class XMLInputCapsule
                     // Very unsafe assumption
                     booleanArrays.add(readBooleanArray(n.getNodeName(), null));
                 }
-            }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (booleanArrays.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + booleanArrays.size());
             }
             mCurrentElement = (Element) mCurrentElement.getParentNode();
             return booleanArrays.toArray(new boolean[0][]);
@@ -1035,7 +953,6 @@ public class XMLInputCapsule
              if (tmpEl == null) {
                  return defVal;
              }
-            String sizeString = tmpEl.getAttribute("size");
             NodeList nodes = tmpEl.getChildNodes();
             List<String> strings = new ArrayList<String>();
 
@@ -1048,17 +965,8 @@ public class XMLInputCapsule
                     strings.add( tmpString );
                 }
             }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + strings.size());
-            }
             return strings.toArray(new String[0]);
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1082,7 +990,6 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             NodeList nodes = mCurrentElement.getChildNodes();
             List<String[]> stringArrays = new ArrayList<String[]>();
 
@@ -1093,16 +1000,9 @@ public class XMLInputCapsule
                     stringArrays.add(readStringArray(n.getNodeName(), null));
                 }
             }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (stringArrays.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + stringArrays.size());
-            }
             mCurrentElement = (Element) mCurrentElement.getParentNode();
             return stringArrays.toArray(new String[0][]);
+            
         } catch (IOException ioe) {
             throw ioe;
         } catch (NumberFormatException nfe) {
@@ -1160,7 +1060,8 @@ public class XMLInputCapsule
                 tmpEl = findFirstChildElement(mCurrentElement);
             }
             mCurrentElement = tmpEl;
-            ret = readSavableFromCurrentElem(defVal);
+            ret = readSavableFromCurrentElem( defVal );
+            
             if (mCurrentElement.getParentNode() instanceof Element) {
                 mCurrentElement = (Element) mCurrentElement.getParentNode();
             } else {
@@ -1184,26 +1085,16 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             List<Savable> savables = new ArrayList<Savable>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
                     mCurrentElement = findNextSiblingElement(mCurrentElement)) {
                 savables.add(readSavableFromCurrentElem(null));
             }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (savables.size() != requiredSize)
-                    throw new IOException("Wrong number of Savables for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + savables.size());
-            }
             ret = savables.toArray(new Savable[0]);
             mCurrentElement = (Element) tmpEl.getParentNode();
             return ret;
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (Exception e) {
             IOException io = new IOException(e.toString());
             io.initCause(e);
@@ -1253,26 +1144,15 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             ArrayList<Savable> savables = new ArrayList<Savable>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
                     mCurrentElement = findNextSiblingElement(mCurrentElement)) {
                 savables.add(readSavableFromCurrentElem(null));
             }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (savables.size() != requiredSize)
-                    throw new IOException(
-                            "Wrong number of Savable arrays for '" + name
-                            + "'.  size says " + requiredSize
-                            + ", data contains " + savables.size());
-            }
             mCurrentElement = (Element) tmpEl.getParentNode();
             return savables;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (Exception e) {
             IOException io = new IOException(e.toString());
             io.initCause(e);
@@ -1290,31 +1170,16 @@ public class XMLInputCapsule
             }
             mCurrentElement = tmpEl;
 
-            String sizeString = tmpEl.getAttribute("size");
-            int requiredSize = (sizeString.length() > 0)
-                             ? Integer.parseInt(sizeString)
-                             : -1;
-
             ArrayList<Savable> sal;
             List<ArrayList<Savable>> savableArrayLists =
                     new ArrayList<ArrayList<Savable>>();
             int i = -1;
-            while (true) {
-                sal = readSavableArrayList("SavableArrayList_" + ++i, null);
-                if (sal == null && savableArrayLists.size() >= requiredSize)
-                    break;
-                savableArrayLists.add(sal);
+            while( (sal = readSavableArrayList ("SavableArrayList_" + ++i, null )) != null ) {
+                savableArrayLists.add( sal );
             }
-
-            if (requiredSize > -1 && savableArrayLists.size() != requiredSize)
-                throw new IOException(
-                        "String array contains wrong element count.  "
-                        + "Specified size " + requiredSize
-                        + ", data contains " + savableArrayLists.size());
             mCurrentElement = (Element) tmpEl.getParentNode();
             return savableArrayLists.toArray(new ArrayList[0]);
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1334,25 +1199,15 @@ public class XMLInputCapsule
                 return defVal;
             }
             mCurrentElement = tmpEl;
-            String sizeString = tmpEl.getAttribute("size");
-
             ArrayList<Savable>[] arr;
             List<ArrayList<Savable>[]> sall = new ArrayList<ArrayList<Savable>[]>();
             int i = -1;
-            while ((arr = readSavableArrayListArray(
-                    "SavableArrayListArray_" + ++i, null)) != null) sall.add(arr);
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (sall.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + sall.size());
+            while ((arr = readSavableArrayListArray( "SavableArrayListArray_" + ++i, null)) != null ) {
+            	sall.add(arr);
             }
             mCurrentElement = (Element) tmpEl.getParentNode();
             return sall.toArray(new ArrayList[0][]);
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (Exception e) {
             IOException io = new IOException(e.toString());
             io.initCause(e);
@@ -1368,26 +1223,15 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             ArrayList<FloatBuffer> tmp = new ArrayList<FloatBuffer>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
                     mCurrentElement = findNextSiblingElement(mCurrentElement)) {
                 tmp.add(readFloatBuffer(null, null));
             }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (tmp.size() != requiredSize)
-                    throw new IOException(
-                            "String array contains wrong element count.  "
-                            + "Specified size " + requiredSize
-                            + ", data contains " + tmp.size());
-            }
             mCurrentElement = (Element) tmpEl.getParentNode();
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1442,12 +1286,31 @@ public class XMLInputCapsule
                 NodeList nodes = tempEl.getChildNodes();
                     for (int i = 0; i < nodes.getLength(); i++) {
                                 Node n = nodes.item(i);
-                                if (n instanceof Element && n.getNodeName().equals(XMLExporter.ELEMENT_MAPENTRY)) {
+                                if (n instanceof Element) {
+                                	if ( n.getNodeName().equals(XMLExporter.ELEMENT_MAPENTRY) ) {
+                                		// Old style mapping
                                         Element elem = (Element) n;
                                         mCurrentElement = elem;
                                         String key = mCurrentElement.getAttribute("key");
                                         Savable val = readSavable("Savable", null);
                                         ret.put(key, val);
+                                	} else {
+                                		// Simpler mapping
+                                		mCurrentElement = (Element)n;
+                                		Savable aValue;
+                                		String aString = mCurrentElement.getAttribute( "value" );
+                                		if ( aString.isEmpty() ) {
+                                			// NOT a simple attribute string, look for a full definition
+	                                		aValue = readSavable( "value", null );
+                                		} else {
+                                			// Support the string as a proxy for the savable
+                                			aValue = new XMLStringProxy( aString );
+                                		}
+	                                	if ( aValue != null ) {
+	                                		// Use the node name as the key string
+	                                		ret.put( n.getNodeName(), aValue );
+	                                	}
+                                	}
                                 }
                         }
         } else {
@@ -1468,19 +1331,19 @@ public class XMLInputCapsule
                 tempEl = mCurrentElement;
         }
         if (tempEl != null) {
-                ret = new IntMap<Savable>();
+            ret = new IntMap<Savable>();
 
-                NodeList nodes = tempEl.getChildNodes();
-                    for (int i = 0; i < nodes.getLength(); i++) {
-                                Node n = nodes.item(i);
-                                if (n instanceof Element && n.getNodeName().equals("MapEntry")) {
-                                        Element elem = (Element) n;
-                                        mCurrentElement = elem;
-                                        int key = Integer.parseInt(mCurrentElement.getAttribute("key"));
-                                        Savable val = readSavable("Savable", null);
-                                        ret.put(key, val);
-                                }
-                        }
+            NodeList nodes = tempEl.getChildNodes();
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node n = nodes.item(i);
+                if (n instanceof Element && n.getNodeName().equals("MapEntry")) {
+                    Element elem = (Element) n;
+                    mCurrentElement = elem;
+                    int key = Integer.parseInt(mCurrentElement.getAttribute("key"));
+                    Savable val = readSavable("Savable", null);
+                    ret.put(key, val);
+                }
+            }
         } else {
                 return defVal;
             }
@@ -1500,21 +1363,12 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of float buffers for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             FloatBuffer tmp = BufferUtils.createFloatBuffer(strings.length);
             for (String s : strings) tmp.put(Float.parseFloat(s));
             tmp.flip();
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1533,22 +1387,12 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of int buffers for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             IntBuffer tmp = BufferUtils.createIntBuffer(strings.length);
             for (String s : strings) tmp.put(Integer.parseInt(s));
             tmp.flip();
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1567,22 +1411,12 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of byte buffers for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             ByteBuffer tmp = BufferUtils.createByteBuffer(strings.length);
             for (String s : strings) tmp.put(Byte.valueOf(s));
             tmp.flip();
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1601,22 +1435,12 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (strings.length != requiredSize)
-                    throw new IOException("Wrong number of short buffers for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + strings.length);
-            }
             ShortBuffer tmp = BufferUtils.createShortBuffer(strings.length);
             for (String s : strings) tmp.put(Short.valueOf(s));
             tmp.flip();
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1635,25 +1459,15 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
-
-            String sizeString = tmpEl.getAttribute("size");
             ArrayList<ByteBuffer> tmp = new ArrayList<ByteBuffer>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
                     mCurrentElement = findNextSiblingElement(mCurrentElement)) {
                 tmp.add(readByteBuffer(null, null));
             }
-            if (sizeString.length() > 0) {
-                int requiredSize = Integer.parseInt(sizeString);
-                if (tmp.size() != requiredSize)
-                    throw new IOException("Wrong number of short buffers for '"
-                            + name + "'.  size says " + requiredSize
-                            + ", data contains " + tmp.size());
-            }
             mCurrentElement = (Element) tmpEl.getParentNode();
             return tmp;
-        } catch (IOException ioe) {
-            throw ioe;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);

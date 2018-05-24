@@ -47,8 +47,8 @@ import com.jme3.export.Savable;
  	It can be configured to be caching, or not.
  	
  */
-public class XMLContextKey 
-	extends AssetKey<Object> 
+public class XMLContextKey<TAsset>
+	extends AssetKey<TAsset> 
 {
 	/** What caching is supported ? */
 	protected Class<? extends AssetCache>		mAssetCache;

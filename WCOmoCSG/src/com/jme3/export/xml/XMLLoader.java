@@ -26,6 +26,7 @@ package com.jme3.export.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,6 +70,11 @@ import com.jme3.scene.Spatial;
 	directly to a load via XMLImporter.  But I needed more changes in the import 
 	structure and have decided to eliminate the need for XMLImporter and to 
 	include the necessary functionality here.
+	
+	NOTE that if a Savable invokes an asset load via the AssetManager from
+		 within its .read() processing, it is possible that this instance
+		 if called a second time via its .load() method.  We must take care
+		 to preserve the proper context it this should happen.
  */
 public class XMLLoader 
 	implements JmeImporter 
@@ -78,15 +84,14 @@ public class XMLLoader
 
     
     /** The active asset manager */
-    protected AssetManager		mAssetManager;
-    /** The key used to access the asset */
-    protected AssetKey			mAssetKey;
-    /** The DOM capsule providing the reading services */
-    protected XMLInputCapsule	mInCapsule;
+    protected AssetManager			mAssetManager;
+    /** Stack of active loading contexts */
+    protected Stack<XMLLoadContext>	mContextStack;
     
     /** The asset manager uses the null constructor */
     public XMLLoader(
     ) {
+    	mContextStack = new Stack();
     }
     
     /** Load the XML */
@@ -96,14 +101,13 @@ public class XMLLoader
     ) throws IOException {
 		// Wire back to the active asset manager
 		mAssetManager = pAssetInfo.getManager();
-		mAssetKey = pAssetInfo.getKey();
 		
 		// Process the stream
     	InputStream aStream = null;
     	try {
     		// Read and parse the given stream
     		aStream = pAssetInfo.openStream();
-    		Savable aNode = load( aStream );
+    		Savable aNode = load( pAssetInfo.getKey(), aStream );
     		return( aNode );
     	
     	} catch( IOException ex ) {
@@ -119,22 +123,24 @@ public class XMLLoader
 
 	/** Service routine that process XML and produces a 'Savable' */
     public Savable load(
-    	InputStream		pInStream
+    	AssetKey		pAssetKey
+    ,	InputStream		pInStream
     ) throws IOException {
+    	XMLLoadContext aContext = mContextStack.push( new XMLLoadContext( pAssetKey ) );
         try {
         	// Produce the DOM via standard XML services
         	Document aDocument = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( pInStream );
-        	mInCapsule = new XMLInputCapsule( aDocument, this );
+        	aContext.mInCapsule = new XMLInputCapsule( aDocument, this );
         	
-        	if ( mAssetKey instanceof XMLContextKey ) {
+        	if ( pAssetKey instanceof XMLContextKey ) {
         		// The key can provide us with extra contextual data
-        		XMLContextKey xmlEnvironment = (XMLContextKey)mAssetKey;
-        		mInCapsule.seedReferencedSavables( xmlEnvironment.getSeedValues() );
+        		XMLContextKey xmlEnvironment = (XMLContextKey)pAssetKey;
+        		aContext.mInCapsule.seedReferencedSavables( xmlEnvironment.getSeedValues() );
         		
-        		mInCapsule.setResourceBundles( xmlEnvironment.getTranslationBundles() );
+        		aContext.mInCapsule.setResourceBundles( xmlEnvironment.getTranslationBundles() );
         	}
         	// The entire document is assumed to be a single savable, with interior components
-            Savable rootNode =  mInCapsule.readSavable( null, null );
+            Savable rootNode =  aContext.mInCapsule.readSavable( null, null );
             
             // NOTE that at this point, we could retrieve the referenced savables
             //		that were produced during processing.  These could be interesting to a
@@ -150,6 +156,8 @@ public class XMLLoader
             IOException ex = new IOException();
             ex.initCause(e);
             throw ex;
+        } finally {
+        	mContextStack.pop();
         }
     }
 
@@ -158,7 +166,7 @@ public class XMLLoader
 	public InputCapsule getCapsule(
 		Savable 	pID
 	) {
-		return mInCapsule;
+		return mContextStack.peek().mInCapsule;
 	}
 
 	/** Simple hook to provide the active asset manager during read operations */
@@ -170,4 +178,16 @@ public class XMLLoader
 	@Override
 	public int getFormatVersion() { return 0; }
 
+	/** Helper class that maintains a proper active context */
+	class XMLLoadContext 
+	{
+		AssetKey		mAssetKey;
+		XMLInputCapsule	mInCapsule;
+		
+		XMLLoadContext(
+			AssetKey		pAssetKey
+		) {
+			mAssetKey = pAssetKey;
+		}
+	}
 }
