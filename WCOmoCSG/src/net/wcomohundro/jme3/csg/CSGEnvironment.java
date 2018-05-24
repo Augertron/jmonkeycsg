@@ -48,6 +48,7 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.export.SavableClassUtil;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -72,6 +73,11 @@ public class CSGEnvironment<ShapeProcessorT>
 	/** Version tracking support */
 	public static final String sCSGEnvironmentRevision="$Rev$";
 	public static final String sCSGEnvironmentDate="$Date$";
+	
+	/** Define a 'prefix' for limiting name length in XML imports */
+	static {
+		SavableClassUtil.addPrefix( "csg", "net.wcomohundro.jme3.csg" );
+	}
 	
 	/** Logger available to any CSG services that desire it */
     public static final Logger sLogger = Logger.getLogger( ConstructiveSolidGeometry.class.getName() );
