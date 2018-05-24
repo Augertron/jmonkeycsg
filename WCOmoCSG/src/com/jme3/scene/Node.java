@@ -740,11 +740,13 @@ public class Node extends Spatial {
     public void read(JmeImporter e) throws IOException {
         // XXX: Load children before loading itself!!
         // This prevents empty children list if controls query
-        // it in Control.setSpatial().
+        // it in Control.setSpatial().  Also, preserve any existing children, which
+    	// coul have been created in the null constructor.
 // wco - 18Mar2015 - protect against missing children
-    	ArrayList childList = e.getCapsule(this).readSavableArrayList("children", new ArrayList() );
-    	children = new SafeArrayList( Spatial.class, childList );
-    	    
+    	ArrayList childList = e.getCapsule(this).readSavableArrayList("children", null );
+    	if ( childList != null ) {
+    		children.addAll( childList );// = new SafeArrayList( Spatial.class, childList );
+    	}    
 //    	        children = new SafeArrayList( Spatial.class, 
 //    	                                      e.getCapsule(this).readSavableArrayList("children", null) );
         // go through children and set parent to this node

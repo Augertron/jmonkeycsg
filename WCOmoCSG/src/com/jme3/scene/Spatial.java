@@ -1623,10 +1623,11 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
                 RenderQueue.Bucket.Inherit);
         shadowMode = ic.readEnum("shadow_mode", ShadowMode.class,
                 ShadowMode.Inherit);
+// 09Apr2018 - wco - DO NOT SHARE THE IDENTITY Transform
+//        localTransform = (Transform) ic.readSavable("transform", Transform.IDENTITY);
+        localTransform = (Transform) ic.readSavable("transform", localTransform );
 
-        localTransform = (Transform) ic.readSavable("transform", Transform.IDENTITY);
-
-//     	27Feb2015 - wco - retain original list if lights not included in the import
+// 27Feb2015 - wco - retain original list if lights not included in the import
 //      localLights = (LightList) ic.readSavable("lights", null);
         localLights = (LightList) ic.readSavable("lights", localLights);
         localLights.setOwner(this);
