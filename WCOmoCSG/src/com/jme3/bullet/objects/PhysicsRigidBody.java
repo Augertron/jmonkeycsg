@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2012 jMonkeyEngine
+ * Copyright (c) 2009-2018 jMonkeyEngine
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -186,6 +186,21 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
         return rot;
     }
 
+    public void setInverseInertiaLocal(Vector3f gravity) {
+    	setInverseInertiaLocal(objectId, gravity);
+    }
+    private native void setInverseInertiaLocal(long objectId, Vector3f gravity);
+    
+    public Vector3f getInverseInertiaLocal(Vector3f trans) {
+        if (trans == null) {
+            trans = new Vector3f();
+        }
+        getInverseInertiaLocal(objectId, trans);
+        return trans;
+    }
+    
+    private native void getInverseInertiaLocal(long objectId, Vector3f vector);
+
     private native void getPhysicsRotation(long objectId, Quaternion rot);
 
     /**
@@ -250,7 +265,7 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
 //    }
     /**
      * Sets the node to kinematic mode. in this mode the node is not affected by physics
-     * but affects other physics objects. Iits kinetic force is calculated by the amount
+     * but affects other physics objects. Its kinetic force is calculated by the amount
      * of movement it is exposed to and its weight.
      * @param kinematic
      */
@@ -753,7 +768,7 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
         setPhysicsRotation((Matrix3f) capsule.readSavable("physicsRotation", new Matrix3f()));
 
 // WCO 21Nov2015 - do not overwrite an empty joints array with null
-// wco 03Feb2016 - synch with 5939
+// wco 24May2018 - synch with 8472
         joints = capsule.readSavableArrayList("joints", this.joints );
     }
 }

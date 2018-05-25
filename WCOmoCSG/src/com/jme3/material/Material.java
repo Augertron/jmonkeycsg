@@ -29,7 +29,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-// jme3 mainline 7316 -----
+// wco 24May2018 - synch with 8852
 package com.jme3.material;
 
 import com.jme3.asset.AssetKey;
@@ -47,10 +47,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
-import com.jme3.shader.Shader;
-import com.jme3.shader.Uniform;
-import com.jme3.shader.UniformBindingManager;
-import com.jme3.shader.VarType;
+import com.jme3.shader.*;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 import com.jme3.texture.image.ColorSpace;
@@ -414,6 +411,17 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     }
 
     /**
+     * Returns the current parameter's value.
+     *
+     * @param name the parameter name to look up.
+     * @return current value or null if the parameter wasn't set.
+     */
+    public <T> T getParamValue(final String name) {
+        final MatParam param = paramValues.get(name);
+        return param == null ? null : (T) param.getValue();
+    }
+
+    /**
      * Returns the texture parameter set on this material with the given name,
      * returns <code>null</code> if the parameter is not set.
      *
@@ -530,6 +538,21 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         checkSetParam(type, name);
         MatParamTexture val = getTextureParam(name);
         if (val == null) {
+            checkTextureParamColorSpace(name, value);
+            paramValues.put(name, new MatParamTexture(type, name, value, null));
+        } else {
+            val.setTextureValue(value);
+        }
+
+        if (technique != null) {
+            technique.notifyParamChanged(name, type, value);
+        }
+
+        // need to recompute sort ID
+        sortingId = -1;
+    }
+
+    private void checkTextureParamColorSpace(String name, Texture value) {
             MatParamTexture paramDef = (MatParamTexture) def.getMaterialParam(name);
             if (paramDef.getColorSpace() != null && paramDef.getColorSpace() != value.getImage().getColorSpace()) {
                 value.getImage().setColorSpace(paramDef.getColorSpace());
@@ -548,17 +571,6 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
                         + "Linear using texture.getImage.setColorSpace().",
                         new Object[]{value.getName(), value.getImage().getColorSpace().name(), name});
             }
-            paramValues.put(name, new MatParamTexture(type, name, value, null));
-        } else {
-            val.setTextureValue(value);
-        }
-
-        if (technique != null) {
-            technique.notifyParamChanged(name, type, value);
-        }
-
-        // need to recompute sort ID
-        sortingId = -1;
     }
 
     /**
@@ -658,6 +670,28 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     }
 
     /**
+     * Pass an uniform buffer object to the material shader.
+     *
+     * @param name  the name of the buffer object defined in the material definition (j3md).
+     * @param value the buffer object.
+     */
+    public void setUniformBufferObject(final String name, final BufferObject value) {
+        value.setBufferType(BufferObject.BufferType.UniformBufferObject);
+        setParam(name, VarType.BufferObject, value);
+    }
+
+    /**
+     * Pass a shader storage buffer object to the material shader.
+     *
+     * @param name  the name of the buffer object defined in the material definition (j3md).
+     * @param value the buffer object.
+     */
+    public void setShaderStorageBufferObject(final String name, final BufferObject value) {
+        value.setBufferType(BufferObject.BufferType.ShaderStorageBufferObject);
+        setParam(name, VarType.BufferObject, value);
+    }
+
+    /**
      * Pass a Vector2f to the material shader.
      *
      * @param name the name of the Vector2f defined in the material definition (j3md)
@@ -705,7 +739,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
      * @throws UnsupportedOperationException If no candidate technique supports
      * the system capabilities.
      */
-    public void selectTechnique(String name, RenderManager renderManager) {
+    public void selectTechnique(String name, final RenderManager renderManager) {
         // check if already created
         Technique tech = techniques.get(name);
         // When choosing technique, we choose one that
@@ -720,14 +754,14 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
             }
 
             TechniqueDef lastTech = null;
+            float weight = 0;
             for (TechniqueDef techDef : techDefs) {
                 if (rendererCaps.containsAll(techDef.getRequiredCaps())) {
-                    // use the first one that supports all the caps
+                    float techWeight = techDef.getWeight() + (techDef.getLightMode() == renderManager.getPreferredLightMode() ? 10f : 0);
+                    if (techWeight > weight) {
                     tech = new Technique(this, techDef);
                     techniques.put(name, tech);
-                    if (tech.getDef().getLightMode() == renderManager.getPreferredLightMode()
-                            || tech.getDef().getLightMode() == LightMode.Disable) {
-                        break;
+                        weight = techWeight;
                     }
                 }
                 lastTech = techDef;
@@ -739,6 +773,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
                                 + "The capabilities %s are required.",
                                 name, def.getName(), lastTech.getRequiredCaps()));
             }
+            logger.log(Level.FINE, this.getMaterialDef().getName() + " selected technique def " + tech.getDef());
         } else if (technique == tech) {
             // attempting to switch to an already
             // active technique.
@@ -793,23 +828,41 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         for (int i = 0; i < paramValues.size(); i++) {
             MatParam param = paramValues.getValue(i);
             VarType type = param.getVarType();
-            Uniform uniform = shader.getUniform(param.getPrefixedName());
 
-            if (uniform.isSetByCurrentMaterial()) {
-                continue;
-            }
+            if (isBO(type)) {
 
-            if (type.isTextureType()) {
-                renderer.setTexture(unit, (Texture) param.getValue());
-                uniform.setValue(VarType.Int, unit);
-                unit++;
+                final ShaderBufferBlock bufferBlock = shader.getBufferBlock(param.getPrefixedName());
+                bufferBlock.setBufferObject((BufferObject) param.getValue());
+
             } else {
-                uniform.setValue(type, param.getValue());
-            }
+
+                Uniform uniform = shader.getUniform(param.getPrefixedName());
+	            if (uniform.isSetByCurrentMaterial()) {
+	                continue;
+	            }
+	
+	            if (type.isTextureType()) {
+	                renderer.setTexture(unit, (Texture) param.getValue());
+	                uniform.setValue(VarType.Int, unit);
+	                unit++;
+	            } else {
+	                uniform.setValue(type, param.getValue());
+	            }
+	        }
         }
 
         //TODO HACKY HACK remove this when texture unit is handled by the uniform.
         return unit;
+    }
+
+    /**
+     * Returns true if the type is Buffer Object's type.
+     *
+     * @param type the material parameter type.
+     * @return true if the type is Buffer Object's type.
+     */
+    private boolean isBO(final VarType type) {
+        return type == VarType.BufferObject;
     }
 
     private void updateRenderState(RenderManager renderManager, Renderer renderer, TechniqueDef techniqueDef) {
@@ -833,7 +886,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
      *
      * @param renderManager The render manager to preload for
      */
-    public void preload(RenderManager renderManager) {
+    public void preload(RenderManager renderManager, Geometry geometry) {
         if (technique == null) {
             selectTechnique(TechniqueDef.DEFAULT_TECHNIQUE_NAME, renderManager);
         }
@@ -844,9 +897,11 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         if (techniqueDef.isNoRender()) {
             return;
         }
+        // Get world overrides
+        SafeArrayList<MatParamOverride> overrides = geometry.getWorldMatParamOverrides();
 
-        Shader shader = technique.makeCurrent(renderManager, null, null, null, rendererCaps);
-        updateShaderMaterialParameters(renderer, shader, null, null);
+        Shader shader = technique.makeCurrent(renderManager, overrides, null, null, rendererCaps);
+        updateShaderMaterialParameters(renderer, shader, overrides, null);
         renderManager.getRenderer().setShader(shader);
     }
 
@@ -1055,6 +1110,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
 
         // load the textures and update nextTexUnit
 // 09Mar2015 - wco - handle NULL params
+// 24May2018 synch with 8852
         if ( params != null ) {
 	        for (Map.Entry<String, MatParam> entry : params.entrySet()) {
 	            MatParam param = entry.getValue();

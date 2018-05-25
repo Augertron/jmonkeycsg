@@ -63,6 +63,7 @@ import java.util.logging.Logger;
 public class SavableClassUtil {
 
     private final static HashMap<String, String> CLASS_REMAPPINGS = new HashMap<>();
+// wco 24May2018 - synch with 7913
 // wco add 'prefix' concept
     private final static HashMap<String, String> CLASS_PREFIXES = new HashMap();
 // wco
@@ -248,8 +249,14 @@ public class SavableClassUtil {
         String newClassName = remapClass(className);
         synchronized(loaders) {
             for (ClassLoader classLoader : loaders){
+                final Class<?> loadedClass;
                 try {
-                    return (Savable) classLoader.loadClass(newClassName).newInstance();
+                    loadedClass = classLoader.loadClass(newClassName);
+                } catch (final ClassNotFoundException e) {
+                    continue;
+                }
+                try {
+                    return (Savable) loadedClass.newInstance();
                 } catch (InstantiationException e) {
                 } catch (IllegalAccessException e) {
                 }

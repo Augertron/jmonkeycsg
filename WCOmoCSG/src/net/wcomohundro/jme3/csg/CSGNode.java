@@ -79,6 +79,7 @@ import com.jme3.texture.Texture;
 import com.jme3.util.SafeArrayList;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.TempVars;
+import com.jme3.util.clone.Cloner;
 
 /**  Constructive Solid Geometry (CSG)
 
@@ -155,7 +156,9 @@ public class CSGNode
 		}
         // Ensure we have our own copy of the physics
         if ( aCopy.mPhysics != null ) {
-        	aCopy.mPhysics = (PhysicsControl)this.mPhysics.cloneForSpatial( aCopy );
+        	Cloner aCloner = new Cloner();
+        	aCopy.mPhysics = (PhysicsControl)aCloner.clone( this.mPhysics );
+        	aCopy.mPhysics.setSpatial( this );
         }
         return( aCopy );
     }
