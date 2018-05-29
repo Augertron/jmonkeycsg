@@ -50,7 +50,6 @@ import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 import com.jme3.scene.control.LightControl;
 import com.jme3.util.TempVars;
-import com.jme3.util.clone.Cloner;
 
 /** I do not understand the rationale behind the standard JME3 LightControl.  If I add a localLight
  	to a Spatial, I expect to position and configure it in relation to that Spatial.  If that Spatial
@@ -135,8 +134,7 @@ public class CSGLightControl
 				
 			} else if ( pControlTemplate instanceof LightControl ) {
 				// Use the LightControll supplied
-	        	Cloner aCloner = new Cloner();
-				aControl = (LightControl)aCloner.clone( pControlTemplate );
+				aControl = (LightControl)pControlTemplate.cloneForSpatial( null );
 				((LightControl)aControl).setLight( aLight );
 			}
 			if ( aControl != null ) {
@@ -194,8 +192,15 @@ public class CSGLightControl
     public CSGLightControl clone(
     	Light		pLight
     ) {
-    	CSGLightControl aCopy = (CSGLightControl)super.jmeClone();
+    	CSGLightControl aCopy = (CSGLightControl)super.cloneForSpatial( null );
     	aCopy.mLight = pLight;
+    	return( aCopy );
+    }
+    @Override
+    public Control cloneForSpatial(
+    	Spatial		pSpatial
+    ) {
+    	CSGLightControl aCopy = (CSGLightControl)super.cloneForSpatial( pSpatial );
     	return( aCopy );
     }
     

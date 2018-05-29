@@ -54,6 +54,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.plugins.blender.math.Vector3d;
 
 
+
 /** Constructive Solid Geometry (CSG)
 	
 	A CSG Vertex is a point in space, know by its position, its normal, and its texture coordinate
@@ -72,7 +73,7 @@ public class CSGVertexDbl
 	/** Version tracking support */
 	public static final String sCSGVertexDblRevision="$Rev$";
 	public static final String sCSGVertexDblDate="$Date$";
-
+	
 	
 	/** Standard null constructor */
 	public CSGVertexDbl(
@@ -119,7 +120,7 @@ public class CSGVertexDbl
 	) {
 		if ( pFlipIt ) {
 			// Make a flipped copy (invert the normal)
-			return( new CSGVertexDbl( mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null ));
+			return( new CSGVertexDbl( (Vector3d)mPosition.clone(), mNormal.negate(), mTextureCoordinate.clone(), null ));
 		} else {
 			// Standard copy, which is currently this same immutable instance
 			return( this ); // new CSGVertex( mPosition.clone(), mNormal.clone(), mTextureCoordinate.clone() ));

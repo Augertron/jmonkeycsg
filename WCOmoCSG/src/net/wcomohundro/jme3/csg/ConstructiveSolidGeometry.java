@@ -58,7 +58,6 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Constructive solid geometry (CSG) (formerly called computational binary solid geometry) is a 
  	technique used in 3D solid modeling. Constructive solid geometry allows a modeler to create 

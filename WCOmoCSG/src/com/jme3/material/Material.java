@@ -29,7 +29,6 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-// wco 24May2018 - synch with 8852
 package com.jme3.material;
 
 import com.jme3.asset.AssetKey;
@@ -47,7 +46,10 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
-import com.jme3.shader.*;
+import com.jme3.shader.Shader;
+import com.jme3.shader.Uniform;
+import com.jme3.shader.UniformBindingManager;
+import com.jme3.shader.VarType;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 import com.jme3.texture.image.ColorSpace;
@@ -411,17 +413,6 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     }
 
     /**
-     * Returns the current parameter's value.
-     *
-     * @param name the parameter name to look up.
-     * @return current value or null if the parameter wasn't set.
-     */
-    public <T> T getParamValue(final String name) {
-        final MatParam param = paramValues.get(name);
-        return param == null ? null : (T) param.getValue();
-    }
-
-    /**
      * Returns the texture parameter set on this material with the given name,
      * returns <code>null</code> if the parameter is not set.
      *
@@ -670,28 +661,6 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     }
 
     /**
-     * Pass an uniform buffer object to the material shader.
-     *
-     * @param name  the name of the buffer object defined in the material definition (j3md).
-     * @param value the buffer object.
-     */
-    public void setUniformBufferObject(final String name, final BufferObject value) {
-        value.setBufferType(BufferObject.BufferType.UniformBufferObject);
-        setParam(name, VarType.BufferObject, value);
-    }
-
-    /**
-     * Pass a shader storage buffer object to the material shader.
-     *
-     * @param name  the name of the buffer object defined in the material definition (j3md).
-     * @param value the buffer object.
-     */
-    public void setShaderStorageBufferObject(final String name, final BufferObject value) {
-        value.setBufferType(BufferObject.BufferType.ShaderStorageBufferObject);
-        setParam(name, VarType.BufferObject, value);
-    }
-
-    /**
      * Pass a Vector2f to the material shader.
      *
      * @param name the name of the Vector2f defined in the material definition (j3md)
@@ -828,41 +797,23 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         for (int i = 0; i < paramValues.size(); i++) {
             MatParam param = paramValues.getValue(i);
             VarType type = param.getVarType();
+            Uniform uniform = shader.getUniform(param.getPrefixedName());
 
-            if (isBO(type)) {
+            if (uniform.isSetByCurrentMaterial()) {
+                continue;
+            }
 
-                final ShaderBufferBlock bufferBlock = shader.getBufferBlock(param.getPrefixedName());
-                bufferBlock.setBufferObject((BufferObject) param.getValue());
-
+            if (type.isTextureType()) {
+                renderer.setTexture(unit, (Texture) param.getValue());
+                uniform.setValue(VarType.Int, unit);
+                unit++;
             } else {
-
-                Uniform uniform = shader.getUniform(param.getPrefixedName());
-	            if (uniform.isSetByCurrentMaterial()) {
-	                continue;
-	            }
-	
-	            if (type.isTextureType()) {
-	                renderer.setTexture(unit, (Texture) param.getValue());
-	                uniform.setValue(VarType.Int, unit);
-	                unit++;
-	            } else {
-	                uniform.setValue(type, param.getValue());
-	            }
-	        }
+                uniform.setValue(type, param.getValue());
+            }
         }
 
         //TODO HACKY HACK remove this when texture unit is handled by the uniform.
         return unit;
-    }
-
-    /**
-     * Returns true if the type is Buffer Object's type.
-     *
-     * @param type the material parameter type.
-     * @return true if the type is Buffer Object's type.
-     */
-    private boolean isBO(final VarType type) {
-        return type == VarType.BufferObject;
     }
 
     private void updateRenderState(RenderManager renderManager, Renderer renderer, TechniqueDef techniqueDef) {
@@ -886,7 +837,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
      *
      * @param renderManager The render manager to preload for
      */
-    public void preload(RenderManager renderManager, Geometry geometry) {
+    public void preload(RenderManager renderManager) {
         if (technique == null) {
             selectTechnique(TechniqueDef.DEFAULT_TECHNIQUE_NAME, renderManager);
         }
@@ -897,11 +848,9 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         if (techniqueDef.isNoRender()) {
             return;
         }
-        // Get world overrides
-        SafeArrayList<MatParamOverride> overrides = geometry.getWorldMatParamOverrides();
 
-        Shader shader = technique.makeCurrent(renderManager, overrides, null, null, rendererCaps);
-        updateShaderMaterialParameters(renderer, shader, overrides, null);
+        Shader shader = technique.makeCurrent(renderManager, null, null, null, rendererCaps);
+        updateShaderMaterialParameters(renderer, shader, null, null);
         renderManager.getRenderer().setShader(shader);
     }
 

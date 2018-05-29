@@ -2,23 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="Assets"/>
-	<classpathentry kind="lib" path="C:/JMonkeySDK/jmonkeyplatform/libs/jME3-testdata.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/nifty-1.4.2.jar" sourcepath="/WCOmoCSGDeploy/extlibs/nifty-1.4.2-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/nifty-default-controls-1.4.2.jar" sourcepath="/WCOmoCSGDeploy/extlibs/nifty-default-controls-1.4.2-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/nifty-style-black-1.4.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/EJML-core-0.27.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/EJML-dense64-0.27.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/EJML-simple-0.27.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/j-ogg-oggd.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/j-ogg-vorbisd.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/jglfont-core-1.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/jinput.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/jME3-bullet-natives.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/jME3-lwjgl-natives-2.9.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/lwjgl-2.9.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/jsr305-3.0.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/extlibs/xpp3-1.1.4c.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jMonkey"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jMonkey321"/>
+	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/jMonkey321/extlibs/nifty-style-black-1.4.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/jMonkey321/libs/jme3-testdata.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

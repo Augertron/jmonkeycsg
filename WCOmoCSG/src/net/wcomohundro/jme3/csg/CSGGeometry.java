@@ -190,9 +190,7 @@ public class CSGGeometry
 		
         // Ensure we have our own copy of the physics
         if ( aCopy.mPhysics != null ) {
-        	Cloner aCloner = new Cloner();
-        	aCopy.mPhysics = aCloner.clone( this.mPhysics );
-        	aCopy.mPhysics.setSpatial( this );
+        	aCopy.mPhysics = (PhysicsControl)this.mPhysics.cloneForSpatial( aCopy );
         }
         return( aCopy );
     }
