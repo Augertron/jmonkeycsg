@@ -29,6 +29,7 @@
 package net.wcomohundro.jme3.csg;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,7 +77,14 @@ public class CSGEnvironment<ShapeProcessorT>
 	
 	/** Define a 'prefix' for limiting name length in XML imports */
 	static {
-		SavableClassUtil.addPrefix( "csg", "net.wcomohundro.jme3.csg" );
+		try {
+			// If the CSG jme3 extensions are not available, then the method does not exist
+			Class[] argTypes = new Class[] { String.class, String.class };
+			Method aMethod = SavableClassUtil.class.getMethod( "addPrefix", argTypes );
+			
+			SavableClassUtil.addPrefix( "csg", "net.wcomohundro.jme3.csg" );
+		} catch( NoSuchMethodException ignore ) {
+		}
 	}
 	
 	/** Logger available to any CSG services that desire it */
