@@ -487,7 +487,10 @@ public class CSGGeonode
 	@Override
 	public BoundingVolume getWorldBound(
 	) {
-    	return( (mMasterGeometry == null) ? super.getWorldBound() : mMasterGeometry.getWorldBound() );		
+    	// Unfortunately, the MasterGeometry is not slaved to the repositioning of this
+    	// CSGGeonode, so its world bound will be off
+//    	return( (mMasterGeometry == null) ? super.getWorldBound() : mMasterGeometry.getWorldBound() );
+		return super.getWorldBound();
 	}
     /**	Returns the number of triangles contained in all sub-branches of this node that contain geometry.
 		OVERRIDE to operate directly from the master 

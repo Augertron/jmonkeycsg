@@ -42,6 +42,7 @@ import com.jme3.material.MatParamOverride;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.Camera.FrustumIntersect;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
@@ -53,6 +54,7 @@ import com.jme3.util.clone.IdentityCloneFunction;
 import com.jme3.util.clone.JmeCloneable;
 import com.jme3.util.SafeArrayList;
 import com.jme3.util.TempVars;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;

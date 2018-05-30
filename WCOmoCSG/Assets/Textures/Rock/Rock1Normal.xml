@@ -9,11 +9,11 @@
 	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/Rock/Rock.PNG' 
+	            		name='Textures/Rock/Rock.png' 
 	            		reference_ID='com.jme3.texture.Texture2D@Rock1NDiffuse'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
-	                	name='Textures/Terrain/Rock/Rock.PNG'/>
+	                	name='Textures/Rock/Rock.png'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@Rock1NDiffuse'/>
 	        </Savable>
@@ -24,11 +24,11 @@
 	        		name='NormalMap' texture_unit='1' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/Rock/Rock_normal.png' 
+	            		name='Textures/Rock/Rock_normal.png' 
 	            		reference_ID='com.jme3.texture.Texture2D@Rock1Normal'>
 	                <key class='com.jme3.asset.TextureKey'
 						generate_mips='true' 
-						name='Textures/Terrain/Rock/Rock_normal.png'/>
+						name='Textures/Rock/Rock_normal.png'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@Rock1Normal'/>
 	        </Savable>

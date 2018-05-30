@@ -42,6 +42,7 @@ import net.wcomohundro.jme3.csg.CSGTempVars;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.math.CSGPolygon.CSGPolygonPlaneMode;
+import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -51,7 +52,6 @@ import com.jme3.export.Savable;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 
 
 

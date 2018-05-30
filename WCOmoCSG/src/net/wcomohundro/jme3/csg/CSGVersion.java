@@ -40,6 +40,7 @@ import net.wcomohundro.jme3.csg.math.CSGPlaneFlt;
 import net.wcomohundro.jme3.csg.math.CSGPolygonFlt;
 import net.wcomohundro.jme3.csg.math.CSGVertexFlt;
 import net.wcomohundro.jme3.csg.shape.*;
+import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.export.InputCapsule;
@@ -48,7 +49,6 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Report on the Versions of the CSG source code
  	NOTE

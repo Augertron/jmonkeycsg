@@ -27,11 +27,11 @@
 	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/Pond/Pond.jpg' 
+	            		name='Textures/CobbleStone/Pond.jpg' 
 	            		reference_ID='com.jme3.texture.Texture2D@PebblesDiffuse'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
-	                	name='Textures/Terrain/Pond/Pond.jpg'/>
+	                	name='Textures/CobbleStone/Pond.jpg'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@PebblesDiffuse'/>
 	        </Savable>
@@ -42,11 +42,11 @@
 	        		name='NormalMap' texture_unit='1' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/Pond/Pond_normal.png' 
+	            		name='Textures/CobbleStone/Pond_normal.png' 
 	            		reference_ID='com.jme3.texture.Texture2D@PebblesNormal'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
-	                	name='Textures/Terrain/Pond/Pond_normal.png'/>
+	                	name='Textures/CobbleStone/Pond_normal.png'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@PebblesNormal'/>
 	        </Savable>

@@ -215,7 +215,7 @@
             <csgEnvironment class='net.wcomohundro.jme3.csg.CSGEnvironment' ref='CSGEnvironmentIOB' />
             <shapes>
                 <net.wcomohundro.jme3.csg.CSGExternal 
-                		name='Teapot' model='Models/Teapot/Teapot.obj'>
+                		name='Teapot' model='Meshes/Teapot.obj'>
                     <transform class='com.jme3.math.Transform'>
 		                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
                     </transform>

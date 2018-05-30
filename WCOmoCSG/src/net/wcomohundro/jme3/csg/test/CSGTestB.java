@@ -52,7 +52,7 @@ import net.wcomohundro.jme3.csg.shape.CSGBox;
 import net.wcomohundro.jme3.csg.shape.CSGCylinder;
 
 /** Simple test of the CSG suport 
- 		Blend together cubes and cylinders
+ 		Blend together cubes and cylinders, with result having multiple textures
  */
 public class CSGTestB 
 	extends CSGTestSceneBase 
@@ -60,17 +60,21 @@ public class CSGTestB
 	public static void main(
 		String[] 	pArgs
 	) {
-	    SimpleApplication app = new CSGTestB();		    
+	    SimpleApplication app = new CSGTestB( false );		    
 	    app.start();
 	}
 	
 	/** Simple unique name **/
-	protected int	mShapeCounter;
+	protected int		mShapeCounter;
+	/** Multi-Material test only */
+	protected boolean	mMultiMatOnly;
 
 	public CSGTestB(
+		boolean		pMultiMatOnly
 	) {
 		super( new StatsAppState(), new FlyCamAppState(), new DebugKeysAppState() );
-		//super( new FlyCamAppState() );
+		
+		mMultiMatOnly = pMultiMatOnly;
 	}
 
     @Override
@@ -84,66 +88,74 @@ public class CSGTestB
 	    // Long cylinder that pokes out of the cube
     	Spatial aGeometry;
 
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
-    	aGeometry.move( -3f, 0, 0f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
-    	aGeometry.move( 0f, 0f, 0f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
-    	aGeometry.move( 3f, 0f, 0f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	// Short cylinder that does not span out of the cube
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, false );
-    	aGeometry.move( -3f, 3f, 0f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
-    	aGeometry.move( 0f, 3f, 0f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
-    	aGeometry.move( 3f, 3f, 0f );
-    	rootNode.attachChild( aGeometry );
-    	
-	    // Long cylinder that pokes out of the cube
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
-    	aGeometry.move( -3f, 0, -5f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
-    	aGeometry.move( 0f, 0f, -5f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.INTERSECTION, true );
-    	aGeometry.move( 3f, 0f, -5f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	// Short cylinder that does not span out of the cube
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, false );
-    	aGeometry.move( -3f, 3f, -5f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
-    	aGeometry.move( 0f, 3f, -5f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
-    	aGeometry.move( 3f, 3f, -5f );
-    	rootNode.attachChild( aGeometry );
-    	
-    	// Just the box
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.SKIP, false );
-    	aGeometry.move( -3f, 0f, 5f );
-    	rootNode.attachChild( aGeometry );
-
-    	// Just the cylinder
-    	aGeometry = buildShape( CSGGeonode.CSGOperator.SKIP, 2.5f, CSGGeonode.CSGOperator.UNION, true );
-    	aGeometry.move( 3f, 0f, 5f );
-    	rootNode.attachChild( aGeometry );
+    	if ( mMultiMatOnly ) {
+    		// Colored cylinder forces multiple materials
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.INTERSECTION, true );
+	    	aGeometry.move( 3f, 0f, -5f );
+	    	rootNode.attachChild( aGeometry );    		
+    	} else {
+    		// All the various combinations
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
+	    	aGeometry.move( -3f, 0, 0f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
+	    	aGeometry.move( 0f, 0f, 0f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
+	    	aGeometry.move( 3f, 0f, 0f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	// Short cylinder that does not span out of the cube
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, false );
+	    	aGeometry.move( -3f, 3f, 0f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
+	    	aGeometry.move( 0f, 3f, 0f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
+	    	aGeometry.move( 3f, 3f, 0f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+		    // Long cylinder that pokes out of the cube
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.UNION, false );
+	    	aGeometry.move( -3f, 0, -5f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
+	    	aGeometry.move( 0f, 0f, -5f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.INTERSECTION, true );
+	    	aGeometry.move( 3f, 0f, -5f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	// Short cylinder that does not span out of the cube
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.UNION, false );
+	    	aGeometry.move( -3f, 3f, -5f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.DIFFERENCE, false );
+	    	aGeometry.move( 0f, 3f, -5f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 1.5f, CSGGeonode.CSGOperator.INTERSECTION, false );
+	    	aGeometry.move( 3f, 3f, -5f );
+	    	rootNode.attachChild( aGeometry );
+	    	
+	    	// Just the box
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.UNION, 2.5f, CSGGeonode.CSGOperator.SKIP, false );
+	    	aGeometry.move( -3f, 0f, 5f );
+	    	rootNode.attachChild( aGeometry );
+	
+	    	// Just the cylinder
+	    	aGeometry = buildShape( CSGGeonode.CSGOperator.SKIP, 2.5f, CSGGeonode.CSGOperator.UNION, true );
+	    	aGeometry.move( 3f, 0f, 5f );
+	    	rootNode.attachChild( aGeometry );
+    	}
     }
 
     protected Spatial buildShape(

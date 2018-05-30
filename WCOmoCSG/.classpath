@@ -4,7 +4,5 @@
 	<classpathentry kind="src" path="Assets"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jMonkey321"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/jMonkey321/extlibs/nifty-style-black-1.4.2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/jMonkey321/libs/jme3-testdata.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

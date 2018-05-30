@@ -43,8 +43,7 @@ import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
 import net.wcomohundro.jme3.csg.math.CSGVertex;
 import net.wcomohundro.jme3.csg.math.CSGVertexDbl;
-
-import com.jme3.scene.plugins.blender.math.Vector3d;
+import net.wcomohundro.jme3.math.Vector3d;
 
 
 /** While a Ray represents the intersection of the two planes associated with two faces, 

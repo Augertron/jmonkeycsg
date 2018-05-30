@@ -10,11 +10,11 @@
 	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/BrickWall/BrickWall.jpg' 
+	            		name='Textures/BrickWall/BrickWall.jpg' 
 	            		reference_ID='com.jme3.texture.Texture2D@BrickNDiffuse'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                		generate_mips='true' 
-	                		name='Textures/Terrain/BrickWall/BrickWall.jpg'/>
+	                		name='Textures/BrickWall/BrickWall.jpg'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickNDiffuse'/>
 	        </Savable>
@@ -25,11 +25,11 @@
 	        		name='NormalMap' texture_unit='1' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/BrickWall/BrickWall_normal.jpg' 
+	            		name='Textures/BrickWall/BrickWall_normal.jpg' 
 	            		reference_ID='com.jme3.texture.Texture2D@BrickNormal'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                		generate_mips='true' 
-	                		name='Textures/Terrain/BrickWall/BrickWall_normal.jpg'/>
+	                		name='Textures/BrickWall/BrickWall_normal.jpg'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickNormal'/>
 	        </Savable>
@@ -44,11 +44,11 @@
 	        		name='ParallaxMap' texture_unit='2' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/BrickWall/BrickWall_height.jpg' 
+	            		name='Textures/BrickWall/BrickWall_height.jpg' 
 	            		reference_ID='com.jme3.texture.Texture2D@BrickParallel'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                		generate_mips='true' 
-	                		name='Textures/Terrain/BrickWall/BrickWall_height.jpg' />
+	                		name='Textures/BrickWall/BrickWall_height.jpg' />
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickParallel'/>
 	        </Savable>

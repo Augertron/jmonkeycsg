@@ -53,7 +53,6 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.SceneProcessor;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
@@ -74,6 +73,7 @@ import net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB;
 import net.wcomohundro.jme3.csg.iob.CSGFace;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB;
 import net.wcomohundro.jme3.csg.shape.*;
+import net.wcomohundro.jme3.math.Vector3d;
 
 /** Simple test of the CSG support 
  		Test case taken from CSG forum on jme -- remove a randomly positioned sphere from a cube

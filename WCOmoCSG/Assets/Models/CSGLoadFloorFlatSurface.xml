@@ -45,7 +45,7 @@
             </transform>
         	<lights class='com.jme3.light.LightList'>
         		<lights>
-        			<com.jme3.light.AmbientLight ref='ALight'/>
+        			<com.jme3.light.AmbientLight ref='ALightBright'/>
         		</lights>
         	</lights>
     		<mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
@@ -64,7 +64,7 @@
             </transform>
         	<lights class='com.jme3.light.LightList'>
         		<lights>
-        			<com.jme3.light.AmbientLight ref='ALight'/>
+        			<com.jme3.light.AmbientLight ref='ALightBright'/>
         		</lights>
         	</lights>
     		<mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='3'>
@@ -85,7 +85,7 @@
             </transform>
         	<lights class='com.jme3.light.LightList'>
         		<lights>
-        			<com.jme3.light.AmbientLight ref='ALight'/>
+        			<com.jme3.light.AmbientLight ref='ALightBright'/>
         		</lights>
         	</lights>
             <shapes>
@@ -113,7 +113,7 @@
             </transform>
         	<lights class='com.jme3.light.LightList'>
         		<lights>
-        			<com.jme3.light.AmbientLight ref='ALight'/>
+        			<com.jme3.light.AmbientLight ref='ALightBright'/>
         		</lights>
         	</lights>
             <shapes>

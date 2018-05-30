@@ -9,11 +9,11 @@
 	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/Rock/Rock.PNG' 
+	            		name='Textures/Rock/Rock.png' 
 	            		reference_ID='com.jme3.texture.Texture2D@Rock1Diffuse'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
-	                	name='Textures/Terrain/Rock/Rock.PNG'/>
+	                	name='Textures/Rock/Rock.png'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@Rock1Diffuse'/>
 	        </Savable>

@@ -9,11 +9,11 @@
 	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/BrickWall/BrickWall.jpg' 
+	            		name='Textures/BrickWall/BrickWall.jpg' 
 	            		reference_ID='com.jme3.texture.Texture2D@BrickDiffuse'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                		generate_mips='true' 
-	                		name='Textures/Terrain/BrickWall/BrickWall.jpg'/>
+	                		name='Textures/BrickWall/BrickWall.jpg'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickDiffuse'/>
 	        </Savable>

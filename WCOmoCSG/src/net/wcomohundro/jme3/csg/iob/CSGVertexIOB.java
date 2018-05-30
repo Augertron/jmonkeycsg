@@ -37,7 +37,6 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGTempVars;
@@ -47,6 +46,7 @@ import net.wcomohundro.jme3.csg.exception.CSGConstructionException;
 import net.wcomohundro.jme3.csg.exception.CSGExceptionI.CSGErrorCode;
 import net.wcomohundro.jme3.csg.math.CSGVertex;
 import net.wcomohundro.jme3.csg.math.CSGVertexDbl;
+import net.wcomohundro.jme3.math.Vector3d;
 
 
 /** A Vertex in the IOB processing realm is assigned to a face, and is dynamically marked as its

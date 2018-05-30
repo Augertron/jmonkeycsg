@@ -71,7 +71,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-    
+<?ignore 
     	<!--  ///////////// MIXED MATERIALS: brick/stone //////////////// -->
         <!-- Add a shorter box to a longer box -->
         <net.wcomohundro.jme3.csg.CSGGeonode name='MixedUnionBox' deferRegeneration='true'
@@ -85,7 +85,8 @@
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 <net.wcomohundro.jme3.csg.CSGShape name='LittleBox'
-                		materialName='Textures/BrickWall/BrickWall.xml'>
+                		materialName='Textures/CobbleStone/CobbleStone.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWall.xml'-->
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
@@ -106,7 +107,8 @@
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 <net.wcomohundro.jme3.csg.CSGShape operator='DIFFERENCE' name='LittleBox'
-                		 materialName='Textures/BrickWall/BrickWall.xml'>
+                		materialName='Textures/CobbleStone/CobbleStone.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWall.xml'-->
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
@@ -127,7 +129,8 @@
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
                 <net.wcomohundro.jme3.csg.CSGShape operator='INTERSECTION' name='LittleBox'
-                		materialName='Textures/BrickWall/BrickWall.xml'>
+                		materialName='Textures/CobbleStone/CobbleStone.xml'>
+                		<!-- materialName='Textures/BrickWall/BrickWall.xml'-->
                     <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
                     <transform class='com.jme3.math.Transform'>
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
@@ -135,7 +138,7 @@
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
-    
+?>    
     	<!--  ///////////// NORMALS //////////////// -->
         <!-- Add a shorter box to a longer box -->
         <net.wcomohundro.jme3.csg.CSGGeonode name='UnionBox' deferRegeneration='true'
@@ -252,5 +255,64 @@
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
         
+    	<!--  ///////////// Single Texture //////////////// -->
+        <!-- Add a shorter box to a longer box -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='UnionBox' deferRegeneration='true'
+                materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0.0' y='4.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape name='OtherBox'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+               </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        
+        <!-- Subtract shorter box from a longer box -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='DifferenceBox' deferRegeneration='true'
+                materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='3.0' y='4.0'/>
+            </transform>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape operator='DIFFERENCE' name='OtherBox'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        
+        <!-- Intersection of a shorter box with a longer box -->
+        <net.wcomohundro.jme3.csg.CSGGeonode name='IntersectionBox' deferRegeneration='true'
+                materialName='Textures/CobbleStone/CobbleStone.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='6.0' y='4.0'/>
+            </transform>
+             <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='1.0'/>
+                </net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape operator='INTERSECTION' name='OtherBox'>
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='0.5' yExtent='0.5' zExtent='0.5'/>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' z='1.0'/>
+                    </transform>
+                </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeonode>
+        
+    
     </children>
 </net.wcomohundro.jme3.csg.CSGLinkNode>

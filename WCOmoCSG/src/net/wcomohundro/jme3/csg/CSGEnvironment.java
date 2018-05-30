@@ -37,6 +37,7 @@ import net.wcomohundro.jme3.csg.CSGShape.CSGShapeProcessor;
 import net.wcomohundro.jme3.csg.math.CSGVertexDbl;
 import net.wcomohundro.jme3.csg.math.CSGVertexFlt;
 import net.wcomohundro.jme3.csg.math.CSGPolygon.CSGPolygonPlaneMode;
+import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
@@ -55,7 +56,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 
 /** Define the operational environment to apply to the CSG processing 
  	An instance of this class acts as container for various public configuration parameters.

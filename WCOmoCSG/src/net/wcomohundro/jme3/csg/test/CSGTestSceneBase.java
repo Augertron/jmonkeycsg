@@ -317,6 +317,8 @@ public abstract class CSGTestSceneBase
     			Geometry picked = aCollision.getGeometry();
     			if ( aBuffer.length() > 0 ) aBuffer.append( "; " );
     			aBuffer.append( picked.getName() );
+    			
+    			//System.out.println( aBuffer.toString() +  " - " + picked.getWorldBound() );
     		}
     	}
     	return( (aBuffer == null) ? "...nothing..." : aBuffer.toString() );

@@ -8,11 +8,11 @@
 	        <Savable class='com.jme3.material.MatParamTexture' name='DiffuseMap' texture_unit='0' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/Rock2/rock.jpg' 
+	            		name='Textures/Rock/rock2.jpg' 
 	            		reference_ID='com.jme3.texture.Texture2D@1025347207'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
-	                	name='Textures/Terrain/Rock2/rock.jpg'/>
+	                	name='Textures/Rock/rock2.jpg'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@1025347207'/>
 	        </Savable>
@@ -21,11 +21,11 @@
 	        <Savable class='com.jme3.material.MatParamTexture' name='NormalMap' texture_unit='1' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
-	            		name='Textures/Terrain/Rock/Rock_normal.png' 
+	            		name='Textures/Rock/Rock_normal.png' 
 	            		reference_ID='com.jme3.texture.Texture2D@1995915332'>
 	                <key class='com.jme3.asset.TextureKey' 
 	                	generate_mips='true' 
-	                	name='Textures/Terrain/Rock/Rock_normal.png'/>
+	                	name='Textures/Rock/Rock_normal.png'/>
 	            </value_savable>
 	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@1995915332'/>
 	        </Savable>

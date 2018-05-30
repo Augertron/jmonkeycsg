@@ -146,14 +146,14 @@ public class CSGTestC
     	CSGGeometry aGeometry = new CSGGeometry( pName );
     	aGeometry.setMaterial( mat_csg );
 
-    	Spatial aSpatial = assetManager.loadModel("Models/Teapot/Teapot.obj");
+    	Spatial aSpatial = assetManager.loadModel("Meshes/Teapot.obj");
     	CSGShape aTeapot = new CSGShape( "Teapot1", ((Geometry)aSpatial).getMesh() );
     	aGeometry.addShape( aTeapot, pOperator1 );
     	
     	CSGShape aCube = new CSGShape( "Box", new Box( 0.2f, 0.2f, 1.0f) );
     	aGeometry.addShape( aCube, pOperator2 );
 
-    	aSpatial = assetManager.loadModel("Models/Teapot/Teapot.obj");
+    	aSpatial = assetManager.loadModel("Meshes/Teapot.obj");
     	aTeapot = new CSGShape( "Teapot2", ((Geometry)aSpatial).getMesh() );
     	aGeometry.addShape( aTeapot, pOperator3 );
 

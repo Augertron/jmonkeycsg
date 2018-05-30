@@ -37,8 +37,7 @@ import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
 import net.wcomohundro.jme3.csg.math.CSGVertex;
 import net.wcomohundro.jme3.csg.math.CSGVertexDbl;
-
-import com.jme3.scene.plugins.blender.math.Vector3d;
+import net.wcomohundro.jme3.math.Vector3d;
 
 
 /** Simple min/max extent applied to a face or complete solid */

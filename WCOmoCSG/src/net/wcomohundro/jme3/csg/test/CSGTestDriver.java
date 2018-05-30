@@ -67,13 +67,13 @@ import com.jme3.asset.NonCachingKey;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.renderer.Camera;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
 
 import net.wcomohundro.jme3.csg.CSGEnvironment;
 import net.wcomohundro.jme3.csg.CSGVersion;
 import net.wcomohundro.jme3.csg.ConstructiveSolidGeometry;
+import net.wcomohundro.jme3.math.Vector3d;
 
 /** A simple application driver that can post a dialog */
 public class CSGTestDriver 

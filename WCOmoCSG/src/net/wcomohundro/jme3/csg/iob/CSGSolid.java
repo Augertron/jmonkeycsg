@@ -44,10 +44,10 @@ import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceCollision;
 import net.wcomohundro.jme3.csg.iob.CSGFace.CSGFaceStatus;
 import net.wcomohundro.jme3.csg.iob.CSGVertexIOB.CSGVertexStatus;
 import net.wcomohundro.jme3.csg.math.CSGPlaneDbl;
+import net.wcomohundro.jme3.math.Vector3d;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.plugins.blender.math.Vector3d;
 
 
 /** Manage a list of 'faces' that make up a given solid shape, ready to blend with another solid.
