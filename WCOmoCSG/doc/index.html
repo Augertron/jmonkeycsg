@@ -119,18 +119,21 @@
  	<h3 id="structure">Code Structure</h3>
  	<p>I am attempting to retain the CSG code as an independent plug-in with no changes needed within
  	the jme3 core.  You will find the interesting stuff in the package "net.wcomohundro.jme3.csg".  Some
- 	habits die hard (well, they really do not die at all), so I work within the Eclipse IDE tapping into
- 	the jMonkey GIT SVN repository to provide the jMonkey environment. I have no real knowledge of the 
- 	jMonkey IDE.</p>
+ 	habits die hard (well, they really do not die at all), so I work within the Eclipse IDE, using
+ 	jMonkey source as provided by the latest stable jme3 SDK.  As of 30May2018, that is version 3.2.1</p>
  	<p>All that being said, I do have a set of core jme3 changes posted in the CSG SVN repository.
  	<i>(oh, come on, you just knew that was coming)</i> I have found the <b>Savable</b> support via XML
  	to be an excellent way to manage my test cases. My core code changes are mostly related to providing
  	reasonable (ie, non NullPointerException) defaults for elements missing from the XML. And I have
  	created a simple XMLLoader plugin for the AssetManager that allows me to load Assets from the 
  	XML files.  This allows me to create CSG test cases very simply by hand editing XML files. By 
- 	providing reasonable defaults, I can prune my XML files to a bare minimum. At some future point, I will
- 	be submitting my core changes back to the jMonkey project. They are handy for anyone who is interested
- 	and the updates have no hard connections back into CSG.</p>
+ 	providing reasonable defaults, I can prune my XML files to a bare minimum.</p>
+ 	<p>The core CSG classes are defined in the <i>WCOmoCSG321...</i> jar. This jar can be included
+ 	within any jMonkey IDE project, which can then utilize all the core functionality.  However, if
+ 	you want to use the XML loader functions, then you will need to include the <i>WCOmoCSGjme321...</i>
+ 	jar and position it <b>before</b> any of the standard jme3 jars. The XML import functions
+ 	will then be available.  Test files, and their associated assets, are available in the 
+ 	<i>WCOmoCSGtest321...</i> jar.  Any and all source can be downloaded from SourceForge.</p>
  	
  	<h3 id="features">Features</h3>
  	<ul>
