@@ -94,6 +94,18 @@ public class XMLLoader
     	mContextStack = new Stack();
     }
     
+    /** Service routine that fills an XMLContextKey with the current context information */
+    public void fillKey(
+    	XMLContextKey	pKey
+    ) {
+    	if ( !mContextStack.isEmpty() ) {
+    		XMLLoadContext aContext = mContextStack.peek();
+    		
+    		pKey.setTranslationBundles( aContext.mInCapsule.mResourceBundles );
+    		pKey.setSeedValues( aContext.mInCapsule.mReferencedSavables );
+    	}
+    }
+    
     /** Load the XML */
 	@Override
     public Object load(
@@ -135,7 +147,8 @@ public class XMLLoader
         	if ( pAssetKey instanceof XMLContextKey ) {
         		// The key can provide us with extra contextual data
         		XMLContextKey xmlEnvironment = (XMLContextKey)pAssetKey;
-        		aContext.mInCapsule.seedReferencedSavables( xmlEnvironment.getSeedValues() );
+        		aContext.mInCapsule.seedReferencedSavables( xmlEnvironment.getSeedValues()
+        													, xmlEnvironment.blendReferences() );
         		
         		aContext.mInCapsule.setResourceBundles( xmlEnvironment.getTranslationBundles() );
         	}

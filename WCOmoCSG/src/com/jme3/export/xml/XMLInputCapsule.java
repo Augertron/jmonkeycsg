@@ -43,6 +43,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.jme3.asset.AssetKey;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
@@ -143,8 +144,17 @@ public class XMLInputCapsule
     public Savable getReferencedSavable( String pRefID ) { return mReferencedSavables.get( pRefID ); }
     public void seedReferencedSavables(
     	Map<String,Savable>	pSeedValues
+    ,	boolean				pBlendIntoSeedValues
     ) {
-    	mReferencedSavables.putAll( pSeedValues );
+    	if ( pSeedValues != null ) {
+		    if ( pBlendIntoSeedValues ) {
+		    	// Use the given values as the source and blend new definitions into it
+		    	mReferencedSavables = pSeedValues;
+		    } else {
+		    	// Start with the given seed values, but do not affect the given map
+		    	mReferencedSavables.putAll( pSeedValues );
+		    }
+    	}
     }
     
     /** Allow translation bundles to be defined */
@@ -184,9 +194,13 @@ public class XMLInputCapsule
 	        	// the class to instantiate, or else the node name is expected to be
 	        	// the class name.
 	            String className;
-	            if ( mCurrentElement.hasAttribute("class") ) {
+	            if ( mCurrentElement.hasAttribute( "class" ) ) {
 	            	// An explicit class attribute is the override
 	                className = mCurrentElement.getAttribute("class");
+	            } else if ( mCurrentElement.hasAttribute("value") ) {
+	            	// An explicit 'value' is just a string
+	            	className = null;
+	            	aResult = new XMLStringProxy( mCurrentElement.getAttribute( "value" ) );
 	            } else if ( pDefaultValue != null ) {
 	            	// The given default value will direct the class to use
 	            	className = pDefaultValue.getClass().getName();
@@ -194,10 +208,11 @@ public class XMLInputCapsule
 	            	// The node name itself is expected to direct the class
 	            	className = mCurrentElement.getNodeName();
 	            }
-	            // Instantiate the Savable instance, looking first for a custom constructor
-	            // NOTE that an explicit class reference to java.lang.Void will return a null
-	            aResult = SavableClassUtil.fromNameExtended( className, this.mImporter );
-
+	            if ( className != null ) {
+		            // Instantiate the Savable instance, looking first for a custom constructor
+		            // NOTE that an explicit class reference to java.lang.Void will return a null
+		            aResult = SavableClassUtil.fromNameExtended( className, this.mImporter );
+	            }
 	            // Check for version constraints
 	            String versionsStr = mCurrentElement.getAttribute( "savable_versions" );
 	            if ( (versionsStr != null) && !versionsStr.isEmpty() ) {
@@ -234,7 +249,6 @@ public class XMLInputCapsule
         // Return whatever we have found so far
         return aResult;
     }
-
 
     /** Callback processing to clean up and interpret a string 
      	Use this hook to tidy up the XML character conventions AND to look for 
@@ -1276,46 +1290,46 @@ public class XMLInputCapsule
         Element tempEl;
 
         if (name != null) {
-                tempEl = findChildElement(mCurrentElement, name);
+            tempEl = findChildElement(mCurrentElement, name);
         } else {
-                tempEl = mCurrentElement;
+            tempEl = mCurrentElement;
         }
         if (tempEl != null) {
-                ret = new HashMap<String, Savable>();
+            ret = new HashMap<String, Savable>();
 
-                NodeList nodes = tempEl.getChildNodes();
-                    for (int i = 0; i < nodes.getLength(); i++) {
-                                Node n = nodes.item(i);
-                                if (n instanceof Element) {
-                                	if ( n.getNodeName().equals(XMLExporter.ELEMENT_MAPENTRY) ) {
-                                		// Old style mapping
-                                        Element elem = (Element) n;
-                                        mCurrentElement = elem;
-                                        String key = mCurrentElement.getAttribute("key");
-                                        Savable val = readSavable("Savable", null);
-                                        ret.put(key, val);
-                                	} else {
-                                		// Simpler mapping
-                                		mCurrentElement = (Element)n;
-                                		Savable aValue;
-                                		String aString = mCurrentElement.getAttribute( "value" );
-                                		if ( aString.isEmpty() ) {
-                                			// NOT a simple attribute string, look for a full definition
-	                                		aValue = readSavable( "value", null );
-                                		} else {
-                                			// Support the string as a proxy for the savable
-                                			aValue = new XMLStringProxy( aString );
-                                		}
-	                                	if ( aValue != null ) {
-	                                		// Use the node name as the key string
-	                                		ret.put( n.getNodeName(), aValue );
-	                                	}
-                                	}
-                                }
-                        }
-        } else {
-                return defVal;
+            NodeList nodes = tempEl.getChildNodes();
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node n = nodes.item(i);
+                if (n instanceof Element) {
+                	if ( n.getNodeName().equals(XMLExporter.ELEMENT_MAPENTRY) ) {
+                		// Old style mapping
+                        Element elem = (Element) n;
+                        mCurrentElement = elem;
+                        String key = mCurrentElement.getAttribute("key");
+                        Savable val = readSavable("Savable", null);
+                        ret.put(key, val);
+                	} else {
+                		// Simpler mapping
+                		mCurrentElement = (Element)n;
+                		Savable aValue;
+                		String aString = mCurrentElement.getAttribute( "value" );
+                		if ( aString.isEmpty() ) {
+                			// NOT a simple attribute string, look for a full definition
+                    		aValue = readSavable( "value", null );
+                		} else {
+                			// Support the string as a proxy for the savable
+                			aValue = new XMLStringProxy( aString );
+                		}
+                    	if ( aValue != null ) {
+                    		// Use the node name as the key string
+                    		ret.put( n.getNodeName(), aValue );
+                    	}
+                	}
+                }
             }
+        } else {
+        	return defVal;
+        }
         mCurrentElement = (Element) tempEl.getParentNode();
         return ret;
     }
@@ -1479,6 +1493,7 @@ public class XMLInputCapsule
         }
     }
 
+    @Override
     public <T extends Enum<T>> T readEnum(
     	String 		name
     , 	Class<T> 	enumType

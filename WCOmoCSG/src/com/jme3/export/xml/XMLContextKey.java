@@ -31,6 +31,7 @@
  */
 package com.jme3.export.xml;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -38,6 +39,8 @@ import java.util.ResourceBundle;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetProcessor;
 import com.jme3.asset.cache.AssetCache;
+import com.jme3.export.InputCapsule;
+import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
 
 
@@ -58,6 +61,7 @@ public class XMLContextKey<TAsset>
 	protected Map<String,ResourceBundle>		mTranslationBundles;
 	/** XML extension:  map of reference names to predefined Savable instances */
 	protected Map<String,Savable>				mSeedValues;
+	protected boolean							mBlendReferences;
 	
 	
 	/** Basic constructor with a path to the asset to load */
@@ -92,11 +96,14 @@ public class XMLContextKey<TAsset>
     }
     
     /** Provide seed values to the XML processing */
+    public boolean blendReferences() { return mBlendReferences; }
+    public void setBlendReferences( boolean pFlag ) { mBlendReferences = pFlag; }
+    
     public Map<String,Savable> getSeedValues() { return mSeedValues; }
     public void setSeedValues(
     	Map<String,Savable>		pSeedValues
     ) {
-    	mSeedValues = (pSeedValues == null) ? Collections.EMPTY_MAP : pSeedValues;
+    	mSeedValues = pSeedValues;
     }
 
     //////////////////////////////// Customize AssetKey ////////////////////////////////////////
@@ -107,4 +114,24 @@ public class XMLContextKey<TAsset>
     @Override
     public Class<? extends AssetProcessor> getProcessorType() { return( mAssetProcessor ); }
     public void setProcessorType( Class<? extends AssetProcessor> pClass ) { mAssetProcessor = pClass; }
+    
+    //////////////////////////////// Savable /////////////////////////////////////////
+    @Override
+    public void read(
+    	JmeImporter		pImporter
+    ) throws IOException {
+    	// The super handles the 'name' reference
+    	super.read( pImporter );
+        
+    	InputCapsule inCapsule = pImporter.getCapsule( this );
+    	
+    	if ( pImporter instanceof XMLLoader ) {
+    		// If we are reconstructing an AssetKey from within the context of an XMLLoader,
+    		// then assume that the active context should be reflected within this key
+    		// and by default, blend into the base set
+    		mBlendReferences = inCapsule.readBoolean( "blendReferences", true );
+    		((XMLLoader)pImporter).fillKey( this );
+    	}
+    }
+
 }

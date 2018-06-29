@@ -111,6 +111,6 @@ public class XMLStringProxy
 		JmeImporter		pImporter
 	) throws IOException {
 		InputCapsule inCapsule = pImporter.getCapsule( this );
-		mString = inCapsule.readString( "value", null );
+		mString = inCapsule.readString( "value", mString );
 	}
 }
