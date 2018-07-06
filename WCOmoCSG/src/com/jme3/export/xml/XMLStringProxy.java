@@ -39,6 +39,48 @@ import com.jme3.math.ColorRGBA;
 public class XMLStringProxy 
 	implements Savable
 {
+	/** General service routine to interpret a String as a Color */
+	public static ColorRGBA stringAsColor(
+		String		pString
+	) {
+		// Looks like ColorRGBA does NOT have a standard string interpreter
+		// Accepting:
+		//		#rgb  #rgba  #rrggbb  #rrggbbaa
+		int red = 256, blue = 256, green = 256, alpha = 256;
+		int length = (pString == null) ? 0 : pString.length();
+		
+		if ( (length >= 4) && ( pString.charAt( 0 ) == '#') ) try {
+			if ( length > 6 ) {
+				// Long mode only accepts double digits
+				red = Integer.parseInt( pString.substring( 1, 3 ), 16 );
+				green = Integer.parseInt( pString.substring( 3, 5 ), 16 );
+				blue = Integer.parseInt( pString.substring( 5, 7 ), 16 );
+				
+				if ( length > 8 ) {
+					alpha = Integer.parseInt( pString.substring( 7, 9 ), 16 );
+				}
+			} else {
+				// Short mode only accepts single digits
+				red = Integer.parseInt( pString.substring( 1, 2 ), 16 ) * 0x11;
+				green = Integer.parseInt( pString.substring( 2, 3 ), 16 ) * 0x11;
+				blue = Integer.parseInt( pString.substring( 3, 4 ), 16 ) * 0x11;
+				
+				if ( length > 4 ) {
+					alpha = Integer.parseInt( pString.substring( 4, 5 ), 16 ) * 0x11;
+				}
+			}
+		} catch( Exception ex ) {
+			// Punt it
+			return( null );
+		} else {
+			// Nothing we understand
+			return( null );
+		}
+		ColorRGBA aColor = new ColorRGBA( red / 255f, green / 255f, blue / 255f, alpha / 255f );
+		return( aColor );
+	}
+	
+	
 	/** The actual string we stand for */
 	protected String	mString;
 	
@@ -60,41 +102,7 @@ public class XMLStringProxy
 	/** Interpret a String as a corresponding color */
 	public ColorRGBA asColor( 
 	) {
-		// Looks like ColorRGBA does NOT have a standard string interpreter
-		// Accepting:
-		//		#rgb  #rgba  #rrggbb  #rrggbbaa
-		int red = 256, blue = 256, green = 256, alpha = 256;
-		int length = (mString == null) ? 0 : mString.length();
-		
-		if ( (length >= 4) && ( mString.charAt( 0 ) == '#') ) try {
-			if ( length > 6 ) {
-				// Long mode only accepts double digits
-				red = Integer.parseInt( mString.substring( 1, 3 ), 16 );
-				green = Integer.parseInt( mString.substring( 3, 5 ), 16 );
-				blue = Integer.parseInt( mString.substring( 5, 7 ), 16 );
-				
-				if ( length > 8 ) {
-					alpha = Integer.parseInt( mString.substring( 7, 9 ), 16 );
-				}
-			} else {
-				// Short mode only accepts single digits
-				red = Integer.parseInt( mString.substring( 1, 2 ), 16 ) * 0x11;
-				green = Integer.parseInt( mString.substring( 2, 3 ), 16 ) * 0x11;
-				blue = Integer.parseInt( mString.substring( 3, 4 ), 16 ) * 0x11;
-				
-				if ( length > 4 ) {
-					alpha = Integer.parseInt( mString.substring( 4, 5 ), 16 ) * 0x11;
-				}
-			}
-		} catch( Exception ex ) {
-			// Punt it
-			return( null );
-		} else {
-			// Nothing we understand
-			return( null );
-		}
-		ColorRGBA aColor = new ColorRGBA( red / 255f, green / 255f, blue / 255f, alpha / 255f );
-		return( aColor );
+		return XMLStringProxy.stringAsColor( mString );
 	}
 
 	////////////////////////////////////////// Savable //////////////////////////////////////////////

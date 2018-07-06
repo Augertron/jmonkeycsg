@@ -1063,8 +1063,13 @@ public class XMLInputCapsule
             if ( name != null ) {
             	// Locate the child of the given name
                 tmpEl = findChildElement(mCurrentElement, name);
-                if (tmpEl == null) {
-                    return defVal;
+                if ( tmpEl == null ) {
+                    String tmpString = mCurrentElement.getAttribute(name);
+                    if ( tmpString == null || tmpString.length() < 1) {
+                    	return defVal;
+                    }
+                    // Use a proxy
+                    return( new XMLStringProxy( tmpString ) );
                 }
             } else if ( mCurrentElement == mDocument.getDocumentElement() ) {
             	// At the very top of the tree, use it as is
