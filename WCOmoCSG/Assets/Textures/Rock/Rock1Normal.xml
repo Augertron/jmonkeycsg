@@ -6,7 +6,7 @@
 	    </MapEntry>
 	    <MapEntry key='DiffuseMap'>
 	        <Savable class='com.jme3.material.MatParamTexture' 
-	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
+	        		name='DiffuseMap' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/Rock/Rock.png' 
@@ -15,13 +15,12 @@
 	                	generate_mips='true' 
 	                	name='Textures/Rock/Rock.png'/>
 	            </value_savable>
-	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@Rock1NDiffuse'/>
 	        </Savable>
 	    </MapEntry>
  
 	    <MapEntry key='NormalMap'>
 	        <Savable class='com.jme3.material.MatParamTexture' 
-	        		name='NormalMap' texture_unit='1' varType='Texture2D'>
+	        		name='NormalMap' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/Rock/Rock_normal.png' 
@@ -30,7 +29,6 @@
 						generate_mips='true' 
 						name='Textures/Rock/Rock_normal.png'/>
 	            </value_savable>
-	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@Rock1Normal'/>
 	        </Savable>
 	    </MapEntry>
 	</parameters>

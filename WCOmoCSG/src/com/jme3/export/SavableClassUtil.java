@@ -35,6 +35,8 @@ import com.jme3.animation.Animation;
 import com.jme3.effect.shapes.*;
 import com.jme3.export.NullSavable;
 import com.jme3.export.Savable;
+import com.jme3.export.xml.SavableList;
+import com.jme3.export.xml.SavableString;
 import com.jme3.material.MatParamTexture;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Transform;
@@ -91,6 +93,8 @@ public class SavableClassUtil {
         addRemapping( "Vector3f", Vector3f.class );
         addRemapping( "Vector2f", Vector2f.class );
         addRemapping( "Transform", Transform.class );
+        addRemapping( "SavableString", SavableString.class );
+        addRemapping( "SavableList", SavableList.class );
     }
  
 // wco add prefix processing
@@ -193,15 +197,8 @@ public class SavableClassUtil {
      * @throws ClassNotFoundException thrown if the class name is not in the classpath.
      * @throws IOException when loading ctor parameters fails
      */
-    public static Savable fromName(String className) throws InstantiationException,
-            IllegalAccessException, ClassNotFoundException, IOException {
-    	return( fromNameExtended( className, null ) );
-    }
-// wco provide lookup for custom constructor
-    static Class[] sConstructorParamTypes = new Class[] { JmeImporter.class };
-    public static Savable fromNameExtended(
-    	String		pClassName
-    ,	JmeImporter	pExtensionArg
+    public static Savable fromName(
+    	String pClassName
     ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
     	pClassName = remapClass( pClassName );
         try {
@@ -211,18 +208,7 @@ public class SavableClassUtil {
             // Special case to explicitly call out null
             if ( aClass == Void.class ) return( null );
             
-            if ( pExtensionArg != null ) try {
-            	Constructor<Savable> aConstructor = aClass.getDeclaredConstructor( sConstructorParamTypes );
-            	Object[] paramArgs = new Object[] { pExtensionArg };
-            	aResult = aConstructor.newInstance( paramArgs );
-            } catch( Exception ex ) {
-            	// No extended constructor
-            	aResult = null;
-            }
-            if ( aResult == null ) {
-            	// No special constructor, so use the standard
-            	aResult = (Savable)aClass.newInstance();
-            }
+            aResult = (Savable)aClass.newInstance();
             return( aResult );
             
         } catch (InstantiationException ex) {

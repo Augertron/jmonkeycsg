@@ -25,6 +25,7 @@
 package com.jme3.export.xml;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
@@ -36,7 +37,7 @@ import com.jme3.math.ColorRGBA;
 /** This is a simple Savable wrapper around a naked string, handy for
  	XML definitions that work on some collection of Savables.
  */
-public class XMLStringProxy 
+public class SavableString 
 	implements Savable
 {
 	/** General service routine to interpret a String as a Color */
@@ -44,40 +45,55 @@ public class XMLStringProxy
 		String		pString
 	) {
 		// Looks like ColorRGBA does NOT have a standard string interpreter
-		// Accepting:
-		//		#rgb  #rgba  #rrggbb  #rrggbbaa
-		int red = 256, blue = 256, green = 256, alpha = 256;
-		int length = (pString == null) ? 0 : pString.length();
+		if ( (pString == null) || pString.isEmpty() ) {
+			return( null );
+		}
+		int length = pString.length();
 		
-		if ( (length >= 4) && ( pString.charAt( 0 ) == '#') ) try {
-			if ( length > 6 ) {
-				// Long mode only accepts double digits
-				red = Integer.parseInt( pString.substring( 1, 3 ), 16 );
-				green = Integer.parseInt( pString.substring( 3, 5 ), 16 );
-				blue = Integer.parseInt( pString.substring( 5, 7 ), 16 );
-				
-				if ( length > 8 ) {
-					alpha = Integer.parseInt( pString.substring( 7, 9 ), 16 );
+		if ( pString.charAt( 0 ) == '#' ) {
+			// Accepting:
+			//		#rgb  #rgba  #rrggbb  #rrggbbaa
+			int red = 256, blue = 256, green = 256, alpha = 256;
+			if ( length >= 4 ) try {
+				if ( length > 6 ) {
+					// Long mode only accepts double digits
+					red = Integer.parseInt( pString.substring( 1, 3 ), 16 );
+					green = Integer.parseInt( pString.substring( 3, 5 ), 16 );
+					blue = Integer.parseInt( pString.substring( 5, 7 ), 16 );
+					
+					if ( length > 8 ) {
+						alpha = Integer.parseInt( pString.substring( 7, 9 ), 16 );
+					}
+				} else {
+					// Short mode only accepts single digits
+					red = Integer.parseInt( pString.substring( 1, 2 ), 16 ) * 0x11;
+					green = Integer.parseInt( pString.substring( 2, 3 ), 16 ) * 0x11;
+					blue = Integer.parseInt( pString.substring( 3, 4 ), 16 ) * 0x11;
+					
+					if ( length > 4 ) {
+						alpha = Integer.parseInt( pString.substring( 4, 5 ), 16 ) * 0x11;
+					}
 				}
+				ColorRGBA aColor = new ColorRGBA( red / 255f, green / 255f, blue / 255f, alpha / 255f );
+				return( aColor );
+				
+			} catch( Exception ex ) {
+				// Punt it
+				return( null );
 			} else {
-				// Short mode only accepts single digits
-				red = Integer.parseInt( pString.substring( 1, 2 ), 16 ) * 0x11;
-				green = Integer.parseInt( pString.substring( 2, 3 ), 16 ) * 0x11;
-				blue = Integer.parseInt( pString.substring( 3, 4 ), 16 ) * 0x11;
-				
-				if ( length > 4 ) {
-					alpha = Integer.parseInt( pString.substring( 4, 5 ), 16 ) * 0x11;
-				}
+				// Nothing we understand with a leading #
+				return( null );
 			}
+		} else try {
+			// Try for something statically named
+			Field aField = ColorRGBA.class.getDeclaredField( pString );
+			ColorRGBA aColor = (ColorRGBA)aField.get( null );
+			return( aColor );
+			
 		} catch( Exception ex ) {
 			// Punt it
 			return( null );
-		} else {
-			// Nothing we understand
-			return( null );
 		}
-		ColorRGBA aColor = new ColorRGBA( red / 255f, green / 255f, blue / 255f, alpha / 255f );
-		return( aColor );
 	}
 	
 	
@@ -85,10 +101,10 @@ public class XMLStringProxy
 	protected String	mString;
 	
 	/** Null Constructor for Savable processing */
-	public XMLStringProxy() {}
+	public SavableString() {}
 	
 	/** Constructor based on a string */
-	public XMLStringProxy(
+	public SavableString(
 		String		pString
 	) {
 		mString = pString;
@@ -102,7 +118,17 @@ public class XMLStringProxy
 	/** Interpret a String as a corresponding color */
 	public ColorRGBA asColor( 
 	) {
-		return XMLStringProxy.stringAsColor( mString );
+		return SavableString.stringAsColor( mString );
+	}
+	/** Interpret a String as a int */
+	public Integer asInt(
+	) {
+		return Integer.valueOf( mString );
+	}
+	/** Interpret a String as a float */
+	public Float asFloat(
+	) {
+		return Float.valueOf( mString );
 	}
 
 	////////////////////////////////////////// Savable //////////////////////////////////////////////

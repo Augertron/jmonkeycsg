@@ -5,7 +5,7 @@
 	        <Savable class='com.jme3.material.MatParam' name='Shininess' value_float='2.0' varType='Float'/>
 	    </MapEntry>
 	    <MapEntry key='DiffuseMap'>
-	        <Savable class='com.jme3.material.MatParamTexture' name='DiffuseMap' texture_unit='0' varType='Texture2D'>
+	        <Savable class='com.jme3.material.MatParamTexture' name='DiffuseMap' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/Debug/NumberedBoxes.jpg' 
@@ -15,7 +15,6 @@
 	                	generate_mips='true' 
 	                	name='Textures/Debug/NumberedBoxes.jpg'/>
 	            </value_savable>
-	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@11147789'/>
 	        </Savable>
 	    </MapEntry>
 	</parameters>

@@ -33,13 +33,16 @@ import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -82,8 +85,10 @@ public class XMLInputCapsule
     	Element 	parent
     , 	String 		name
     ) {
-        if (parent == null) {
+        if ( parent == null ) {
             return null;
+        } else if ( name == null ) {
+        	return parent;
         }
         Node ret = parent.getFirstChild();
         while (ret != null && (!(ret instanceof Element) || !ret.getNodeName().equals(name))) {
@@ -120,8 +125,9 @@ public class XMLInputCapsule
     protected Map<String,ResourceBundle>	mResourceBundles;
     /** Version info registered with the Savables, filled in dynamically as elements are processed */
     protected int[] 						mClassHierarchyVersions;
-    /** The Savable that is actively being filled */
-    private Savable 						mSavable;
+    /** The Savable that is actively being filled, and the attributes it consumes */
+    protected Savable 						mSavable;
+    protected Set<String>					mSavableAttrs;
 
     /** The basic constructor that must be provided with the DOM */
     public XMLInputCapsule(
@@ -167,18 +173,25 @@ public class XMLInputCapsule
     /** Allow direct access to the current element */
     public Element getCurrentElement() { return mCurrentElement; }
     
+    /** Allow importer .read() to suppress attribute checking on the current Savable
+     	being processed
+     */
+    public void suppressAttributeChecking() { mSavableAttrs = null; }
+    
     /** Callback processing to read a savable from the given element, instantiating 
         from a given class name 
      */
     public Savable readSavableFromElem(
     	Element		pElement
     ,	Savable		pDefaultValue
+    ,	boolean		pMarkElementProcessed
     ) throws InstantiationException, ClassNotFoundException, IOException, IllegalAccessException {
     	// Prep what we find
         Savable aResult = pDefaultValue;
 
     	Element savedElement = mCurrentElement;
     	Savable savedContext = mSavable;
+    	Set<String> savedContextAttrs = mSavableAttrs;
     	int[] savedVersions = mClassHierarchyVersions;
     	try {
             // Use the given element as the current context
@@ -200,7 +213,7 @@ public class XMLInputCapsule
 	            } else if ( mCurrentElement.hasAttribute("value") ) {
 	            	// An explicit 'value' is just a string
 	            	className = null;
-	            	aResult = new XMLStringProxy( mCurrentElement.getAttribute( "value" ) );
+	            	aResult = new SavableString( mCurrentElement.getAttribute( "value" ) );
 	            } else if ( pDefaultValue != null ) {
 	            	// The given default value will direct the class to use
 	            	className = pDefaultValue.getClass().getName();
@@ -209,9 +222,9 @@ public class XMLInputCapsule
 	            	className = mCurrentElement.getNodeName();
 	            }
 	            if ( className != null ) {
-		            // Instantiate the Savable instance, looking first for a custom constructor
+		            // Instantiate the Savable instance
 		            // NOTE that an explicit class reference to java.lang.Void will return a null
-		            aResult = SavableClassUtil.fromNameExtended( className, this.mImporter );
+		            aResult = SavableClassUtil.fromName( className );
 	            }
 	            // Check for version constraints
 	            String versionsStr = mCurrentElement.getAttribute( "savable_versions" );
@@ -235,16 +248,54 @@ public class XMLInputCapsule
 	            if ( aResult != null ) {
 		            // We fill the empty instance constructed above by letting
 		            // it read itself.  We save the current element 'context'
-		            // within mSavable
+		            // within mSavable, and get ready to monitor which attr/elements
+	            	// are processed.
 		            mSavable = aResult;
+		            
+		            // Preseed with the standards that are part of the XML process,
+		            // not the actual instance
+		            mSavableAttrs = new HashSet();
+		            mSavableAttrs.add( "class" );
+		            mSavableAttrs.add( "id" );
+		            mSavableAttrs.add( "reference_ID" );
+		            
 		            aResult.read( mImporter );
+		            
+		            // Confirm that all attributes and child elements have been touched
+		            // NOTE that a callback during the .read() above can suppress this check
+		            if ( mSavableAttrs != null ) {
+			            NamedNodeMap allAttrs = mCurrentElement.getAttributes();
+			            for( int i = 0, j = allAttrs.getLength(); i < j; i += 1 ) {
+			            	Node anAttr = allAttrs.item( i );
+			            	String attrName = anAttr.getNodeName();
+			            	if ( !mSavableAttrs.contains( attrName ) ) {
+			            		throw new IOException( "Attribute: " + attrName + " not supported by " + mSavable );
+			            	}
+			            }
+			            Node childNode = mCurrentElement.getFirstChild();
+			            while( childNode != null ) {
+			            	if ( childNode.getNodeType() == Node.ELEMENT_NODE ) {
+				            	String childName = childNode.getNodeName();
+				            	if ( !mSavableAttrs.contains( childName ) ) {
+				            		throw new IOException( "Element: " + childName + " not supported by " + mSavable );
+				            	}
+			            	}
+			            	childNode = childNode.getNextSibling();
+			            }
+		            }
 	            }
 	        }
     	} finally {
     		// Restore all the saved values
             mCurrentElement = savedElement;
             mSavable = savedContext;
+            mSavableAttrs = savedContextAttrs;
             mClassHierarchyVersions = savedVersions;
+            
+            if ( pMarkElementProcessed ) {
+            	// This child is part of the parent
+            	hasProcessed( pElement.getNodeName() );
+            }
     	}
         // Return whatever we have found so far
         return aResult;
@@ -335,7 +386,16 @@ public class XMLInputCapsule
         if ( (mCurrentElement == null) || mCurrentElement.getNodeName().equals("null") ) {
             return null;
         }
-        return( readSavableFromElem( mCurrentElement, pDefaultValue ) );
+        return( readSavableFromElem( mCurrentElement, pDefaultValue, false ) );
+    }
+    
+    /** Service routine to mark an attribute within a Savable as being processed */
+    protected void hasProcessed( 
+    	String	pName
+    ) {
+    	if ( (mSavable != null) && (mSavableAttrs != null) ) {
+    		mSavableAttrs.add( pName );
+    	}
     }
 
     //////////////////////////////////// Input Capsule ///////////////////////////////////////////
@@ -359,6 +419,9 @@ public class XMLInputCapsule
     public byte readByte(String name, byte defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+
         tmpString = decodeString( tmpString );
         try {
             return Byte.parseByte(tmpString);
@@ -376,15 +439,13 @@ public class XMLInputCapsule
     @Override
     public byte[] readByteArray(String name, byte[] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens( tmpEl.getAttribute("data") );
             byte[] tmp = new byte[strings.length];
             for (int i = 0; i < strings.length; i++) {
@@ -406,15 +467,13 @@ public class XMLInputCapsule
     @Override
     public byte[][] readByteArray2D(String name, byte[][] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             NodeList nodes = mCurrentElement.getChildNodes();
             List<byte[]> byteArrays = new ArrayList<byte[]>();
 
@@ -444,6 +503,9 @@ public class XMLInputCapsule
     public int readInt(String name, int defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+
         tmpString = decodeString( tmpString );
         try {
             return Integer.parseInt(tmpString);
@@ -461,15 +523,14 @@ public class XMLInputCapsule
     @Override
     public int[] readIntArray(String name, int[] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             int[] tmp = new int[strings.length];
             for (int i = 0; i < tmp.length; i++) {
@@ -491,15 +552,13 @@ public class XMLInputCapsule
     @Override
     public int[][] readIntArray2D(String name, int[][] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             NodeList nodes = mCurrentElement.getChildNodes();
             List<int[]> intArrays = new ArrayList<int[]>();
 
@@ -530,6 +589,9 @@ public class XMLInputCapsule
     public float readFloat(String name, float defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+
         tmpString = decodeString( tmpString );
         try {
             return Float.parseFloat(tmpString);
@@ -547,15 +609,13 @@ public class XMLInputCapsule
     @Override
     public float[] readFloatArray(String name, float[] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             float[] tmp = new float[strings.length];
             for (int i = 0; i < tmp.length; i++) {
@@ -574,15 +634,13 @@ public class XMLInputCapsule
     public float[][] readFloatArray2D(String name, float[][] defVal) throws IOException {
         /* Why does this one method ignore the 'size attr.? */
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             int size_outer = Integer.parseInt(tmpEl.getAttribute("size_outer"));
             int size_inner = Integer.parseInt(tmpEl.getAttribute("size_outer"));
 
@@ -611,6 +669,9 @@ public class XMLInputCapsule
     public double readDouble(String name, double defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+
         tmpString = decodeString( tmpString );
         try {
             return Double.parseDouble(tmpString);
@@ -628,15 +689,13 @@ public class XMLInputCapsule
     @Override
     public double[] readDoubleArray(String name, double[] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             double[] tmp = new double[strings.length];
             for (int i = 0; i < tmp.length; i++) {
@@ -658,15 +717,13 @@ public class XMLInputCapsule
     @Override
     public double[][] readDoubleArray2D(String name, double[][] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = mCurrentElement;
+            
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             NodeList nodes = mCurrentElement.getChildNodes();
             List<double[]> doubleArrays = new ArrayList<double[]>();
 
@@ -696,6 +753,9 @@ public class XMLInputCapsule
     public long readLong(String name, long defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+
         tmpString = decodeString( tmpString );
         try {
             return Long.parseLong(tmpString);
@@ -713,15 +773,13 @@ public class XMLInputCapsule
     @Override
     public long[] readLongArray(String name, long[] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             long[] tmp = new long[strings.length];
             for (int i = 0; i < tmp.length; i++) {
@@ -743,15 +801,13 @@ public class XMLInputCapsule
     @Override
     public long[][] readLongArray2D(String name, long[][] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             NodeList nodes = mCurrentElement.getChildNodes();
             List<long[]> longArrays = new ArrayList<long[]>();
 
@@ -781,6 +837,9 @@ public class XMLInputCapsule
     public short readShort(String name, short defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+
         tmpString = decodeString( tmpString );
         try {
             return Short.parseShort(tmpString);
@@ -797,16 +856,14 @@ public class XMLInputCapsule
 
     @Override
     public short[] readShortArray(String name, short[] defVal) throws IOException {
-         try {
-             Element tmpEl;
-             if (name != null) {
-                 tmpEl = findChildElement(mCurrentElement, name);
-             } else {
-                 tmpEl = mCurrentElement;
-             }
-             if (tmpEl == null) {
-                 return defVal;
-             }
+        try {
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
+            if (tmpEl == null) {
+                return defVal;
+            }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             short[] tmp = new short[strings.length];
             for (int i = 0; i < tmp.length; i++) {
@@ -828,15 +885,13 @@ public class XMLInputCapsule
     @Override
     public short[][] readShortArray2D(String name, short[][] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             NodeList nodes = mCurrentElement.getChildNodes();
             List<short[]> shortArrays = new ArrayList<short[]>();
 
@@ -866,6 +921,9 @@ public class XMLInputCapsule
     public boolean readBoolean(String name, boolean defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+        
         tmpString = decodeString( tmpString );
         try {
             return Boolean.parseBoolean(tmpString);
@@ -879,15 +937,13 @@ public class XMLInputCapsule
     @Override
     public boolean[] readBooleanArray(String name, boolean[] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens( tmpEl.getAttribute("data") );
             boolean[] tmp = new boolean[strings.length];
             for (int i = 0; i < tmp.length; i++) {
@@ -905,15 +961,13 @@ public class XMLInputCapsule
     @Override
     public boolean[][] readBooleanArray2D(String name, boolean[][] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             NodeList nodes = mCurrentElement.getChildNodes();
             List<boolean[]> booleanArrays = new ArrayList<boolean[]>();
 
@@ -943,6 +997,9 @@ public class XMLInputCapsule
     public String readString(String name, String defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
+
         tmpString = decodeString( tmpString );
         try {
         	// Nothing is really done to a string
@@ -957,16 +1014,14 @@ public class XMLInputCapsule
 
     @Override
     public String[] readStringArray(String name, String[] defVal) throws IOException {
-         try {
-             Element tmpEl;
-             if (name != null) {
-                 tmpEl = findChildElement(mCurrentElement, name);
-             } else {
-                 tmpEl = mCurrentElement;
-             }
-             if (tmpEl == null) {
-                 return defVal;
-             }
+        try {
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
+            if (tmpEl == null) {
+                return defVal;
+            }
+            hasProcessed( name );
+
             NodeList nodes = tmpEl.getChildNodes();
             List<String> strings = new ArrayList<String>();
 
@@ -995,15 +1050,13 @@ public class XMLInputCapsule
     @Override
     public String[][] readStringArray2D(String name, String[][] defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             NodeList nodes = mCurrentElement.getChildNodes();
             List<String[]> stringArrays = new ArrayList<String[]>();
 
@@ -1034,6 +1087,8 @@ public class XMLInputCapsule
     public BitSet readBitSet(String name, BitSet defVal) throws IOException {
         String tmpString = mCurrentElement.getAttribute(name);
         if (tmpString == null || tmpString.length() < 1) return defVal;
+        
+        hasProcessed( name );
         try {
             BitSet set = new BitSet();
             String[] strings = parseTokens(tmpString);
@@ -1044,6 +1099,7 @@ public class XMLInputCapsule
                 }
             }
             return set;
+            
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -1062,6 +1118,8 @@ public class XMLInputCapsule
             Element tmpEl = null;
             if ( name != null ) {
             	// Locate the child of the given name
+                hasProcessed( name );
+
                 tmpEl = findChildElement(mCurrentElement, name);
                 if ( tmpEl == null ) {
                     String tmpString = mCurrentElement.getAttribute(name);
@@ -1069,7 +1127,7 @@ public class XMLInputCapsule
                     	return defVal;
                     }
                     // Use a proxy
-                    return( new XMLStringProxy( tmpString ) );
+                    return( new SavableString( tmpString ) );
                 }
             } else if ( mCurrentElement == mDocument.getDocumentElement() ) {
             	// At the very top of the tree, use it as is
@@ -1104,6 +1162,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             List<Savable> savables = new ArrayList<Savable>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
@@ -1129,6 +1189,7 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
 
             int size_outer = Integer.parseInt(tmpEl.getAttribute("size_outer"));
             int size_inner = Integer.parseInt(tmpEl.getAttribute("size_outer"));
@@ -1163,6 +1224,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             ArrayList<Savable> savables = new ArrayList<Savable>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
@@ -1187,6 +1250,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             mCurrentElement = tmpEl;
 
             ArrayList<Savable> sal;
@@ -1217,6 +1282,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             mCurrentElement = tmpEl;
             ArrayList<Savable>[] arr;
             List<ArrayList<Savable>[]> sall = new ArrayList<ArrayList<Savable>[]>();
@@ -1242,6 +1309,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             ArrayList<FloatBuffer> tmp = new ArrayList<FloatBuffer>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
@@ -1265,13 +1334,10 @@ public class XMLInputCapsule
     @Override
     public Map<? extends Savable, ? extends Savable> readSavableMap(String name, Map<? extends Savable, ? extends Savable> defVal) throws IOException {
         Map<Savable, Savable> ret;
-        Element tempEl;
+        
+        Element tempEl = findChildElement(mCurrentElement, name);
+        hasProcessed( name );
 
-        if (name != null) {
-                tempEl = findChildElement(mCurrentElement, name);
-        } else {
-                tempEl = mCurrentElement;
-        }
         ret = new HashMap<Savable, Savable>();
 
         NodeList nodes = tempEl.getChildNodes();
@@ -1292,14 +1358,11 @@ public class XMLInputCapsule
     @Override
     public Map<String, ? extends Savable> readStringSavableMap(String name, Map<String, ? extends Savable> defVal) throws IOException {
         Map<String, Savable> ret = null;
-        Element tempEl;
+        Element tempEl = findChildElement(mCurrentElement, name);
 
-        if (name != null) {
-            tempEl = findChildElement(mCurrentElement, name);
-        } else {
-            tempEl = mCurrentElement;
-        }
         if (tempEl != null) {
+            hasProcessed( name );
+
             ret = new HashMap<String, Savable>();
 
             NodeList nodes = tempEl.getChildNodes();
@@ -1323,7 +1386,7 @@ public class XMLInputCapsule
                     		aValue = readSavable( "value", null );
                 		} else {
                 			// Support the string as a proxy for the savable
-                			aValue = new XMLStringProxy( aString );
+                			aValue = new SavableString( aString );
                 		}
                     	if ( aValue != null ) {
                     		// Use the node name as the key string
@@ -1342,14 +1405,11 @@ public class XMLInputCapsule
     @Override
     public IntMap<? extends Savable> readIntSavableMap(String name, IntMap<? extends Savable> defVal) throws IOException {
         IntMap<Savable> ret = null;
-        Element tempEl;
+        Element tempEl = findChildElement(mCurrentElement, name);
 
-        if (name != null) {
-                tempEl = findChildElement(mCurrentElement, name);
-        } else {
-                tempEl = mCurrentElement;
-        }
         if (tempEl != null) {
+            hasProcessed( name );
+
             ret = new IntMap<Savable>();
 
             NodeList nodes = tempEl.getChildNodes();
@@ -1373,15 +1433,13 @@ public class XMLInputCapsule
     @Override
     public FloatBuffer readFloatBuffer(String name, FloatBuffer defVal) throws IOException {
         try {
-            Element tmpEl;
-            if (name != null) {
-                tmpEl = findChildElement(mCurrentElement, name);
-            } else {
-                tmpEl = mCurrentElement;
-            }
+            Element tmpEl = findChildElement(mCurrentElement, name);
+
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             FloatBuffer tmp = BufferUtils.createFloatBuffer(strings.length);
             for (String s : strings) tmp.put(Float.parseFloat(s));
@@ -1406,6 +1464,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             IntBuffer tmp = BufferUtils.createIntBuffer(strings.length);
             for (String s : strings) tmp.put(Integer.parseInt(s));
@@ -1430,6 +1490,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             ByteBuffer tmp = BufferUtils.createByteBuffer(strings.length);
             for (String s : strings) tmp.put(Byte.valueOf(s));
@@ -1454,6 +1516,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             ShortBuffer tmp = BufferUtils.createShortBuffer(strings.length);
             for (String s : strings) tmp.put(Short.valueOf(s));
@@ -1478,6 +1542,8 @@ public class XMLInputCapsule
             if (tmpEl == null) {
                 return defVal;
             }
+            hasProcessed( name );
+
             ArrayList<ByteBuffer> tmp = new ArrayList<ByteBuffer>();
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
@@ -1508,6 +1574,8 @@ public class XMLInputCapsule
         try {
             String eVal = mCurrentElement.getAttribute(name);
             if (eVal != null && eVal.length() > 0) {
+                hasProcessed( name );
+
             	eVal = decodeString( eVal );
                 ret = Enum.valueOf(enumType, eVal);
             }

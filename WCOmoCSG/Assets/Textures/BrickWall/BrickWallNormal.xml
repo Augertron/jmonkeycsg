@@ -7,7 +7,7 @@
 	    
 	    <MapEntry key='DiffuseMap'>
 	        <Savable class='com.jme3.material.MatParamTexture' 
-	        		name='DiffuseMap' texture_unit='0' varType='Texture2D'>
+	        		name='DiffuseMap' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/BrickWall/BrickWall.jpg' 
@@ -16,13 +16,12 @@
 	                		generate_mips='true' 
 	                		name='Textures/BrickWall/BrickWall.jpg'/>
 	            </value_savable>
-	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickNDiffuse'/>
 	        </Savable>
 	    </MapEntry>
 
 	    <MapEntry key='NormalMap'>
 	        <Savable class='com.jme3.material.MatParamTexture' 
-	        		name='NormalMap' texture_unit='1' varType='Texture2D'>
+	        		name='NormalMap' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/BrickWall/BrickWall_normal.jpg' 
@@ -31,7 +30,6 @@
 	                		generate_mips='true' 
 	                		name='Textures/BrickWall/BrickWall_normal.jpg'/>
 	            </value_savable>
-	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickNormal'/>
 	        </Savable>
 	    </MapEntry>
 	     
@@ -41,7 +39,7 @@
 	    
 	    <MapEntry key='ParallaxMap'>
 	        <Savable class='com.jme3.material.MatParamTexture' 
-	        		name='ParallaxMap' texture_unit='2' varType='Texture2D'>
+	        		name='ParallaxMap' varType='Texture2D'>
 	            <value_savable class='com.jme3.texture.Texture2D' 
 	            		minificationFilter='Trilinear' 
 	            		name='Textures/BrickWall/BrickWall_height.jpg' 
@@ -50,7 +48,6 @@
 	                		generate_mips='true' 
 	                		name='Textures/BrickWall/BrickWall_height.jpg' />
 	            </value_savable>
-	            <texture class='com.jme3.texture.Texture2D' ref='com.jme3.texture.Texture2D@BrickParallel'/>
 	        </Savable>
 	    </MapEntry>
 	</parameters>
