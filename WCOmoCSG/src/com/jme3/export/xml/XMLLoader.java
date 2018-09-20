@@ -101,7 +101,7 @@ public class XMLLoader
     	if ( !mContextStack.isEmpty() ) {
     		XMLLoadContext aContext = mContextStack.peek();
     		
-    		pKey.setTranslationBundles( aContext.mInCapsule.mResourceBundles );
+    		pKey.setTranslationBundles( aContext.mInCapsule.mResourceBundles, aContext.mInCapsule.mInternalBundle );
     		pKey.setSeedValues( aContext.mInCapsule.mReferencedSavables );
     	}
     }
@@ -150,7 +150,8 @@ public class XMLLoader
         		aContext.mInCapsule.seedReferencedSavables( xmlEnvironment.getSeedValues()
         													, xmlEnvironment.blendReferences() );
         		
-        		aContext.mInCapsule.setResourceBundles( xmlEnvironment.getTranslationBundles() );
+        		aContext.mInCapsule.setResourceBundles( xmlEnvironment.getTranslationBundles()
+        											,	xmlEnvironment.getInternalBundle() );
         	}
         	// The entire document is assumed to be a single savable, with interior components
             Savable rootNode =  aContext.mInCapsule.readSavable( null, null );

@@ -32,8 +32,10 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -52,19 +54,46 @@ import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
 import com.jme3.export.SavableClassUtil;
 import com.jme3.export.xml.XMLExporter;
+import com.jme3.math.FastMath;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.IntMap;
 
 /** This is a basic rip-off of the DOMInputCapsule, leveraging all the standard readBlah() support,
- 	but providing extra XML processing services as well. 	
+ 	but providing extra XML processing services as well.  For example, floating point input
+ 	values can be expressed as a rational fraction (literally '1/3') or as a fraction of PI
+ 	('1/2PI') to help with radian values.
  	
  	The basic premise is that every element in the DOM represents some Savable (or item within a
  	Savable)  We know which 'current' element we are working on, and the parent .read() processing
  	directs us from item to item, each item becoming the 'current' as it is worked on.
  	
+ 	XMLInputCapsule is designed to support manually coded XML, not just the result of a prior
+ 	XML output that is machine generated.  To that end, we anticipate likely human error 
+ 	(basic typos) so this class will monitor the attributes/elements touched during the
+ 	Savable read process. If any attributes/elements exist within the XML that were not
+ 	touched, an error is registered.
+ 	
  	Those Savables that are 'XMLInputCapsule' aware can use the call backs to process DOM
  	elements on their own.  This allows any given Savable to customize its XML support beyond
  	the standard jMonkey definitions of XML data types.
+ 	
+ 	String substitution will be applied if given a set of ResourceBundles.  Any
+ 	strings of the form ${bundle.name} will locate the bundle by name, and will then
+ 	resolve the given name within that bundle.  The resultant text replaces the ${...} string.
+ 	
+ 	A special 'internal' bundle is supported where substitution values can be defined by
+ 	the parsing process itself. Of course, no localization occurs, you just get what you get.
+ 	The internal bundle is referenced by ${#.somename}.  It is the responsibility of the
+ 	user of XMLInputCapsule to decide how to load the internal bundle.
+ 	
+ 	The id/ref mechanism provides a way of defining Savables within a library, which can
+ 	be referenced within the parsing to provide a common definition.  The library can be
+ 	pre-seeded with values before the parsing starts.
+ 	
+ 	@see XMLContextKey for loading XML based asset content from within another XML input
+ 		 process, passing the active XML input context from the outer to the inner process.
+ 		 This allows you to utilize the id/ref, resource bundle, and internal bundle
+ 		 across different parsing invocations.
  */
 public class XMLInputCapsule 
 	implements InputCapsule
@@ -111,6 +140,86 @@ public class XMLInputCapsule
         return null;
     }
     
+    /** Floating point parsing routine that understands rational fractions and PI 
+     		xx.xPI/yy.y    or   xx.x/yy.yPI    or  xxx/yyy
+     */
+    public static float parseFloat(
+    	String		pPiText
+    ,	float		pDefault
+    ) {
+    	if ( pPiText == null ) {
+    		return pDefault;
+    	}
+    	float aFloatValue = 0.0f;
+		float numerator = 1.0f;
+		float denominator = 1.0f;
+
+		pPiText = pPiText.toUpperCase();
+		int piIndex = pPiText.indexOf( "PI" );
+		int slashIndex = pPiText.indexOf( "/" );
+		if ( piIndex >= 0 ) {
+			// Decipher things like 3PI/4 and 3/4PI
+			int numeratorEnd, denominatorStart;
+			if ( slashIndex < 0 ) {
+				// Like 2PI
+				numerator = FastMath.PI;
+				numeratorEnd = piIndex;
+				denominatorStart = piIndex + 2;
+			} else if ( piIndex < slashIndex ) {
+				// Like 3PI/4
+				numerator = FastMath.PI;
+				numeratorEnd = piIndex;
+				denominatorStart = slashIndex + 1;
+			} else {
+				// Like 3/4PI
+				denominator = FastMath.PI;
+				pPiText = pPiText.substring( 0, piIndex );
+				numeratorEnd = slashIndex;
+				denominatorStart = slashIndex + 1;
+			}
+			if ( numeratorEnd > 0 ) {
+				// Some integer multiplier of PI
+				String numeratorTxt = pPiText.substring( 0, numeratorEnd );
+				if ( numeratorTxt.indexOf( '.' ) < 0 ) {
+					numerator *= Integer.parseInt( numeratorTxt );
+				} else {
+					numerator *= Float.parseFloat( numeratorTxt );
+				}
+			}
+			if ( denominatorStart < pPiText.length() ) {
+				// Some integer divisor of PI
+				String denominatorTxt = pPiText.substring( denominatorStart );
+				if ( denominatorTxt.indexOf( '.' ) < 0 ) {
+					denominator *= Integer.parseInt( denominatorTxt );
+				} else {
+					denominator *= Float.parseFloat( denominatorTxt );
+				}
+			}
+			aFloatValue = numerator / denominator;
+			
+		} else if ( slashIndex > 0 ) {
+			// Rational fraction like 3/4, but no PI
+			String numeratorTxt = pPiText.substring( 0, slashIndex );
+			if ( numeratorTxt.indexOf( '.' ) < 0 ) {
+				numerator = Integer.parseInt( numeratorTxt );
+			} else {
+				numerator = Float.parseFloat( numeratorTxt );
+			}
+			String denominatorTxt = pPiText.substring( slashIndex + 1 );
+			if ( denominatorTxt.indexOf( '.' ) < 0 ) {
+				denominator = Integer.parseInt( denominatorTxt );
+			} else {
+				denominator = Float.parseFloat( denominatorTxt );
+			}
+			aFloatValue = numerator / denominator;
+			
+		} else {
+			// If not PI or a rational fraction, then its just a float
+			aFloatValue = Float.parseFloat( pPiText );
+		}
+    	return aFloatValue;
+    }
+    
     /** The importer that is driving this process */
     protected JmeImporter					mImporter;
     /** The DOM Document that is being processed */
@@ -123,9 +232,10 @@ public class XMLInputCapsule
     protected Map<String, Savable>			mReferencedSavables;
     /** Library of ResourceBundles used for string translation */
     protected Map<String,ResourceBundle>	mResourceBundles;
+    protected ResourceBundle				mInternalBundle;
     /** Version info registered with the Savables, filled in dynamically as elements are processed */
     protected int[] 						mClassHierarchyVersions;
-    /** The Savable that is actively being filled, and the attributes it consumes */
+    /** The Savable that is actively being filled, and the attributes/elements it consumes */
     protected Savable 						mSavable;
     protected Set<String>					mSavableAttrs;
 
@@ -166,8 +276,28 @@ public class XMLInputCapsule
     /** Allow translation bundles to be defined */
     public void setResourceBundles( 
     	Map<String,ResourceBundle>	pBundles
+    ,	ResourceBundle				pInternalDefinitions
     ) {
     	mResourceBundles = pBundles;
+    	if ( pInternalDefinitions != null ) {
+    		mInternalBundle = pInternalDefinitions;
+    	}
+    }
+    
+    /** Define substitution values for the internal bundle */
+    public void addInternalSubstitution(
+    	String		pKey
+    ,	Object		pValue
+    ,	boolean		pOverwritePrior
+    ) {
+    	// This only works if we are using our own variant of a bundle
+    	// Otherwise there is no standard way to set a dynamic value into a bundle.
+    	if ( mInternalBundle == null ) {
+    		mInternalBundle = new XMLInputCapsuleBundle();
+    	}
+    	if ( pOverwritePrior || !mInternalBundle.containsKey( pKey ) ) {
+    		((XMLInputCapsuleBundle)mInternalBundle).put( pKey, pValue );
+    	}
     }
     
     /** Allow direct access to the current element */
@@ -188,6 +318,7 @@ public class XMLInputCapsule
     ) throws InstantiationException, ClassNotFoundException, IOException, IllegalAccessException {
     	// Prep what we find
         Savable aResult = pDefaultValue;
+        Savable xmlResult = null;
 
     	Element savedElement = mCurrentElement;
     	Savable savedContext = mSavable;
@@ -199,9 +330,22 @@ public class XMLInputCapsule
 	    	
 	        // A reference to a previously constructed item overrides all other processing
 	        String refID = mCurrentElement.getAttribute( "ref" );
+	        String cloneID = mCurrentElement.getAttribute( "clone" );
 	        if ( refID.length() > 0 ) {
-	        	// Look up the reference
+	        	// Look up the reference and us it as-is (even null)
 	            aResult = mReferencedSavables.get( refID );
+	            
+	        } else if ( cloneID.length() > 0 ) {
+	        	// Look up the reference and clone it as the base instance
+	        	xmlResult = mReferencedSavables.get( cloneID );
+	        	if ( xmlResult instanceof XMLCloneable ) {
+	        		// Make a copy of the template
+	        		xmlResult = aResult = (Savable)((XMLCloneable)xmlResult).clone();
+	        	} else {
+	        		// If we cannot clone it, then treat it like no reference having been found
+	        		// BUT NEVER EVER USE THE UNDERLYING TEMPLATE
+	        		aResult = null;
+	        	}
 	        } else {
 	        	// Process the current node, where the class='...' attribute tells us
 	        	// the class to instantiate, or else the node name is expected to be
@@ -224,7 +368,7 @@ public class XMLInputCapsule
 	            if ( className != null ) {
 		            // Instantiate the Savable instance
 		            // NOTE that an explicit class reference to java.lang.Void will return a null
-		            aResult = SavableClassUtil.fromName( className );
+		            xmlResult = aResult = SavableClassUtil.fromName( className );
 	            }
 	            // Check for version constraints
 	            String versionsStr = mCurrentElement.getAttribute( "savable_versions" );
@@ -237,6 +381,14 @@ public class XMLInputCapsule
 	            } else {
 	                mClassHierarchyVersions = null;
 	            }
+	        }
+            if ( xmlResult != null ) {
+	            // We fill the empty/cloned instance constructed above by letting
+	            // it read itself.  We save the current element 'context'
+	            // within mSavable, and get ready to monitor which attr/elements
+            	// are processed.
+	            mSavable = xmlResult;
+	            
 	            // If we have reference_ID='blah' or id='blah', then save this
 	            // instance for subsequent reference
 	            refID = mCurrentElement.getAttribute( "reference_ID" );
@@ -245,46 +397,39 @@ public class XMLInputCapsule
 	            	// Allow subsequent parsing to reference back to this item
 	            	mReferencedSavables.put( refID, aResult );
 	            }
-	            if ( aResult != null ) {
-		            // We fill the empty instance constructed above by letting
-		            // it read itself.  We save the current element 'context'
-		            // within mSavable, and get ready to monitor which attr/elements
-	            	// are processed.
-		            mSavable = aResult;
-		            
-		            // Preseed with the standards that are part of the XML process,
-		            // not the actual instance
-		            mSavableAttrs = new HashSet();
-		            mSavableAttrs.add( "class" );
-		            mSavableAttrs.add( "id" );
-		            mSavableAttrs.add( "reference_ID" );
-		            
-		            aResult.read( mImporter );
-		            
-		            // Confirm that all attributes and child elements have been touched
-		            // NOTE that a callback during the .read() above can suppress this check
-		            if ( mSavableAttrs != null ) {
-			            NamedNodeMap allAttrs = mCurrentElement.getAttributes();
-			            for( int i = 0, j = allAttrs.getLength(); i < j; i += 1 ) {
-			            	Node anAttr = allAttrs.item( i );
-			            	String attrName = anAttr.getNodeName();
-			            	if ( !mSavableAttrs.contains( attrName ) ) {
-			            		throw new IOException( "Attribute: " + attrName + " not supported by " + mSavable );
+	            // Preseed with the standards that are part of the XML process,
+	            // not the actual instance
+	            mSavableAttrs = new HashSet();
+	            mSavableAttrs.add( "class" );
+	            mSavableAttrs.add( "clone" );
+	            mSavableAttrs.add( "id" );
+	            mSavableAttrs.add( "reference_ID" );
+	            
+	            aResult.read( mImporter );
+	            
+	            // Confirm that all attributes and child elements have been touched
+	            // NOTE that a callback during the .read() above can suppress this check
+	            if ( mSavableAttrs != null ) {
+		            NamedNodeMap allAttrs = mCurrentElement.getAttributes();
+		            for( int i = 0, j = allAttrs.getLength(); i < j; i += 1 ) {
+		            	Node anAttr = allAttrs.item( i );
+		            	String attrName = anAttr.getNodeName();
+		            	if ( !mSavableAttrs.contains( attrName ) ) {
+		            		throw new IOException( "Attribute: " + attrName + " not supported by " + mSavable );
+		            	}
+		            }
+		            Node childNode = mCurrentElement.getFirstChild();
+		            while( childNode != null ) {
+		            	if ( childNode.getNodeType() == Node.ELEMENT_NODE ) {
+			            	String childName = childNode.getNodeName();
+			            	if ( !mSavableAttrs.contains( childName ) ) {
+			            		throw new IOException( "Element: " + childName + " not supported by " + mSavable );
 			            	}
-			            }
-			            Node childNode = mCurrentElement.getFirstChild();
-			            while( childNode != null ) {
-			            	if ( childNode.getNodeType() == Node.ELEMENT_NODE ) {
-				            	String childName = childNode.getNodeName();
-				            	if ( !mSavableAttrs.contains( childName ) ) {
-				            		throw new IOException( "Element: " + childName + " not supported by " + mSavable );
-				            	}
-			            	}
-			            	childNode = childNode.getNextSibling();
-			            }
+		            	}
+		            	childNode = childNode.getNextSibling();
 		            }
 	            }
-	        }
+            }
     	} finally {
     		// Restore all the saved values
             mCurrentElement = savedElement;
@@ -313,7 +458,7 @@ public class XMLInputCapsule
         }
         pText = pText.replaceAll("\\&quot;", "\"").replaceAll("\\&lt;", "<").replaceAll("\\&amp;", "&");
         
-        if ( mResourceBundles != null ) {
+        if ( (mInternalBundle != null) || (mResourceBundles != null) ) {
         	// Look for dynamic substitutions of the form ${bundle.key.key.key}
         	int start, prior = 0;
         	StringBuilder aBuffer = null;
@@ -327,7 +472,8 @@ public class XMLInputCapsule
         		if ( (end > start) && ((end-start) >= 3) && (dot > start) && (dot < end-1) ) {
         			// The a. portion picks the bundle
         			String libraryRef = pText.substring( start, dot );
-        			ResourceBundle aBundle = mResourceBundles.get( libraryRef );
+        			ResourceBundle aBundle 
+        				= (libraryRef.equals("#")) ? mInternalBundle : mResourceBundles.get( libraryRef );
         			if ( aBundle != null ) {
         				String aKey = pText.substring( dot+1, end );
         				if ( aBundle.containsKey( aKey ) ) {
@@ -594,7 +740,7 @@ public class XMLInputCapsule
 
         tmpString = decodeString( tmpString );
         try {
-            return Float.parseFloat(tmpString);
+            return parseFloat( tmpString, defVal );
         } catch (NumberFormatException nfe) {
             IOException io = new IOException(nfe.toString());
             io.initCause(nfe);
@@ -619,7 +765,7 @@ public class XMLInputCapsule
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             float[] tmp = new float[strings.length];
             for (int i = 0; i < tmp.length; i++) {
-                tmp[i] = Float.parseFloat(strings[i]);
+                tmp[i] = parseFloat( strings[i], (i < defVal.length) ? defVal[i] : Float.NaN );
             }
             return tmp;
 
@@ -650,7 +796,7 @@ public class XMLInputCapsule
             for (int i = 0; i < size_outer; i++) {
                 tmp[i] = new float[size_inner];
                 for (int k = 0; k < size_inner; k++) {
-                    tmp[i][k] = Float.parseFloat(strings[i]);
+                    tmp[i][k] = parseFloat( strings[i], defVal[i][k] );
                 }
             }
             return tmp;
@@ -1168,6 +1314,7 @@ public class XMLInputCapsule
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
                     mCurrentElement = findNextSiblingElement(mCurrentElement)) {
+            	hasProcessed( mCurrentElement.getNodeName() );
                 savables.add(readSavableFromCurrentElem(null));
             }
             ret = savables.toArray(new Savable[0]);
@@ -1198,6 +1345,7 @@ public class XMLInputCapsule
             mCurrentElement = findFirstChildElement(tmpEl);
             for (int i = 0; i < size_outer; i++) {
                 for (int j = 0; j < size_inner; j++) {
+                	hasProcessed( mCurrentElement.getNodeName() );
                     tmp[i][j] = (readSavableFromCurrentElem(null));
                     if (i == size_outer - 1 && j == size_inner - 1) {
                         break;
@@ -1230,6 +1378,7 @@ public class XMLInputCapsule
             for (mCurrentElement = findFirstChildElement(tmpEl);
                     mCurrentElement != null;
                     mCurrentElement = findNextSiblingElement(mCurrentElement)) {
+            	hasProcessed( mCurrentElement.getNodeName() );
                 savables.add(readSavableFromCurrentElem(null));
             }
             mCurrentElement = (Element) tmpEl.getParentNode();
@@ -1589,3 +1738,56 @@ public class XMLInputCapsule
 
 
 }
+/** Helper class to support 'internal' definitions for substitutions */
+class XMLInputCapsuleBundle
+	extends ResourceBundle
+{
+	/** The set of entries */
+	protected Hashtable<String,Object>	mEntries;
+	/** Cached set of keys */
+	protected Set<String>				mKeys;
+	
+	/** Standard constructor */
+	XMLInputCapsuleBundle(
+	) {
+		mEntries = new Hashtable( 11 );
+	}
+	
+	/** Define a new entry */
+	public void put(
+		String		pKey
+	,	Object		pValue
+	) {
+		mEntries.put( pKey, pValue );
+		
+		// Force refresh of key set
+		mKeys = null;
+	}
+	
+	/** List the keys */
+	@Override
+    public Enumeration<String> getKeys(
+    ) { 
+		return mEntries.keys(); 
+	}
+    
+    /** Locate the given key */
+    @Override
+    protected Object handleGetObject(
+    	String	pKey
+    ) { 
+    	return mEntries.get( pKey ); 
+    }
+    
+    /** Keep the key set fresh */
+    @Override
+    protected Set<String> handleKeySet(
+    ) {
+    	if ( mKeys == null ) {
+    		mKeys = mEntries.keySet();
+    	}
+    	return mKeys;
+    }
+
+};
+

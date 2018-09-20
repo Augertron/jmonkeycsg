@@ -59,6 +59,7 @@ public class XMLContextKey<TAsset>
 	protected Class<? extends AssetProcessor>	mAssetProcessor;
 	/** XML extension:  map of reference names to translation ResourceBundles */
 	protected Map<String,ResourceBundle>		mTranslationBundles;
+	protected ResourceBundle					mInternalBundle;
 	/** XML extension:  map of reference names to predefined Savable instances */
 	protected Map<String,Savable>				mSeedValues;
 	protected boolean							mBlendReferences;
@@ -81,10 +82,13 @@ public class XMLContextKey<TAsset>
     
     /** Provide translation resource bundles to the XML processing */
     public Map<String,ResourceBundle> getTranslationBundles() { return mTranslationBundles; }
+    public ResourceBundle getInternalBundle() { return mInternalBundle; }
     public void setTranslationBundles(
     	Map<String,ResourceBundle>	pBundleMap
+    ,	ResourceBundle				pInternalBundle
     ) {
     	mTranslationBundles = pBundleMap;
+    	mInternalBundle = pInternalBundle;
     }
     public ResourceBundle getResourceBundle( 
     	String		pReferenceName
