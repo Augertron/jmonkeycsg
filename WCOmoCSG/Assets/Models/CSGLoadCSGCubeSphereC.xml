@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<com.jme3.scene.Node format_version='2' name='CSGSamplesC'>
+<com.jme3.scene.Node name='CSGSamplesC'>
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' z='-10.0'/>
     </transform>
@@ -77,7 +77,6 @@
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                 		<!--  scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/ -->
             		</transform>
-                    <scaleTexture class='com.jme3.math.Vector2f' x='2' y='2'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
@@ -98,7 +97,6 @@
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                 		<!-- scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/ -->
             		</transform>
-                    <scaleTexture class='com.jme3.math.Vector2f' x='3' y='3'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>
@@ -119,7 +117,6 @@
                         <translation class='com.jme3.math.Vector3f' z='1.0'/>
                 		<!-- scale class='com.jme3.math.Vector3f' x='0.5' y='0.5' z='0.5'/-->
             		</transform>
-                    <scaleTexture class='com.jme3.math.Vector2f' x='0.5' y='0.5'/>
                 </net.wcomohundro.jme3.csg.CSGShape>
             </shapes>
         </net.wcomohundro.jme3.csg.CSGGeonode>

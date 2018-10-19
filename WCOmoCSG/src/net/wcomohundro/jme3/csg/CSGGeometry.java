@@ -666,13 +666,10 @@ public class CSGGeometry
 				}
 			}
 		}
-		// Look for specially defined tranform 
-		if ( this.localTransform == Transform.IDENTITY ) {
-			// No explicit transform, look for a proxy
-			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
-			if ( proxyTransform != null ) {
-				localTransform = proxyTransform.getTransform();
-			}
+		// Look for a proxy
+		CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
+		if ( proxyTransform != null ) {
+			localTransform = proxyTransform.getTransform();
 		}
 		// Anything special for the Material?
         boolean repeatTexture = aCapsule.readBoolean( "repeatTexture", false );
@@ -681,6 +678,12 @@ public class CSGGeometry
         	if ( aParam != null ) {
         		aParam.getTextureValue().setWrap( Texture.WrapMode.Repeat );
         	}
+        }
+        // You may be thinking of CSGGeonode
+        boolean forceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  true );
+        if ( forceSingleMaterial ) {
+        	// CSGGeometry is inherently single material and cannot be anything else
+			CSGEnvironment.sLogger.log( Level.WARNING, "CSGGeometry asked to support mulitple materials: " + this );
         }
         // Any physics?
         mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );

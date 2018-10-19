@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<com.jme3.scene.Node format_version='2' name='CSGSamples'>
+<com.jme3.scene.Node name='CSGSamples'>
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' z='0.0'/>
     </transform>
@@ -58,7 +58,6 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
             		radius='1.5' axisSamples='1' radialSamples='3' firstRadial='PI/2' useEvenSlices='true'>
-            	<scaleTexture class='com.jme3.math.Vector2f' x='4' y='4'/>
             </mesh>
         </com.jme3.scene.Geometry>
 
@@ -102,7 +101,7 @@
             <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
                 <translation class='com.jme3.math.Vector3f' x='15.0' y='-6.0'/>
                 <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='PI/2' />
-             </csgtransform>
+            </csgtransform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' 
             	radius='3' axisSamples='32' radialSamples='32' inverted='true'>
             	<colorGradient>

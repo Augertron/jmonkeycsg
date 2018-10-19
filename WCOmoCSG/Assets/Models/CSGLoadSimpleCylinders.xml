@@ -141,7 +141,7 @@
             <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
                 <translation class='com.jme3.math.Vector3f' x='-10.0' y='-20.0'/>
                 <rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='-1PI/2' />
-             </csgtransform>
+            </csgtransform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
             	radius='0.5' radius2='6' zExtent='6' axisSamples='3' radialSamples='32' inverted='true'>
             	<colorGradient>

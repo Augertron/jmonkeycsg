@@ -26,6 +26,7 @@ package com.jme3.export.xml;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -52,7 +53,6 @@ import com.jme3.asset.AssetKey;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
-import com.jme3.export.SavableClassUtil;
 import com.jme3.export.xml.XMLExporter;
 import com.jme3.math.FastMath;
 import com.jme3.util.BufferUtils;
@@ -83,7 +83,7 @@ import com.jme3.util.IntMap;
  	
  	A special 'internal' bundle is supported where substitution values can be defined by
  	the parsing process itself. Of course, no localization occurs, you just get what you get.
- 	The internal bundle is referenced by ${#.somename}.  It is the responsibility of the
+ 	The internal bundle is referenced by ${somename}.  It is the responsibility of the
  	user of XMLInputCapsule to decide how to load the internal bundle.
  	
  	The id/ref mechanism provides a way of defining Savables within a library, which can
@@ -228,13 +228,15 @@ public class XMLInputCapsule
     protected Element 						mCurrentElement;
     /** Format version of the overall XML, as defined by format_version='123' in the XML itself */
     protected int							mFormatVersion;
+    /** Version info registered with the Savables, filled in dynamically as elements are processed */
+    protected int[] 						mClassHierarchyVersions;
+    /** Set of special extended mappings of abbreviations to classes to instantiate */
+    protected Map<String,Class>				mClassAbbreviations;
     /** Library of registered values, as set by id='xxx', referenced by ref='xxx' */
     protected Map<String, Savable>			mReferencedSavables;
     /** Library of ResourceBundles used for string translation */
     protected Map<String,ResourceBundle>	mResourceBundles;
     protected ResourceBundle				mInternalBundle;
-    /** Version info registered with the Savables, filled in dynamically as elements are processed */
-    protected int[] 						mClassHierarchyVersions;
     /** The Savable that is actively being filled, and the attributes/elements it consumes */
     protected Savable 						mSavable;
     protected Set<String>					mSavableAttrs;
@@ -255,9 +257,32 @@ public class XMLInputCapsule
         mFormatVersion = aVersion.equals("") ? 0 : Integer.parseInt( aVersion );
     }
     
+    /** Allow extended abbreviations for class names */
+    public Map<String,Class> getClassAbbreviations() { return mClassAbbreviations; }
+    public void setClassAbbreviations(
+    	Map<String,Class>	pAbbreviations
+    ) {
+    	mClassAbbreviations = pAbbreviations;
+    }
+    public void registerClassAbbreviation(
+    	String		pAbbreviation
+    ,	Class		pClass
+    ) {
+    	if ( mClassAbbreviations == null ) {
+    		mClassAbbreviations = new HashMap( 17 );
+    	}
+    	mClassAbbreviations.put( pAbbreviation, pClass );
+    }
+    
     /** Allow predefined 'seed' values to be provided into the processing */
     public Map<String, Savable>	getReferencedSavables() { return mReferencedSavables; }
     public Savable getReferencedSavable( String pRefID ) { return mReferencedSavables.get( pRefID ); }
+    public void setReferencedSavable( 
+    	String 		pRefID
+    , 	Savable 	pValue 
+    ) { 
+    	mReferencedSavables.put( pRefID, pValue );
+    }
     public void seedReferencedSavables(
     	Map<String,Savable>	pSeedValues
     ,	boolean				pBlendIntoSeedValues
@@ -315,7 +340,17 @@ public class XMLInputCapsule
     	Element		pElement
     ,	Savable		pDefaultValue
     ,	boolean		pMarkElementProcessed
-    ) throws InstantiationException, ClassNotFoundException, IOException, IllegalAccessException {
+    ) throws IOException {
+    	return readSavableFromElem( pElement, pDefaultValue, null, pMarkElementProcessed );
+    }
+    public Savable readSavableFromElem(
+    	Element		pElement
+    ,	Savable		pDefaultValue
+    ,	Savable		pCloneSource
+    ,	boolean		pMarkElementProcessed
+    ) throws IOException {
+    	if ( pElement ==  null ) return null;
+    	
     	// Prep what we find
         Savable aResult = pDefaultValue;
         Savable xmlResult = null;
@@ -332,43 +367,77 @@ public class XMLInputCapsule
 	        String refID = mCurrentElement.getAttribute( "ref" );
 	        String cloneID = mCurrentElement.getAttribute( "clone" );
 	        if ( refID.length() > 0 ) {
-	        	// Look up the reference and us it as-is (even null)
-	            aResult = mReferencedSavables.get( refID );
-	            
+	        	// Look up the reference and us it as-is
+	        	if ( mReferencedSavables.containsKey( refID ) ) {
+	        		aResult = mReferencedSavables.get( refID );
+	        	} else {
+	        		// This is not the same as an explicit null value, 
+            		throw new IOException( "Reference: " + refID + " not defined for " + mCurrentElement );
+	        	}
 	        } else if ( cloneID.length() > 0 ) {
 	        	// Look up the reference and clone it as the base instance
-	        	xmlResult = mReferencedSavables.get( cloneID );
+	        	if ( cloneID.equals( "*" ) ) {
+	        		if ( pCloneSource instanceof XMLCloneable ) {
+		        		// Use the explicit source provided
+		        		xmlResult = pCloneSource;
+	        		} else if ( pDefaultValue instanceof XMLCloneable ) {
+	        			// Clone the default
+	        			xmlResult = pDefaultValue;
+	        		} else {
+	        			// We have nothing else to substitute for "*"
+	        		}
+	        	} else {
+	        		// Lookup the reference
+	        		xmlResult = mReferencedSavables.get( cloneID );
+	        	}
 	        	if ( xmlResult instanceof XMLCloneable ) {
 	        		// Make a copy of the template
 	        		xmlResult = aResult = (Savable)((XMLCloneable)xmlResult).clone();
 	        	} else {
-	        		// If we cannot clone it, then treat it like no reference having been found
-	        		// BUT NEVER EVER USE THE UNDERLYING TEMPLATE
-	        		aResult = null;
+	        		// If we cannot clone it and obviously the user is expecting something
+	        		// to be here
+	        		throw new IOException( "Clone: " + cloneID + " not valid for " + mCurrentElement );
 	        	}
 	        } else {
 	        	// Process the current node, where the class='...' attribute tells us
 	        	// the class to instantiate, or else the node name is expected to be
 	        	// the class name.
-	            String className;
+	            Class aClass = null;
+	            String className = null;
+	            String classValue = null;
+	            if ( mCurrentElement.hasAttribute( "value" ) ) {
+	            	// An explicit 'value' is just a string
+	            	classValue = decodeString( mCurrentElement.getAttribute( "value" ) );
+	            }
 	            if ( mCurrentElement.hasAttribute( "class" ) ) {
 	            	// An explicit class attribute is the override
-	                className = mCurrentElement.getAttribute("class");
-	            } else if ( mCurrentElement.hasAttribute("value") ) {
-	            	// An explicit 'value' is just a string
-	            	className = null;
-	            	aResult = new SavableString( mCurrentElement.getAttribute( "value" ) );
+	            	className = mCurrentElement.getAttribute( "class" );
+	                aClass = XMLClassUtil.classFromName( className, mClassAbbreviations );
+	                
 	            } else if ( pDefaultValue != null ) {
 	            	// The given default value will direct the class to use
-	            	className = pDefaultValue.getClass().getName();
+	            	aClass = pDefaultValue.getClass();
+	            	
 	            } else {
 	            	// The node name itself is expected to direct the class
 	            	className = mCurrentElement.getNodeName();
+	            	aClass = XMLClassUtil.classFromName( className, mClassAbbreviations );
 	            }
-	            if ( className != null ) {
+	            if ( classValue != null ) {
+	            	if ( aClass == null ) {
+	            		// Just a string
+	            		aResult = new SavableString( classValue );
+	            	} else {
+	            		// Expect a static field of this name
+	            		aResult = XMLClassUtil.fromClassField( aClass, classValue );
+	            	}
+	            } else if ( aClass != null ) {
 		            // Instantiate the Savable instance
 		            // NOTE that an explicit class reference to java.lang.Void will return a null
-		            xmlResult = aResult = SavableClassUtil.fromName( className );
+		            xmlResult = aResult = XMLClassUtil.fromClass( aClass );
+	            } else {
+	            	// I do not understand this one
+            		throw new IOException( "Savable class not found for: " + mCurrentElement.getNodeName() );
 	            }
 	            // Check for version constraints
 	            String versionsStr = mCurrentElement.getAttribute( "savable_versions" );
@@ -392,7 +461,7 @@ public class XMLInputCapsule
 	            // If we have reference_ID='blah' or id='blah', then save this
 	            // instance for subsequent reference
 	            refID = mCurrentElement.getAttribute( "reference_ID" );
-	            if ( refID.isEmpty() ) refID = mCurrentElement.getAttribute("id");
+	            if ( refID.isEmpty() ) refID = mCurrentElement.getAttribute( "id" );
 	            if ( refID.length() > 0 ) {
 	            	// Allow subsequent parsing to reference back to this item
 	            	mReferencedSavables.put( refID, aResult );
@@ -430,6 +499,14 @@ public class XMLInputCapsule
 		            }
 	            }
             }
+    	} catch( IOException ex ) {
+    		// These are just thrown as is
+    		throw ex;
+    	} catch( Exception ex ) {
+    		// Throw as an IOException
+            IOException io = new IOException( ex.toString() );
+            io.initCause( ex );
+            throw io;    		
     	} finally {
     		// Restore all the saved values
             mCurrentElement = savedElement;
@@ -467,31 +544,34 @@ public class XMLInputCapsule
         		start += 2;
         		int end = pText.indexOf( "}", start );
         		int dot = pText.indexOf( ".", start );
+        		ResourceBundle aBundle = null;
         		
-        		// We need a minimum of ${a.b}
-        		if ( (end > start) && ((end-start) >= 3) && (dot > start) && (dot < end-1) ) {
-        			// The a. portion picks the bundle
+        		if ( dot < 0 ) {
+        			// If not a dot notation, then it is an internal reference
+        			aBundle = mInternalBundle;
+        			dot = 1;
+        		} else if ( (end > start) && ((end-start) >= 3) && (dot > start) && (dot < end-1) ) {
+            		// We need a minimum of ${a.b} where the a. portion picks the bundle
         			String libraryRef = pText.substring( start, dot );
-        			ResourceBundle aBundle 
-        				= (libraryRef.equals("#")) ? mInternalBundle : mResourceBundles.get( libraryRef );
-        			if ( aBundle != null ) {
-        				String aKey = pText.substring( dot+1, end );
-        				if ( aBundle.containsKey( aKey ) ) {
-        					// We have a substitution
-        					String aValue = aBundle.getString( aKey );
-        					
-        					if ( aBuffer == null ) {
-        						aBuffer = new StringBuilder( pText.length() + 10 );
-        					}
-        					if ( prior < start-2 ) {
-        						// Copy up to the ${
-        						aBuffer.append( pText, prior, start-2 );
-        					}
-        					// Copy the substitution
-        					aBuffer.append( aValue );
-        				}
-        			}
+        			aBundle = mResourceBundles.get( libraryRef );
         		}
+    			if ( aBundle != null ) {
+    				String aKey = pText.substring( dot+1, end );
+    				if ( aBundle.containsKey( aKey ) ) {
+    					// We have a substitution
+    					String aValue = aBundle.getString( aKey );
+    					
+    					if ( aBuffer == null ) {
+    						aBuffer = new StringBuilder( pText.length() + 10 );
+    					}
+    					if ( prior < start-2 ) {
+    						// Copy up to the ${
+    						aBuffer.append( pText, prior, start-2 );
+    					}
+    					// Copy the substitution
+    					aBuffer.append( aValue );
+    				}
+    			}
         		if ( end > start ) {
         			// Look for another after skipping past the }
         			prior = end + 1;
@@ -528,7 +608,7 @@ public class XMLInputCapsule
     /** Service routine to read a savable, instantiating from a given class name */
     protected Savable readSavableFromCurrentElem(
     	Savable		pDefaultValue
-    ) throws InstantiationException, ClassNotFoundException, IOException, IllegalAccessException {
+    ) throws IOException {
         if ( (mCurrentElement == null) || mCurrentElement.getNodeName().equals("null") ) {
             return null;
         }
@@ -553,7 +633,7 @@ public class XMLInputCapsule
     	// If we have encountered version markers on savables, they will be regisered
     	// within mClassHierarchyVersion, with the active savable in mSavable
         if ( mClassHierarchyVersions != null ){
-            return SavableClassUtil.getSavedSavableVersion(
+            return XMLClassUtil.getSavedSavableVersion(
             		mSavable, pDesiredClass, mClassHierarchyVersions, mFormatVersion );
         } else {
         	// Nothing in particular is known
@@ -764,8 +844,9 @@ public class XMLInputCapsule
 
             String[] strings = parseTokens(tmpEl.getAttribute("data"));
             float[] tmp = new float[strings.length];
+            int defCount = (defVal == null) ? 0 : defVal.length;
             for (int i = 0; i < tmp.length; i++) {
-                tmp[i] = parseFloat( strings[i], (i < defVal.length) ? defVal[i] : Float.NaN );
+                tmp[i] = parseFloat( strings[i], (i < defCount) ? defVal[i] : Float.NaN );
             }
             return tmp;
 
@@ -1258,196 +1339,159 @@ public class XMLInputCapsule
     }
 
     @Override
-    public Savable readSavable(String name, Savable defVal) throws IOException {
+    public Savable readSavable(
+    	String name, Savable defVal
+    ) throws IOException {
         Savable ret = defVal;
-        try {
-            Element tmpEl = null;
-            if ( name != null ) {
-            	// Locate the child of the given name
-                hasProcessed( name );
 
-                tmpEl = findChildElement(mCurrentElement, name);
-                if ( tmpEl == null ) {
-                    String tmpString = mCurrentElement.getAttribute(name);
-                    if ( tmpString == null || tmpString.length() < 1) {
-                    	return defVal;
-                    }
-                    // Use a proxy
-                    return( new SavableString( tmpString ) );
+        Element tmpEl = null;
+        if ( name != null ) {
+        	// Locate the child of the given name
+            hasProcessed( name );
+
+            tmpEl = findChildElement( mCurrentElement, name );
+            if ( tmpEl == null ) {
+                String tmpString = mCurrentElement.getAttribute(name);
+                if ( tmpString == null || tmpString.length() < 1) {
+                	return defVal;
                 }
-            } else if ( mCurrentElement == mDocument.getDocumentElement() ) {
-            	// At the very top of the tree, use it as is
-                tmpEl = mDocument.getDocumentElement();
-            } else {
-            	// Assume we are interested in the first
-                tmpEl = findFirstChildElement(mCurrentElement);
+                // Use a proxy
+                return( new SavableString( tmpString ) );
             }
-            mCurrentElement = tmpEl;
-            ret = readSavableFromCurrentElem( defVal );
-            
-            if (mCurrentElement.getParentNode() instanceof Element) {
-                mCurrentElement = (Element) mCurrentElement.getParentNode();
-            } else {
-                mCurrentElement = null;
-            }
-        } catch (IOException ioe) {
-            throw ioe;
-        } catch (Exception e) {
-            IOException io = new IOException(e.toString());
-            io.initCause(e);
-            throw io;
+        } else if ( mCurrentElement == mDocument.getDocumentElement() ) {
+        	// At the very top of the tree, use it as is
+            tmpEl = mDocument.getDocumentElement();
+        } else {
+        	// Assume we are interested in the first
+            tmpEl = findFirstChildElement( mCurrentElement );
         }
+        ret = readSavableFromElem( tmpEl, defVal, false );
         return ret;
     }
 
     @Override
-    public Savable[] readSavableArray(String name, Savable[] defVal) throws IOException {
+    public Savable[] readSavableArray(
+    	String name, Savable[] defVal
+    ) throws IOException {
         Savable[] ret = defVal;
-        try {
-            Element tmpEl = findChildElement(mCurrentElement, name);
-            if (tmpEl == null) {
-                return defVal;
-            }
-            hasProcessed( name );
 
-            List<Savable> savables = new ArrayList<Savable>();
-            for (mCurrentElement = findFirstChildElement(tmpEl);
-                    mCurrentElement != null;
-                    mCurrentElement = findNextSiblingElement(mCurrentElement)) {
-            	hasProcessed( mCurrentElement.getNodeName() );
-                savables.add(readSavableFromCurrentElem(null));
-            }
-            ret = savables.toArray(new Savable[0]);
-            mCurrentElement = (Element) tmpEl.getParentNode();
-            return ret;
-            
-        } catch (Exception e) {
-            IOException io = new IOException(e.toString());
-            io.initCause(e);
-            throw io;
+    	Element savedCurrentElement = mCurrentElement;
+        Element tmpEl = findChildElement(mCurrentElement, name);
+        if (tmpEl == null) {
+            return defVal;
         }
+        hasProcessed( name );
+
+        List<Savable> savables = new ArrayList<Savable>();
+        for (mCurrentElement = findFirstChildElement(tmpEl);
+                mCurrentElement != null;
+                mCurrentElement = findNextSiblingElement(mCurrentElement)) {
+        	hasProcessed( mCurrentElement.getNodeName() );
+            savables.add(readSavableFromCurrentElem(null));
+        }
+        ret = savables.toArray(new Savable[0]);
+        mCurrentElement = savedCurrentElement;
+        return ret;
     }
 
     @Override
-    public Savable[][] readSavableArray2D(String name, Savable[][] defVal) throws IOException {
+    public Savable[][] readSavableArray2D(
+    	String name, Savable[][] defVal
+    ) throws IOException {
         Savable[][] ret = defVal;
-        try {
-            Element tmpEl = findChildElement(mCurrentElement, name);
-            if (tmpEl == null) {
-                return defVal;
-            }
-            hasProcessed( name );
 
-            int size_outer = Integer.parseInt(tmpEl.getAttribute("size_outer"));
-            int size_inner = Integer.parseInt(tmpEl.getAttribute("size_outer"));
-
-            Savable[][] tmp = new Savable[size_outer][size_inner];
-            mCurrentElement = findFirstChildElement(tmpEl);
-            for (int i = 0; i < size_outer; i++) {
-                for (int j = 0; j < size_inner; j++) {
-                	hasProcessed( mCurrentElement.getNodeName() );
-                    tmp[i][j] = (readSavableFromCurrentElem(null));
-                    if (i == size_outer - 1 && j == size_inner - 1) {
-                        break;
-                    }
-                    mCurrentElement = findNextSiblingElement(mCurrentElement);
-                }
-            }
-            ret = tmp;
-            mCurrentElement = (Element) tmpEl.getParentNode();
-            return ret;
-        } catch (IOException ioe) {
-            throw ioe;
-        } catch (Exception e) {
-            IOException io = new IOException(e.toString());
-            io.initCause(e);
-            throw io;
+    	Element savedCurrentElement = mCurrentElement;
+        Element tmpEl = findChildElement(mCurrentElement, name);
+        if (tmpEl == null) {
+            return defVal;
         }
+        hasProcessed( name );
+
+        int size_outer = Integer.parseInt(tmpEl.getAttribute("size_outer"));
+        int size_inner = Integer.parseInt(tmpEl.getAttribute("size_outer"));
+
+        Savable[][] tmp = new Savable[size_outer][size_inner];
+        mCurrentElement = findFirstChildElement(tmpEl);
+        for (int i = 0; i < size_outer; i++) {
+            for (int j = 0; j < size_inner; j++) {
+            	hasProcessed( mCurrentElement.getNodeName() );
+                tmp[i][j] = (readSavableFromCurrentElem(null));
+                if (i == size_outer - 1 && j == size_inner - 1) {
+                    break;
+                }
+                mCurrentElement = findNextSiblingElement(mCurrentElement);
+            }
+        }
+        ret = tmp;
+        mCurrentElement = savedCurrentElement;
+        return ret;
     }
 
     @Override
-    public ArrayList<Savable> readSavableArrayList(String name, ArrayList defVal) throws IOException {
-        try {
-            Element tmpEl = findChildElement(mCurrentElement, name);
-            if (tmpEl == null) {
-                return defVal;
-            }
-            hasProcessed( name );
-
-            ArrayList<Savable> savables = new ArrayList<Savable>();
-            for (mCurrentElement = findFirstChildElement(tmpEl);
-                    mCurrentElement != null;
-                    mCurrentElement = findNextSiblingElement(mCurrentElement)) {
-            	hasProcessed( mCurrentElement.getNodeName() );
-                savables.add(readSavableFromCurrentElem(null));
-            }
-            mCurrentElement = (Element) tmpEl.getParentNode();
-            return savables;
-
-        } catch (Exception e) {
-            IOException io = new IOException(e.toString());
-            io.initCause(e);
-            throw io;
+    public ArrayList<Savable> readSavableArrayList(
+    	String name, ArrayList defVal
+    ) throws IOException {
+    	Element savedCurrentElement = mCurrentElement;
+        Element tmpEl = findChildElement(mCurrentElement, name);
+        if (tmpEl == null) {
+            return defVal;
         }
+        hasProcessed( name );
+
+        ArrayList<Savable> savables = new ArrayList<Savable>();
+        for (mCurrentElement = findFirstChildElement(tmpEl);
+                mCurrentElement != null;
+                mCurrentElement = findNextSiblingElement(mCurrentElement)) {
+        	hasProcessed( mCurrentElement.getNodeName() );
+            savables.add(readSavableFromCurrentElem(null));
+        }
+        mCurrentElement = savedCurrentElement;
+        return savables;
     }
 
     @Override
     public ArrayList<Savable>[] readSavableArrayListArray(
-            String name, ArrayList[] defVal) throws IOException {
-        try {
-            Element tmpEl = findChildElement(mCurrentElement, name);
-            if (tmpEl == null) {
-                return defVal;
-            }
-            hasProcessed( name );
-
-            mCurrentElement = tmpEl;
-
-            ArrayList<Savable> sal;
-            List<ArrayList<Savable>> savableArrayLists =
-                    new ArrayList<ArrayList<Savable>>();
-            int i = -1;
-            while( (sal = readSavableArrayList ("SavableArrayList_" + ++i, null )) != null ) {
-                savableArrayLists.add( sal );
-            }
-            mCurrentElement = (Element) tmpEl.getParentNode();
-            return savableArrayLists.toArray(new ArrayList[0]);
-            
-        } catch (NumberFormatException nfe) {
-            IOException io = new IOException(nfe.toString());
-            io.initCause(nfe);
-            throw io;
-        } catch (DOMException de) {
-            IOException io = new IOException(de.toString());
-            io.initCause(de);
-            throw io;
+        String name, ArrayList[] defVal
+    ) throws IOException {
+    	Element savedCurrentElement = mCurrentElement;
+        Element tmpEl = findChildElement(mCurrentElement, name);
+        if (tmpEl == null) {
+            return defVal;
         }
+        hasProcessed( name );
+
+        mCurrentElement = tmpEl;
+
+        ArrayList<Savable> sal;
+        List<ArrayList<Savable>> savableArrayLists = new ArrayList<ArrayList<Savable>>();
+        int i = -1;
+        while( (sal = readSavableArrayList ("SavableArrayList_" + ++i, null )) != null ) {
+            savableArrayLists.add( sal );
+        }
+        mCurrentElement = savedCurrentElement;
+        return savableArrayLists.toArray( new ArrayList[0] );
     }
 
     @Override
-    public ArrayList<Savable>[][] readSavableArrayListArray2D(String name, ArrayList[][] defVal) throws IOException {
-        try {
-            Element tmpEl = findChildElement(mCurrentElement, name);
-            if (tmpEl == null) {
-                return defVal;
-            }
-            hasProcessed( name );
-
-            mCurrentElement = tmpEl;
-            ArrayList<Savable>[] arr;
-            List<ArrayList<Savable>[]> sall = new ArrayList<ArrayList<Savable>[]>();
-            int i = -1;
-            while ((arr = readSavableArrayListArray( "SavableArrayListArray_" + ++i, null)) != null ) {
-            	sall.add(arr);
-            }
-            mCurrentElement = (Element) tmpEl.getParentNode();
-            return sall.toArray(new ArrayList[0][]);
-            
-        } catch (Exception e) {
-            IOException io = new IOException(e.toString());
-            io.initCause(e);
-            throw io;
+    public ArrayList<Savable>[][] readSavableArrayListArray2D(
+    	String name, ArrayList[][] defVal
+    ) throws IOException {
+    	Element savedCurrentElement = mCurrentElement;
+        Element tmpEl = findChildElement(mCurrentElement, name);
+        if (tmpEl == null) {
+            return defVal;
         }
+        hasProcessed( name );
+
+        mCurrentElement = tmpEl;
+        ArrayList<Savable>[] arr;
+        List<ArrayList<Savable>[]> sall = new ArrayList<ArrayList<Savable>[]>();
+        int i = -1;
+        while ((arr = readSavableArrayListArray( "SavableArrayListArray_" + ++i, null)) != null ) {
+        	sall.add(arr);
+        }
+        mCurrentElement = savedCurrentElement;
+        return sall.toArray(new ArrayList[0][]);
     }
 
     @Override
@@ -1505,49 +1549,69 @@ public class XMLInputCapsule
     }
 
     @Override
-    public Map<String, ? extends Savable> readStringSavableMap(String name, Map<String, ? extends Savable> defVal) throws IOException {
-        Map<String, Savable> ret = null;
+    public Map<String, ? extends Savable> readStringSavableMap(
+    	String name
+    , 	Map<String, ? extends Savable> defVal
+    ) throws IOException {
         Element tempEl = findChildElement(mCurrentElement, name);
 
         if (tempEl != null) {
+        	// Mark the name as being processed
             hasProcessed( name );
-
-            ret = new HashMap<String, Savable>();
-
-            NodeList nodes = tempEl.getChildNodes();
-            for (int i = 0; i < nodes.getLength(); i++) {
-                Node n = nodes.item(i);
-                if (n instanceof Element) {
-                	if ( n.getNodeName().equals(XMLExporter.ELEMENT_MAPENTRY) ) {
-                		// Old style mapping
-                        Element elem = (Element) n;
-                        mCurrentElement = elem;
-                        String key = mCurrentElement.getAttribute("key");
-                        Savable val = readSavable("Savable", null);
-                        ret.put(key, val);
-                	} else {
-                		// Simpler mapping
-                		mCurrentElement = (Element)n;
-                		Savable aValue;
-                		String aString = mCurrentElement.getAttribute( "value" );
-                		if ( aString.isEmpty() ) {
-                			// NOT a simple attribute string, look for a full definition
-                    		aValue = readSavable( "value", null );
-                		} else {
-                			// Support the string as a proxy for the savable
-                			aValue = new SavableString( aString );
-                		}
-                    	if ( aValue != null ) {
-                    		// Use the node name as the key string
-                    		ret.put( n.getNodeName(), aValue );
-                    	}
-                	}
-                }
-            }
+            
+            // Read the map
+            Map<String, ? extends Savable> ret = readStringSavableMap( tempEl );
+            return ret;
         } else {
+        	// No such item
         	return defVal;
         }
-        mCurrentElement = (Element) tempEl.getParentNode();
+    }
+    public Map<String, ? extends Savable> readStringSavableMap(
+    	Element pContext
+    ) throws IOException {
+    	Element savedCurrentElement = mCurrentElement;
+    	Map<String, Savable> ret = new HashMap<String, Savable>();
+
+        NodeList nodes = pContext.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node childNode = nodes.item(i);
+            if ( childNode instanceof Element ) {
+            	String nodeName = childNode.getNodeName();
+            	if ( nodeName.equals(XMLExporter.ELEMENT_MAPENTRY ) ) {
+            		// Old style mapping
+                    Element elem = (Element)childNode;
+                    mCurrentElement = elem;
+                    String key = mCurrentElement.getAttribute("key");
+                    Savable val = readSavable("Savable", null);
+                    ret.put(key, val);
+            	} else {
+            		// Simpler mapping based on nodename and 'value' or first child
+            		mCurrentElement = (Element)childNode;
+            		Savable aValue;
+            		String aString = mCurrentElement.getAttribute( "value" );
+            		if ( aString.isEmpty() ) {
+            			// NOT a simple attribute string, look for a full definition
+                		aValue = readSavable( "value", null );
+                		if ( aValue == null ) {
+                			// Not an element named 'value', how about the first child
+                			Element tempE2 = findFirstChildElement( mCurrentElement );
+                			if ( tempE2 != null ) {
+                				aValue = readSavableFromElem( tempE2, null, true );
+                			}
+                		}
+            		} else {
+            			// Support the string as a proxy for the savable
+            			aValue = new SavableString( decodeString( aString ) );
+            		}
+                	if ( aValue != null ) {
+                		// Use the node name as the key string
+                		ret.put( nodeName, aValue );
+                	}
+            	}
+            }
+        }
+        mCurrentElement = savedCurrentElement;
         return ret;
     }
 

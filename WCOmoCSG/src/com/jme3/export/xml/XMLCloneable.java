@@ -35,10 +35,11 @@ package com.jme3.export.xml;
  	XMLInputCapsule .read() processing.  It makes the .clone() method
  	public.
  */
-public interface XMLCloneable 
+public interface XMLCloneable
+<T extends Object>
 	extends Cloneable
 {
 	/** Make the underlying .clone() mechanism available to the public,
 	 	and absorbs any cloning error */
-	public Object clone();
+	public T clone();
 }

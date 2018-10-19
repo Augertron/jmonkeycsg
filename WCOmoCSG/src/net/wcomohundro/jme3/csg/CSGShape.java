@@ -1030,12 +1030,9 @@ public class CSGShape
 			}
 		}
 		// Look for specially configured transform
-		if ( this.localTransform == Transform.IDENTITY ) {
-			// No explicit transform, look for a proxy
-			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
-			if ( proxyTransform != null ) {
-				localTransform = proxyTransform.getTransform();
-			}
+		CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
+		if ( proxyTransform != null ) {
+			localTransform = proxyTransform.getTransform();
 		}
         // Any physics?
         mPhysics = (PhysicsControl)aCapsule.readSavable( "physics", null );

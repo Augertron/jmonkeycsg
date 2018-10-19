@@ -57,6 +57,8 @@ public class XMLContextKey<TAsset>
 	protected Class<? extends AssetCache>		mAssetCache;
 	/** What processor is needed? */
 	protected Class<? extends AssetProcessor>	mAssetProcessor;
+	/** XML extension:  set of abbreviations to classes */
+	protected Map<String,Class>					mClassAbbreviations;
 	/** XML extension:  map of reference names to translation ResourceBundles */
 	protected Map<String,ResourceBundle>		mTranslationBundles;
 	protected ResourceBundle					mInternalBundle;
@@ -78,6 +80,22 @@ public class XMLContextKey<TAsset>
     ) {
         super();
         setSeedValues( null );
+    }
+    
+    /** Allow reuse of this key with a different name */
+    public void setName(
+    	String		pName
+    ) {
+        this.name = reducePath( pName );
+        this.extension = getExtension( this.name );
+    }
+    
+    /** Provide extra name abbreviations to associated class */
+    public Map<String,Class> getClassAbbreviations() { return mClassAbbreviations; }
+    public void setClassAbbreviations(
+    	Map<String,Class>	pAbbreviations
+    ) {
+    	mClassAbbreviations = pAbbreviations;
     }
     
     /** Provide translation resource bundles to the XML processing */

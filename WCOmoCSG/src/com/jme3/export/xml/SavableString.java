@@ -53,7 +53,7 @@ public class SavableString
 		if ( pString.charAt( 0 ) == '#' ) {
 			// Accepting:
 			//		#rgb  #rgba  #rrggbb  #rrggbbaa
-			int red = 256, blue = 256, green = 256, alpha = 256;
+			int red, blue, green, alpha = 255;
 			if ( length >= 4 ) try {
 				if ( length > 6 ) {
 					// Long mode only accepts double digits
@@ -94,6 +94,33 @@ public class SavableString
 			// Punt it
 			return( null );
 		}
+	}
+	/** General service routine to interpret a Color as a String */
+	public static String colorAsString(
+		ColorRGBA	pColor
+	) {
+		// Looks like ColorRGBA does NOT have a standard string interpreter
+		if ( pColor == null ) {
+			return( null );
+		}
+		StringBuilder aBuffer = new StringBuilder( 16 );
+		aBuffer.append( "#" );
+		
+		float[] colors = pColor.getColorArray();
+		for( int i = 0, j = colors.length -1; i <= j; i += 1 ) {
+			float aValue = colors[i];
+			
+			if ( (i == j) && (aValue >= 1.0f) ) {
+				// Alpha not needed 
+				break;
+			}
+			// Convert to double digit hex
+			int intValue = (int)(aValue * 255);
+			String hexValue = Integer.toHexString( intValue );
+			if ( intValue < 16 ) aBuffer.append( "0" );
+			aBuffer.append( hexValue );
+		}
+		return aBuffer.toString();
 	}
 	
 	

@@ -401,12 +401,9 @@ public class CSGNode
 			}
 		}
 		// Look for specially defined tranform 
-		if ( this.localTransform == Transform.IDENTITY ) {
-			// No explicit transform, look for a proxy
-			CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
-			if ( proxyTransform != null ) {
-				localTransform = proxyTransform.getTransform();
-			}
+		CSGTransform proxyTransform = (CSGTransform)aCapsule.readSavable( "csgtransform", null );
+		if ( proxyTransform != null ) {
+			localTransform = proxyTransform.getTransform();
 		}
 		// Look to apply this material as a default for any elements with no material
 		this.setDefaultMaterial( mMaterial );

@@ -2,7 +2,7 @@
 <!-- This set of constructs is used to test various EPSILON settings where we are
      trying to produce smooth blended shapes without having triangle drop out.
  -->
-<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples'>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='CSGSamples'>
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
@@ -81,9 +81,6 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
-		            	</scaleFaces>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
@@ -117,9 +114,6 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
-		            	</scaleFaces>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
@@ -195,9 +189,6 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
-		            	</scaleFaces>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
@@ -231,9 +222,6 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
-		            	</scaleFaces>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
@@ -310,9 +298,6 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
-		            	</scaleFaces>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>
@@ -346,9 +331,6 @@
 		            		radius='0.5' smoothSurface='false' closed='true'>
 		            	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
 		            		arc='7PI/4' firstRadial='1PI/8' helix='0.5' />
-		                <scaleFaces>
-		                	<com.jme3.math.Vector3f x='1.0' y='6' z='2'/>
-		            	</scaleFaces>
 		            </mesh>
 		        </net.wcomohundro.jme3.csg.CSGShape>    
             </shapes>

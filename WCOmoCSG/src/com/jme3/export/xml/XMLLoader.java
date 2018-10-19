@@ -101,6 +101,7 @@ public class XMLLoader
     	if ( !mContextStack.isEmpty() ) {
     		XMLLoadContext aContext = mContextStack.peek();
     		
+    		pKey.setClassAbbreviations( aContext.mInCapsule.mClassAbbreviations );
     		pKey.setTranslationBundles( aContext.mInCapsule.mResourceBundles, aContext.mInCapsule.mInternalBundle );
     		pKey.setSeedValues( aContext.mInCapsule.mReferencedSavables );
     	}
@@ -147,6 +148,8 @@ public class XMLLoader
         	if ( pAssetKey instanceof XMLContextKey ) {
         		// The key can provide us with extra contextual data
         		XMLContextKey xmlEnvironment = (XMLContextKey)pAssetKey;
+        		
+        		aContext.mInCapsule.setClassAbbreviations( xmlEnvironment.getClassAbbreviations() );
         		aContext.mInCapsule.seedReferencedSavables( xmlEnvironment.getSeedValues()
         													, xmlEnvironment.blendReferences() );
         		

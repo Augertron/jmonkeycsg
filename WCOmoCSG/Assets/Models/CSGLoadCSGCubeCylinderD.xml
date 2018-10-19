@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<com.jme3.scene.Node format_version='2' name='CSGSamplesC'>
+<com.jme3.scene.Node name='CSGSamplesC'>
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' z='15.0'/>
     </transform>

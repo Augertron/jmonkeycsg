@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<com.jme3.scene.Node format_version='2' name='CSGSamples'>
+<com.jme3.scene.Node name='CSGSamples'>
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' z='0.0'/>
     </transform>
@@ -20,10 +20,6 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
             		xExtent='1.0' yExtent='10.0' zExtent='1.0'>
-                <scaleFaces>
-                    <com.jme3.math.Vector3f x='1' y='10' z='5'/>
-                    <com.jme3.math.Vector3f x='1' y='10' z='10'/>
-            	</scaleFaces>
             </mesh>
         </com.jme3.scene.Geometry>
         
@@ -36,10 +32,7 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
             		xExtent='2.0' yExtent='1.0' zExtent='1.0'  generateTangentBinormal='true'>
-            	<scaleFaces>
-                    <com.jme3.math.Vector3f x='2' y='1' z='5'/>
-                    <com.jme3.math.Vector3f x='2' y='1' z='48'/>
-            	</scaleFaces>
+
             </mesh>
         </com.jme3.scene.Geometry>  
         
@@ -53,10 +46,6 @@
             </transform>
             <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
             		xExtent='1.0' yExtent='1.0' zExtent='1.5'  generateTangentBinormal='true'>
-            	<scaleFaces>
-                    <com.jme3.math.Vector3f x='1' y='1.5' z='10'/>
-                    <com.jme3.math.Vector3f x='1' y='1.5' z='48'/>
-            	</scaleFaces>
             </mesh>
         </com.jme3.scene.Geometry>
         

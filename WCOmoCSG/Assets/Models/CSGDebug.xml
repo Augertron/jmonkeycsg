@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGDebug'>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='CSGDebug'>
 	<csgEnvironment class='net.wcomohundro.jme3.csg.iob.CSGEnvironmentIOB'
 		doublePrecision='true' structuralDebug='true' preTransform='true'
 		XepsilonNearZero='1.0e-10' XepsilonBetweenPoints='1.0e-7' XepsilonOnPlane='1.0e-7'

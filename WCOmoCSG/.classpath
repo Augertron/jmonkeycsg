@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="com/jme3/export/SavableClassUtil.java" kind="src" path="src"/>
 	<classpathentry kind="src" path="Assets"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/JMonkey321/jmonkeyplatform/libs/jbullet.jar"/>
+	<classpathentry kind="lib" path="C:/JMonkey321/jmonkeyplatform/libs/jme3-bullet-native-3.2.1-stable.jar"/>
+	<classpathentry kind="lib" path="C:/Users/womohundro/workspace/WCOmoCSGDeploy/libs/jme3-bullet-321-b20181009-j17.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jMonkey321"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

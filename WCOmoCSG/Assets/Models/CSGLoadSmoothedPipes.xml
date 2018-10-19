@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<com.jme3.scene.Node format_version='2' name='CSGSamples'>
+<com.jme3.scene.Node name='CSGSamples'>
     <transform class='com.jme3.math.Transform'>
         <translation class='com.jme3.math.Vector3f' y='0.0'/>
     </transform>
@@ -14,9 +14,6 @@
             		smoothSurface='false' closed='true'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
             			arc='7PI/4' firstRadial='1PI/4' helix='0'/>
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
@@ -31,9 +28,6 @@
             		smoothSurface='false' closed='true'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
             			arc='7PI/4' firstRadial='1PI/4' helix='0.75' />
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
@@ -47,9 +41,6 @@
             		smoothSurface='false' closed='true'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
             		arc='2PI' firstRadial='1PI/4' helix='2' />
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
         
@@ -63,9 +54,6 @@
             		smoothSurface='false' closed='true'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
             		arc='4PI' firstRadial='1PI/4' helix='3' />
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
@@ -79,9 +67,6 @@
             		radius='0.5' smoothSurface='false' closed='false'>
             	<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
             		arc='-4PI' firstRadial='1PI/4' helix='4' />
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
             </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
 
@@ -105,9 +90,6 @@
 	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-2.0'/>
 	                </controlPoints>
 	            </slicePath>
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
              </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='NotSmoothCroppedCurveOblate'
@@ -130,9 +112,6 @@
 	                    <com.jme3.math.Vector3f x='00' y='0.0' z='-2.0'/>
 	                </controlPoints>
 	            </slicePath>
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
              </mesh>
         </com.jme3.scene.Geometry>
         
@@ -156,9 +135,6 @@
 	                    <com.jme3.math.Vector3f x='00' y='1.0' z='-2.0'/>
 	                </controlPoints>
 	            </slicePath>
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
              </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='SmoothCroppedCurveOblate'
@@ -181,9 +157,6 @@
 	                    <com.jme3.math.Vector3f x='00' y='1.0' z='-2.0'/>
 	                </controlPoints>
 	            </slicePath>
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
              </mesh>
         </com.jme3.scene.Geometry>
         
@@ -211,9 +184,6 @@
 	                    <com.jme3.math.Vector3f x='0.5' y='2.25' z='-2.5'/>
 	                </controlPoints>
 	            </slicePath>
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
              </mesh>
         </net.wcomohundro.jme3.csg.CSGGeometry>
         <com.jme3.scene.Geometry name='SmoothCroppedTwisty'
@@ -237,9 +207,6 @@
 	                    <com.jme3.math.Vector3f x='0.0' y='1.0' z='-1.00'/>
 	                </controlPoints>
 	            </slicePath>
-                <scaleFaces>
-                	<com.jme3.math.Vector3f x='2.0' y='3' z='2'/>
-            	</scaleFaces>
              </mesh>
         </com.jme3.scene.Geometry>
    </children>

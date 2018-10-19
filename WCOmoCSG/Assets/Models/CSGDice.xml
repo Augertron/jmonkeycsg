@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGLinkNode fname='CSGSamples' deferRegeneration='true'>	
+<net.wcomohundro.jme3.csg.CSGLinkNode name='CSGSamples' deferRegeneration='true'>	
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>

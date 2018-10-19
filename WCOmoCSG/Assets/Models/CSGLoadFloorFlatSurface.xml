@@ -1,5 +1,5 @@
 <?xml  version='1.0' encoding='UTF-8'?>
-<net.wcomohundro.jme3.csg.CSGLinkNode fname='FloorSamples'>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='FloorSamples'>
     <!-- Define some common items for later reference  -->
     <library>
     	<MapEntry key='ALightBright'>

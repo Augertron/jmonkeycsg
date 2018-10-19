@@ -50,7 +50,7 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
-import com.jme3.export.SavableClassUtil;
+import com.jme3.export.xml.XMLClassUtil;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -77,14 +77,7 @@ public class CSGEnvironment<ShapeProcessorT>
 	
 	/** Define a 'prefix' for limiting name length in XML imports */
 	static {
-		try {
-			// If the CSG jme3 extensions are not available, then the method does not exist
-			Class[] argTypes = new Class[] { String.class, String.class };
-			Method aMethod = SavableClassUtil.class.getMethod( "addPrefix", argTypes );
-			
-			SavableClassUtil.addPrefix( "csg", "net.wcomohundro.jme3.csg" );
-		} catch( NoSuchMethodException ignore ) {
-		}
+		XMLClassUtil.addPrefix( "csg", "net.wcomohundro.jme3.csg" );
 	}
 	
 	/** Logger available to any CSG services that desire it */
