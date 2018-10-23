@@ -1,0 +1,117 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- This is a simple LAMP with a conical shade and an exposed bulb.
+	 If included as a 'decoration' on another CSGShape, the Spotlight will illuminate the
+	 mesh the Lamp is attached to.
+
+	 You can apply 'fixup' by setting a new Color on:
+	 	LampLight
+	 	InnerShade
+	 	Bulb
+	 	
+	 and/or setting new Material on:
+	 	Exterior
+	 	Interior
+ -->
+<net.wcomohundro.jme3.csg.CSGGeonode name='ConeLamp'>
+	<!-- Define some basics -->
+	<library>
+		<MapEntry key='LampColor'>
+			<Savable class='com.jme3.math.ColorRGBA' r='0' g='0.8' b='0' a='1' id='LampColor'/>
+		</MapEntry>
+		<MapEntry key='BulbColor'>
+			<Savable class='com.jme3.math.ColorRGBA' r='0' g='0.9' b='0' a='1' id='BulbColor'/>
+		</MapEntry>
+		<MapEntry key='GlowColor'>
+			<Savable class='com.jme3.math.ColorRGBA' r='0.75' g='0.75' b='0.75' a='1' id='GlowColor'/>
+		</MapEntry>
+		
+		<!-- The spotlight that shines out of the lamp -->
+		<MapEntry key='LampLight'>
+	      	<Savable class='com.jme3.light.SpotLight' name='LampLight' id='LampLight'
+	      			spotRange='20' spotInnerAngle='0.35' spotOuterAngle='0.8'>
+	      		<!-- Base it on the given color -->
+	      		<color class='com.jme3.math.ColorRGBA' ref='LampColor'/>
+	      		<!-- At the center of the narrow end -->
+	      		<position class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='1.0'/>
+	      		<!-- Pointing toward the wide end -->
+	      		<direction class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-1.0'/>
+	      	</Savable>
+	   	</MapEntry>
+	   		   	
+	   	<!-- The inner surface of the lamp shade -->
+		<MapEntry key='InnerShade'>
+	      	<Savable class='com.jme3.light.AmbientLight' name='InnerShade' id='InnerShade'>
+	      		<!-- Base it on the given color -->
+	      		<color class='com.jme3.math.ColorRGBA' ref='LampColor'/>
+	      	</Savable>
+      	</MapEntry>
+      	
+      	<!-- The glowing lightbulb itself -->
+      	<MapEntry key='BulbMaterial'>
+	      	<Savable class='com.jme3.material.Material' name='BulbMaterial' id='BulbMaterial'
+	      			material_def='Common/MatDefs/Misc/Unshaded.j3md' >
+	      		<parameters>
+				    <MapEntry key='Color'>
+				        <Savable class='com.jme3.material.MatParam' varType='Vector4' name='Color'>
+				        	<value_savable class='com.jme3.math.ColorRGBA' ref='BulbColor'/>
+				        </Savable>
+				    </MapEntry>
+				    <MapEntry key='GlowColor'>
+				        <Savable class='com.jme3.material.MatParam' varType='Vector4' name='GlowColor'>
+				        	<value_savable class='com.jme3.math.ColorRGBA' ref='GlowColor'/>
+				        </Savable>
+				    </MapEntry>
+				</parameters>
+	      	</Savable>
+		</MapEntry>
+	</library>
+	
+	<!-- Once upon a time, I was going to size and orient the lamp here, but I have
+		 decided to leave that task to the parent item that includes the lamp -->
+    <shapes>
+       	<net.wcomohundro.jme3.csg.CSGShape name='Exterior'
+       			materialName='Textures/Rock/Rock2Rpt.xml'>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                				radius='0.3' radius2='1.9'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='3' scaleY='1'/>
+            	</faceProperties>
+        	</mesh>
+    	</net.wcomohundro.jme3.csg.CSGShape>
+    	
+        <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+        		materialName='Textures/Rock/Rock1Rpt.xml'>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+                				radius='0.3' radius2='1.9'>
+                <faceProperties>
+                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleX='3' scaleY='1'/>
+            	</faceProperties>
+            </mesh>
+		    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+		        <translation class='com.jme3.math.Vector3f' x='0' y='0' z='-0.2'/>
+		    </csgtransform>
+		    <!-- This makes the interior cone of the lampshade light up -->
+		    <lights class='com.jme3.light.LightList'>
+				<lights>
+					<com.jme3.light.AmbientLight ref='InnerShade'/>
+				</lights>
+		    </lights>
+    	</net.wcomohundro.jme3.csg.CSGShape>
+    	
+        <net.wcomohundro.jme3.csg.CSGShape name='Bulb' operator='UNION'>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSphere' radius='0.3'>
+        	</mesh>
+            <material class='com.jme3.material.Material' ref='BulbMaterial'/>
+		    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+		        <translation class='com.jme3.math.Vector3f' x='0' y='0' z='0.4'/>
+      			<scale class='com.jme3.math.Vector3f' x='1' y='1' z='2.0'/>
+		    </csgtransform>
+    	</net.wcomohundro.jme3.csg.CSGShape>
+	</shapes>
+	
+    <lights class='com.jme3.light.LightList'>
+		<lights>
+			<com.jme3.light.SpotLight ref='LampLight'/>
+		</lights>
+    </lights>
+</net.wcomohundro.jme3.csg.CSGGeonode>

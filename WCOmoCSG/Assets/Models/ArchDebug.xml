@@ -1,0 +1,78 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='ArchDebug'>
+
+    <library>
+    	<!-- Define 'CorridorLamp' to overide which lamp is used to light the corridor -->
+    	<MapEntry key='XCorridorLamp'>
+	        <Savable class='com.jme3.asset.NonCachingKey' name='Lamps/SimpleConeLamp.xml'/>
+	    </MapEntry>
+	    <MapEntry key='CorridorLamp'>
+	        <Savable class='com.jme3.asset.NonCachingKey' name='Lamps/SphereInCubeLamp.xml'/>
+	    </MapEntry>
+    
+    	<MapEntry key='ACorridor'>
+    		<Savable class='com.jme3.asset.NonCachingKey' name='Models/ArchLampedCorridor.xml'/>
+		</MapEntry>
+		
+		<MapEntry key='BloomFilter'>
+			<Savable class='com.jme3.post.filters.BloomFilter'
+				glowMode='Objects' blurScale='1.5' exposurePower='5.0' exposureCutOff='0.0'
+				bloomIntensity='2.0' downSamplingFactor='1.0' />
+		</MapEntry>
+	</library>
+	
+	<children>
+<?ignore
+		<!--  The sky -->
+		<net.wcomohundro.jme3.csg.shape.CSGSkyDome name='TheSky' radius='120'>
+			<colorGradient>
+            	<com.jme3.math.ColorRGBA r='0.1' g='0.1' b='0.4' a='1'/>
+            	<com.jme3.math.ColorRGBA r='0.2' g='0.2' b='0.9' a='1'/>
+			</colorGradient>
+		</net.wcomohundro.jme3.csg.shape.CSGSkyDome>
+?>
+		<!-- Simple corridor -->
+		<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial reference='ACorridor'>
+			<!-- Move/Rotate confirms that the interior lights/decorations are managed correctly -->
+		    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+		        <XXtranslation class='com.jme3.math.Vector3f' x='5' y='5' z='0'/>
+		        <XXrot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
+		    </csgtransform>
+		</net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial>
+<?ignore		
+		<!-- The floor -->
+		<net.wcomohundro.jme3.csg.CSGGeometry name='Flooring' 
+				deferRegeneration='true'
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='false'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+            <physics class='com.jme3.bullet.control.RigidBodyControl'
+            		mass='0.0' restitution='0' friction='0.9' applyLocalPhysics='true' >
+            	<collisionShape class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape'/>
+            </physics>
+            <shapes>
+                <net.wcomohundro.jme3.csg.CSGShape name='Surface'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+		          		<faceProperties>
+							<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+									face='SURFACE' scaleX='1032' scaleY='1032'/>
+		            	</faceProperties>
+		            	<heightMap class='net.wcomohundro.jme3.csg.shape.CSGHeightMapGenerator'
+		            			type='HILL' size='129' scale='0.025' seed='12345' />
+		            </mesh>
+		        </net.wcomohundro.jme3.csg.CSGShape>
+		        <net.wcomohundro.jme3.csg.CSGShape name='ACorridorHole' 
+		        		operator='DIFFERENCE' surface='USE_BOUNDING_BOX'>
+		        	<spatial class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial' 
+		        			reference='Models/CSGSimpleCorridor.xml' />
+		        </net.wcomohundro.jme3.csg.CSGShape>
+            </shapes>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+?>		
+	</children>
+</net.wcomohundro.jme3.csg.CSGLinkNode>

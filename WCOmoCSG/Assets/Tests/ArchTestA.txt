@@ -1,0 +1,5 @@
+// List of scenes to load for ArchA
+Models/ArchSingleCorridor.xml
+Models/ArchMultiCorridor.xml
+Models/ArchHelix.xml
+Models/ArchLampedCorridor.xml

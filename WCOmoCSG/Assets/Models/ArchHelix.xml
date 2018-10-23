@@ -1,0 +1,75 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- A pipe in a box -->
+<net.wcomohundro.jme3.csg.CSGGeonode name='HelixCarvedFromACube' id='ACoil'
+		deferRegeneration='true'
+ 		singleMaterial='false'
+        materialName='Textures/Rock/Rock2Rpt.xml'>
+    <library>
+    	<MapEntry key='ALightBright'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightBright' id='ALightBright' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='1.0' g='1.0' b='1.0' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALight'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALightDim'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightDim' id='ALightDim' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+       	
+        <MapEntry key='DLight'>
+	       	<Savable class='com.jme3.light.DirectionalLight' name='DLight' id='DLight' enabled='true' 
+       				spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+       			<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+       			<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+       		</Savable>
+       	</MapEntry>
+	</library>
+	
+    <transform class='com.jme3.math.Transform'>
+    	<!-- Mostly below ground -->
+        <translation class='com.jme3.math.Vector3f' x='0' y='-1.995' z='0'/>
+    </transform>
+	<lights class='com.jme3.light.LightList'>
+		<lights>
+			<com.jme3.light.AmbientLight ref='ALight'/>
+		</lights>
+	</lights>
+    <physics class='com.jme3.bullet.control.RigidBodyControl'
+    		mass='0.0' restitution='0' applyLocalPhysics='true' >
+    	<collisionShape class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape'/>
+    </physics>
+    <shapes>
+	    <net.wcomohundro.jme3.csg.CSGShape name='Box'>
+	        <transform class='com.jme3.math.Transform'>
+	      		<translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='0.0'/>
+	        </transform>
+	        <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+	        		xExtent='2.0' yExtent='2.0' zExtent='2.0'>
+		      	<faceProperties>
+		          	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties faceMask='63' scaleX='2' scaleY='2'/>
+		  		</faceProperties>
+		    </mesh>
+	    </net.wcomohundro.jme3.csg.CSGShape>
+                
+        <net.wcomohundro.jme3.csg.CSGShape name='Interior' operator='DIFFERENCE'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+	      	<transform class='com.jme3.math.Transform'>
+	          	<translation class='com.jme3.math.Vector3f' x='0.0' y='-2.0' z='0.0'/>
+	      	</transform>
+      		<mesh class='net.wcomohundro.jme3.csg.shape.CSGPipe' 
+      				axisSamples='90' radialSamples='24' firstRadial='PI/4' pipeEnds='CROPPED' 
+      				radius='0.5' smoothSurface='false' closed='true'>
+      			<slicePath class='net.wcomohundro.jme3.csg.shape.CSGSplineGenerator' 
+      				arc='4PI' firstRadial='1PI/4' helix='4' />
+          		<faceProperties>
+              		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' scaleY='4PI'/>
+      			</faceProperties>
+      		</mesh>
+  		</net.wcomohundro.jme3.csg.CSGShape>    
+	</shapes>
+</net.wcomohundro.jme3.csg.CSGGeonode>

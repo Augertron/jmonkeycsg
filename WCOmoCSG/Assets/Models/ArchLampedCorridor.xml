@@ -1,0 +1,230 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGGeonode name='LampedCorridor'
+			deferRegeneration='true'
+       		singleMaterial='false' 
+       		generateTangentBinormal='true'
+       		shadow_mode='CastAndReceive'
+       		materialName='Textures/CobbleStone/CobbleStoneRpt.xml'>
+       		
+       		<!-- materialName='Textures/BrickWall/BrickWallRpt.xml' -->
+       		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+       		<!-- materialName='Textures/Rock/Rock2Rpt.xml', -->
+       		<!-- materialName='Textures/Debug/Normals.xml' -->
+       		<!-- materialName='Textures/Debug/Wireframe.xml' -->
+       		
+    <!-- Define some common items for later reference  -->
+    <library>
+    	<MapEntry key='ALightBright'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightBright' id='ALightBright' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALight'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALightDim'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightDim' id='ALightDim' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+	       	
+    	<MapEntry key='DLight'>
+	        <Savable class='com.jme3.light.DirectionalLight' name='DLight' id='DLight' enabled='true' 
+	       			spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+	       		<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+	       	</Savable>
+	    </MapEntry>
+	    
+	    <!-- Some appropriate lamps to light the corridor -->
+	    <MapEntry key='CorridorLamp'>
+	        <Savable class='com.jme3.asset.NonCachingKey' name='Lamps/SimpleConeLamp.xml'/>
+	    </MapEntry>
+	    <MapEntry key='XCorridorLamp'>
+	        <Savable class='com.jme3.asset.NonCachingKey' name='Lamps/SphereInCubeLamp.xml'/>
+	    </MapEntry>
+	    
+	</library>
+	
+    <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+    	<!-- Just a tad below ground level -->
+        <translation class='com.jme3.math.Vector3f' x='0' y='0.995' z='0'/>
+        <XXXrot class='net.wcomohundro.jme3.math.CSGQuaternion' roll='PI/4' />
+    </csgtransform>
+    <physics class='com.jme3.bullet.control.RigidBodyControl'
+    		mass='0.0' restitution='0.5' applyLocalPhysics='true' >
+    	<collisionShape class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape'/>
+    </physics>
+    
+    <!-- This light will apply to everything, both inside and out -->
+    <lights class='com.jme3.light.LightList'>
+		<lights>
+			<com.jme3.light.AmbientLight ref='ALightDim'/>
+		</lights>
+    </lights>
+           
+    <shapes>
+       	<net.wcomohundro.jme3.csg.CSGShape name='Exterior'>
+		    <shapes>
+              	<net.wcomohundro.jme3.csg.CSGShape name='ExteriorBox'>
+		            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                  				xExtent='1.0' yExtent='1.0' zExtent='10.0'>
+		                <faceProperties>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='1'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='10' scaleY='1.0'/>
+		                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='10.0'/>
+		            	</faceProperties>
+                    </mesh>
+		    	</net.wcomohundro.jme3.csg.CSGShape>
+                <net.wcomohundro.jme3.csg.CSGShape name='FrontDoor' operator='DIFFERENCE'>
+                		<!-- materialName='Textures/Rock/Rock2.xml'> -->
+                		<!-- materialName='Textures/Rock/Rock1Rpt.xml'> -->
+                    <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' 
+                    		xExtent='0.9' yExtent='0.5' zExtent='0.9'>
+                    </mesh>
+                    <transform class='com.jme3.math.Transform'>
+                        <translation class='com.jme3.math.Vector3f' x='0' y='0.5' z='10'/>
+                    </transform>
+	            </net.wcomohundro.jme3.csg.CSGShape>
+		    </shapes>
+			<transform class='com.jme3.math.Transform'>
+           		<translation class='com.jme3.math.Vector3f' x='0' y='0' z='0'/>
+           	</transform>
+       </net.wcomohundro.jme3.csg.CSGShape>
+               
+       <!-- NOTE that we build the 'unit' interior arch to be 1 long, and adjust
+                 the textures and sizes accordingly.  Then we apply scaling to
+                 match the size of the external box.  -->
+       <net.wcomohundro.jme3.csg.CSGShape name='InteriorArch' operator='DIFFERENCE' >
+       		<!-- materialName='Textures/Rock/Rock1NormalRpt.xml' -->
+       		
+       		<shapes>
+	        	<net.wcomohundro.jme3.csg.CSGShape name='SquareBottom'>
+	              	<mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' 
+	              	 		xExtent='0.5' yExtent='0.25' zExtent='0.5' closed='true'>
+	              	 	<!-- Use the texture origin to match the box pattern to the span 
+	              	         of the arch below -->
+		             	<faceProperties>
+		                 	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+		                 		scaleX='1.0' scaleY='0.5'/>
+		                 	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='RIGHT' 
+		                 		scaleX='3.0' scaleY='1.0' terminusX='1.0'/>
+		                 	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT' 
+		                 		scaleX='3.0' scaleY='1.0' originX='0.5'/>
+		                 	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+		                 		scaleX='3.0' scaleY='1.0'/>
+		                 	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='BOTTOM'
+		                 		materialName='Textures/Rock/Rock1NormalRpt.xml'/>
+		         		</faceProperties>
+	              	</mesh>
+	              	<transform class='com.jme3.math.Transform'>
+	                  	<translation class='com.jme3.math.Vector3f' x='0' y='-0.25' z='0'/>
+	              	</transform>
+	          	</net.wcomohundro.jme3.csg.CSGShape>
+	        	<net.wcomohundro.jme3.csg.CSGShape name='ArchedRoof' operator='UNION'>
+	              	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+	              	 		axisSamples='34' closed='true' zExtent='0.5' 
+	              	 		radialSamples='32' radius='0.5' 
+	              	 		firstRadial='0PI' textureMode='CAN'>
+	            		<faceProperties>
+	                		<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+	                				face='SIDES' scaleX='3' scaleY='1'/>
+	        			</faceProperties>
+	              	</mesh>
+	          	</net.wcomohundro.jme3.csg.CSGShape>
+	       	</shapes>
+        	<!-- Scale to match the transform below -->
+           	<faceProperties>
+               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' 
+               		scaleX='1.9' scaleY='1.9'/>
+               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' 
+               		scaleX='1.9' scaleY='19.9'/>
+               	<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' 
+               		scaleX='1.9' scaleY='19.9'/>
+      			<net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='SIDES' 
+      				scaleX='1.9' scaleY='19.9'/>
+       		</faceProperties>
+       		<!-- Scale to match the exterior box -->
+           	<transform class='com.jme3.math.Transform'>
+                 <scale class='com.jme3.math.Vector3f' x='1.90' y='1.90' z='19.9'/>
+           	</transform>
+           	
+       		<!-- Decorations are attached to the final Mesh produced for this shape, but
+       			 are NOT subject to the scaling applied to the shape.  Position accordingly -->
+       		<decorations>
+       			<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial cloneAs='CenterLamp' reference='CorridorLamp'>
+    				<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+	              		<!-- Hang from the roof in the center -->
+	                  	<translation class='com.jme3.math.Vector3f' x='0' y='0.75' z='0'/>
+        				<!-- Size it -->
+        				<scale class='com.jme3.math.Vector3f' x='0.2' y='0.2' z='0.2'/>
+    					<!-- Point the lamp down -->
+        				<rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='-1PI/2' />
+	              	</csgtransform>
+       			</net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial>
+       			<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial cloneAs='NearLamp' reference='CorridorLamp'>
+    				<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+	              		<!-- Move it to the near end of the corridor -->
+	                  	<translation class='com.jme3.math.Vector3f' x='0' y='0.75' z='9.0'/>
+        				<!-- Size it -->
+        				<scale class='com.jme3.math.Vector3f' x='0.2' y='0.2' z='0.2'/>
+    					<!-- Point the lamp down -->
+        				<rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='-1PI/2' />
+	              	</csgtransform>
+	              	<fixup>
+				    	<MapEntry key='LampLight'>
+					       	<Savable class='com.jme3.math.ColorRGBA' r='0.8' g='0' b='0' a='1'/>
+					    </MapEntry>
+				    	<MapEntry key='InnerShade'>
+					       	<Savable class='com.jme3.math.ColorRGBA' r='0.8' g='0' b='0' a='1'/>
+					    </MapEntry>
+				    	<MapEntry key='Bulb'>
+					       	<Savable class='com.jme3.math.ColorRGBA' r='0.9' g='0' b='0' a='1'/>
+					    </MapEntry>
+	              	</fixup>
+       			</net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial>
+       			<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial cloneAs='FarLamp' reference='CorridorLamp'>
+    				<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+	              		<!-- Move it to the far end of the corridor -->
+	                  	<translation class='com.jme3.math.Vector3f' x='0' y='0.75' z='-9.0'/>
+        				<!-- Size it -->
+        				<scale class='com.jme3.math.Vector3f' x='0.2' y='0.2' z='0.2'/>
+    					<!-- Point the lamp down -->
+        				<rot class='net.wcomohundro.jme3.math.CSGQuaternion' pitch='-1PI/2' />
+	              	</csgtransform>
+	              	<fixup>
+				    	<MapEntry key='LampLight'>
+					       	<Savable class='com.jme3.math.ColorRGBA' r='0' g='0' b='0.8' a='1'/>
+					    </MapEntry>
+				    	<MapEntry key='InnerShade'>
+					       	<Savable class='com.jme3.math.ColorRGBA' r='0' g='0' b='0.8' a='1'/>
+					    </MapEntry>
+				    	<MapEntry key='Bulb'>
+					       	<Savable class='com.jme3.math.ColorRGBA' r='0' g='0' b='0.9' a='1'/>
+					    </MapEntry>
+	              	</fixup>
+       			</net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial>
+
+       		</decorations>
+       </net.wcomohundro.jme3.csg.CSGShape> 
+            
+       <net.wcomohundro.jme3.csg.CSGShape name='BackDoor' operator='DIFFERENCE'>
+       			<!-- materialName='Textures/Debug/Normals.xml' -->
+           	<mesh class='net.wcomohundro.jme3.csg.shape.CSGCylinder' 
+              		radius='0.5' zExtent='0.4'>
+           	</mesh>
+           	<!-- Position it to the back, tilt it a bit, and drill through the side -->
+           	<csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+           		<translation class='com.jme3.math.Vector3f' x='0.7' y='-0.475' z='-9.0'/>
+               	<rot class='net.wcomohundro.jme3.math.CSGQuaternion' yawl='PI/2' pitch='PI/32'/>
+           	</csgtransform>
+           	<!-- Let the interior lights shine here as well -->
+     		<sharedLights>
+     			<String value='Exterior'/>
+     			<String value='InteriorArch'/>
+     		</sharedLights>
+       </net.wcomohundro.jme3.csg.CSGShape>
+    </shapes>
+</net.wcomohundro.jme3.csg.CSGGeonode>

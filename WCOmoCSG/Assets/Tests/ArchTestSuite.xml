@@ -1,0 +1,10 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<!-- Prep the ENVIRONMENT -->
+<net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+	<scenes>
+		<String value='Models/ArchSingleCorridor.xml'/>
+		<String value='Models/ArchRepeatedCorridor.xml'/>
+		<String value='Models/ArchMultiCorridor.xml'/>
+	</scenes>
+</net.wcomohundro.jme3.csg.test.CSGTestSceneList>
+

@@ -1,0 +1,94 @@
+<?xml  version='1.0' encoding='UTF-8'?>
+<net.wcomohundro.jme3.csg.CSGLinkNode name='RepeatedCorridor' deferRegeneration='true'>
+    <library>
+        <MapEntry key='ACorridor'>
+	       	<Savable class='com.jme3.asset.NonCachingKey' name='Models/ArchSimpleCorridor.xml'/>
+    	</MapEntry>
+    	
+    	<MapEntry key='ALightBright'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightBright' id='ALightBright' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='1.0' g='1.0' b='1.0' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALight'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALight' id='ALight' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.25' g='0.25' b='0.25' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+    	<MapEntry key='ALightDim'>
+	       	<Savable class='com.jme3.light.AmbientLight' name='ALightDim' id='ALightDim' enabled='true'>
+	       		<color class='com.jme3.math.ColorRGBA' r='0.075' g='0.075' b='0.075' a='1'/>
+	       	</Savable>
+	    </MapEntry>
+       	
+        <MapEntry key='DLight'>
+	       	<Savable class='com.jme3.light.DirectionalLight' name='DLight' id='DLight' enabled='true' 
+       				spotRange='20' spotInnerAngle='0.05' spotOuterAngle='0.7'>
+       			<color class='com.jme3.math.ColorRGBA' r='0.5' g='0.5' b='0' a='1'/>
+       			<direction class='com.jme3.math.Vector3f' x='-1.0' y='-1.0' z='1.0'/>
+       		</Savable>
+       	</MapEntry>
+	</library>
+	
+	<children>
+		<!-- The sky above -->
+		<net.wcomohundro.jme3.csg.shape.CSGSkyDome name='TheSky' radius='120'>
+			<colorGradient>
+            	<com.jme3.math.ColorRGBA r='0.1' g='0.1' b='0.3' a='1'/>
+            	<com.jme3.math.ColorRGBA r='0.2' g='0.2' b='0.8' a='1'/>
+			</colorGradient>
+		</net.wcomohundro.jme3.csg.shape.CSGSkyDome>
+
+		<!-- Include the primary library item (NOT A CLONE) -->
+		<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial reference='ACorridor' />
+
+		<!-- Include the library item, shifting its position -->
+		<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial
+				reference='ACorridor' cloneAs='LeftCorridor'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='-3' y='0' z='0'/>
+            </transform>
+		</net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial>
+		
+		<!-- Include the library AGAIN, shifting its position and spinning it 180 degrees -->
+		<net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial 
+				reference='ACorridor' cloneAs='RightCorridor'>
+            <csgtransform class='net.wcomohundro.jme3.math.CSGTransform'>
+            	<translation class='com.jme3.math.Vector3f' x='3' y='0' z='0'/>
+                <rot class='net.wcomohundro.jme3.math.CSGQuaternion' yawl='PI'/>
+            </csgtransform>
+		</net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderSpatial>
+
+		<!-- The floor below -->
+		<net.wcomohundro.jme3.csg.CSGGeometry name='Flooring' 
+	    		shadow_mode='Receive'
+	    		generateTangentBinormal='false'
+        		materialName='Textures/CobbleStone/PebblesRpt.xml'>
+            <transform class='com.jme3.math.Transform'>
+                <translation class='com.jme3.math.Vector3f' x='0' y='-0.01' z='0'/>
+            </transform>
+        	<lights class='com.jme3.light.LightList'>
+        		<lights>
+        			<com.jme3.light.AmbientLight ref='ALight'/>
+        		</lights>
+        	</lights>
+            <physics class='com.jme3.bullet.control.RigidBodyControl'
+            		mass='0.0' restitution='0' friction='0.9' applyLocalPhysics='true' >
+            	<collisionShape class='net.wcomohundro.jme3.csg.placeholder.CSGPlaceholderCollisionShape'/>
+            </physics>
+            <mesh class='net.wcomohundro.jme3.csg.shape.CSGSurface' extent='129'>
+          		<faceProperties>
+					<net.wcomohundro.jme3.csg.shape.CSGFaceProperties 
+							face='SURFACE' scaleX='1032' scaleY='1032'/>
+            	</faceProperties>
+            </mesh>
+        </net.wcomohundro.jme3.csg.CSGGeometry>
+        
+	</children>
+	<!-- Externally defined children -->
+<!-- 
+	<assetLoaderKeyList>
+		<com.jme3.asset.NonCachingKey name='Models/ArchSimpleCorridor.xml'/>
+	</assetLoaderKeyList>
+-->
+</net.wcomohundro.jme3.csg.CSGLinkNode>
