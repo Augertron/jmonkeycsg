@@ -130,12 +130,21 @@ public class XMLInputCapsule
     public static Element findNextSiblingElement(
     	Element 	pCurrent
     ) {
-        Node ret = pCurrent.getNextSibling();
-        while (ret != null) {
-            if (ret instanceof Element) {
-                return (Element) ret;
+        return( findNextSiblingElement( pCurrent, null ) );
+    }
+    /** DOM service routine:  scan for the next sibling Element after the given one */
+    public static Element findNextSiblingElement(
+    	Element 	pCurrent
+    ,	String		pSiblingName
+    ) {
+        Node aNode = pCurrent.getNextSibling();
+        while( aNode != null ) {
+            if ( aNode instanceof Element ) {
+            	if ( (pSiblingName == null) || pSiblingName.equals( aNode.getNodeName() ) ) {
+            		return (Element)aNode;
+            	}
             }
-            ret = ret.getNextSibling();
+            aNode = aNode.getNextSibling();
         }
         return null;
     }
@@ -254,7 +263,7 @@ public class XMLInputCapsule
         mCurrentElement = mDocument.getDocumentElement();
         
         String aVersion = mCurrentElement.getAttribute( "format_version" );
-        mFormatVersion = aVersion.equals("") ? 0 : Integer.parseInt( aVersion );
+        mFormatVersion = aVersion.isEmpty() ? 0 : Integer.parseInt( aVersion );
     }
     
     /** Allow extended abbreviations for class names */
@@ -343,13 +352,40 @@ public class XMLInputCapsule
     ) throws IOException {
     	return readSavableFromElem( pElement, pDefaultValue, null, pMarkElementProcessed );
     }
+    /** Read a set of savables from beneath an element, either explicitly named or not */
+    public List<Savable> readSavablesFromElement(
+    	Element		pElement
+    ,	String		pChildName
+    ,	boolean		pMarkElementProcessed
+    ) throws IOException {
+    	if ( pElement == null ) return null;
+    	
+    	List<Savable> childList = new ArrayList( 5 );
+		Element childElement;
+		if ( pChildName == null ) {
+			// Accept a child of any name
+			childElement = XMLInputCapsule.findFirstChildElement( pElement );
+		} else {
+			// Accept only a specifically named child
+			childElement = findChildElement( pElement, pChildName );
+		}
+		while( childElement != null ) {
+			Savable aChild = readSavableFromElem( childElement, null, null, pMarkElementProcessed );
+			childList.add( aChild );
+			
+			childElement = findNextSiblingElement( childElement, pChildName );
+		}
+		return childList;
+    }
+    
+    /** Read and instantiate a savable, possibly operating from a clone */
     public Savable readSavableFromElem(
     	Element		pElement
     ,	Savable		pDefaultValue
     ,	Savable		pCloneSource
     ,	boolean		pMarkElementProcessed
     ) throws IOException {
-    	if ( pElement ==  null ) return null;
+    	if ( pElement ==  null ) return pDefaultValue;
     	
     	// Prep what we find
         Savable aResult = pDefaultValue;
@@ -436,12 +472,12 @@ public class XMLInputCapsule
 		            // NOTE that an explicit class reference to java.lang.Void will return a null
 		            xmlResult = aResult = XMLClassUtil.fromClass( aClass );
 	            } else {
-	            	// I do not understand this one
-            		throw new IOException( "Savable class not found for: " + mCurrentElement.getNodeName() );
+	            	// I do not understand this one, so let the default value stand
+	            	aResult = pDefaultValue;
 	            }
 	            // Check for version constraints
 	            String versionsStr = mCurrentElement.getAttribute( "savable_versions" );
-	            if ( (versionsStr != null) && !versionsStr.isEmpty() ) {
+	            if ( !versionsStr.isEmpty() ) {
 	                String[] versions = versionsStr.split(",");
 	                mClassHierarchyVersions = new int[ versions.length ];
 	                for (int i = 0; i < mClassHierarchyVersions.length; i++){
@@ -521,6 +557,29 @@ public class XMLInputCapsule
     	}
         // Return whatever we have found so far
         return aResult;
+    }
+    
+    /** Look for a string, based on an 'attribute' or on a child with a value= attribute */
+    public String resolveAttribute(
+    	Element		pElement
+    ,	String		pName
+    ) {
+    	// Look first for an attribute
+    	String aValue = pElement.getAttribute( pName );
+    	if ( aValue.isEmpty() ) {
+    		Element aChild = findChildElement( pElement, pName );
+    		if ( aChild != null ) {
+    			// Look for is 'value'
+    			aValue = aChild.getAttribute( "value" );
+    		}
+    		if ( aValue.isEmpty() ) {
+    			// No such attribute
+    			return( null );
+    		}
+    	}
+    	// Decode it
+    	String bValue = decodeString( aValue );
+    	return bValue;
     }
 
     /** Callback processing to clean up and interpret a string 
@@ -643,12 +702,10 @@ public class XMLInputCapsule
         
     @Override
     public byte readByte(String name, byte defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-
-        tmpString = decodeString( tmpString );
         try {
             return Byte.parseByte(tmpString);
         } catch (NumberFormatException nfe) {
@@ -727,12 +784,10 @@ public class XMLInputCapsule
 
     @Override
     public int readInt(String name, int defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-
-        tmpString = decodeString( tmpString );
         try {
             return Integer.parseInt(tmpString);
         } catch (NumberFormatException nfe) {
@@ -813,12 +868,10 @@ public class XMLInputCapsule
 
     @Override
     public float readFloat(String name, float defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-
-        tmpString = decodeString( tmpString );
         try {
             return parseFloat( tmpString, defVal );
         } catch (NumberFormatException nfe) {
@@ -894,12 +947,10 @@ public class XMLInputCapsule
 
     @Override
     public double readDouble(String name, double defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-
-        tmpString = decodeString( tmpString );
         try {
             return Double.parseDouble(tmpString);
         } catch (NumberFormatException nfe) {
@@ -978,12 +1029,10 @@ public class XMLInputCapsule
 
     @Override
     public long readLong(String name, long defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-
-        tmpString = decodeString( tmpString );
         try {
             return Long.parseLong(tmpString);
         } catch (NumberFormatException nfe) {
@@ -1062,12 +1111,10 @@ public class XMLInputCapsule
 
     @Override
     public short readShort(String name, short defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-
-        tmpString = decodeString( tmpString );
         try {
             return Short.parseShort(tmpString);
         } catch (NumberFormatException nfe) {
@@ -1146,12 +1193,10 @@ public class XMLInputCapsule
 
     @Override
     public boolean readBoolean(String name, boolean defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-        
-        tmpString = decodeString( tmpString );
         try {
             return Boolean.parseBoolean(tmpString);
         } catch (DOMException de) {
@@ -1222,12 +1267,10 @@ public class XMLInputCapsule
 
     @Override
     public String readString(String name, String defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
-
-        tmpString = decodeString( tmpString );
         try {
         	// Nothing is really done to a string
             return tmpString;
@@ -1312,8 +1355,8 @@ public class XMLInputCapsule
 
     @Override
     public BitSet readBitSet(String name, BitSet defVal) throws IOException {
-        String tmpString = mCurrentElement.getAttribute(name);
-        if (tmpString == null || tmpString.length() < 1) return defVal;
+        String tmpString = resolveAttribute( mCurrentElement, name );
+        if ( tmpString == null ) return defVal;
         
         hasProcessed( name );
         try {
@@ -1351,10 +1394,9 @@ public class XMLInputCapsule
 
             tmpEl = findChildElement( mCurrentElement, name );
             if ( tmpEl == null ) {
-                String tmpString = mCurrentElement.getAttribute(name);
-                if ( tmpString == null || tmpString.length() < 1) {
-                	return defVal;
-                }
+                String tmpString = resolveAttribute( mCurrentElement, name );
+                if ( tmpString == null ) return defVal;
+
                 // Use a proxy
                 return( new SavableString( tmpString ) );
             }
@@ -1594,10 +1636,15 @@ public class XMLInputCapsule
             			// NOT a simple attribute string, look for a full definition
                 		aValue = readSavable( "value", null );
                 		if ( aValue == null ) {
-                			// Not an element named 'value', how about the first child
-                			Element tempE2 = findFirstChildElement( mCurrentElement );
-                			if ( tempE2 != null ) {
-                				aValue = readSavableFromElem( tempE2, null, true );
+                			// Nothing for 'value=', is the element itself a Savable?
+                			aValue = readSavableFromElem( mCurrentElement, null, true );
+                			
+                			if ( aValue == null ) {
+	                			// How about the first child?
+	                			Element tempE2 = findFirstChildElement( mCurrentElement );
+	                			if ( tempE2 != null ) {
+	                				aValue = readSavableFromElem( tempE2, null, true );
+	                			}
                 			}
                 		}
             		} else {
@@ -1607,6 +1654,8 @@ public class XMLInputCapsule
                 	if ( aValue != null ) {
                 		// Use the node name as the key string
                 		ret.put( nodeName, aValue );
+                	} else {
+    	        		throw new IOException( "readStringSavableMap - Missing Savable for: " + nodeName );
                 	}
             	}
             }
@@ -1785,12 +1834,10 @@ public class XMLInputCapsule
     ) throws IOException {
         T ret = defVal;
         try {
-            String eVal = mCurrentElement.getAttribute(name);
-            if (eVal != null && eVal.length() > 0) {
+            String eVal = resolveAttribute( mCurrentElement, name );
+            if ( eVal != null ) {
                 hasProcessed( name );
-
-            	eVal = decodeString( eVal );
-                ret = Enum.valueOf(enumType, eVal);
+                ret = Enum.valueOf( enumType, eVal );
             }
         } catch (Exception e) {
             IOException io = new IOException(e.toString());
