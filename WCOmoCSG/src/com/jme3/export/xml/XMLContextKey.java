@@ -33,6 +33,7 @@ package com.jme3.export.xml;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -107,6 +108,15 @@ public class XMLContextKey<TAsset>
     ) {
     	mTranslationBundles = pBundleMap;
     	mInternalBundle = pInternalBundle;
+    }
+    public void registerTranslationBundle(
+    	String			pBundleName
+    ,	ResourceBundle	pBundle
+    ) {
+    	if ( mTranslationBundles == null ) {
+    		mTranslationBundles = new HashMap( 7 );
+    	}
+    	mTranslationBundles.put( pBundleName, pBundle );
     }
     public ResourceBundle getResourceBundle( 
     	String		pReferenceName
