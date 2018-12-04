@@ -500,7 +500,19 @@ public class XMLInputCapsule
 	            if ( refID.isEmpty() ) refID = mCurrentElement.getAttribute( "id" );
 	            if ( refID.length() > 0 ) {
 	            	// Allow subsequent parsing to reference back to this item
-	            	mReferencedSavables.put( refID, aResult );
+	            	boolean doReference = true;
+	            	if ( mReferencedSavables.containsKey( refID ) ) {
+	            		// By default, do NOT override something previously defined
+	            		if ( mCurrentElement.hasAttribute( "overrideRef" ) ) {
+	            			doReference = Boolean.parseBoolean( mCurrentElement.getAttribute( "overrideRef" ) );
+	            		} else {
+	            			doReference = false;
+	            		}
+	            	}
+	            	if ( doReference ) {
+	            		// Make this item referencable
+	            		mReferencedSavables.put( refID, aResult );
+	            	}
 	            }
 	            // Preseed with the standards that are part of the XML process,
 	            // not the actual instance
@@ -509,6 +521,7 @@ public class XMLInputCapsule
 	            mSavableAttrs.add( "clone" );
 	            mSavableAttrs.add( "id" );
 	            mSavableAttrs.add( "reference_ID" );
+	            mSavableAttrs.add( "overrideRef" );
 	            
 	            aResult.read( mImporter );
 	            
