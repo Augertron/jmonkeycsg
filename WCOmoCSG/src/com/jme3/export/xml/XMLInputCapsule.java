@@ -578,14 +578,19 @@ public class XMLInputCapsule
     ,	String		pName
     ) {
     	// Look first for an attribute
-    	String aValue = pElement.getAttribute( pName );
-    	if ( aValue.isEmpty() ) {
+    	String aValue = null;
+    	if ( pElement.hasAttribute( pName ) ) {
+    		// Use whatever was given (even an explicit empty string)
+    		aValue = pElement.getAttribute( pName );
+    	} else {
     		Element aChild = findChildElement( pElement, pName );
     		if ( aChild != null ) {
-    			// Look for is 'value'
-    			aValue = aChild.getAttribute( "value" );
+    			// Look for its 'value'
+    			if ( aChild.hasAttribute( "value" ) ) {
+    				aValue = aChild.getAttribute( "value" );
+    			}
     		}
-    		if ( aValue.isEmpty() ) {
+    		if ( aValue == null ) {
     			// No such attribute
     			return( null );
     		}
