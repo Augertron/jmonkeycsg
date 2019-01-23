@@ -229,6 +229,86 @@ public class XMLInputCapsule
     	return aFloatValue;
     }
     
+    /** Decode a string, looking for substitution escapes of the form
+     
+     		${tag.keystring}
+     	or
+     		${keystring}
+     		
+     	where a sequence with a tag is resolved via a set of tagged 
+     	resource bundles, and a sequence without a tag is resolved via
+     	the given 'internal' bundle.
+     	
+     	All such sequences in the given string are replaced by their
+     	corresponding elements from the appropriate bundle.  
+	 */
+	public static String decodeString(
+		String						pText
+	,	Map<String,ResourceBundle>	pResourceBundles
+	,	ResourceBundle				pInternalBundle
+	) {
+	    if ( pText == null ) {
+	        return null;
+	    }
+	    if ( (pInternalBundle != null) || (pResourceBundles != null) ) {
+	    	// Look for dynamic substitutions of the form ${bundle.key.key.key}
+	    	int start, prior = 0;
+	    	StringBuilder aBuffer = null;
+	    	
+	    	while( (start = pText.indexOf( "${", prior )) >= prior ) {
+	    		start += 2;
+	    		int end = pText.indexOf( "}", start );
+	    		int dot = pText.indexOf( ".", start );
+	    		ResourceBundle aBundle = null;
+	    		
+	    		if ( dot < 0 ) {
+	    			// If not a dot notation, then it is an internal reference
+	    			aBundle = pInternalBundle;
+	    			dot = 1;
+	    		} else if ( (end > start) && ((end-start) >= 3) && (dot > start) && (dot < end-1) ) {
+	        		// We need a minimum of ${a.b} where the a. portion picks the bundle
+	    			String libraryRef = pText.substring( start, dot );
+	    			aBundle = pResourceBundles.get( libraryRef );
+	    		}
+				if ( aBundle != null ) {
+					String aKey = pText.substring( dot+1, end );
+					if ( aBundle.containsKey( aKey ) ) {
+						// We have a substitution
+						String aValue = aBundle.getString( aKey );
+						
+						if ( aBuffer == null ) {
+							aBuffer = new StringBuilder( pText.length() + 10 );
+						}
+						if ( prior < start-2 ) {
+							// Copy up to the ${
+							aBuffer.append( pText, prior, start-2 );
+						}
+						// Copy the substitution
+						aBuffer.append( aValue );
+					}
+				}
+	    		if ( end > start ) {
+	    			// Look for another after skipping past the }
+	    			prior = end + 1;
+	    		} else {
+	    			// Off the end
+	    			break;
+	    		}
+	    	}
+	    	if ( aBuffer != null ) {
+	    		// Copy anything after the last }
+	    		if ( prior < pText.length() ) {
+	    			aBuffer.append( pText, prior, pText.length() );
+	    		}
+	    		// Return the replacement text
+	    		pText = aBuffer.toString();
+	    	}
+	    }
+	    return pText;
+	}
+
+
+    
     /** The importer that is driving this process */
     protected JmeImporter					mImporter;
     /** The DOM Document that is being processed */
@@ -333,6 +413,10 @@ public class XMLInputCapsule
     		((XMLInputCapsuleBundle)mInternalBundle).put( pKey, pValue );
     	}
     }
+    
+    /** Access to the map of ResourceBundles used for translation */
+    public Map<String,ResourceBundle> getResourceBundles() { return mResourceBundles; }
+    public ResourceBundle getInternalResourceBundle() { return mInternalBundle; }
     
     /** Allow direct access to the current element */
     public Element getCurrentElement() { return mCurrentElement; }
@@ -612,61 +696,7 @@ public class XMLInputCapsule
         }
         pText = pText.replaceAll("\\&quot;", "\"").replaceAll("\\&lt;", "<").replaceAll("\\&amp;", "&");
         
-        if ( (mInternalBundle != null) || (mResourceBundles != null) ) {
-        	// Look for dynamic substitutions of the form ${bundle.key.key.key}
-        	int start, prior = 0;
-        	StringBuilder aBuffer = null;
-        	
-        	while( (start = pText.indexOf( "${", prior )) >= prior ) {
-        		start += 2;
-        		int end = pText.indexOf( "}", start );
-        		int dot = pText.indexOf( ".", start );
-        		ResourceBundle aBundle = null;
-        		
-        		if ( dot < 0 ) {
-        			// If not a dot notation, then it is an internal reference
-        			aBundle = mInternalBundle;
-        			dot = 1;
-        		} else if ( (end > start) && ((end-start) >= 3) && (dot > start) && (dot < end-1) ) {
-            		// We need a minimum of ${a.b} where the a. portion picks the bundle
-        			String libraryRef = pText.substring( start, dot );
-        			aBundle = mResourceBundles.get( libraryRef );
-        		}
-    			if ( aBundle != null ) {
-    				String aKey = pText.substring( dot+1, end );
-    				if ( aBundle.containsKey( aKey ) ) {
-    					// We have a substitution
-    					String aValue = aBundle.getString( aKey );
-    					
-    					if ( aBuffer == null ) {
-    						aBuffer = new StringBuilder( pText.length() + 10 );
-    					}
-    					if ( prior < start-2 ) {
-    						// Copy up to the ${
-    						aBuffer.append( pText, prior, start-2 );
-    					}
-    					// Copy the substitution
-    					aBuffer.append( aValue );
-    				}
-    			}
-        		if ( end > start ) {
-        			// Look for another after skipping past the }
-        			prior = end + 1;
-        		} else {
-        			// Off the end
-        			break;
-        		}
-        	}
-        	if ( aBuffer != null ) {
-        		// Copy anything after the last }
-        		if ( prior < pText.length() ) {
-        			aBuffer.append( pText, prior, pText.length() );
-        		}
-        		// Return the replacement text
-        		pText = aBuffer.toString();
-        	}
-        }
-        return pText;
+        return decodeString( pText, mResourceBundles, mInternalBundle );
     }
 
     /** Service routine to break a string into multiple tokens */
