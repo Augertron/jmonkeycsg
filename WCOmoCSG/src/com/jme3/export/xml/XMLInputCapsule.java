@@ -617,7 +617,8 @@ public class XMLInputCapsule
 		            	Node anAttr = allAttrs.item( i );
 		            	String attrName = anAttr.getNodeName();
 		            	if ( !mSavableAttrs.contains( attrName ) ) {
-		            		throw new IOException( "Attribute: " + attrName + " not supported by " + mSavable );
+		            		throw new IOException( "Attribute: " + attrName 
+		            								+ " not supported by " + mSavable.getClass().getSimpleName() );
 		            	}
 		            }
 		            Node childNode = mCurrentElement.getFirstChild();
@@ -625,7 +626,8 @@ public class XMLInputCapsule
 		            	if ( childNode.getNodeType() == Node.ELEMENT_NODE ) {
 			            	String childName = childNode.getNodeName();
 			            	if ( !mSavableAttrs.contains( childName ) ) {
-			            		throw new IOException( "Element: " + childName + " not supported by " + mSavable );
+			            		throw new IOException( "Element: " + childName 
+			            							+ " not supported by " + mSavable.getClass().getSimpleName() );
 			            	}
 		            	}
 		            	childNode = childNode.getNextSibling();
