@@ -3,7 +3,7 @@
     <lights class='com.jme3.light.LightList'>
         <lights size='1'>
         	<com.jme3.light.AmbientLight name='ALight' enabled='true'>
-        		<color class='com.jme3.math.ColorRGBA' r='1' g='1' b='1' a='1'/>
+        		<color class='ColorRGBA' r='1' g='1' b='1' a='1'/>
         	</com.jme3.light.AmbientLight>
         </lights>
     </lights>
@@ -11,138 +11,232 @@
     	<!-- Just a cube with a texture -->
         <com.jme3.scene.Geometry name='ABox'
         		materialName='Textures/BrickWall/BrickWall.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='-5.0'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='0.0' y='-5.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' />
+            <mesh class='_csg.shape.CSGBox' />
         </com.jme3.scene.Geometry>
 
         <com.jme3.scene.Geometry name='LongXBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='5.0'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='0.0' y='5.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='5.0' />
+            <mesh class='_csg.shape.CSGBox' xExtent='5.0' />
         </com.jme3.scene.Geometry>
         
         <com.jme3.scene.Geometry name='LongStretchedXBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='0.0' y='0.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='5.0' yExtent='1.0' zExtent='1.0'>
+            <mesh class='_csg.shape.CSGBox' xExtent='5.0' yExtent='1.0' zExtent='1.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='5' scaleY='1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='5' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='5' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='5' scaleY='1'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='LongStretchedYBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='10.0' y='0.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='5.0' zExtent='1.0'>
+            <mesh class='_csg.shape.CSGBox' xExtent='1.0' yExtent='5.0' zExtent='1.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='5'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1' scaleY='5'/>
+                    <_csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='5'/>
+                    <_csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='1' scaleY='5'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='LongStretchedZBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-10.0' y='0.0'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='-10.0' y='0.0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='5.0'>
+            <mesh class='_csg.shape.CSGBox' xExtent='1.0' yExtent='1.0' zExtent='5.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='5' scaleY='1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='5'/>
+                    <_csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='5' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='1' scaleY='5'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         
         <com.jme3.scene.Geometry name='LongStretchedXYYBox'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='10.0' y='10.0' z='0'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='10.0' y='10.0' z='0'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGBox' xExtent='2.0' yExtent='3.0' zExtent='4.0'>
+            <mesh class='_csg.shape.CSGBox' xExtent='2.0' yExtent='3.0' zExtent='4.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='2' scaleY='3'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='4' scaleY='3'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='2' scaleY='4'/>
+                    <_csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='2' scaleY='3'/>
+                    <_csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='4' scaleY='3'/>
+                    <_csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='2' scaleY='4'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         
         
-    	<!-- Just a cube with a texture -->
+    	<!-- Axial boxes with a texture -->
         <com.jme3.scene.Geometry name='ABoxAxial'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='-5.0' z='-20'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='0.0' y='-5.0' z='-20'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' />
+            <mesh class='_csg.shape.CSGAxialBox' />
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='BBoxAxial'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='5.0' y='-5.0' z='-20'/>
+            </transform>
+            <mesh class='_csg.shape.CSGAxialBox'>
+                            <faceProperties>
+                    <_csg.shape.CSGFaceProperties face='SIDES' scaleX='4'/>
+            	</faceProperties>
+            </mesh>
         </com.jme3.scene.Geometry>
 
         <com.jme3.scene.Geometry name='LongXBoxAxial'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='5.0' z='-20'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='0.0' y='5.0' z='-20'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='5.0' />
+            <mesh class='_csg.shape.CSGAxialBox' xExtent='5.0' />
         </com.jme3.scene.Geometry>
         
         <com.jme3.scene.Geometry name='LongStretchedXBoxAxial'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='0.0' y='0.0' z='-20'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='0.0' y='0.0' z='-20'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='5.0' yExtent='1.0' zExtent='1.0'>
+            <mesh class='_csg.shape.CSGAxialBox' xExtent='5.0' yExtent='1.0' zExtent='1.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='5' scaleY='1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='12' scaleY='1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='12' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='5' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='12' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='12' scaleY='1'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='LongStretchedYBoxAxial'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='10.0' y='0.0' z='-20'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='10.0' y='0.0' z='-20'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='1.0' yExtent='5.0' zExtent='1.0'>
+            <mesh class='_csg.shape.CSGAxialBox' xExtent='1.0' yExtent='5.0' zExtent='1.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='5'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='12' scaleY='1'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='12' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='1' scaleY='5'/>
+                    <_csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='12' scaleY='1'/>
+                    <_csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='12' scaleY='1'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         <com.jme3.scene.Geometry name='LongStretchedZBoxAxial'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='-10.0' y='0.0' z='-20'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='-10.0' y='0.0' z='-20'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='1.0' yExtent='1.0' zExtent='5.0'>
+            <mesh class='_csg.shape.CSGAxialBox' xExtent='1.0' yExtent='1.0' zExtent='5.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='4' scaleY='5'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='4' scaleY='5'/>
+                    <_csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='4' scaleY='5'/>
+                    <_csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='4' scaleY='5'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>
         
         <com.jme3.scene.Geometry name='LongStretchedXYYBoxAxial'
         		materialName='Textures/BrickWall/BrickWallRpt.xml'>
-            <transform class='com.jme3.math.Transform'>
-                <translation class='com.jme3.math.Vector3f' x='10.0' y='10.0' z='-20'/>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='10.0' y='10.0' z='-20'/>
             </transform>
-            <mesh class='net.wcomohundro.jme3.csg.shape.CSGAxialBox' xExtent='2.0' yExtent='3.0' zExtent='4.0'>
+            <mesh class='_csg.shape.CSGAxialBox' xExtent='2.0' yExtent='3.0' zExtent='4.0'>
                 <faceProperties>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='2' scaleY='3'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='10' scaleY='4'/>
-                    <net.wcomohundro.jme3.csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='10' scaleY='4'/>
+                    <_csg.shape.CSGFaceProperties face='FRONT_BACK' scaleX='2' scaleY='3'/>
+                    <_csg.shape.CSGFaceProperties face='LEFT_RIGHT' scaleX='10' scaleY='4'/>
+                    <_csg.shape.CSGFaceProperties face='TOP_BOTTOM' scaleX='10' scaleY='4'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+        <!-- Hexahedron with a texture -->
+        <com.jme3.scene.Geometry name='AHexahedron'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='0.0' y='-5.0' z='-40'/>
+            </transform>
+            <mesh class='_csg.shape.CSGHexahedron' />
+        </com.jme3.scene.Geometry>
+        
+        <com.jme3.scene.Geometry name='BHexahedron'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='5.0' y='-5.0' z='-40'/>
+            </transform>
+            <mesh class='_csg.shape.CSGHexahedron'>
+                <faceProperties>
+                    <_csg.shape.CSGFaceProperties face='SIDES' scaleX='4'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+
+         <com.jme3.scene.Geometry name='CHexahedron'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='-5.0' y='-5.0' z='-40'/>
+            </transform>
+            <mesh class='_csg.shape.CSGHexahedron' topExtent='0.5' bottomExtent='1.5' >
+                <faceProperties>
+                    <_csg.shape.CSGFaceProperties face='SIDES' scaleX='4'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+         <com.jme3.scene.Geometry name='DHexahedron'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='-10.0' y='-5.0' z='-40'/>
+            </transform>
+            <mesh class='_csg.shape.CSGHexahedron' leftExtent='0.75' rightExtent='1.25' >
+                <faceProperties>
+                    <_csg.shape.CSGFaceProperties face='SIDES' scaleX='4'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        
+         <com.jme3.scene.Geometry name='EHexahedron'
+        		materialName='Textures/BrickWall/BrickWallRpt.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='-15.0' y='-5.0' z='-40'/>
+            </transform>
+            <mesh class='_csg.shape.CSGHexahedron' 
+            		topExtent='0.5' bottomExtent='1.5' leftExtent='0.75' rightExtent='1.25'>
+                <faceProperties>
+                    <_csg.shape.CSGFaceProperties face='SIDES' scaleX='4'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='EHexahedronWF'
+        		materialName='Textures/Debug/Wireframe.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='-20.0' y='-5.0' z='-40'/>
+            </transform>
+            <mesh class='_csg.shape.CSGHexahedron'
+            		topExtent='0.5' bottomExtent='1.5' leftExtent='0.75' rightExtent='1.25'>
+                <faceProperties>
+                    <_csg.shape.CSGFaceProperties face='SIDES' scaleX='4'/>
+            	</faceProperties>
+            </mesh>
+        </com.jme3.scene.Geometry>
+        <com.jme3.scene.Geometry name='EHexahedronNormals'
+        		materialName='Textures/Debug/Normals.xml'>
+            <transform class='Transform'>
+                <translation class='Vector3f' x='-25.0' y='-5.0' z='-40.0'/>
+            </transform>
+            <mesh class='_csg.shape.CSGHexahedron'
+            		topExtent='0.5' bottomExtent='1.5' leftExtent='0.75' rightExtent='1.25'>
+                <faceProperties>
+                    <_csg.shape.CSGFaceProperties face='SIDES' scaleX='4'/>
             	</faceProperties>
             </mesh>
         </com.jme3.scene.Geometry>

@@ -310,8 +310,11 @@ public class CSGAxialBox
     	int faceIndex, faceMask;
     	Vector2f baseTex = pTempVars.vect2d1;
     	Vector2f spanTex = pTempVars.vect2d2;
-    	Vector2f spanRL = pTempVars.vect2d3;
-    	Vector2f spanTB = pTempVars.vect2d4;
+    	Vector2f spanRight = pTempVars.vect2d3;
+    	Vector2f spanLeft = pTempVars.vect2d4;
+    	Vector2f spanTop = pTempVars.vect2d5;
+    	Vector2f spanBottom = pTempVars.vect2d6;
+    	Vector2f temp = pTempVars.vect2d7;
     	
     	if ( pSurface < 0 ) {
     		// BACK
@@ -327,20 +330,16 @@ public class CSGAxialBox
     		faceMask = (Face.LEFT_RIGHT.getMask() | Face.TOP_BOTTOM.getMask()) & mGeneratedFacesMask;
     		
     		// Account for span around the perimeter
-    		float perimeter = (2 * 2 * mExtentX) + (2 * 2 * mExtentY);
-    		spanRL.set( (mExtentY * 2) / perimeter, 1 );
-    		spanTB.set( (mExtentX * 2) / perimeter, 1 );
+    		resolveTextureSpans( spanRight, spanLeft, spanTop, spanBottom );
     	}
     	// Process the faces in the expected sFaces[] order
     	for( ; faceIndex < sFaces.length; faceIndex += 1 ) {
     		Face aFace = sFaces[ faceIndex ];
     		int faceBit = aFace.getMask();
-    		if ( (faceMask & faceBit) == 0 ) {
-    			// We are not drawing this face
-    			continue;
-    		}
+
     		// Texture order for the 'sides' is counter clockwise, starting from the right
-    		// ie Right / Top / Left / Bottom
+    		// ie Right / Top / Left / Bottom, so we can set the 'base' with Right and 
+    		// advance it as we cycle through the rest of the sides
     		switch( aFace ) {
     		case FRONT:
     		case BACK:
@@ -348,70 +347,131 @@ public class CSGAxialBox
     			resolveTextureCoord( baseTex, spanTex
     								, Vector2f.ZERO, Vector2f.UNIT_XY
     								, faceBit
-    								, pTempVars.vect2d5 );
+    								, temp );
     			break;
     			
-    		case LEFT:
     		case RIGHT:
+    			baseTex.set( 0, 0 );		// First side, initialize the starting point
+    			resolveTextureCoord( baseTex, spanTex
+									, baseTex, spanRight
+									, faceBit
+									, temp );
+				break;
+    		case LEFT:
     			// The span is across the left/right face
     			resolveTextureCoord( baseTex, spanTex
-									, baseTex, spanRL
+									, baseTex, spanLeft
 									, faceBit
-									, pTempVars.vect2d5 );
+									, temp );
     			break;
-    			
     		case TOP:
-    		case BOTTOM:
-    			// The span is across the top/bottom face
-    			resolveTextureCoord( baseTex, spanTex
-									, baseTex, spanTB
+			    resolveTextureCoord( baseTex, spanTex
+									, baseTex, spanTop
 									, faceBit
-									, pTempVars.vect2d5 );
+									, temp );
+				break;
+    		case BOTTOM:
+    			resolveTextureCoord( baseTex, spanTex
+									, baseTex, spanBottom
+									, faceBit
+									, temp );
     			break;
     		}
-    		// Where is this vertex?
-    		int vertexSelector = faceIndex * 4;			// 4 per face
-    		int textureSelector = faceIndex * 4 * 2;	// x/y for 4 per face
-    		
-    		// We include the 4 vertices, the index buffer will select the 2 sets of 3
-    		// to build the proper triangles
-    		for( int j = 0; j < 4; j += 1 ) {
-    			// Pick the proper vertex positions for the given face
-        		Vector3f aPosition = setPosition( pTempVars.vect1, sCanFaceVertices[ vertexSelector++ ] );
-                pContext.mPosBuf.put( aPosition.x )
-                                .put( aPosition.y )
-                                .put( aPosition.z );	
-                
-                // The normal is the same for all the vertices of any given face
-                int normalSelector = faceIndex * 3;
-                float normalFlip = (mInverted) ? -1 : 1;
-                pContext.mNormBuf.put( sNormals[ normalSelector++ ] * normalFlip )
-                				 .put( sNormals[ normalSelector++ ] * normalFlip )
-                				 .put( sNormals[ normalSelector++ ] * normalFlip );
-                
-                // The texture varies per vertex based on the face
-                Vector2f aTexture = pTempVars.vect2d5;
-                aTexture.set( baseTex.x + (sCanTexture[ textureSelector++ ] * spanTex.x)
-                			, baseTex.y + (sCanTexture[ textureSelector++ ] * spanTex.y) );
-                pContext.mTexBuf.put( aTexture.x )
-                			    .put( aTexture.y );
+    		// Check if we are drawing this face 
+    		// (otherwise, we still need to keep adjusting the texture points in baseTex)
+    		if ( (faceMask & faceBit) == faceBit ) {
+	    		// By definition, the same normal applies to all vertices on this face
+	            float normalFlip = (mInverted) ? -1 : 1;
+                Vector3f aNormal = setNormal( pTempVars.vect2, faceIndex, normalFlip
+                								, pTempVars.vect3, pTempVars.vect4 );
+	    		
+	    		// We include the 4 vertices, the index buffer will select the 2 sets of 3
+	    		// to build the proper triangles
+	    		for( int j = 0; j < 4; j += 1 ) {
+	    			// Pick the proper vertex positions for the given face
+	    			pContext.mPosVector = setPosition( pTempVars.vect1, faceIndex, j );
+	                pContext.mPosBuf.put( pContext.mPosVector.x )
+	                                .put( pContext.mPosVector.y )
+	                                .put( pContext.mPosVector.z );	
+	                
+	                // The normal is the same for all the vertices of any given face
+	                pContext.mNormBuf.put( aNormal.x )
+					                 .put( aNormal.y )
+					                 .put( aNormal.z );
+	                
+	                // The texture varies per vertex based on the face
+	                Vector2f aTexture = setTexture( temp, faceIndex, j, baseTex, spanTex, pContext.mPosVector );
+	                pContext.mTexBuf.put( temp.x )
+	                			    .put( temp.y );
+	    		}
     		}
     		baseTex.x += spanTex.x;
     	}
     }
     
+    /** Resolve the 'span' as applied to a texture on a side of the box */
+    protected void resolveTextureSpans(
+    	Vector2f	pRightSpan
+    ,	Vector2f	pLeftSpan
+    ,	Vector2f	pTopSpan
+    ,	Vector2f	pBottomSpan
+    ) {
+		// Account for span around the perimeter
+    	// and we assume a full span (1.0) to cover the 'z' 
+		float perimeter = (2 * 2 * mExtentX) + (2 * 2 * mExtentY);
+		pRightSpan.set( (mExtentY * 2) / perimeter, 1 );
+		pLeftSpan.set( (mExtentY * 2) / perimeter, 1 );
+		
+		pTopSpan.set( (mExtentX * 2) / perimeter, 1 );    	
+		pBottomSpan.set( (mExtentX * 2) / perimeter, 1 );    	
+    }
+    
     /** Service routine to calculate an appropriate positional vector */
-    public Vector3f setPosition(
+    protected Vector3f setPosition(
     	Vector3f	pResult
+    ,	int			pFaceIndex
     ,	int			pWhichPoint
     ) {
-    	// x/y/z per vertex
-    	pWhichPoint *= 3;
-    	pResult.set( sVertices[ pWhichPoint++ ], sVertices[ pWhichPoint++ ], sVertices[ pWhichPoint++ ] );
+		int vertexSelector = (pFaceIndex * 4) + pWhichPoint;			// 4 per face
+		int whichVertex = sCanFaceVertices[ vertexSelector++ ];
+		int index = whichVertex * 3;									// x/y/z per vertex
+    	pResult.set( sVertices[ index++ ], sVertices[ index++ ], sVertices[ index++ ] );
     	
     	// Account for size
     	pResult.multLocal( mExtentX, mExtentY, mExtentZ );
-    	return( pResult );
+    	return pResult;
+    }
+    
+    /** Service routine to calculate an appropriate normal for a given face */
+    protected Vector3f setNormal(
+    	Vector3f	pResult
+    ,	int			pFaceIndex
+    ,	float		pFlipNormal
+    ,	Vector3f	pTemp1
+    ,	Vector3f	pTemp2
+    ) {
+    	// x/y/z per face
+        int normalSelector = pFaceIndex * 3;
+        pResult.set( sNormals[ normalSelector++ ] * pFlipNormal
+        		,	 sNormals[ normalSelector++ ] * pFlipNormal
+        		,	 sNormals[ normalSelector++ ] * pFlipNormal );
+        return pResult;
+    }
+    
+    /** Service routine to calculate an appropriate texture */
+    protected Vector2f setTexture(
+    	Vector2f	pResult
+    ,	int			pFaceIndex
+    ,	int			pWhichPoint
+    ,	Vector2f	pBaseTex
+    ,	Vector2f	pSpanTex
+    ,	Vector3f	pPosition
+    ) {
+		int textureSelector = (pFaceIndex * 4 * 2) + (pWhichPoint * 2);		// x/y for 4 per face
+        pResult.set(  pBaseTex.x + (sCanTexture[ textureSelector++ ] * pSpanTex.x)
+    				, pBaseTex.y + (sCanTexture[ textureSelector++ ] * pSpanTex.y) );
+        
+        return pResult;	
     }
 
     /** Service routine to allocate and fill an index buffer */
@@ -461,11 +521,6 @@ public class CSGAxialBox
         // Let the super do its thing
         super.read( pImporter );
         
-        // NOTE that super x/y/z default to zero to detect not-supplied
-        if ( mExtentX == 0 ) mExtentX = 1.0f;
-        if ( mExtentY == 0 ) mExtentY = 1.0f;
-        if ( mExtentZ == 0 ) mExtentZ = 1.0f;
-
         if ( mGeneratedFacesMask == 0 ) {
         	// Default to full face set, along with explicit open/closed
         	mGeneratedFacesMask = this.getSupportedFacesMask();
@@ -481,20 +536,30 @@ public class CSGAxialBox
 	        applyGradient( colors );
         }
     }
+    /** Service routine to read the extents */
+    @Override
+    protected void readExtents(
+    	JmeImporter		pImporter
+    ,	InputCapsule	pInCapsule
+    ) throws IOException {
+    	super.readExtents( pImporter, pInCapsule );
+    	
+        // NOTE that super x/y/z default to zero to detect not-supplied
+        if ( mExtentX == 0 ) mExtentX = 1.0f;
+        if ( mExtentY == 0 ) mExtentY = 1.0f;
+        if ( mExtentZ == 0 ) mExtentZ = 1.0f;
+    }
     
     /** Preserve this shape */
     @Override
-    public void write(
+    protected void writeExtents(
     	JmeExporter		pExporter
+    ,	OutputCapsule	pOutCapsule
     ) throws IOException {
-        OutputCapsule outCapsule = pExporter.getCapsule(this);
-        
-    	// Let the super do its thing
-        super.write( pExporter );
-        outCapsule.write( mExtentX, "xExtent", 1 );
-        outCapsule.write( mExtentY, "yExtent", 1 );       
+    	super.writeExtents( pExporter, pOutCapsule );
+    	pOutCapsule.write( mExtentX, "xExtent", 1 );
+    	pOutCapsule.write( mExtentY, "yExtent", 1 );       
     }
-
 
     /** Apply texture coordinate scaling to selected 'faces' of the box */
     @Override

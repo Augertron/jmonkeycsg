@@ -56,8 +56,8 @@ public class CSGHexahedron
 	extends CSGAxialBox
 {
 	/** Version tracking support */
-	public static final String sCSGHexahedronRevision="$Rev: $";
-	public static final String sCSGHexahedronDate="$Date: $";
+	public static final String sCSGHexahedronRevision="$Rev$";
+	public static final String sCSGHexahedronDate="$Date$";
 
 	/** The size of the box (remember to *2 for full width/height/depth) */
     protected float mExtentTop, mExtentBottom, mExtentLeft, mExtentRight;

@@ -77,6 +77,8 @@ public class CSGTempVars
 	public Vector2f		vect2d3 = new Vector2f();
 	public Vector2f		vect2d4 = new Vector2f();
 	public Vector2f		vect2d5 = new Vector2f();
+	public Vector2f		vect2d6 = new Vector2f();
+	public Vector2f		vect2d7 = new Vector2f();
 	
 	public Vector3d		vectd1 = new Vector3d();
 	public Vector3d		vectd2 = new Vector3d();

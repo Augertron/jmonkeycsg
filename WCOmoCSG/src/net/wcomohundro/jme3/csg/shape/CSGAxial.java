@@ -356,8 +356,16 @@ public abstract class CSGAxial
     	
         OutputCapsule outCapsule = pExporter.getCapsule( this );
         outCapsule.write( mAxisSamples, "axisSamples", 32 );
-        outCapsule.write( mExtentZ, "zExtent", 1 );
+        
+        writeExtents( pExporter, outCapsule );
     }
+    protected void writeExtents(
+    	JmeExporter		pExporter
+    ,	OutputCapsule	pOutCapsule
+    ) throws IOException {
+        pOutCapsule.write( mExtentZ, "zExtent", 1 );
+    }
+    
     @Override
     public void read(
     	JmeImporter		pImporter
@@ -369,20 +377,25 @@ public abstract class CSGAxial
         
         mAxisSamples = inCapsule.readInt( "axisSamples", mAxisSamples );
         
-        // Let each shape apply its own zExtent default
-        mExtentZ = inCapsule.readFloat( "zExtent", 0 );
+        readExtents( pImporter, inCapsule );
+    }
+    protected void readExtents(
+    	JmeImporter		pImporter
+    ,	InputCapsule	pInCapsule
+    ) throws IOException {
+        mExtentZ = pInCapsule.readFloat( "zExtent", 0 );
         if ( mExtentZ == 0 ) {
-        	float aHeight = inCapsule.readFloat( "height", 0 );
+        	float aHeight = pInCapsule.readFloat( "height", 0 );
         	if ( aHeight > 0 ) {
         		// An explicit height sets the zExtent
         		mExtentZ = aHeight / 2.0f;
         	}
         }
         // Likewise for x/y/radius
-        setRadius( inCapsule.readFloat( "radius", 0 ) );
+        setRadius( pInCapsule.readFloat( "radius", 0 ) );
         if ( getRadius() == 0 ) {
-        	setXExtent( inCapsule.readFloat( "xExtent", 0 ) );
-        	setYExtent( inCapsule.readFloat( "yExtent", 0 ) );
+        	setXExtent( pInCapsule.readFloat( "xExtent", 0 ) );
+        	setYExtent( pInCapsule.readFloat( "yExtent", 0 ) );
         }
     }
         

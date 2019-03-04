@@ -398,7 +398,7 @@ public class CSGSphere
     	// Since we are dealing with a sphere, the normal just needs to point
     	// back to the origin
     	if ( pSurface != 0 ) {
-    		// Special backface/processing processing, using the -1/+1 of the surface
+    		// Special backface/frontface processing, using the -1/+1 of the surface
     		pUseVector.set( 0, 0, (float)pSurface );
 
     	} else {

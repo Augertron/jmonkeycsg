@@ -681,7 +681,7 @@ public class CSGGeometry
         }
         // You may be thinking of CSGGeonode
         boolean forceSingleMaterial = aCapsule.readBoolean( "singleMaterial",  true );
-        if ( forceSingleMaterial ) {
+        if ( !forceSingleMaterial ) {
         	// CSGGeometry is inherently single material and cannot be anything else
 			CSGEnvironment.sLogger.log( Level.WARNING, "CSGGeometry asked to support mulitple materials: " + this );
         }

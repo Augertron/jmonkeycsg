@@ -176,12 +176,18 @@ public class CSGBox
         super.read( pImporter );
 
         // Basic configuration
-        mExtentX = inCapsule.readFloat( "xExtent", 1 );
-        mExtentY = inCapsule.readFloat( "yExtent", 1 );
-        mExtentZ = inCapsule.readFloat( "zExtent", 1 );
-
+        readExtents( pImporter, inCapsule );
+        
         // Standard trigger of updateGeometry() to build the shape 
         this.updateGeometry();
+    }
+    protected void readExtents(
+    	JmeImporter		pImporter
+    ,	InputCapsule	pInCapsule
+    ) throws IOException {
+        mExtentX = pInCapsule.readFloat( "xExtent", 1 );
+        mExtentY = pInCapsule.readFloat( "yExtent", 1 );
+        mExtentZ = pInCapsule.readFloat( "zExtent", 1 );    	
     }
     
     /** Preserve this shape */
@@ -194,9 +200,15 @@ public class CSGBox
     	// Let the super do its thing
         super.write( pExporter );
         
-        outCapsule.write( mExtentX, "xExtent", 1 );
-        outCapsule.write( mExtentY, "yExtent", 1 );
-        outCapsule.write( mExtentZ, "zExtent", 1 );
+        writeExtents( pExporter, outCapsule );
+    }
+    protected void writeExtents(
+    	JmeExporter		pExporter
+    ,	OutputCapsule	pOutCapsule
+    ) throws IOException {
+    	pOutCapsule.write( mExtentX, "xExtent", 1 );
+    	pOutCapsule.write( mExtentY, "yExtent", 1 );
+    	pOutCapsule.write( mExtentZ, "zExtent", 1 );
     }
 
 
@@ -333,7 +345,7 @@ public class CSGBox
         }
     }
     /** Service routine that constructs the array of vectors representing the 8 vertices of the box */
-    protected final Vector3f[] computeVertices(
+    protected Vector3f[] computeVertices(
     ) {
         Vector3f[] axes = {
             Vector3f.UNIT_X.mult( mExtentX )
