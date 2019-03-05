@@ -32,6 +32,7 @@ import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.VertexBuffer.Type;
@@ -45,11 +46,11 @@ import com.jme3.util.BufferUtils;
  	X extent) and independent Left and Right extents (rather than a single Y extent)
  	
  	A CSGHexahedron with equal Top/Bottom extents, and equal Left/Right extents is identical
- 	to a CSGAxialBox.  Otherwise, the X extent is the average of top and bottom, and Y
- 	extent is the average of right and left.
+ 	to a CSGAxialBox.  Otherwise, all four 'corners' can be defined by independent, 
+ 	positive extents.
  	
  	This results in a deformed 'cube' with rectangularly shaped sides, but with faces
- 	that are any four sided figure.
+ 	that are any four sided (convex) figure.
 
  */
 public class CSGHexahedron 
@@ -59,8 +60,11 @@ public class CSGHexahedron
 	public static final String sCSGHexahedronRevision="$Rev$";
 	public static final String sCSGHexahedronDate="$Date$";
 
-	/** The size of the box (remember to *2 for full width/height/depth) */
-    protected float mExtentTop, mExtentBottom, mExtentLeft, mExtentRight;
+	/** The extents that define the four corners */
+    protected Vector2f mExtentTopLeft;
+    protected Vector2f mExtentTopRight;
+    protected Vector2f mExtentBottomLeft;
+    protected Vector2f mExtentBottomRight;
     
     
 	/** Standard null constructor */
@@ -81,10 +85,25 @@ public class CSGHexahedron
 		,       pExtentZ
 		,       false );
 		
-		mExtentLeft = pExtentLeft;
-		mExtentRight = pExtentRight;
-		mExtentTop = pExtentTop;
-		mExtentBottom = pExtentBottom;
+		mExtentTopLeft = new Vector2f( pExtentTop, pExtentLeft );
+		mExtentTopRight = new Vector2f( pExtentTop, pExtentRight );
+		mExtentBottomLeft = new Vector2f( pExtentBottom, pExtentLeft );
+		mExtentBottomRight = new Vector2f( pExtentBottom, pExtentRight );
+		
+        if ( pReadyGeometry ) {
+    		this.updateGeometry();
+        }
+	}
+	public CSGHexahedron(
+		Vector2f	pExtentTopLeft
+	,	Vector2f	pExtentTopRight
+	,	Vector2f	pExtentBottomLeft
+	,	Vector2f	pExtentBottomRight
+	,	float		pExtentZ
+	,	boolean		pReadyGeometry
+	) {
+		super( 0, 0, pExtentZ, false );
+		setExtents( pExtentTopLeft, pExtentTopRight, pExtentBottomLeft, pExtentBottomRight );
 		
         if ( pReadyGeometry ) {
     		this.updateGeometry();
@@ -93,30 +112,48 @@ public class CSGHexahedron
 	
 	/** Accessors to the extents */
 	@Override
-    public void setXExtent( float pExtent ) { mExtentX = mExtentTop = mExtentBottom = pExtent; }
+    public void setXExtent( 
+    	float pExtent 
+    ) { 
+		mExtentX = pExtent; 
+		mExtentTopLeft.x = pExtent;
+		mExtentTopRight.x = pExtent;
+		mExtentBottomLeft.x = pExtent;
+		mExtentBottomRight.x = pExtent;
+	}
     @Override
-    public void setYExtent( float pExtent ) { mExtentY = mExtentLeft = mExtentRight = pExtent; }
+    public void setYExtent( 
+    	float pExtent 
+    ) { 
+    	mExtentY = pExtent; 
+		mExtentTopLeft.y = pExtent;
+		mExtentTopRight.y = pExtent;
+		mExtentBottomLeft.y = pExtent;
+		mExtentBottomRight.y = pExtent;
+    }
 
-    public float getLeftExtent() { return mExtentLeft; }
-    public void setLeftExtent( float pExtent ) { mExtentLeft = pExtent; }
-    
-    public float getRightExtent() { return mExtentRight; }
-    public void setRightExtent( float pExtent ) { mExtentRight = pExtent; }
-
-    public float getTopExtent() { return mExtentTop; }
-    public void setTopExtent( float pExtent ) { mExtentTop = pExtent; }
-
-    public float getBottomExtent() { return mExtentBottom; }
-    public void setBottomExtent( float pExtent ) { mExtentBottom = pExtent; }
-
-    @Override
-    public float getRadius() { return( (mExtentTop + mExtentBottom + mExtentLeft + mExtentRight) / 4.0f ); }
     @Override
     public void setRadius( 
     	float pRadius 
     ) {
-    	mExtentX = mExtentTop = mExtentBottom = pRadius;
-    	mExtentY = mExtentLeft = mExtentRight = pRadius;
+    	setXExtent( pRadius );
+    	setYExtent( pRadius );
+    }
+    
+    /** Explicitly set all the extents */
+    public void setExtents(
+    	Vector2f	pExtentTopLeft
+    ,	Vector2f	pExtentTopRight
+    ,	Vector2f	pExtentBottomLeft
+    ,	Vector2f	pExtentBottomRight
+    ) {
+		mExtentTopLeft = pExtentTopLeft;
+		mExtentTopRight = pExtentTopRight;
+		mExtentBottomLeft = pExtentBottomLeft;
+		mExtentBottomRight = pExtentBottomRight;
+		
+		mExtentX = (pExtentTopLeft.x + pExtentTopRight.x + pExtentBottomLeft.x + pExtentBottomRight.x) / 4.0f;
+		mExtentY = (pExtentTopLeft.y + pExtentTopRight.y + pExtentBottomLeft.y + pExtentBottomRight.y) / 4.0f;
     }
     
     /** Service routine to calculate an appropriate positional vector */
@@ -134,29 +171,29 @@ public class CSGHexahedron
     	// Account for size
     	switch( whichVertex ) {
     	case 0: 		// right, bottom, back
-        	pResult.multLocal( mExtentBottom, mExtentRight, mExtentZ );
+        	pResult.multLocal( mExtentBottomRight.x, mExtentBottomRight.y, mExtentZ );
     		break;
     	case 1:			// left, bottom, back
-        	pResult.multLocal( mExtentBottom, mExtentLeft, mExtentZ );
+        	pResult.multLocal( mExtentBottomLeft.x, mExtentBottomLeft.y, mExtentZ );
     		break;
     	case 2:			// left, top, back
-        	pResult.multLocal( mExtentTop, mExtentLeft, mExtentZ );
+        	pResult.multLocal( mExtentTopLeft.x, mExtentTopLeft.y, mExtentZ );
     		break;
     	case 3:			// right, top, back	
-        	pResult.multLocal( mExtentTop, mExtentRight, mExtentZ );
+        	pResult.multLocal( mExtentTopRight.x, mExtentTopRight.y, mExtentZ );
     		break;
 		
     	case 4:			// left, bottom, front
-        	pResult.multLocal( mExtentBottom, mExtentLeft, mExtentZ );
+        	pResult.multLocal( mExtentBottomLeft.x, mExtentBottomLeft.y, mExtentZ );
     		break;
     	case 5:			// right, bottom, front	
-        	pResult.multLocal( mExtentBottom, mExtentRight, mExtentZ );
+        	pResult.multLocal( mExtentBottomRight.x, mExtentBottomRight.y, mExtentZ );
     		break;
     	case 6:			// right, top, front
-        	pResult.multLocal( mExtentTop, mExtentRight, mExtentZ );
+        	pResult.multLocal( mExtentTopRight.x, mExtentTopRight.y, mExtentZ );
     		break;
     	case 7:			// left, top, front	
-        	pResult.multLocal( mExtentTop, mExtentLeft, mExtentZ );
+        	pResult.multLocal( mExtentTopLeft.x, mExtentTopLeft.y, mExtentZ );
     		break;
     	}
     	return( pResult );
@@ -213,13 +250,15 @@ public class CSGHexahedron
     	case FRONT:
     	case BACK:
     		// Front and Back are arbitrarily shaped and must account for each vertex
-    		float maxX = (mExtentTop > mExtentBottom) ? mExtentTop : mExtentBottom;
-    		float maxY = (mExtentLeft > mExtentRight) ? mExtentLeft : mExtentRight;
+    		float leftMostX = Math.max( mExtentTopLeft.x, mExtentBottomLeft.x );
+    		float rightMostX = Math.max( mExtentTopRight.x, mExtentBottomRight.x );
+    		float topMostY = Math.max( mExtentTopLeft.y, mExtentTopRight.y );
+    		float bottomMostY = Math.max( mExtentBottomLeft.y, mExtentBottomRight.y );
     		
-    		float offsetX = pPosition.x + maxX;
-    		float offsetY = pPosition.y + maxY;
-    		float texX = offsetX / (2 * maxX);
-    		float texY = offsetY / (2 * maxY);
+    		float offsetX = pPosition.x + leftMostX;
+    		float offsetY = pPosition.y + bottomMostY;
+    		float texX = offsetX / (leftMostX + rightMostX);
+    		float texY = offsetY / (topMostY + bottomMostY);
 	    	pResult.set( pBaseTex.x + texX, pBaseTex.y + texY );
 	        break;
 	    default:
@@ -240,15 +279,22 @@ public class CSGHexahedron
     ) {
 		// Account for span around the perimeter
     	// and we assume a full span (1.0) to cover the 'z' 
-		float perimeter = (2 * mExtentRight) + (2 * mExtentLeft) + (2 * mExtentTop) + (2 * mExtentBottom);
-		pRightSpan.set( (mExtentRight * 2) / perimeter, 1 );
-		pLeftSpan.set( (mExtentLeft * 2) / perimeter, 1 );
+    	float topDistance = FastMath.sqrt( FastMath.sqr( mExtentTopLeft.x + mExtentTopRight.x )
+										+	FastMath.sqr( mExtentTopLeft.y - mExtentTopRight.y ) );
+    	float bottomDistance = FastMath.sqrt( FastMath.sqr( mExtentBottomLeft.x + mExtentBottomRight.x )
+										+	FastMath.sqr( mExtentBottomLeft.y - mExtentBottomRight.y ) );
+    	float leftDistance = FastMath.sqrt( FastMath.sqr( mExtentTopLeft.x - mExtentBottomLeft.x )
+    									+ 	FastMath.sqr( mExtentTopLeft.y + mExtentBottomLeft.y ) );
+    	float rightDistance = FastMath.sqrt( FastMath.sqr( mExtentTopRight.x - mExtentBottomRight.x )
+										+ 	FastMath.sqr( mExtentTopRight.y + mExtentBottomRight.y ) );
+		float perimeter = topDistance + bottomDistance + leftDistance + rightDistance;
 		
-		pTopSpan.set( (mExtentTop * 2) / perimeter, 1 );    	
-		pBottomSpan.set( (mExtentBottom * 2) / perimeter, 1 );    	
+		pRightSpan.set( rightDistance / perimeter, 1 );
+		pLeftSpan.set( leftDistance / perimeter, 1 );
+		pTopSpan.set( topDistance / perimeter, 1 );    	
+		pBottomSpan.set( bottomDistance / perimeter, 1 );    	
     }
     
-
     /** Read the fundamental configuration parameters */
     @Override
     protected void readExtents(
@@ -265,13 +311,45 @@ public class CSGHexahedron
         		mExtentZ = 1.0f;
         	}
         }
-        mExtentTop = pInCapsule.readFloat( "topExtent", 1 );
-        mExtentBottom = pInCapsule.readFloat( "bottomExtent", 1 );
-        mExtentLeft = pInCapsule.readFloat( "leftExtent", 1 );
-        mExtentRight = pInCapsule.readFloat( "rightExtent", 1 );
+        // Attempt to take the most generic specs possible
+        Vector2f topLeft = (Vector2f)pInCapsule.readSavable( "topLeftExtent", null );
+        Vector2f topRight = (Vector2f)pInCapsule.readSavable( "topRightExtent", null );
+        Vector2f bottomLeft = (Vector2f)pInCapsule.readSavable( "bottomLeftExtent", null );
+        Vector2f bottomRight = (Vector2f)pInCapsule.readSavable( "bottomRightExtent", null );
         
-        mExtentX = (mExtentTop + mExtentBottom) / 2.0f;
-        mExtentY = (mExtentLeft + mExtentRight) / 2.0f;
+        float topExtent = pInCapsule.readFloat( "topExtent", 0 );
+        float bottomExtent = pInCapsule.readFloat( "bottomExtent", 0 );
+        float leftExtent = pInCapsule.readFloat( "leftExtent", 0 );
+        float rightExtent = pInCapsule.readFloat( "rightExtent", 0 );
+        
+        float xExtent = pInCapsule.readFloat( "xExtent", 1.0f );
+        float yExtent = pInCapsule.readFloat( "yExtent", 1.0f );
+        
+        if ( topLeft == null ) {
+        	topLeft = new Vector2f( (topExtent == 0) ? xExtent : topExtent
+        						,	(leftExtent == 0) ? yExtent : leftExtent );
+        } else {
+        	topLeft = topLeft.clone();
+        }
+        if ( topRight == null ) {
+        	topRight = new Vector2f( (topExtent == 0) ? xExtent : topExtent
+        						,	(rightExtent == 0) ? yExtent : rightExtent );
+        } else {
+        	topRight = topRight.clone();
+        }
+        if ( bottomLeft == null ) {
+        	bottomLeft = new Vector2f( (bottomExtent == 0) ? xExtent : bottomExtent
+        						,	(leftExtent == 0) ? yExtent : leftExtent );
+        } else {
+        	bottomLeft = bottomLeft.clone();
+        }
+        if ( bottomRight == null ) {
+        	bottomRight = new Vector2f( (bottomExtent == 0) ? xExtent : bottomExtent
+        						,	(rightExtent == 0) ? yExtent : rightExtent );
+        } else {
+        	bottomRight = bottomRight.clone();
+        }
+        setExtents( topLeft, topRight, bottomLeft, bottomRight );
     }
     
     /** Preserve this shape */
@@ -281,10 +359,10 @@ public class CSGHexahedron
     ,	OutputCapsule	pOutCapsule
     ) throws IOException {
     	pOutCapsule.write( mExtentZ, "zExtent", 1 );
-    	pOutCapsule.write( mExtentTop, "topExtent", 1 );
-    	pOutCapsule.write( mExtentBottom, "bottomExtent", 1 );
-    	pOutCapsule.write( mExtentLeft, "leftExtent", 1 );
-    	pOutCapsule.write( mExtentRight, "rightExtent", 1 );
+    	pOutCapsule.write( mExtentTopLeft, "topLeftExtent", null );
+    	pOutCapsule.write( mExtentTopRight, "topRightExtent", null );
+    	pOutCapsule.write( mExtentBottomLeft, "bottomLeftExtent", null );
+    	pOutCapsule.write( mExtentBottomRight, "bottomRightExtent", null );
     }
 
 	/////// Implement ConstructiveSolidGeometry

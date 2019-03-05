@@ -294,8 +294,8 @@ public interface ConstructiveSolidGeometry
 
 	/** Version tracking support 
 	 	(I plan to roll these numbers manually when something interesting happens) */
-	public static final int sCSGVersionMajor = 0;
-	public static final int sCSGVersionMinor = 9;
+	public static final int sCSGVersionMajor = 1;
+	public static final int sCSGVersionMinor = 0;
 	// NOTE that $Rev$  and $Date$ are auto-filled by SVN processing based on SVN keywords 
 	public static final String sCSGRevision="$Rev$";
 	public static final String sCSGDate="$Date$";
