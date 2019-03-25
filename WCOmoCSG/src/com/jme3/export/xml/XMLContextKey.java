@@ -106,8 +106,12 @@ public class XMLContextKey<TAsset>
     	Map<String,ResourceBundle>	pBundleMap
     ,	ResourceBundle				pInternalBundle
     ) {
-    	mTranslationBundles = pBundleMap;
-    	mInternalBundle = pInternalBundle;
+    	if ( pBundleMap != null ) {
+    		mTranslationBundles = pBundleMap;
+    	}
+    	if ( pInternalBundle != null ) {
+    		mInternalBundle = pInternalBundle;
+    	}
     }
     public void registerTranslationBundle(
     	String			pBundleName
