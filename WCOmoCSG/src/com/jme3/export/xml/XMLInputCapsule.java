@@ -261,10 +261,10 @@ public class XMLInputCapsule
 	    		int dot = pText.indexOf( ".", start );
 	    		ResourceBundle aBundle = null;
 	    		
-	    		if ( dot < 0 ) {
+	    		if ( (dot < 0) || (dot > end) ) {
 	    			// If not a dot notation, then it is an internal reference
 	    			aBundle = pInternalBundle;
-	    			dot = 1;
+	    			dot = start-1;
 	    		} else if ( (end > start) && ((end-start) >= 3) && (dot > start) && (dot < end-1) ) {
 	        		// We need a minimum of ${a.b} where the a. portion picks the bundle
 	    			String libraryRef = pText.substring( start, dot );
