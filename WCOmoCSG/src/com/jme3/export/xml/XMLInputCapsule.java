@@ -557,6 +557,8 @@ public class XMLInputCapsule
 		            xmlResult = aResult = XMLClassUtil.fromClass( aClass );
 	            } else {
 	            	// I do not understand this one, so let the default value stand
+	            	// BUT we have not really processed anything
+	            	pMarkElementProcessed = false;
 	            	aResult = pDefaultValue;
 	            }
 	            // Check for version constraints
@@ -1440,14 +1442,13 @@ public class XMLInputCapsule
         Element tmpEl = null;
         if ( name != null ) {
         	// Locate the child of the given name
-            hasProcessed( name );
-
             tmpEl = findChildElement( mCurrentElement, name );
             if ( tmpEl == null ) {
                 String tmpString = resolveAttribute( mCurrentElement, name );
                 if ( tmpString == null ) return defVal;
 
                 // Use a proxy
+                hasProcessed( name );
                 return( new SavableString( tmpString ) );
             }
         } else if ( mCurrentElement == mDocument.getDocumentElement() ) {
@@ -1457,7 +1458,8 @@ public class XMLInputCapsule
         	// Assume we are interested in the first
             tmpEl = findFirstChildElement( mCurrentElement );
         }
-        ret = readSavableFromElem( tmpEl, defVal, false );
+        // The elemnt is marked processed if we find something real to use
+        ret = readSavableFromElem( tmpEl, defVal, true );
         return ret;
     }
 
